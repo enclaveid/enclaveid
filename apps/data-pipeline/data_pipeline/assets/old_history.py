@@ -178,7 +178,47 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             "embeddings"
         )
 
-    return [interests, interests_embeddings, interests_clusters]
+    @asset(
+        name=spec.name_prefix + "_cluster_summaries",
+        partitions_def=user_partitions_def,
+        io_manager_key="parquet_io_manager",
+        ins={
+            "interests_clusters": AssetIn(
+                key=[spec.name_prefix + "_interests_clusters"]
+            )
+        },
+        op_tags=k8s_gpu_config,
+    )
+    def cluster_summaries(
+        context: AssetExecutionContext,
+        config: RowLimitConfig,
+        interests_clusters: pl.DataFrame,
+    ) -> pl.DataFrame:
+        return
+
+    @asset(
+        name=spec.name_prefix + "_cluster_summaries",
+        partitions_def=user_partitions_def,
+        io_manager_key="parquet_io_manager",
+        ins={
+            "cluster_summaries": AssetIn(key=[spec.name_prefix + "_cluster_summaries"])
+        },
+        op_tags=k8s_gpu_config,
+    )
+    def summaries_embeddings(
+        context: AssetExecutionContext,
+        config: RowLimitConfig,
+        cluster_summaries: pl.DataFrame,
+    ) -> pl.DataFrame:
+        return
+
+    return [
+        interests,
+        interests_embeddings,
+        interests_clusters,
+        cluster_summaries,
+        summaries_embeddings,
+    ]
 
 
 sensitive_interests_spec = InterestsSpec(
@@ -208,6 +248,8 @@ general_interests_spec = InterestsSpec(
 )
 
 interests_assets = [
-    # *build_interests_assets(sensitive_interests_spec),
     *build_interests_assets(general_interests_spec),
+    # *build_interests_assets(sensitive_interests_spec),
+    # ^ This doesn't seem necessary anymore because llama3 seems good enough
+    # at identifying sensitive topics without the specialized prompt
 ]
