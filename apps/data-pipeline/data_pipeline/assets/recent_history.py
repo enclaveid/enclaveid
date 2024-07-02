@@ -8,10 +8,10 @@ from dagster import AssetExecutionContext, asset
 from pgvector.psycopg import register_vector
 from pydantic import Field
 
+from ..constants.custom_config import RowLimitConfig
 from ..partitions import user_partitions_def
 from ..resources.mistral_resource import MistralResource
 from ..resources.postgres_resource import PGVectorClient, PGVectorClientResource
-from ..utils.custom_config import RowLimitConfig
 from ..utils.recent_history_utils import (
     ChunkedSessionOutput,
     get_daily_sessions,

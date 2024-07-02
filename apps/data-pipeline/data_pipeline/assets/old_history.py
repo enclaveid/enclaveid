@@ -6,10 +6,10 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, AssetsDefinition, asset
 from pydantic import Field
 
+from ..constants.custom_config import RowLimitConfig
+from ..constants.k8s import k8s_gpu_config
 from ..partitions import user_partitions_def
-from ..utils.custom_config import RowLimitConfig
 from ..utils.is_cuda_available import is_cuda_available
-from ..utils.k8s import k8s_gpu_config
 from ..utils.old_history_utils import (
     InterestsSpec,
     get_embeddings,
@@ -64,10 +64,6 @@ class InterestsEmbeddingsConfig(RowLimitConfig):
 
 
 def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
-    """TODO: Implement a tags-based concurrency limit of 1 for GPU assets to
-    avoid competition for resources.
-    """
-
     @asset(
         name=spec.name_prefix + "_interests",
         partitions_def=user_partitions_def,
@@ -83,14 +79,8 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
         # Polars reads data out-of-order
         full_takeout = full_takeout.slice(0, config.row_limit).sort("timestamp")
 
-        # Split into multiple data frames (one per day). This is necessary to correctly
-        # identify the data associated with each time entry.
-        daily_dfs = full_takeout.with_columns(
-            date=pl.col("timestamp").dt.date()
-        ).partition_by("date", as_dict=True, include_key=False)
-
         sessions_output = get_full_history_sessions(
-            daily_dfs=daily_dfs,
+            full_takeout=full_takeout,
             chunk_size=config.chunk_size,
             first_instruction=spec.first_instruction,
             second_instruction=spec.second_instruction,
@@ -121,7 +111,6 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             .select("date", "interests")
             # Explode the interests so we get the embeddings for each individual interest
             .explode("interests")
-            # Drop any null values just in case
             .drop_nulls()
         )
 
@@ -184,26 +173,27 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             }
         )
 
-        # TODO: Implement logic to extract the top 5 largest clusters, and top 5 clusters
-        # by farthest point sampling (most distance from each other -.e., cross-cluster distance)
-        return df.with_columns(cluster_label=pl.Series(cluster_labels))
+        # Remove the embeddings to save space
+        return df.with_columns(cluster_label=pl.Series(cluster_labels)).drop(
+            "embeddings"
+        )
 
     return [interests, interests_embeddings, interests_clusters]
 
 
-# sensitive_interests_spec = InterestsSpec(
-#     name_prefix="sensitive",
-#     first_instruction=(
-#         "Here is a list of my recent Google search activity. "
-#         "What have I been doing? What were my goals? "
-#         "Are there any sensitive psychosocial topics?"
-#     ),
-#     second_instruction=(
-#         "Format the previous answer as a semicolon-separated array of strings delimited by square brackets. "
-#         "Focus on the goal of the search activity in realtion to the specific topic. "
-#         "Only include the sensitive psychosocial activity."
-#     ),
-# )
+sensitive_interests_spec = InterestsSpec(
+    name_prefix="sensitive",
+    first_instruction=(
+        "Here is a list of my recent Google search activity. "
+        "What have I been doing? What were my goals? "
+        "Are there any sensitive psychosocial topics?"
+    ),
+    second_instruction=(
+        "Format the previous answer as a semicolon-separated array of strings delimited by square brackets. "
+        "Focus on the goal of the search activity in realtion to the specific topic. "
+        "Only include the sensitive psychosocial activity."
+    ),
+)
 
 general_interests_spec = InterestsSpec(
     name_prefix="general",
@@ -218,6 +208,6 @@ general_interests_spec = InterestsSpec(
 )
 
 interests_assets = [
-    #*build_interests_assets(sensitive_interests_spec),
+    # *build_interests_assets(sensitive_interests_spec),
     *build_interests_assets(general_interests_spec),
 ]

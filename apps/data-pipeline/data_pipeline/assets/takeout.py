@@ -9,9 +9,9 @@ from dagster import (
 )
 from pydantic import Field
 
+from ..constants.custom_config import RowLimitConfig
 from ..consts import PRODUCTION_STORAGE_BUCKET, DataProvider
 from ..partitions import user_partitions_def
-from ..utils.custom_config import RowLimitConfig
 
 
 class TakeoutConfig(RowLimitConfig):
