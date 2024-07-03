@@ -156,7 +156,10 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             min_cluster_size=10,
             gen_min_span_tree=True,
             metric="euclidean",
-            cluster_selection_epsilon=0.15,  # 0.15 seems to work well enough
+            # By specifying an epsilon we can coalesce similar clusters
+            # but we rather keep them separate until after the
+            # bipartite matching stage
+            # cluster_selection_epsilon=0.15,
         )
         cluster_labels = clusterer.fit_predict(
             reduced_data_gpu.astype(np.float64).get()
@@ -178,46 +181,46 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             "embeddings"
         )
 
-    @asset(
-        name=spec.name_prefix + "_cluster_summaries",
-        partitions_def=user_partitions_def,
-        io_manager_key="parquet_io_manager",
-        ins={
-            "interests_clusters": AssetIn(
-                key=[spec.name_prefix + "_interests_clusters"]
-            )
-        },
-        op_tags=k8s_gpu_config,
-    )
-    def cluster_summaries(
-        context: AssetExecutionContext,
-        config: RowLimitConfig,
-        interests_clusters: pl.DataFrame,
-    ) -> pl.DataFrame:
-        return
+    # @asset(
+    #     name=spec.name_prefix + "_cluster_summaries",
+    #     partitions_def=user_partitions_def,
+    #     io_manager_key="parquet_io_manager",
+    #     ins={
+    #         "interests_clusters": AssetIn(
+    #             key=[spec.name_prefix + "_interests_clusters"]
+    #         )
+    #     },
+    #     op_tags=k8s_gpu_config,
+    # )
+    # def cluster_summaries(
+    #     context: AssetExecutionContext,
+    #     config: RowLimitConfig,
+    #     interests_clusters: pl.DataFrame,
+    # ) -> pl.DataFrame:
+    #     return
 
-    @asset(
-        name=spec.name_prefix + "_cluster_summaries",
-        partitions_def=user_partitions_def,
-        io_manager_key="parquet_io_manager",
-        ins={
-            "cluster_summaries": AssetIn(key=[spec.name_prefix + "_cluster_summaries"])
-        },
-        op_tags=k8s_gpu_config,
-    )
-    def summaries_embeddings(
-        context: AssetExecutionContext,
-        config: RowLimitConfig,
-        cluster_summaries: pl.DataFrame,
-    ) -> pl.DataFrame:
-        return
+    # @asset(
+    #     name=spec.name_prefix + "_cluster_summaries",
+    #     partitions_def=user_partitions_def,
+    #     io_manager_key="parquet_io_manager",
+    #     ins={
+    #         "cluster_summaries": AssetIn(key=[spec.name_prefix + "_cluster_summaries"])
+    #     },
+    #     op_tags=k8s_gpu_config,
+    # )
+    # def summaries_embeddings(
+    #     context: AssetExecutionContext,
+    #     config: RowLimitConfig,
+    #     cluster_summaries: pl.DataFrame,
+    # ) -> pl.DataFrame:
+    #     return
 
     return [
         interests,
         interests_embeddings,
         interests_clusters,
-        cluster_summaries,
-        summaries_embeddings,
+        # cluster_summaries,
+        # summaries_embeddings,
     ]
 
 
