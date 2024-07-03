@@ -42,7 +42,6 @@ readme = 'README.md'
   tqdm = "^4.66.2"
   mistralai = "^0.1.8"
   dagster-k8s = "^0.23.7"
-  hdbscan = "^0.8.37"
 
   [tool.poetry.group.ml.dependencies]
   # These are very large packages.
@@ -51,9 +50,12 @@ readme = 'README.md'
   vllm = "0.5.0.post1"
   transformers = "4.42.3"
   sentence-transformers = "3.0.0"
+  hdbscan = "^0.8.37"
+  networkx = "^3.3"
   dask-cudf-cu12 = { version = "24.4.0", source = "nvidia" }
   cuml-cu12 = { version = "24.4.0", source = "nvidia" }
   cudf-cu12 = { version = "24.4.0", source = "nvidia" }
+  nx-cugraph-cu12 = { version = "24.4.0", source = "nvidia" }
 
   [tool.poetry.group.dev.dependencies]
   autopep8 = "2.0.2"

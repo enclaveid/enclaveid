@@ -2701,20 +2701,20 @@ files = [
 
 [[package]]
 name = "networkx"
-version = "3.2.1"
+version = "3.3"
 description = "Python package for creating and manipulating graphs and networks"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 files = [
-    {file = "networkx-3.2.1-py3-none-any.whl", hash = "sha256:f18c69adc97877c42332c170849c96cefa91881c99a7cb3e95b7c659ebdc1ec2"},
-    {file = "networkx-3.2.1.tar.gz", hash = "sha256:9f1bb5cf3409bf324e0a722c20bdb4c20ee39bf1c30ce8ae499c8502b0b5e0c6"},
+    {file = "networkx-3.3-py3-none-any.whl", hash = "sha256:28575580c6ebdaf4505b22c6256a2b9de86b316dc63ba9e93abde3d78dfdbcf2"},
+    {file = "networkx-3.3.tar.gz", hash = "sha256:0c127d8b2f4865f59ae9cb8aafcd60b5c70f3241ebd66f7defad7c4ab90126c9"},
 ]
 
 [package.extras]
-default = ["matplotlib (>=3.5)", "numpy (>=1.22)", "pandas (>=1.4)", "scipy (>=1.9,!=1.11.0,!=1.11.1)"]
-developer = ["changelist (==0.4)", "mypy (>=1.1)", "pre-commit (>=3.2)", "rtoml"]
-doc = ["nb2plots (>=0.7)", "nbconvert (<7.9)", "numpydoc (>=1.6)", "pillow (>=9.4)", "pydata-sphinx-theme (>=0.14)", "sphinx (>=7)", "sphinx-gallery (>=0.14)", "texext (>=0.6.7)"]
-extra = ["lxml (>=4.6)", "pydot (>=1.4.2)", "pygraphviz (>=1.11)", "sympy (>=1.10)"]
+default = ["matplotlib (>=3.6)", "numpy (>=1.23)", "pandas (>=1.4)", "scipy (>=1.9,!=1.11.0,!=1.11.1)"]
+developer = ["changelist (==0.5)", "mypy (>=1.1)", "pre-commit (>=3.2)", "rtoml"]
+doc = ["myst-nb (>=1.0)", "numpydoc (>=1.7)", "pillow (>=9.4)", "pydata-sphinx-theme (>=0.14)", "sphinx (>=7)", "sphinx-gallery (>=0.14)", "texext (>=0.6.7)"]
+extra = ["lxml (>=4.6)", "pydot (>=2.0)", "pygraphviz (>=1.12)", "sympy (>=1.10)"]
 test = ["pytest (>=7.2)", "pytest-cov (>=4.0)"]
 
 [[package]]
@@ -2995,6 +2995,30 @@ files = [
     {file = "nvtx-0.2.10-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3d59655a35941e58ef46fa1297e09628d06b05b94e078e39a02e3dffc09aa823"},
     {file = "nvtx-0.2.10.tar.gz", hash = "sha256:58b89cd69079fda1ceef8441eec5c5c189d6a1ff94c090a3afe03aedd0bbd140"},
 ]
+
+[[package]]
+name = "nx-cugraph-cu12"
+version = "24.4.0"
+description = "cugraph backend for NetworkX"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "nx_cugraph_cu12-24.4.0-py3-none-any.whl", hash = "sha256:6b3262aea2befb367bf2e073b971b095919b897a600b33cf7a33252daf80eb70"},
+]
+
+[package.dependencies]
+cupy-cuda12x = ">=12.0.0"
+networkx = ">=3.0"
+numpy = ">=1.23,<2.0a0"
+pylibcugraph-cu12 = "==24.4.*"
+
+[package.extras]
+test = ["packaging (>=21)", "pandas", "pytest", "pytest-benchmark", "pytest-cov", "pytest-mpl", "pytest-xdist", "scipy"]
+
+[package.source]
+type = "legacy"
+url = "https://pypi.nvidia.com"
+reference = "nvidia"
 
 [[package]]
 name = "oauthlib"
@@ -3987,6 +4011,23 @@ crypto = ["cryptography (>=3.4.0)"]
 dev = ["coverage[toml] (==5.0.4)", "cryptography (>=3.4.0)", "pre-commit", "pytest (>=6.0.0,<7.0.0)", "sphinx (>=4.5.0,<5.0.0)", "sphinx-rtd-theme", "zope.interface"]
 docs = ["sphinx (>=4.5.0,<5.0.0)", "sphinx-rtd-theme", "zope.interface"]
 tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
+
+[[package]]
+name = "pylibcugraph-cu12"
+version = "24.4.0"
+description = "pylibcugraph - Python bindings for the libcugraph cuGraph C/C++/CUDA library"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "pylibcugraph_cu12-24.4.0.tar.gz", hash = "sha256:9c4e8c6d52df0958d1cf182d8f1a5b63b5b9558a3cec9e24877d92b4f0750014"},
+]
+
+[package.dependencies]
+pylibraft-cu12 = "==24.4.*"
+rmm-cu12 = "==24.4.*"
+
+[package.extras]
+test = ["cudf-cu12 (==24.4.*)", "numpy (>=1.23,<2.0a0)", "pandas", "pytest", "pytest-benchmark", "pytest-cov", "pytest-xdist", "scipy"]
 
 [[package]]
 name = "pylibraft-cu12"
@@ -6400,4 +6441,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "149c3700df1a99ce885cf5c2ebc5a4ace52587a5ceb1958bc07b06326c59edb9"
+content-hash = "2345c99c50b4cbf590cd334170267846e1f0e1cee1b6580ce1456201988ad6eb"
