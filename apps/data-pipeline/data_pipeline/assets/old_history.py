@@ -7,6 +7,7 @@ from dagster import AssetExecutionContext, AssetIn, AssetsDefinition, asset
 from pydantic import Field
 
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
+from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
 
 from ..constants.custom_config import RowLimitConfig
 from ..constants.k8s import k8s_gpu_config
@@ -85,8 +86,8 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
         sessions_output = get_full_history_sessions(
             full_takeout=full_takeout,
             chunk_size=config.chunk_size,
-            first_instruction=spec.first_instruction,
-            second_instruction=spec.second_instruction,
+            first_instruction=spec.enrichment_prompt_sequence[0],
+            second_instruction=spec.enrichment_prompt_sequence[1],
             llama8b=llama8b,
         )
 
@@ -183,23 +184,46 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             "embeddings"
         )
 
-    # @asset(
-    #     name=spec.name_prefix + "_cluster_summaries",
-    #     partitions_def=user_partitions_def,
-    #     io_manager_key="parquet_io_manager",
-    #     ins={
-    #         "interests_clusters": AssetIn(
-    #             key=[spec.name_prefix + "_interests_clusters"]
-    #         )
-    #     },
-    # )
-    # async def cluster_summaries(
-    #     context: AssetExecutionContext,
-    #     config: RowLimitConfig,
-    #     interests_clusters: pl.DataFrame,
-    # ) -> pl.DataFrame:
-    #     api_key = EnvVar("AZURE_AI_LLAMA70B_API_KEY")
-    #     get_llama70b_completions
+    @asset(
+        name=spec.name_prefix + "_cluster_summaries",
+        partitions_def=user_partitions_def,
+        io_manager_key="parquet_io_manager",
+        ins={
+            "interests_clusters": AssetIn(
+                key=[spec.name_prefix + "_interests_clusters"]
+            )
+        },
+    )
+    async def cluster_summaries(
+        context: AssetExecutionContext,
+        config: RowLimitConfig,
+        llama70b: Llama70bResource,
+        interests_clusters: pl.DataFrame,
+    ) -> pl.DataFrame:
+        df = (
+            interests_clusters.with_columns(
+                (pl.col("date") + pl.lit(":") + pl.col("interests")).alias(
+                    "date_interests"
+                )
+            )
+            .group_by("cluster_label")
+            .agg([pl.col("date_interests").str.concat("\n").alias("cluster_items")])
+            .filter(pl.col("cluster_label") != -1)
+        )
+
+        prompt_sequences = [
+            [
+                f"{spec.clustering_prompt_sequence[0]}\n{row['cluster_items']}",
+                spec.clustering_prompt_sequence[1],
+            ]
+            for row in df.to_dicts()
+        ]
+
+        cluster_summaries = await llama70b.get_completions(prompt_sequences)
+
+        return df.with_columns(
+            cluster_summary=pl.Series(cluster_summaries),
+        ).drop(["cluster_items", "date_interests", "date", "interests"])
 
     # @asset(
     #     name=spec.name_prefix + "_cluster_summaries",
@@ -221,35 +245,53 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
         interests,
         interests_embeddings,
         interests_clusters,
-        # cluster_summaries,
+        cluster_summaries,
         # summaries_embeddings,
     ]
 
 
 sensitive_interests_spec = InterestsSpec(
     name_prefix="sensitive",
-    first_instruction=(
-        "Here is a list of my recent Google search activity. "
-        "What have I been doing? What were my goals? "
-        "Are there any sensitive psychosocial topics?"
-    ),
-    second_instruction=(
-        "Format the previous answer as a semicolon-separated array of strings delimited by square brackets. "
-        "Focus on the goal of the search activity in realtion to the specific topic. "
-        "Only include the sensitive psychosocial activity."
-    ),
+    enrichment_prompt_sequence=[
+        (
+            "Here is a list of my recent Google search activity. "
+            "What have I been doing? What were my goals? "
+            "Are there any sensitive psychosocial topics?"
+        ),
+        (
+            "Format the previous answer as a semicolon-separated array of strings delimited by square brackets. "
+            "Focus on the goal of the search activity in realtion to the specific topic. "
+            "Only include the sensitive psychosocial activity."
+        ),
+    ],
+    clustering_prompt_sequence=[
+        (
+            "Here is a list of records of some of my internet activity surrounding a specific topic."
+            " What have I been doing? How are these activities related?"
+        ),
+        "How would you summarize this trajectory? Be mindful of the time periods.",
+    ],
 )
 
 general_interests_spec = InterestsSpec(
     name_prefix="general",
-    first_instruction=(
-        "Here is a list of my recent Google search activity. "
-        "What have I been doing? What were my goals?"
-    ),
-    second_instruction=(
-        "Format the previous answer as a semicolon-separated array of strings delimited by square brackets. "
-        "Focus on the goal of the search activity in realtion to the specific topic."
-    ),
+    enrichment_prompt_sequence=[
+        (
+            "Here is a list of my recent Google search activity. "
+            "What have I been doing? What were my goals?"
+        ),
+        (
+            "Format the previous answer as a semicolon-separated array of strings delimited by square brackets. "
+            "Focus on the goal of the search activity in realtion to the specific topic."
+        ),
+    ],
+    clustering_prompt_sequence=[
+        (
+            "Here is a list of records of some of my internet activity surrounding a specific topic."
+            " What have I been doing? How are these activities related?"
+        ),
+        "How would you summarize this trajectory? Be mindful of the time periods.",
+    ],
 )
 
 interests_assets = [

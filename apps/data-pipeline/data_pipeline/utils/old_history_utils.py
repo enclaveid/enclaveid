@@ -19,8 +19,8 @@ else:
 
 class InterestsSpec(BaseModel):
     name_prefix: str = Field(description="A prefix to add to the name of the asset.")
-    first_instruction: str
-    second_instruction: str
+    enrichment_prompt_sequence: List[str]
+    clustering_prompt_sequence: List[str]
 
 
 @dataclass

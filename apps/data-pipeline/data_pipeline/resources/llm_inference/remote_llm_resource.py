@@ -66,4 +66,4 @@ class RemoteLlmResource(ConfigurableResource):
         )
 
         # Only return the final assistant's response
-        return map(lambda x: x[-1]["content"], conversations)
+        return list(map(lambda x: x[-1]["content"], conversations))
