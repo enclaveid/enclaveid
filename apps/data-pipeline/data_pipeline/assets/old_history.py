@@ -184,6 +184,7 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             "embeddings"
         )
 
+    # TODO: add constraints to the llama70b resource
     @asset(
         name=spec.name_prefix + "_cluster_summaries",
         partitions_def=user_partitions_def,

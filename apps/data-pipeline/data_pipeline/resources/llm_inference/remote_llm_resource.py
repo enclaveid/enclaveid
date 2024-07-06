@@ -17,7 +17,6 @@ class RemoteLlmResource(ConfigurableResource):
     _client: httpx.AsyncClient = PrivateAttr()
 
     def setup_for_execution(self, context: InitResourceContext) -> None:
-        self.api_key = context.resource_config["api_key"]
         self._client = httpx.AsyncClient(
             limits=httpx.Limits(
                 max_connections=self._concurrency_limit,
