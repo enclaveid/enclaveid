@@ -22,5 +22,5 @@ resources = {
     ),
     "llama8b": Llama8bResource(),
     "llama70b": Llama70bResource(api_key=EnvVar("AZURE_AI_LLAMA70B_API_KEY")),
-    "gpt4": Gpt4Resource(api_key=EnvVar("OPENAI_API_KEY")),
+    "gpt4": Gpt4Resource(api_key=EnvVar("AZURE_AI_GPT4_API_KEY")),
 }
