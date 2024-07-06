@@ -13,6 +13,7 @@ resources = {
         extension=".snappy", base_dir=str(DAGSTER_STORAGE_BUCKET)
     ),
     "mistral": MistralResource(api_key=EnvVar("MISTRAL_API_KEY")),
+    # TODO: use a single env var with the uri
     "pgvector": PGVectorClientResource(
         host=EnvVar("PGHOST"),
         port=EnvVar.int("PGPORT"),
