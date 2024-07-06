@@ -94,6 +94,7 @@
         "engine": "docker",
         "push": true,
         "file": "apps/data-pipeline/Dockerfile.ml",
+        "platforms": ["linux/amd64"],
         "metadata": {
           "images": ["docker.io/enclaveid/data-pipeline-ml"],
           "tags": [
@@ -113,6 +114,7 @@
         "engine": "docker",
         "push": true,
         "file": "apps/data-pipeline/Dockerfile.base",
+        "platforms": ["linux/amd64"],
         "metadata": {
           "images": ["docker.io/enclaveid/data-pipeline-base"],
           "tags": [
@@ -132,6 +134,7 @@
         "engine": "docker",
         "push": true,
         "file": "apps/data-pipeline/notebooks/Dockerfile",
+        "platforms": ["linux/amd64"],
         "metadata": {
           "images": ["docker.io/enclaveid/jupyter"],
           "tags": [

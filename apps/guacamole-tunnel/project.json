@@ -9,6 +9,7 @@
       "dependsOn": ["build"],
       "options": {
         "engine": "docker",
+        "platforms": ["linux/amd64"],
         "push": true,
         "metadata": {
           "images": ["docker.io/enclaveid/guacamole-tunnel"],

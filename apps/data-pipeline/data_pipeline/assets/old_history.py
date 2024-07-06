@@ -6,6 +6,8 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, AssetsDefinition, asset
 from pydantic import Field
 
+from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
+
 from ..constants.custom_config import RowLimitConfig
 from ..constants.k8s import k8s_gpu_config
 from ..partitions import user_partitions_def
@@ -73,6 +75,7 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
     def interests(
         context: AssetExecutionContext,
         config: InterestsConfig,
+        llama8b: Llama8bResource,
         full_takeout: pl.DataFrame,
     ) -> pl.DataFrame:
         # Enforce the row_limit (if any) per day and sort the data by time because
@@ -84,7 +87,7 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             chunk_size=config.chunk_size,
             first_instruction=spec.first_instruction,
             second_instruction=spec.second_instruction,
-            ml_model_name=config.ml_model_name,
+            llama8b=llama8b,
         )
 
         context.add_output_metadata(
@@ -156,9 +159,8 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             min_cluster_size=10,
             gen_min_span_tree=True,
             metric="euclidean",
-            # By specifying an epsilon we can coalesce similar clusters
-            # but we rather keep them separate until after the
-            # bipartite matching stage
+            # By specifying an epsilon we can coalesce similar clusters but we rather keep
+            # them separate until after the bipartite matching stage
             # cluster_selection_epsilon=0.15,
         )
         cluster_labels = clusterer.fit_predict(
@@ -190,14 +192,14 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
     #             key=[spec.name_prefix + "_interests_clusters"]
     #         )
     #     },
-    #     op_tags=k8s_gpu_config,
     # )
-    # def cluster_summaries(
+    # async def cluster_summaries(
     #     context: AssetExecutionContext,
     #     config: RowLimitConfig,
     #     interests_clusters: pl.DataFrame,
     # ) -> pl.DataFrame:
-    #     return
+    #     api_key = EnvVar("AZURE_AI_LLAMA70B_API_KEY")
+    #     get_llama70b_completions
 
     # @asset(
     #     name=spec.name_prefix + "_cluster_summaries",
