@@ -70,6 +70,9 @@ def parsed_takeout(
         with ZipFile(f, "r") as zip_ref, zip_ref.open(expected_file) as zip_f:
             raw_df = pl.read_json(zip_f.read(), schema_overrides={"time": pl.Datetime})
 
+    # Filter out the "Used Search" records because they don't contain enough information
+    raw_df = raw_df.filter(pl.col("title") != "Used Search")
+
     full_df = raw_df.select(
         pl.all().exclude("time"),
         timestamp=pl.col("time"),
