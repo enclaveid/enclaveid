@@ -60,7 +60,7 @@ def generate_chunked_interests(
     prompt_sequences: List[List[str]] = []
 
     for date, day_dfs in chunks.items():
-        for _, frame in enumerate(day_dfs, start=1):
+        for frame in day_dfs:
             dates.append(date)
             prompt_sequences.append(
                 [f"{first_instruction}\n{frame}", second_instruction]

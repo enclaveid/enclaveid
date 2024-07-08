@@ -56,11 +56,11 @@ class RemoteLlmResource(ConfigurableResource):
             conversation.append({"role": "assistant", "content": response})
         return conversation
 
-    async def get_completions(self, prompts: List[List[str]]):
+    async def get_completions(self, prompt_sequences: List[List[str]]):
         conversations = await asyncio.gather(
             *(
-                self._get_prompt_sequence_completion(prompt_list)
-                for prompt_list in prompts
+                self._get_prompt_sequence_completion(prompt_sequence)
+                for prompt_sequence in prompt_sequences
             )
         )
 

@@ -49,20 +49,6 @@ SUMMARY_PROMPT = dedent(
 
 class SessionsConfig(RowLimitConfig):
     chunk_size: int = Field(default=15, description="The size of each chunk.")
-    ml_model_name: str = Field(
-        default="mistral-tiny",
-        description=(
-            "The Mistral model to use. See the Mistral docs for a list of valid "
-            "endpoints: https://docs.mistral.ai/platform/endpoints/"
-        ),
-    )
-    rate_limit: float = Field(
-        default=5.0,
-        description=(
-            "The maximum number of requests allowed per second. See the Mistral "
-            "docs here: https://docs.mistral.ai/platform/pricing/"
-        ),
-    )
 
 
 # TODO: Consider converting all these assets into a single graph-backed asset
@@ -97,10 +83,8 @@ async def recent_sessions(
             df=day_df,
             llama70b=llama70b,
             chunk_size=config.chunk_size,
-            logger=context.log,
             day=day,
             prompt=SUMMARY_PROMPT,
-            rate_limit=config.rate_limit,
         )
         daily_outputs.append(output)
 
