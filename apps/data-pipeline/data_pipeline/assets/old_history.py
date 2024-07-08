@@ -220,7 +220,9 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             for row in df.to_dicts()
         ]
 
-        cluster_summaries = await llama70b.get_completions(prompt_sequences)
+        cluster_summaries = await llama70b.get_prompt_sequences_completions(
+            prompt_sequences
+        )
 
         return df.with_columns(
             cluster_summary=pl.Series(cluster_summaries),
