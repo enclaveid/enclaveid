@@ -2,7 +2,6 @@ import asyncio
 import datetime
 import json
 from dataclasses import dataclass
-from typing import Dict, List
 
 import polars as pl
 from aiolimiter import AsyncLimiter
@@ -15,7 +14,7 @@ from ..resources.llm_inference.llama70b_resource import Llama70bResource
 @dataclass
 class ChunkedSessionOutput:
     output_df: pl.DataFrame
-    raw_answers: list[str | list[str]]
+    raw_answers: list[str]
     num_sessions: int
     invalid_types: int
     invalid_keys: int
@@ -71,51 +70,18 @@ async def get_daily_sessions(
     df: pl.DataFrame,
     llama70b: Llama70bResource,
     chunk_size: int,
-    logger: DagsterLogManager,
     day: datetime.date,
     prompt: str,
-    rate_limit: float,
 ) -> ChunkedSessionOutput:
-    """
-    Parameters
-    ---
-    rate_limit
-        the maximum requests allowed per second
-    """
     # Keep only the relevant columns
     df = df.select("hour", "title")
 
-    limiter = AsyncLimiter(max_rate=rate_limit, time_period=1)
-    tasks = []
-    end_of_prompt = (
-        "What is the json output? please answer only in json, without other text\n"
-    )
-
-    for idx, frame in enumerate(df.iter_slices(n_rows=chunk_size), start=1):
-        # Set Polars' string formatting so none of the rows or strings are
-        # compressed / cut off.
-        max_chars = frame["title"].str.len_chars().max()
-        with pl.Config(
-            tbl_formatting="NOTHING",
-            tbl_hide_column_data_types=True,
-            tbl_hide_dataframe_shape=True,
-            fmt_str_lengths=max_chars,
-            tbl_rows=-1,
-        ):
-            conversation: List[Dict[str, str]] = []
-            conversation.append(
-                {
-                    "role": "system",
-                    "content": "You are a super smart assistant that can read through user's google search history and identify groups of similar searches.",
-                }
-            )
-            conversation.append(
-                {"role": "user", "content": f"{prompt}\n{frame}\n{end_of_prompt}"}
-            )
-            tasks.append(llama70b._get_completion(conversation=conversation))
+    prompt_sequences = [
+        [f"{prompt}\n{frame}"] for frame in df.iter_slices(n_rows=chunk_size)
+    ]
 
     sessions_list = []
-    raw_answers = await asyncio.gather(*tasks)
+    raw_answers = await llama70b.get_completions(prompt_sequences)
     for answer in raw_answers:
         # Sometimes the LLM returns multipe json objects in a list
         # Some other times it returns a single json object
