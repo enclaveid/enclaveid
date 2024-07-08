@@ -2,12 +2,14 @@ import asyncio
 import datetime
 import json
 from dataclasses import dataclass
+from typing import Dict, List
 
 import polars as pl
 from aiolimiter import AsyncLimiter
 from dagster import DagsterLogManager
 from mistralai.async_client import MistralAsyncClient
-from mistralai.models.chat_completion import ChatMessage
+
+from ..resources.llm_inference.llama70b_resource import Llama70bResource
 
 
 @dataclass
@@ -65,29 +67,14 @@ def extract_json(text):
         return {}, None
 
 
-# TODO: Consider making this a method of the MistralResource.
-async def get_completion(
-    prompt: str, client: MistralAsyncClient, limiter: AsyncLimiter, model="mistral-tiny"
-):
-    messages = [ChatMessage(role="user", content=prompt)]
-    async with limiter:
-        chat_response = await client.chat(
-            model=model,
-            messages=messages,
-        )
-
-    return chat_response.choices[0].message.content
-
-
 async def get_daily_sessions(
     df: pl.DataFrame,
-    client: MistralAsyncClient,
+    llama70b: Llama70bResource,
     chunk_size: int,
     logger: DagsterLogManager,
     day: datetime.date,
     prompt: str,
     rate_limit: float,
-    model: str = "mistral-tiny",
 ) -> ChunkedSessionOutput:
     """
     Parameters
@@ -100,6 +87,10 @@ async def get_daily_sessions(
 
     limiter = AsyncLimiter(max_rate=rate_limit, time_period=1)
     tasks = []
+    end_of_prompt = (
+        "What is the json output? please answer only in json, without other text\n"
+    )
+
     for idx, frame in enumerate(df.iter_slices(n_rows=chunk_size), start=1):
         # Set Polars' string formatting so none of the rows or strings are
         # compressed / cut off.
@@ -111,14 +102,17 @@ async def get_daily_sessions(
             fmt_str_lengths=max_chars,
             tbl_rows=-1,
         ):
-            tasks.append(
-                get_completion(
-                    prompt=f"{prompt}\n{frame}",
-                    client=client,
-                    limiter=limiter,
-                    model=model,
-                )
+            conversation: List[Dict[str, str]] = []
+            conversation.append(
+                {
+                    "role": "system",
+                    "content": "You are a super smart assistant that can read through user's google search history and identify groups of similar searches.",
+                }
             )
+            conversation.append(
+                {"role": "user", "content": f"{prompt}\n{frame}\n{end_of_prompt}"}
+            )
+            tasks.append(llama70b._get_completion(conversation=conversation))
 
     sessions_list = []
     raw_answers = await asyncio.gather(*tasks)
