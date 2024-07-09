@@ -13,6 +13,7 @@ def get_environment() -> str:
 
 DEPLOYMENT_TYPE = get_environment()
 
+# TODO: why do we need so many different buckets? confusing
 PRODUCTION_STORAGE_BUCKET: UPath = {
     "LOCAL": UPath(__file__).parent.parent / "data",
     # TODO: Should we also have a staging bucket for user data?
@@ -21,7 +22,7 @@ PRODUCTION_STORAGE_BUCKET: UPath = {
 }[DEPLOYMENT_TYPE]
 
 DAGSTER_STORAGE_BUCKET = {
-    "LOCAL": UPath("/tmp/dagster_data"),
+    "LOCAL": UPath(__file__).parent.parent / "data",
     "BRANCH": UPath("az://enclaveid-dagster-staging-bucket/"),
     "PROD": UPath("az://enclaveid-dagster-prod-bucket/"),
 }[DEPLOYMENT_TYPE]

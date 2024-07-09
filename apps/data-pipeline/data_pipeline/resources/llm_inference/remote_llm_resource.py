@@ -2,7 +2,7 @@ import asyncio
 from typing import Any, Dict, List
 
 import httpx
-from dagster import ConfigurableResource, InitResourceContext
+from dagster import ConfigurableResource, InitResourceContext, get_dagster_logger
 from pydantic import PrivateAttr
 
 
@@ -28,21 +28,27 @@ class RemoteLlmResource(ConfigurableResource):
     async def _get_completion(
         self,
         conversation: List[Dict[str, str]],
-    ) -> str:
-        response = await self._client.post(
-            self._inference_url,
-            json={
-                "messages": conversation,
-                **self._inference_config,
-            },
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.api_key}",
-            },
-        )
-        response.raise_for_status()
-        res = response.json()
-        return res["choices"][0]["message"]["content"]
+    ):
+        payload = {
+            "messages": conversation,
+            **self._inference_config,
+        }
+
+        try:
+            response = await self._client.post(
+                self._inference_url,
+                json=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}",
+                },
+            )
+            response.raise_for_status()
+            res = response.json()
+            return res["choices"][0]["message"]["content"]
+        except Exception as e:
+            get_dagster_logger().error(f"Error in LLM completion: {e}")
+            return None
 
     async def _get_prompt_sequence_completion(
         self,
@@ -53,16 +59,20 @@ class RemoteLlmResource(ConfigurableResource):
         for prompt in prompts_sequence:
             conversation.append({"role": "user", "content": prompt})
             response = await self._get_completion(conversation)
-            conversation.append({"role": "assistant", "content": response})
+            if not response:
+                return []
+            else:
+                conversation.append({"role": "assistant", "content": response})
+
         return conversation
 
-    async def get_completions(self, prompts: List[List[str]]):
+    async def get_prompt_sequences_completions(self, prompt_sequences: List[List[str]]):
         conversations = await asyncio.gather(
             *(
-                self._get_prompt_sequence_completion(prompt_list)
-                for prompt_list in prompts
+                self._get_prompt_sequence_completion(prompt_sequence)
+                for prompt_sequence in prompt_sequences
             )
         )
 
         # Only return the final assistant's response
-        return list(map(lambda x: x[-1]["content"], conversations))
+        return list(map(lambda x: x[-1]["content"], list(filter(None, conversations))))

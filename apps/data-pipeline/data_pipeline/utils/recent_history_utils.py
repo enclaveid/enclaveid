@@ -7,13 +7,14 @@ import polars as pl
 from aiolimiter import AsyncLimiter
 from dagster import DagsterLogManager
 from mistralai.async_client import MistralAsyncClient
-from mistralai.models.chat_completion import ChatMessage
+
+from ..resources.llm_inference.llama70b_resource import Llama70bResource
 
 
 @dataclass
 class ChunkedSessionOutput:
     output_df: pl.DataFrame
-    raw_answers: list[str | list[str]]
+    raw_answers: list[str]
     num_sessions: int
     invalid_types: int
     invalid_keys: int
@@ -65,63 +66,22 @@ def extract_json(text):
         return {}, None
 
 
-# TODO: Consider making this a method of the MistralResource.
-async def get_completion(
-    prompt: str, client: MistralAsyncClient, limiter: AsyncLimiter, model="mistral-tiny"
-):
-    messages = [ChatMessage(role="user", content=prompt)]
-    async with limiter:
-        chat_response = await client.chat(
-            model=model,
-            messages=messages,
-        )
-
-    return chat_response.choices[0].message.content
-
-
 async def get_daily_sessions(
     df: pl.DataFrame,
-    client: MistralAsyncClient,
+    llama70b: Llama70bResource,
     chunk_size: int,
-    logger: DagsterLogManager,
     day: datetime.date,
     prompt: str,
-    rate_limit: float,
-    model: str = "mistral-tiny",
 ) -> ChunkedSessionOutput:
-    """
-    Parameters
-    ---
-    rate_limit
-        the maximum requests allowed per second
-    """
     # Keep only the relevant columns
     df = df.select("hour", "title")
 
-    limiter = AsyncLimiter(max_rate=rate_limit, time_period=1)
-    tasks = []
-    for idx, frame in enumerate(df.iter_slices(n_rows=chunk_size), start=1):
-        # Set Polars' string formatting so none of the rows or strings are
-        # compressed / cut off.
-        max_chars = frame["title"].str.len_chars().max()
-        with pl.Config(
-            tbl_formatting="NOTHING",
-            tbl_hide_column_data_types=True,
-            tbl_hide_dataframe_shape=True,
-            fmt_str_lengths=max_chars,
-            tbl_rows=-1,
-        ):
-            tasks.append(
-                get_completion(
-                    prompt=f"{prompt}\n{frame}",
-                    client=client,
-                    limiter=limiter,
-                    model=model,
-                )
-            )
+    prompt_sequences = [
+        [f"{prompt}\n{frame}"] for frame in df.iter_slices(n_rows=chunk_size)
+    ]
 
     sessions_list = []
-    raw_answers = await asyncio.gather(*tasks)
+    raw_answers = await llama70b.get_prompt_sequences_completions(prompt_sequences)
     for answer in raw_answers:
         # Sometimes the LLM returns multipe json objects in a list
         # Some other times it returns a single json object

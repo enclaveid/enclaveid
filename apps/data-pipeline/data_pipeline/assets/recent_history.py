@@ -10,6 +10,7 @@ from pydantic import Field
 
 from ..constants.custom_config import RowLimitConfig
 from ..partitions import user_partitions_def
+from ..resources.llm_inference.llama70b_resource import Llama70bResource
 from ..resources.mistral_resource import MistralResource
 from ..resources.postgres_resource import PGVectorClient, PGVectorClientResource
 from ..utils.recent_history_utils import (
@@ -48,20 +49,6 @@ SUMMARY_PROMPT = dedent(
 
 class SessionsConfig(RowLimitConfig):
     chunk_size: int = Field(default=15, description="The size of each chunk.")
-    ml_model_name: str = Field(
-        default="mistral-tiny",
-        description=(
-            "The Mistral model to use. See the Mistral docs for a list of valid "
-            "endpoints: https://docs.mistral.ai/platform/endpoints/"
-        ),
-    )
-    rate_limit: float = Field(
-        default=5.0,
-        description=(
-            "The maximum number of requests allowed per second. See the Mistral "
-            "docs here: https://docs.mistral.ai/platform/pricing/"
-        ),
-    )
 
 
 # TODO: Consider converting all these assets into a single graph-backed asset
@@ -70,13 +57,11 @@ class SessionsConfig(RowLimitConfig):
 async def recent_sessions(
     context: AssetExecutionContext,
     config: SessionsConfig,
-    mistral: MistralResource,
+    llama70b: Llama70bResource,
     recent_takeout: pl.DataFrame,
 ) -> pl.DataFrame:
     # Enforce the row_limit (if any) per day
     recent_takeout = recent_takeout.slice(0, config.row_limit)
-
-    client = mistral.get_async_client()
 
     # Sort the data by time -- Polars might read data out-of-order
     recent_sessions = recent_takeout.sort("timestamp")
@@ -96,13 +81,10 @@ async def recent_sessions(
 
         output = await get_daily_sessions(
             df=day_df,
-            client=client,
+            llama70b=llama70b,
             chunk_size=config.chunk_size,
-            logger=context.log,
             day=day,
             prompt=SUMMARY_PROMPT,
-            rate_limit=config.rate_limit,
-            model=config.ml_model_name,
         )
         daily_outputs.append(output)
 
