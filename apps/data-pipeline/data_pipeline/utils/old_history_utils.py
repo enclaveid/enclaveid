@@ -1,20 +1,13 @@
 import datetime
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import polars as pl
 from dagster import get_dagster_logger
 from pydantic import BaseModel, Field
 
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
-
-from .is_cuda_available import is_cuda_available
-
-if is_cuda_available() or TYPE_CHECKING:
-    from sentence_transformers import SentenceTransformer
-else:
-    SentenceTransformer = None
 
 
 class InterestsSpec(BaseModel):
@@ -117,14 +110,4 @@ def get_full_history_sessions(
     return FullHistorySessionsOutput(
         output_df=output_df,
         count_invalid_responses=int(output_df["count_invalid_responses"].sum()),
-    )
-
-
-# TODO: Make into a resource
-def get_embeddings(series: pl.Series, model: SentenceTransformer):
-    embeddings = model.encode(series.to_list(), precision="float32")
-    return pl.Series(
-        name="embeddings",
-        values=embeddings,
-        dtype=pl.Array(pl.Float32, model.get_sentence_embedding_dimension()),  # type: ignore
     )

@@ -7,12 +7,10 @@ from data_pipeline.utils.is_cuda_available import is_cuda_available
 
 if is_cuda_available() or TYPE_CHECKING:
     import torch
-    from sentence_transformers import SentenceTransformer
     from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
     from vllm import LLM, SamplingParams
 else:
     torch = None
-    SentenceTransformer = None
     LLM = SamplingParams = None
     AutoTokenizer = PreTrainedTokenizer = PreTrainedTokenizerFast = None
 

@@ -2,6 +2,7 @@ import asyncio
 from typing import Any, Dict, List
 
 import httpx
+from curlify2 import Curlify
 from dagster import ConfigurableResource, InitResourceContext, get_dagster_logger
 from pydantic import PrivateAttr
 
@@ -28,12 +29,11 @@ class RemoteLlmResource(ConfigurableResource):
     async def _get_completion(
         self,
         conversation: List[Dict[str, str]],
-    ):
+    ) -> str | None:
         payload = {
             "messages": conversation,
             **self._inference_config,
         }
-
         try:
             response = await self._client.post(
                 self._inference_url,
@@ -47,13 +47,14 @@ class RemoteLlmResource(ConfigurableResource):
             res = response.json()
             return res["choices"][0]["message"]["content"]
         except Exception as e:
-            get_dagster_logger().error(f"Error in LLM completion: {e}")
+            curl = Curlify(response.request)  # type: ignore
+            get_dagster_logger().error(
+                f"Error in LLM completion: {e}. Request: {curl.to_curl()}"
+            )
+
             return None
 
-    async def _get_prompt_sequence_completion(
-        self,
-        prompts_sequence: List[str],
-    ):
+    async def _get_prompt_sequence_completion(self, prompts_sequence: List[str]):
         conversation: List[Dict[str, str]] = []
 
         for prompt in prompts_sequence:
@@ -75,4 +76,6 @@ class RemoteLlmResource(ConfigurableResource):
         )
 
         # Only return the final assistant's response
-        return list(map(lambda x: x[-1]["content"], list(filter(None, conversations))))
+        return list(
+            map(lambda x: x[-1]["content"] if len(x) > 0 else None, conversations)
+        )

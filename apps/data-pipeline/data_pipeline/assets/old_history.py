@@ -1,4 +1,3 @@
-from functools import partial
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -8,6 +7,9 @@ from pydantic import Field
 
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
 from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
+from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
+    SentenceTransformerResource,
+)
 
 from ..constants.custom_config import RowLimitConfig
 from ..constants.k8s import k8s_gpu_config
@@ -15,7 +17,6 @@ from ..partitions import user_partitions_def
 from ..utils.is_cuda_available import is_cuda_available
 from ..utils.old_history_utils import (
     InterestsSpec,
-    get_embeddings,
     get_full_history_sessions,
 )
 
@@ -23,7 +24,6 @@ if is_cuda_available() or TYPE_CHECKING:
     import cuml
     import cupy as cp
     from cuml.cluster.hdbscan import HDBSCAN
-    from sentence_transformers import SentenceTransformer
 
 
 class InterestsConfig(RowLimitConfig):
@@ -107,6 +107,7 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
     def interests_embeddings(
         context: AssetExecutionContext,
         config: InterestsEmbeddingsConfig,
+        sentence_transformer: SentenceTransformerResource,
         interests: pl.DataFrame,
     ) -> pl.DataFrame:
         df = (
@@ -118,13 +119,10 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             .drop_nulls()
         )
 
-        context.log.info("Loading the model. This may take a few minutes...")
-        model = SentenceTransformer(config.ml_model_name)
-
         context.log.info("Computing embeddings")
         return df.with_columns(
             embeddings=pl.col("interests").map_batches(
-                partial(get_embeddings, model=model),
+                sentence_transformer.get_embeddings
             )
         )
 
@@ -184,7 +182,7 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             "embeddings"
         )
 
-    # TODO: add constraints to the llama70b resource
+    # TODO: add constraints to the llama70b resource to limit concurrency
     @asset(
         name=spec.name_prefix + "_cluster_summaries",
         partitions_def=user_partitions_def,
@@ -220,6 +218,7 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             for row in df.to_dicts()
         ]
 
+        context.log.info(f"Processing {len(prompt_sequences)} clusters...")
         cluster_summaries = await llama70b.get_prompt_sequences_completions(
             prompt_sequences
         )
@@ -228,28 +227,36 @@ def build_interests_assets(spec: InterestsSpec) -> list[AssetsDefinition]:
             cluster_summary=pl.Series(cluster_summaries),
         ).drop(["cluster_items", "date_interests", "date", "interests"])
 
-    # @asset(
-    #     name=spec.name_prefix + "_cluster_summaries",
-    #     partitions_def=user_partitions_def,
-    #     io_manager_key="parquet_io_manager",
-    #     ins={
-    #         "cluster_summaries": AssetIn(key=[spec.name_prefix + "_cluster_summaries"])
-    #     },
-    #     op_tags=k8s_gpu_config,
-    # )
-    # def summaries_embeddings(
-    #     context: AssetExecutionContext,
-    #     config: RowLimitConfig,
-    #     cluster_summaries: pl.DataFrame,
-    # ) -> pl.DataFrame:
-    #     return
+    @asset(
+        name=spec.name_prefix + "_summaries_embeddings",
+        partitions_def=user_partitions_def,
+        io_manager_key="parquet_io_manager",
+        ins={
+            "cluster_summaries": AssetIn(key=[spec.name_prefix + "_cluster_summaries"])
+        },
+        op_tags=k8s_gpu_config,
+    )
+    def summaries_embeddings(
+        context: AssetExecutionContext,
+        config: RowLimitConfig,
+        sentence_transformer: SentenceTransformerResource,
+        cluster_summaries: pl.DataFrame,
+    ) -> pl.DataFrame:
+        df = cluster_summaries.slice(0, config.row_limit)
+
+        context.log.info("Computing embeddings...")
+        return df.with_columns(
+            embeddings=pl.col("cluster_summary").map_batches(
+                sentence_transformer.get_embeddings
+            )
+        )
 
     return [
         interests,
         interests_embeddings,
         interests_clusters,
         cluster_summaries,
-        # summaries_embeddings,
+        summaries_embeddings,
     ]
 
 

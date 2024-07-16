@@ -875,6 +875,17 @@ stylecheck = ["autopep8 (==1.5.5)", "flake8 (==3.8.4)", "mypy (==1.4.1)", "pbr (
 test = ["hypothesis (>=6.37.2,<6.55.0)", "mpmath", "pytest (>=7.2)"]
 
 [[package]]
+name = "curlify2"
+version = "2.0.0"
+description = "Library to convert python requests and httpx object to curl command."
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "curlify2-2.0.0-py3-none-any.whl", hash = "sha256:23878b13fa33ed92ae5dff0476e5b881b39fc79a5fcb37e6726f96239a136474"},
+    {file = "curlify2-2.0.0.tar.gz", hash = "sha256:6c3a98dc8603b76da990f58754b18ec4e9bfe5b881fc52d33ddf9d9096568809"},
+]
+
+[[package]]
 name = "cython"
 version = "0.29.37"
 description = "The Cython compiler for writing C extensions for the Python language."
@@ -6442,4 +6453,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "2345c99c50b4cbf590cd334170267846e1f0e1cee1b6580ce1456201988ad6eb"
+content-hash = "1d0caf67dee16e694f35e508140d8cd13e7b49dafab4cfe9c8833867b4fd586f"
