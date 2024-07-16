@@ -15,8 +15,6 @@ RUN pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com -r requ
 COPY apps/data-pipeline/requirements.prod.txt /app/
 RUN pip install --no-cache-dir -r requirements.prod.txt
 
-ENV NETWORKX_AUTOMATIC_BACKENDS=cugraph
-
 # Install the root only
 COPY dist/apps/data-pipeline/ /app/
 RUN pip install --no-deps  *.whl
