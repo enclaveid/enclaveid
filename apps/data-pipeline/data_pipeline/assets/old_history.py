@@ -1,15 +1,15 @@
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 
 import numpy as np
 import polars as pl
 from dagster import (
-    AllPartitionMapping,
     AssetExecutionContext,
     AssetIn,
     asset,
 )
 from pydantic import Field
 
+from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
 from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
 from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
@@ -250,7 +250,7 @@ def general_summaries_embeddings(
 
     context.log.info("Computing embeddings...")
     return df.with_columns(
-        embeddings=pl.col("cluster_embeddings").map_batches(
+        embeddings=pl.col("cluster_summary").map_batches(
             sentence_transformer.get_embeddings
         )
     )
@@ -258,47 +258,58 @@ def general_summaries_embeddings(
 
 @asset(
     partitions_def=user_partitions_def,
+    deps=[general_summaries_embeddings],
     io_manager_key="parquet_io_manager",
-    ins={
-        "general_summaries_embeddings": AssetIn(
-            partition_mapping=AllPartitionMapping(),
-        )
-    },
     op_tags=k8s_gpu_config,
 )
 def general_user_matching(
     context: AssetExecutionContext,
     config: RowLimitConfig,
-    general_summaries_embeddings: Dict[str, pl.DataFrame],
 ) -> pl.DataFrame:
-    current_user_df = general_summaries_embeddings[context.partition_key].sort(
-        by="cluster_label"
-    )
+    current_user_df = pl.read_parquet(
+        DAGSTER_STORAGE_BUCKET
+        / "general_summaries_embeddings"
+        / f"{context.partition_key}.snappy"
+    ).sort(by="cluster_label")
+
     result_df = pl.DataFrame(
         {
-            "other_user_id": [],
-            "user_cluster_label": [],
-            "other_user_cluster_label": [],
-            "cosine_similarity": [],
+            "user_cluster_label": pl.Series([], dtype=pl.Int64),
+            "other_user_cluster_label": pl.Series([], dtype=pl.Int64),
+            "cosine_similarity": pl.Series([], dtype=pl.Float64),
+            "other_user_id": pl.Series([], dtype=pl.Utf8),
         }
     )
 
+    # Get a list of ready partitions in the parent asset
+    other_user_ids = context.instance.get_materialized_partitions(
+        context.asset_key_for_input("general_summaries_embeddings")
+    )
+
+    context.log.info(f"Matching with {len(other_user_ids)-1} users")
+
     # TODO Optimization: Do not recompute the embeddings for the same pair of users
-    for other_user_id, other_user_df in general_summaries_embeddings.items():
+    for other_user_id in other_user_ids:
         if other_user_id == context.partition_key:
             continue
 
-        other_user_df = other_user_df.sort(by="cluster_label")
+        other_user_df = pl.read_parquet(
+            DAGSTER_STORAGE_BUCKET
+            / "general_summaries_embeddings"
+            / f"{other_user_id}.snappy"
+        ).sort(by="cluster_label")
 
         # Perform the bipartite matching for each user
         match_df = maximum_bipartite_matching(
-            current_user_df["cluster_embeddings"].to_numpy(),
-            other_user_df["cluster_embeddings"].to_numpy(),
+            current_user_df["embeddings"].to_numpy(),
+            other_user_df["embeddings"].to_numpy(),
         )
 
         # Add the other_user_id to the match_df
-        match_df["other_user_id"] = other_user_id
+        match_df = match_df.with_columns(
+            other_user_id=pl.Series([other_user_id] * len(match_df))
+        )
 
         result_df = result_df.vstack(match_df)
 
-    return result_df
+    return result_df.sort(by="cosine_similarity", descending=True)

@@ -15,52 +15,60 @@ if is_cuda_available() or TYPE_CHECKING:
 def maximum_bipartite_matching(
     user1_embeddings: ndarray, user2_embeddings: ndarray
 ) -> pl.DataFrame:
-    # Find lengths and determine padding needed
     len1 = len(user1_embeddings)
     len2 = len(user2_embeddings)
-    max_len = max(len1, len2)
 
-    user1_embeddings_gpu = cp.asarray(user1_embeddings)
-    user2_embeddings_gpu = cp.asarray(user2_embeddings)
+    # Determine which set of embeddings has more vectors
+    if len1 >= len2:
+        primary_embeddings = user1_embeddings
+        secondary_embeddings = user2_embeddings
+    else:
+        # Swap if user1 has fewer embeddings than user2
+        primary_embeddings = user2_embeddings
+        secondary_embeddings = user1_embeddings
+        len1, len2 = len2, len1  # Swap lengths accordingly
 
-    # Pad the smaller array with zeros
-    if len1 < max_len:
-        padding = cp.zeros((max_len - len1, user2_embeddings_gpu.shape[1]))
-        user1_embeddings_gpu = cp.vstack((user1_embeddings_gpu, padding))
-    elif len2 < max_len:
-        padding = cp.zeros((max_len - len2, user1_embeddings_gpu.shape[1]))
-        user2_embeddings_gpu = cp.vstack((user2_embeddings_gpu, padding))
+    primary_embeddings_gpu = cp.asarray(primary_embeddings)
+    secondary_embeddings_gpu = cp.asarray(secondary_embeddings)
 
     # Compute the pairwise cosine similarity matrix
     cost_matrix = pairwise_distances(
-        user1_embeddings_gpu, user2_embeddings_gpu, metric="cosine"
+        primary_embeddings_gpu, secondary_embeddings_gpu, metric="cosine"
     )
 
     # Convert the cost matrix to a cuDF DataFrame for CuGraph
     rows, cols = cost_matrix.shape
-    df = cudf.DataFrame(
-        {"weight": cost_matrix.ravel(order="C")}  # 'C' denotes row-major order
-    )
+    df = cudf.DataFrame({"weight": cost_matrix.ravel(order="C")})
 
-    _, assignment = cugraph.dense_hungarian(df["weight"], rows, cols)
+    cost, assignment = cugraph.dense_hungarian(df["weight"], rows, cols)
 
-    # Convert assignment result to useful format
-    # Each index corresponds to a user1 embedding and the value at that index to a user2 embedding
-    user1_indices = cp.arange(len(assignment))
-    user2_indices = cp.array(assignment.values)
+    # Mapping indices back if swapped
+    if len1 < len2:
+        # If we swapped the matrices, swap back the assignments
+        user2_indices = cp.arange(len(assignment))
+        user1_indices = cp.array(assignment.values)
+    else:
+        user1_indices = cp.arange(len(assignment))
+        user2_indices = cp.array(assignment.values)
 
     # Calculate similarity from cosine distances
     similarities = 1 - cost_matrix[user1_indices, user2_indices].get()
 
-    # Remove padding
-    return (
-        pl.DataFrame(
-            {
-                "user_cluster_label": user1_indices.tolist(),
-                "other_user_cluster_label": user2_indices.get().tolist(),
-                "cosine_similarity": similarities.tolist(),
-            }
-        )
-        .sort(by="cosine_similarity", descending=True)
-        .head(min(len1, len2))
+    result_df = pl.DataFrame(
+        {
+            "user_cluster_label": user1_indices.get().tolist(),
+            "other_user_cluster_label": user2_indices.get().tolist(),
+            "cosine_similarity": similarities.tolist(),
+        }
     )
+
+    # Adjusted filtering logic to exclude dummy indices
+    valid_user1_indices = set(range(len1))
+    valid_user2_indices = set(range(len2))
+
+    result_df = result_df.filter(
+        (pl.col("user_cluster_label").is_in(valid_user1_indices))
+        & (pl.col("other_user_cluster_label").is_in(valid_user2_indices))
+    )
+
+    return result_df
