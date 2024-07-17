@@ -2,7 +2,7 @@ import { Logo } from '../Logo';
 
 function LandingConnections() {
   return (
-    <section className="max-w-[1440px] px-6 mx-auto py-20 lg:pt-[154px] lg:pb-[160px]">
+    <section className="max-w-[1440px] px-6 mx-auto py-10 2xl:pt-[154px] 2xl:pb-[160px]">
       <div className="rounded-3xl overflow-hidden flex lg:flex-row flex-col w-full">
         <div className="bg-greenBg py-8 md:py-20 lg:py-[160px] flex flex-col md:pl-14 xl:pl-[88px] md:pr-14 px-6 md:gap-12 gap-10 lg:gap-16">
           <div className="flex flex-col gap-6 xl:max-w-[422px]">
