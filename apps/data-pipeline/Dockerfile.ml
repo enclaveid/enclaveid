@@ -19,3 +19,5 @@ RUN pip install --no-cache-dir -r requirements.prod.txt
 COPY dist/apps/data-pipeline/ /app/
 RUN pip install --no-deps  *.whl
 
+ENV HF_HOME=/model-cache/huggingface
+ENV SENTENCE_TRANSFORMERS_HOME=/model-cache/sentence-transformers

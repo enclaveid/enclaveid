@@ -10,6 +10,7 @@ k8s_gpu_config = {
                     "nvidia.com/gpu": "1",
                 },
             },
+            "volumeMounts": [{"name": "model-cache", "mountPath": "/model-cache"}],
         },
         "pod_spec_config": {
             "tolerations": [
@@ -37,6 +38,12 @@ k8s_gpu_config = {
                     }
                 }
             },
+            "volumes": [
+                {
+                    "name": "model-cache",
+                    "persistentVolumeClaim": {"claimName": "enclaveid-model-cache-pvc"},
+                }
+            ],
         },
     }
 }

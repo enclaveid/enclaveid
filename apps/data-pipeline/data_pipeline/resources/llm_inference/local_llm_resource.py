@@ -1,3 +1,4 @@
+import time
 from typing import TYPE_CHECKING, Dict, List, Union
 
 from dagster import ConfigurableResource, InitResourceContext, get_dagster_logger
@@ -27,9 +28,15 @@ class LocalLlmResource(ConfigurableResource):
 
     def setup_for_execution(self, context: InitResourceContext) -> None:
         logger = get_dagster_logger()
-        logger.info(f"Loading {self._model_name}...")
 
+        load_time_start = time.time()
         self._llm = LLM(self._model_name)
+        load_time_end = time.time()
+
+        logger.info(
+            f"Loaded {self._model_name} in {load_time_end - load_time_start:.2f}s"
+        )
+
         self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
         self._sampling_params = SamplingParams(
             temperature=self._temperature,

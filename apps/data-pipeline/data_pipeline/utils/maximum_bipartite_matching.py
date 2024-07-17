@@ -18,15 +18,14 @@ def maximum_bipartite_matching(
     len1 = len(user1_embeddings)
     len2 = len(user2_embeddings)
 
-    # Determine which set of embeddings has more vectors
+    # We swap so that the primary embeddings is always the one with more elements
     if len1 >= len2:
         primary_embeddings = user1_embeddings
         secondary_embeddings = user2_embeddings
     else:
-        # Swap if user1 has fewer embeddings than user2
         primary_embeddings = user2_embeddings
         secondary_embeddings = user1_embeddings
-        len1, len2 = len2, len1  # Swap lengths accordingly
+        len1, len2 = len2, len1
 
     primary_embeddings_gpu = cp.asarray(primary_embeddings)
     secondary_embeddings_gpu = cp.asarray(secondary_embeddings)
@@ -44,7 +43,6 @@ def maximum_bipartite_matching(
 
     # Mapping indices back if swapped
     if len1 < len2:
-        # If we swapped the matrices, swap back the assignments
         user2_indices = cp.arange(len(assignment))
         user1_indices = cp.array(assignment.values)
     else:
@@ -62,7 +60,7 @@ def maximum_bipartite_matching(
         }
     )
 
-    # Adjusted filtering logic to exclude dummy indices
+    # Exclude dummy indices
     valid_user1_indices = set(range(len1))
     valid_user2_indices = set(range(len2))
 
