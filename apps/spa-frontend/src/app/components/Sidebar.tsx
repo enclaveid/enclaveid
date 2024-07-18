@@ -1,7 +1,7 @@
 import { SidebarSection } from './SidebarSection';
 import { SidebarItem } from './SidebarItem';
-import { HomeIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { ChartBarIcon } from '@heroicons/react/24/outline';
+import { UserCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon } from '@heroicons/react/24/outline';
 import { UsersIcon } from '@heroicons/react/24/outline';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import { ArrowLeftStartOnRectangleIcon } from '@heroicons/react/24/outline';
@@ -9,6 +9,7 @@ import { CogIcon } from '@heroicons/react/24/outline';
 import { SimilarProfileBadge } from './SimilarProfileBadge';
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
+import { Logo } from './Logo';
 
 export interface SidebarProps {
   onLogout?: () => void;
@@ -21,9 +22,10 @@ function Sidebar(props: SidebarProps) {
   return (
     <aside className="w-full sm:w-[296px] bg-[#F3F5F7] px-[18px] sm:px-[22px] flex flex-col sm:h-full h-max border-b border-b-[#E5E8EE] sm:border-none relative">
       <div className="pb-3.5 sm:pb-[54px] pt-[55px] sm:pt-12 sm:border-b border-b-[#E5E8EE] flex items-center justify-between">
-        <h1 className="text-passiveLinkColor text-xl leading-6 sm:text-4xl sm:leading-[42px] tracking-[-0.02em] text-center">
+        {/* <h1 className="text-passiveLinkColor text-xl leading-6 sm:text-4xl sm:leading-[42px] tracking-[-0.02em] text-center">
           EnclaveID
-        </h1>
+        </h1> */}
+        <Logo isSmall />
         <button
           className="sm:hidden"
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -33,22 +35,26 @@ function Sidebar(props: SidebarProps) {
       </div>
       <div className="sm:flex hidden flex-col justify-between flex-1 py-5">
         <div className="flex flex-col gap-[18px]">
-          <SidebarSection title={'Data'}>
+          <SidebarSection title={'Social Discovery'}>
             <SidebarItem
-              icon={<HomeIcon />}
+              icon={<UsersIcon />}
+              text="Find similar users"
+              href="/socials"
+            />
+          </SidebarSection>
+          <SidebarSection title={'Your profile'}>
+            <SidebarItem
+              icon={<UserCircleIcon />}
               text="Traits Dashboard"
               href="/dashboard"
             />
-            <SidebarItem icon={<ChartBarIcon />} text="Life Journeys" />
-          </SidebarSection>
-          <SidebarSection title={'Social'}>
             <SidebarItem
-              icon={<UsersIcon />}
-              text="Explore Social"
-              href="/socials"
+              icon={<TrophyIcon />}
+              text="Life Journeys"
+              href="/life-journeys"
             />
-            <SimilarProfileBadge peopleCount={1123} />
           </SidebarSection>
+          <SimilarProfileBadge peopleCount={1123} />
         </div>
         <SidebarSection noGap={true}>
           <SidebarItem
@@ -124,13 +130,14 @@ function Sidebar(props: SidebarProps) {
                     <div className="flex flex-col gap-[18px]">
                       <SidebarSection title={'Data'}>
                         <SidebarItem
-                          icon={<HomeIcon />}
+                          icon={<UserCircleIcon />}
                           text="Traits Dashboard"
                           href="/dashboard"
                         />
                         <SidebarItem
-                          icon={<ChartBarIcon />}
+                          icon={<TrophyIcon />}
                           text="Life Journeys"
+                          href="/life-journeys"
                         />
                       </SidebarSection>
                       <SidebarSection title={'Social'}>

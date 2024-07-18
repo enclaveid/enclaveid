@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { LocationPinIcon } from './Icons';
-import { toSvg } from 'jdenticon';
 import classNames from 'classnames';
+import { getIdenticon } from '../utils/identicons';
 
 type User = {
   name: string;
@@ -12,15 +12,6 @@ type User = {
   loading?: boolean;
   matchPercentage: number;
 };
-
-function getIdenticon(uniqueId: string): string {
-  const svgString = toSvg(uniqueId, 200);
-
-  return (
-    'data:image/svg+xml,' +
-    encodeURIComponent(svgString).replace(/'/g, '%27').replace(/"/g, '%22')
-  );
-}
 
 function SocialCard({
   name,

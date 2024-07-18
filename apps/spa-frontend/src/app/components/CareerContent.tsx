@@ -30,7 +30,7 @@ export const findHighestValues = (props: RadarChartProps): string[] => {
 };
 
 function CareerContent() {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
   const { setLink } = useBreadcrumb();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 

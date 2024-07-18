@@ -1,10 +1,15 @@
 import classNames from 'classnames';
+import { getIdenticon } from '../utils/identicons';
 
 interface SimilarProfileBadgeProps {
   peopleCount: number;
   url?: string;
   variant?: 'sm';
 }
+
+const randomUsernames = Array.from({ length: 5 }, () =>
+  Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(''),
+);
 
 function SimilarProfileBadge({
   peopleCount = 1123,
@@ -20,31 +25,14 @@ function SimilarProfileBadge({
     >
       <div className="flex items-center gap-2.5">
         <div className="flex -space-x-2 overflow-hidden shrink-0">
-          <img
-            className="inline-block h-[27px] w-[27px] rounded-full"
-            src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            alt=""
-          />
-          <img
-            className="inline-block h-[27px] w-[27px] rounded-full"
-            src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            alt=""
-          />
-          <img
-            className="inline-block h-[27px] w-[27px] rounded-full"
-            src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2.25&w=256&h=256&q=80"
-            alt=""
-          />
-          <img
-            className="inline-block h-[27px] w-[27px] rounded-full"
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            alt=""
-          />
-          <img
-            className="inline-block h-[27px] w-[27px] rounded-full"
-            src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            alt=""
-          />
+          {randomUsernames.map((username, index) => (
+            <img
+              key={index}
+              className="inline-block h-[27px] w-[27px] rounded-full"
+              src={getIdenticon(username)}
+              alt=""
+            />
+          ))}
         </div>
         <span className="text-[#6C7A8A] text-xs">
           {`${peopleCount.toLocaleString()} people have a similar profile`}

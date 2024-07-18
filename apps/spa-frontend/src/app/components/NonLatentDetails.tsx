@@ -32,7 +32,7 @@ const steps = [
   { label: 'Step three on the journey' },
 ];
 
-function NonLatentDetails() {
+function LifeJourneys() {
   const [isOpen, setIsOpen] = useState(false);
 
   function closeModal() {
@@ -144,4 +144,4 @@ function NonLatentDetails() {
   );
 }
 
-export { NonLatentDetails };
+export { LifeJourneys };

@@ -11,15 +11,15 @@ function Logo({ withoutIcon, noText = false, isSmall = false }: LogoProps) {
     <div
       className={classNames(
         'flex items-center justify-center',
-        isSmall ? 'gap-2' : 'gap-5',
+        isSmall ? 'gap-4' : 'gap-5',
       )}
     >
       {!withoutIcon && (
         <img
           src="/logo-bg.webp"
           alt="logo"
-          width={isSmall ? 32 : 80}
-          height={isSmall ? 32 : 80}
+          width={isSmall ? 48 : 80}
+          height={isSmall ? 48 : 80}
           className={classNames(noText ? 'rounded' : 'rounded-lg')}
         />
       )}
@@ -28,7 +28,7 @@ function Logo({ withoutIcon, noText = false, isSmall = false }: LogoProps) {
       </span> */}
       {!noText && (
         <svg
-          width={isSmall ? '118' : '170'}
+          width={isSmall ? '150' : '170'}
           height="29"
           viewBox="0 0 170 29"
           fill="none"
