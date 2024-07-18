@@ -3,7 +3,6 @@ import { MFTChartData } from './mock-data';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SimilarProfileBadge } from './SimilarProfileBadge';
 import { CustomDrawer } from './CustomDrawer';
 
 function MFTSection() {
@@ -50,7 +49,7 @@ function MFTSection() {
           <div className="gap-9 flex flex-col overflow-y-auto items-center relative">
             <MFTChart {...MFTChartData} handleClick={handleClick} />
             <div className="mt-3 mb-8 w-full">
-              <SimilarProfileBadge peopleCount={253} />
+              {/* <SimilarProfileBadge peopleCount={253} /> */}
             </div>
           </div>
         </div>

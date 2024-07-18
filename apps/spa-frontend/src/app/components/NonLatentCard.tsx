@@ -1,5 +1,4 @@
 import classNames from 'classnames';
-import { SimilarProfileBadge } from './SimilarProfileBadge';
 
 interface NonLatentCardProps {
   title: string;
@@ -21,7 +20,7 @@ function NonLatentCard({ title, description, isSelected }: NonLatentCardProps) {
         <h1 className="text-passiveLinkColor text-sm font-medium">{title}</h1>
         <p className="text-passiveLinkColor text-sm ">{description}</p>
       </div>
-      <SimilarProfileBadge peopleCount={16} variant="sm" />
+      {/* <SimilarProfileBadge peopleCount={16} variant="sm" /> */}
     </article>
   );
 }

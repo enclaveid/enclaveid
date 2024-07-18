@@ -1,5 +1,4 @@
 import { useLocation } from 'react-router-dom';
-import { SimilarProfileBadge } from './SimilarProfileBadge';
 import { findHighestValues } from './CareerContent';
 import { RadarChart } from './RadarChart';
 
@@ -28,7 +27,7 @@ function RadarChartDetails() {
           {radarChart.description}
         </p>
         <div className="mt-3 mb-8 max-w-max">
-          <SimilarProfileBadge peopleCount={253} />
+          {/* <SimilarProfileBadge peopleCount={253} /> */}
         </div>
       </div>
     </div>

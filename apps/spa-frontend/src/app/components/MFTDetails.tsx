@@ -1,6 +1,5 @@
 import { useLocation } from 'react-router-dom';
 import { MFTChart } from './MFTChart';
-import { SimilarProfileBadge } from './SimilarProfileBadge';
 
 interface Props {
   circles: {
@@ -28,7 +27,7 @@ function MFTDetails() {
           <div className="w-full py-[13px] bg-[#F3F5F7] rounded-xl text-passiveLinkColor text-[32px] leading-[38px] text-center flex items-center justify-center">
             Moderate
           </div>
-          <SimilarProfileBadge peopleCount={253} />
+          {/* <SimilarProfileBadge peopleCount={253} /> */}
         </div>
       </div>
       <div className="gap-9 flex flex-col overflow-y-auto items-center justify-center shrink-0 xl:max-w-[545px] w-full xl:pt-0 pt-10">

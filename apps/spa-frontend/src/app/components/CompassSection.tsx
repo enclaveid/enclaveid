@@ -3,7 +3,6 @@ import CompassChart from './CompassChart';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useNavigate } from 'react-router-dom';
 import { compassChartData } from './mock-data';
-import { SimilarProfileBadge } from './SimilarProfileBadge';
 import { CustomDrawer } from './CustomDrawer';
 
 function CompassSection() {
@@ -46,7 +45,7 @@ function CompassSection() {
               handleClick={handleClick}
             />
             <div className="mt-3 mb-8">
-              <SimilarProfileBadge peopleCount={253} />
+              {/* <SimilarProfileBadge peopleCount={253} /> */}
             </div>
           </div>
         </div>

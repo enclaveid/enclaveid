@@ -4,7 +4,6 @@ import { Button } from './Button';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useState } from 'react';
 import { radarChart } from './mock-data';
-import { SimilarProfileBadge } from './SimilarProfileBadge';
 import { RadarChart, RadarChartProps } from './RadarChart';
 import { CustomDrawer } from './CustomDrawer';
 
@@ -88,7 +87,7 @@ function CareerContent() {
             <RadarChart values={radarChart.values} />
 
             <div className="mt-3 mb-8">
-              <SimilarProfileBadge peopleCount={253} />
+              {/* <SimilarProfileBadge peopleCount={253} /> */}
             </div>
           </div>
         </div>

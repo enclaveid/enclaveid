@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 
 import { useState } from 'react';
 import { TraitCard } from './TraitCard';
-import { SimilarProfileBadge } from './SimilarProfileBadge';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { CustomDrawer } from './CustomDrawer';
 
@@ -69,7 +68,7 @@ function TraitCard1({ title, data }: TraitCardProps) {
             <TraitCard {...result} key={index} isDrawer={true} />
           ))}
           <div className="-mt-3 mb-8 px-4">
-            <SimilarProfileBadge peopleCount={253} />
+            {/* <SimilarProfileBadge peopleCount={253} /> */}
           </div>
         </div>
       </CustomDrawer>

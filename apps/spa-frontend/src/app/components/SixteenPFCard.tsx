@@ -4,7 +4,6 @@ import { DashboardCardLayout } from './DashboardCardLayout';
 import { useNavigate } from 'react-router-dom';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useState } from 'react';
-import { SimilarProfileBadge } from './SimilarProfileBadge';
 import { CustomDrawer } from './CustomDrawer';
 
 interface DataProps {
@@ -93,7 +92,7 @@ function SixteenPFCard({ title, data }: SixteenPFCardProps) {
             </div>
           </div>
           <div className="-mt-3 mb-8">
-            <SimilarProfileBadge peopleCount={253} />
+            {/* <SimilarProfileBadge peopleCount={253} /> */}
           </div>
         </div>
       </CustomDrawer>

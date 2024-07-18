@@ -1,6 +1,5 @@
 import { useLocation } from 'react-router-dom';
 import CompassChart from './CompassChart';
-import { SimilarProfileBadge } from './SimilarProfileBadge';
 
 function CompassDetails() {
   const location = useLocation();
@@ -13,7 +12,7 @@ function CompassDetails() {
       <div className="gap-9 flex flex-col overflow-y-auto">
         <CompassChart {...compassChartData} showDescription={true} />
         <div className="mt-3 mb-8 max-w-max">
-          <SimilarProfileBadge peopleCount={253} />
+          {/* <SimilarProfileBadge peopleCount={253} /> */}
         </div>
       </div>
     </div>

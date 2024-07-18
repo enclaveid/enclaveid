@@ -3,7 +3,6 @@ import { Button } from './Button';
 import { DashboardCardLayout } from './DashboardCardLayout';
 
 import { useNavigate } from 'react-router-dom';
-import { SimilarProfileBadge } from './SimilarProfileBadge';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { CustomDrawer } from './CustomDrawer';
 
@@ -69,7 +68,7 @@ function IntjCard({ header, label, description, data }: IntjCardProps) {
           </div>
           <div dangerouslySetInnerHTML={{ __html: data.content }} />
           <div className="mt-4 mb-8">
-            <SimilarProfileBadge peopleCount={253} />
+            {/* <SimilarProfileBadge peopleCount={253} /> */}
           </div>
         </div>
       </CustomDrawer>
