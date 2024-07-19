@@ -34,15 +34,15 @@ class RemoteLlmResource(ConfigurableResource):
             "messages": conversation,
             **self._inference_config,
         }
+        response = await self._client.post(
+            self._inference_url,
+            json=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}",
+            },
+        )
         try:
-            response = await self._client.post(
-                self._inference_url,
-                json=payload,
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self.api_key}",
-                },
-            )
             response.raise_for_status()
             res = response.json()
             return res["choices"][0]["message"]["content"]
@@ -67,7 +67,9 @@ class RemoteLlmResource(ConfigurableResource):
 
         return conversation
 
-    async def get_prompt_sequences_completions(self, prompt_sequences: List[List[str]]):
+    async def get_prompt_sequences_completions(
+        self, prompt_sequences: List[List[str]]
+    ) -> List[List[str | None]]:
         conversations = await asyncio.gather(
             *(
                 self._get_prompt_sequence_completion(prompt_sequence)
@@ -75,7 +77,15 @@ class RemoteLlmResource(ConfigurableResource):
             )
         )
 
-        # Only return the final assistant's response
+        # Assume all prompt sequences have the same length
+        prompt_sequences_length = len(prompt_sequences[0])
+
+        # Return all the assistant responses, only for completed conversations
         return list(
-            map(lambda x: x[-1]["content"] if len(x) > 0 else None, conversations)
+            map(
+                lambda x: [message["content"] for message in x[1::2]]
+                if len(x) == prompt_sequences_length * 2
+                else [],
+                conversations,
+            )
         )

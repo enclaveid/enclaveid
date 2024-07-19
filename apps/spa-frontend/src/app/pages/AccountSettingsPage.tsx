@@ -11,13 +11,13 @@ interface SettingOption {
 }
 
 interface AccountSettings {
-  [key: string]: SettingOption[] | { deleteAccount: string; logOut: string };
+  [key: string]: SettingOption[] | { deleteAccount?: string; logOut?: string };
 }
 
 interface SectionTabProps {
   title: string;
   settings?: SettingOption[];
-  moreOptions?: { deleteAccount: string; logOut: string };
+  moreOptions?: { deleteAccount?: string; logOut?: string };
   openModal?: () => void;
 }
 
@@ -36,17 +36,17 @@ interface ModalProps {
 const accountSettings: AccountSettings = {
   personality: [
     {
-      label: 'Disable social matching',
+      label: 'Do not match over sensitive psychosocial topics',
       value: true,
     },
     {
-      label: 'Make account private',
+      label: 'Disable social matching',
       value: true,
     },
   ],
   more: {
     deleteAccount: 'Delete my account and all of my history',
-    logOut: 'Log Out',
+    //logOut: 'Log Out',
   },
 };
 

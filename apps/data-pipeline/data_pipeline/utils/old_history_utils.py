@@ -1,7 +1,7 @@
 import datetime
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import polars as pl
 from dagster import get_dagster_logger
@@ -13,7 +13,7 @@ from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResour
 class InterestsSpec(BaseModel):
     name_prefix: str = Field(description="A prefix to add to the name of the asset.")
     enrichment_prompt_sequence: List[str]
-    clustering_prompt_sequence: List[str]
+    summary_prompt_sequence: List[Any]
 
 
 @dataclass

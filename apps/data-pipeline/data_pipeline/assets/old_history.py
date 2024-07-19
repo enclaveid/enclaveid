@@ -44,12 +44,21 @@ general_interests_spec = InterestsSpec(
             "Focus on the goal of the search activity in realtion to the specific topic."
         ),
     ],
-    clustering_prompt_sequence=[
-        (
-            "Here is a list of records of some of my internet activity surrounding a specific topic."
-            " What have I been doing? How are these activities related?"
+    summary_prompt_sequence=[
+        lambda search_activity: (
+            f"Here is a list of my recent Google search activity.\n{search_activity}\n"
+            "Consider the possible usages of Google Search that do not deeply engage "
+            "one's identity. Does this activity seem rather reactive and based on "
+            "circumstance, or does it seem proactive and curiosity driven with a sense "
+            "of purpose and direction? Answer YES in the first case, NO otherwise."
         ),
-        "How would you summarize this trajectory? Be mindful of the time periods.",
+        (
+            "If you answered NO: What can you learn about the user from this trend? Provide a general summary of"
+            " the trend and a fine grained summary which includes specific niche topics that "
+            " make this activity unique. \n"
+            "If you answered YES: What kind of circumstances must the user have found themselves to prompt this"
+            " activity? Include specific details on the circumstances."
+        ),
     ],
 )
 
@@ -199,7 +208,11 @@ def general_interests_clusters(
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
-    ins={"interests_clusters": AssetIn(key=["general_interests_clusters"])},
+    ins={
+        "interests_clusters": AssetIn(
+            key=["general_interests_clusters"],
+        ),
+    },
 )
 async def general_cluster_summaries(
     context: AssetExecutionContext,
@@ -218,20 +231,40 @@ async def general_cluster_summaries(
 
     prompt_sequences = [
         [
-            f"{general_interests_spec.clustering_prompt_sequence[0]}\n{row['cluster_items']}",
-            general_interests_spec.clustering_prompt_sequence[1],
+            general_interests_spec.summary_prompt_sequence[0](row["cluster_items"]),
+            general_interests_spec.summary_prompt_sequence[1],
         ]
         for row in df.to_dicts()
     ]
 
     context.log.info(f"Processing {len(prompt_sequences)} clusters...")
-    cluster_summaries = await llama70b.get_prompt_sequences_completions(
+    summaries_completions = await llama70b.get_prompt_sequences_completions(
         prompt_sequences
     )
 
-    return df.with_columns(
-        cluster_summary=pl.Series(cluster_summaries),
-    ).drop(["cluster_items", "date_interests", "date", "interests"])
+    cluster_splits = list(map(lambda x: x[0], summaries_completions))
+
+    # Tag the clusters with the type of activity: YES = reactive, NO = proactive
+    activity_types = []
+    for cluster_split in cluster_splits:
+        if cluster_split is None:
+            activity_types.append("unknown")
+        else:
+            if "YES" in cluster_split:
+                activity_types.append("reactive")
+            else:
+                activity_types.append("proactive")
+
+    cluster_summaries = list(map(lambda x: x[1], summaries_completions))
+
+    return (
+        df.with_columns(
+            cluster_summary=pl.Series(cluster_summaries),
+            activity_type=pl.Series(activity_types),
+        )
+        .filter(pl.col("activity_type") != "unknown")
+        .drop(["cluster_items", "date_interests", "date", "interests"])
+    )
 
 
 @asset(

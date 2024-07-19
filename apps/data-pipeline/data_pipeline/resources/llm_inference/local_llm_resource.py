@@ -60,6 +60,7 @@ class LocalLlmResource(ConfigurableResource):
 
         return list(map(lambda res: res.outputs[0].text, results))
 
+    # TODO: the return behavior should be the same as the non-batch implementation
     def get_prompt_sequences_completions_batch(self, prompt_sequences: List[List[str]]):
         all_completions = []
         max_length = max(len(sequence) for sequence in prompt_sequences)
