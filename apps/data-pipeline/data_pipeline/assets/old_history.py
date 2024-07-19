@@ -242,7 +242,9 @@ async def general_cluster_summaries(
         prompt_sequences
     )
 
-    cluster_splits = list(map(lambda x: x[0], summaries_completions))
+    cluster_splits = list(
+        map(lambda x: x[0] if len(x) > 0 else None, summaries_completions)
+    )
 
     # Tag the clusters with the type of activity: YES = reactive, NO = proactive
     activity_types = []
@@ -255,7 +257,9 @@ async def general_cluster_summaries(
             else:
                 activity_types.append("proactive")
 
-    cluster_summaries = list(map(lambda x: x[1], summaries_completions))
+    cluster_summaries = list(
+        map(lambda x: x[1] if len(x) > 0 else None, summaries_completions)
+    )
 
     return (
         df.with_columns(

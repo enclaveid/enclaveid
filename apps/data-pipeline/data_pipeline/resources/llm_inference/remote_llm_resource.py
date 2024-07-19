@@ -47,7 +47,7 @@ class RemoteLlmResource(ConfigurableResource):
             res = response.json()
             return res["choices"][0]["message"]["content"]
         except Exception as e:
-            curl = Curlify(response.request)  # type: ignore
+            curl = Curlify(response.request)
             get_dagster_logger().error(
                 f"Error in LLM completion: {e}. Request: {curl.to_curl()}"
             )
@@ -69,7 +69,7 @@ class RemoteLlmResource(ConfigurableResource):
 
     async def get_prompt_sequences_completions(
         self, prompt_sequences: List[List[str]]
-    ) -> List[List[str | None]]:
+    ) -> List[List[str]]:
         conversations = await asyncio.gather(
             *(
                 self._get_prompt_sequence_completion(prompt_sequence)
