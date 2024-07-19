@@ -11,6 +11,8 @@ if is_cuda_available() or TYPE_CHECKING:
     import cupy as cp
     from cuml.metrics import pairwise_distances
 
+PAD_VALUE = -1
+
 
 # TODO: Refactor, too complex
 def maximum_bipartite_matching(
@@ -28,12 +30,22 @@ def maximum_bipartite_matching(
         primary_embeddings = user1_embeddings
         secondary_embeddings = user2_embeddings
         primary_labels = user1_cluster_labels
-        secondary_labels = pad(user2_cluster_labels, (0, len1 - len2))
+        secondary_labels = pad(
+            user2_cluster_labels,
+            (0, len1 - len2),
+            mode="constant",
+            constant_values=(PAD_VALUE),
+        )
     else:
         primary_embeddings = user2_embeddings
         secondary_embeddings = user1_embeddings
         primary_labels = user2_cluster_labels
-        secondary_labels = pad(user1_cluster_labels, (0, len2 - len1))
+        secondary_labels = pad(
+            user1_cluster_labels,
+            (0, len2 - len1),
+            mode="constant",
+            constant_values=(PAD_VALUE),
+        )
 
     primary_embeddings_gpu = cp.asarray(primary_embeddings)
     secondary_embeddings_gpu = cp.asarray(secondary_embeddings)
@@ -68,7 +80,8 @@ def maximum_bipartite_matching(
         }
     )
 
+    # Remove padded values
     return result_df.filter(
-        (pl.col("user_cluster_label").is_in(user1_cluster_labels))
-        & (pl.col("other_user_cluster_label").is_in(user2_cluster_labels))
+        (pl.col("user_cluster_label") != PAD_VALUE)
+        & (pl.col("other_user_cluster_label") != PAD_VALUE)
     )
