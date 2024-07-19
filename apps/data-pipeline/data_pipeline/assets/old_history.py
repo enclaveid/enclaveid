@@ -312,8 +312,8 @@ def general_user_matching(
 
     result_df = pl.DataFrame(
         {
-            "user_cluster_label": pl.Series([], dtype=pl.Int64),
-            "other_user_cluster_label": pl.Series([], dtype=pl.Int64),
+            "user_cluster_label": pl.Series([], dtype=pl.Int32),
+            "other_user_cluster_label": pl.Series([], dtype=pl.Int32),
             "cosine_similarity": pl.Series([], dtype=pl.Float64),
             "other_user_id": pl.Series([], dtype=pl.Utf8),
             "activity_type": pl.Series([], dtype=pl.Utf8),
@@ -352,8 +352,10 @@ def general_user_matching(
             ):
                 # Perform the bipartite matching for each user
                 match_df = maximum_bipartite_matching(
-                    current_user_df["embeddings"].to_numpy(),
-                    other_user_df["embeddings"].to_numpy(),
+                    current_user_activity_df["embeddings"].to_numpy(),
+                    other_user_activity_df["embeddings"].to_numpy(),
+                    current_user_activity_df["cluster_label"].to_numpy(),
+                    other_user_activity_df["cluster_label"].to_numpy(),
                 )
 
                 # Add the other_user_id to the match_df

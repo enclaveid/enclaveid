@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import polars as pl
-from numpy import ndarray
+from numpy import ndarray, pad
 
 from data_pipeline.utils.is_cuda_available import is_cuda_available
 
@@ -12,20 +12,28 @@ if is_cuda_available() or TYPE_CHECKING:
     from cuml.metrics import pairwise_distances
 
 
+# TODO: Refactor, too complex
 def maximum_bipartite_matching(
-    user1_embeddings: ndarray, user2_embeddings: ndarray
+    user1_embeddings: ndarray,
+    user2_embeddings: ndarray,
+    user1_cluster_labels: ndarray,
+    user2_cluster_labels: ndarray,
 ) -> pl.DataFrame:
     len1 = len(user1_embeddings)
     len2 = len(user2_embeddings)
 
-    # We swap so that the primary embeddings is always the one with more elements
+    # Ensure the primary embeddings always have more elements
+    # and pad the smaller array with zeros
     if len1 >= len2:
         primary_embeddings = user1_embeddings
         secondary_embeddings = user2_embeddings
+        primary_labels = user1_cluster_labels
+        secondary_labels = pad(user2_cluster_labels, (0, len1 - len2))
     else:
         primary_embeddings = user2_embeddings
         secondary_embeddings = user1_embeddings
-        len1, len2 = len2, len1
+        primary_labels = user2_cluster_labels
+        secondary_labels = pad(user1_cluster_labels, (0, len2 - len1))
 
     primary_embeddings_gpu = cp.asarray(primary_embeddings)
     secondary_embeddings_gpu = cp.asarray(secondary_embeddings)
@@ -41,7 +49,7 @@ def maximum_bipartite_matching(
 
     cost, assignment = cugraph.dense_hungarian(df["weight"], rows, cols)
 
-    # Mapping indices back if swapped
+    # Remapping indices to cluster labels
     if len1 < len2:
         user2_indices = cp.arange(len(assignment))
         user1_indices = cp.array(assignment.values)
@@ -54,19 +62,13 @@ def maximum_bipartite_matching(
 
     result_df = pl.DataFrame(
         {
-            "user_cluster_label": user1_indices.get().tolist(),
-            "other_user_cluster_label": user2_indices.get().tolist(),
+            "user_cluster_label": primary_labels[user1_indices.get().tolist()],
+            "other_user_cluster_label": secondary_labels[user2_indices.get().tolist()],
             "cosine_similarity": similarities.tolist(),
         }
     )
 
-    # Exclude dummy indices
-    valid_user1_indices = set(range(len1))
-    valid_user2_indices = set(range(len2))
-
-    result_df = result_df.filter(
-        (pl.col("user_cluster_label").is_in(valid_user1_indices))
-        & (pl.col("other_user_cluster_label").is_in(valid_user2_indices))
+    return result_df.filter(
+        (pl.col("user_cluster_label").is_in(user1_cluster_labels))
+        & (pl.col("other_user_cluster_label").is_in(user2_cluster_labels))
     )
-
-    return result_df
