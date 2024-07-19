@@ -7,11 +7,17 @@ from dagster_k8s import k8s_job_executor
 
 from data_pipeline.consts import get_environment
 
-from .assets import old_history, recent_history, takeout
+from .assets import old_history, takeout
 from .resources import resources
 from .sensors import users_sensor
 
-all_assets = load_assets_from_modules([takeout, recent_history, old_history])
+all_assets = load_assets_from_modules(
+    [
+        takeout,
+        old_history,
+        # recent_history,  TODO: Uncomment this line to enable the recent_history asset
+    ]
+)
 
 defs = Definitions(
     assets=all_assets,

@@ -16,6 +16,7 @@ class RemoteLlmResource(ConfigurableResource):
     _inference_config: Dict[str, Any] = PrivateAttr()
 
     _client: httpx.AsyncClient = PrivateAttr()
+    _retry_event: asyncio.Event = PrivateAttr(default_factory=asyncio.Event)
 
     def setup_for_execution(self, context: InitResourceContext) -> None:
         self._client = httpx.AsyncClient(
@@ -25,41 +26,69 @@ class RemoteLlmResource(ConfigurableResource):
             ),
             timeout=self._timeout,
         )
+        self._retry_event.set()  # Initially allow all operations
 
     async def _get_completion(
         self,
         conversation: List[Dict[str, str]],
+        conversation_id: int,
     ) -> str | None:
         payload = {
             "messages": conversation,
             **self._inference_config,
         }
-        response = await self._client.post(
-            self._inference_url,
-            json=payload,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.api_key}",
-            },
-        )
-        try:
-            response.raise_for_status()
-            res = response.json()
-            return res["choices"][0]["message"]["content"]
-        except Exception as e:
-            curl = Curlify(response.request)
-            get_dagster_logger().error(
-                f"Error in LLM completion: {e}. Request: {curl.to_curl()}"
+
+        max_attempts = 3  # Define max retry attempts
+        logger = get_dagster_logger()
+
+        for _ in range(max_attempts):
+            await self._retry_event.wait()  # Wait if currently in retry mode
+
+            response = await self._client.post(
+                self._inference_url,
+                json=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}",
+                },
             )
 
-            return None
+            if response.status_code == 429:
+                retry_after = response.headers.get("Retry-After")
+                if retry_after:
+                    wait_time = int(retry_after)
+                    # logger.info(
+                    #     f"429 Too Many Requests: Retrying completion #{conversation_id} after {wait_time} seconds."
+                    # )
+                    self._retry_event.clear()  # Block further requests
+                    await asyncio.sleep(wait_time)  # Wait as advised by the server
+                    self._retry_event.set()  # Allow requests again
+                    continue
 
-    async def _get_prompt_sequence_completion(self, prompts_sequence: List[str]):
+            try:
+                response.raise_for_status()
+                res = response.json()
+                return res["choices"][0]["message"]["content"]
+            except Exception as e:
+                curl = Curlify(response.request)
+                logger.error(
+                    f"Error in LLM completion #{conversation_id}: {e}. Request: {curl.to_curl()}"
+                )
+                return None
+
+        logger.error(
+            f"Failed to get completion #{conversation_id} after {max_attempts} attempts."
+        )
+        return None
+
+    async def _get_prompt_sequence_completion(
+        self, prompts_sequence: List[str], conversation_id: int
+    ) -> List[Dict[str, str]]:
         conversation: List[Dict[str, str]] = []
 
         for prompt in prompts_sequence:
             conversation.append({"role": "user", "content": prompt})
-            response = await self._get_completion(conversation)
+            response = await self._get_completion(conversation, conversation_id)
             if not response:
                 return []
             else:
@@ -72,8 +101,8 @@ class RemoteLlmResource(ConfigurableResource):
     ) -> List[List[str]]:
         conversations = await asyncio.gather(
             *(
-                self._get_prompt_sequence_completion(prompt_sequence)
-                for prompt_sequence in prompt_sequences
+                self._get_prompt_sequence_completion(prompt_sequence, i)
+                for i, prompt_sequence in enumerate(prompt_sequences)
             )
         )
 

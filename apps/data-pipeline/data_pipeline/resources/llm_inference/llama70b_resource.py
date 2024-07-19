@@ -2,7 +2,7 @@ from data_pipeline.resources.llm_inference.remote_llm_resource import RemoteLlmR
 
 
 class Llama70bResource(RemoteLlmResource):
-    _concurrency_limit = 128
+    _concurrency_limit = 60
     _timeout = 60 * 10
     _inference_url = "https://Meta-Llama-3-70B-Instruct-pbssd-serverless.eastus2.inference.ai.azure.com/v1/chat/completions"
     _inference_config = {

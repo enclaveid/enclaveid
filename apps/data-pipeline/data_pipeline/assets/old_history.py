@@ -213,6 +213,7 @@ def general_interests_clusters(
             key=["general_interests_clusters"],
         ),
     },
+    op_tags={"dagster/concurrency_key": "llama70b"},
 )
 async def general_cluster_summaries(
     context: AssetExecutionContext,
@@ -315,6 +316,7 @@ def general_user_matching(
             "other_user_cluster_label": pl.Series([], dtype=pl.Int64),
             "cosine_similarity": pl.Series([], dtype=pl.Float64),
             "other_user_id": pl.Series([], dtype=pl.Utf8),
+            "activity_type": pl.Series([], dtype=pl.Utf8),
         }
     )
 
@@ -336,17 +338,30 @@ def general_user_matching(
             / f"{other_user_id}.snappy"
         ).sort(by="cluster_label")
 
-        # Perform the bipartite matching for each user
-        match_df = maximum_bipartite_matching(
-            current_user_df["embeddings"].to_numpy(),
-            other_user_df["embeddings"].to_numpy(),
-        )
+        for activity_type in ["proactive", "reactive"]:
+            current_user_activity_df = current_user_df.filter(
+                pl.col("activity_type") == activity_type
+            )
+            other_user_activity_df = other_user_df.filter(
+                pl.col("activity_type") == activity_type
+            )
 
-        # Add the other_user_id to the match_df
-        match_df = match_df.with_columns(
-            other_user_id=pl.Series([other_user_id] * len(match_df))
-        )
+            if (
+                not current_user_activity_df.is_empty()
+                and not other_user_activity_df.is_empty()
+            ):
+                # Perform the bipartite matching for each user
+                match_df = maximum_bipartite_matching(
+                    current_user_df["embeddings"].to_numpy(),
+                    other_user_df["embeddings"].to_numpy(),
+                )
 
-        result_df = result_df.vstack(match_df)
+                # Add the other_user_id to the match_df
+                match_df = match_df.with_columns(
+                    other_user_id=pl.Series([other_user_id] * len(match_df)),
+                    activity_type=pl.Series([activity_type] * len(match_df)),
+                )
+
+                result_df = result_df.vstack(match_df)
 
     return result_df.sort(by="cosine_similarity", descending=True)
