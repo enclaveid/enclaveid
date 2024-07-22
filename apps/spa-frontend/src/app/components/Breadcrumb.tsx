@@ -4,6 +4,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useEffect } from 'react';
 
+const pathToLabelMap = {
+  '/dashboard': 'Traits Dashboard',
+  '/socials': 'Explore Social',
+  '/life-journeys': 'Life Journeys',
+};
+
 function Breadcrumb() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,6 +34,14 @@ function Breadcrumb() {
     }
   }, [location, setLink]);
 
+  const getBreadcrumbLabel = () => {
+    for (const [path, label] of Object.entries(pathToLabelMap)) {
+      if (location.pathname.startsWith(path)) {
+        return label;
+      }
+    }
+    return '';
+  };
   return (
     <div className="flex gap-1.5 items-center text-[23px] leading-[27px] font-medium">
       <button
@@ -38,12 +52,8 @@ function Breadcrumb() {
             : 'text-passiveLinkColor',
         )}
       >
-        {location.pathname.startsWith('/dashboard')
-          ? 'Traits Dashboard'
-          : location.pathname.startsWith('/socials')
-            ? 'Explore Social'
-            : ''}
-      </button>{' '}
+        {getBreadcrumbLabel()}
+      </button>
       {link && (
         <>
           <span className="text-passiveLinkColor">{'>'}</span>{' '}

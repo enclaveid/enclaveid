@@ -44,7 +44,7 @@ function LifeJourneys() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-6">
       <h1 className="pt-[21px] pb-[13px] leading-[21.11px] text-lg text-passiveLinkColor text-center border-b w-full border-[#E5E8EE]">
         Life Journeys
       </h1>
