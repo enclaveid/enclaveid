@@ -11,8 +11,10 @@ function Breadcrumb() {
   const { link, setLink } = useBreadcrumb();
 
   const handleDashboardClick = () => {
-    navigate(-1);
-    setLink('');
+    if (link) {
+      navigate(-1);
+      setLink('');
+    }
   };
 
   useEffect(() => {
