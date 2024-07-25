@@ -1,9 +1,8 @@
-from typing import Iterable
-
-from pandas.io import sql
-from psycopg import Connection
+import polars as pl
+import psycopg
+from dagster import get_dagster_logger
+from psycopg import sql
 from sqlalchemy import make_url
-from sqlalchemy.dialects.postgresql import insert
 
 
 def conn_string_to_conn_args(conn_string: str):
@@ -17,9 +16,36 @@ def conn_string_to_conn_args(conn_string: str):
     }
 
 
-def pg_insert_on_conflict_replace(
-    table: sql.SQLTable, conn: Connection, keys: list, data_iter: Iterable
-):
-    stmt = insert(table).values(list(data_iter))
-    upsert_stmt = stmt.on_conflict_do_update(index_elements=keys)
-    conn.execute(upsert_stmt)
+# TODO: Handle conflicts
+def insert_dataframe_to_table(
+    df: pl.DataFrame, conn: psycopg.Connection, table_name: str
+) -> list:
+    # Convert Polars DataFrame to list of tuples
+    data = df.to_numpy().tolist()
+    columns = df.columns
+
+    # Create SQL query for inserting data with conflict handling
+    column_names = sql.SQL(", ").join(map(sql.Identifier, columns))
+    placeholders = sql.SQL(", ").join(sql.Placeholder() * len(columns))
+
+    logger = get_dagster_logger()
+    logger.info(f"Inserting {len(data)} rows of {column_names} into {table_name}")
+
+    insert_query = sql.SQL(
+        """
+        INSERT INTO {table} ({columns})
+        VALUES ({values})
+        RETURNING id
+    """
+    ).format(
+        table=sql.Identifier(table_name),
+        columns=column_names,
+        values=placeholders,
+    )
+
+    # Execute the query and fetch the inserted IDs
+    with conn.cursor() as cur:
+        cur.executemany(insert_query, data)
+        inserted_ids = [row[0] for row in cur.fetchall()]
+
+    return inserted_ids

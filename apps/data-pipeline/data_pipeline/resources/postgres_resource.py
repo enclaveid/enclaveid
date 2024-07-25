@@ -11,6 +11,8 @@ from dagster import ConfigurableResource, get_dagster_logger
 from pgvector.psycopg import register_vector
 from pydantic import Field
 
+# TODO: Why do we need this? Super ugly.
+
 
 class PostgresClient:
     def __init__(

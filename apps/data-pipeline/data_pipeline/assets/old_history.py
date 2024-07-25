@@ -8,16 +8,17 @@ from dagster import (
     asset,
 )
 from pydantic import Field
+from sqlalchemy import func, or_
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
+from data_pipeline.resources.api_db_session import ApiDbSession
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
 from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
 from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
     SentenceTransformerResource,
 )
-from data_pipeline.resources.postgres_resource import PGVectorClientResource
 from data_pipeline.utils.maximum_bipartite_matching import maximum_bipartite_matching
-from data_pipeline.utils.postgres import pg_insert_on_conflict_replace
 
 from ..constants.custom_config import RowLimitConfig
 from ..constants.k8s import k8s_gpu_config
@@ -206,7 +207,6 @@ def general_interests_clusters(
     return df.with_columns(cluster_label=pl.Series(cluster_labels)).drop("embeddings")
 
 
-# TODO: add constraints to the llama70b resource to limit concurrency
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
@@ -302,10 +302,9 @@ def general_summaries_embeddings(
     io_manager_key="parquet_io_manager",
     op_tags=k8s_gpu_config,
 )
-def general_user_matching(
+def general_summaries_user_matches(
     context: AssetExecutionContext,
     config: RowLimitConfig,
-    pgvector: PGVectorClientResource,
 ) -> pl.DataFrame:
     current_user_df = pl.read_parquet(
         DAGSTER_STORAGE_BUCKET
@@ -369,14 +368,128 @@ def general_user_matching(
 
                 result_df = result_df.vstack(match_df)
 
-    pg_client = pgvector.get_client()
-    with pg_client._get_conn() as conn:
-        result_df.to_pandas().to_sql(
-            "user_cluster_match",
-            con=conn,  # type: ignore
-            if_exists="append",
-            index=False,
-            method=pg_insert_on_conflict_replace,
+    return result_df.sort(by="cosine_similarity", descending=True)
+
+
+@asset(
+    partitions_def=user_partitions_def,
+    io_manager_key="parquet_io_manager",
+    ins={
+        "summaries_user_matches": AssetIn(key=["general_summaries_user_matches"]),
+        "cluster_summaries": AssetIn(key=["general_cluster_summaries"]),
+    },
+)
+def api_user_matches(
+    context: AssetExecutionContext,
+    config: RowLimitConfig,
+    api_db: ApiDbSession,
+    summaries_user_matches: pl.DataFrame,
+    cluster_summaries: pl.DataFrame,
+):
+    db_conn = api_db.get_session()
+
+    UserInterests = api_db.get_mapped_class("UserInterests")
+    user_interests_record_id = db_conn.execute(
+        pg_insert(UserInterests)
+        .values(
+            userId=context.partition_key,
+            dataProvider="GOOGLE",
+            updatedAt=func.now(),
+        )
+        .on_conflict_do_nothing()
+        .returning(UserInterests.c.id)
+    ).fetchone()
+
+    if user_interests_record_id is None:
+        raise Exception(
+            f"UserInterests record for {context.partition_key} could not be created"
         )
 
-    return result_df.sort(by="cosine_similarity", descending=True)
+    # Inser clusters with summaries into the database
+    InterestsCluster = api_db.get_mapped_class("InterestsCluster")
+    current_user_interests_clusters = db_conn.execute(
+        pg_insert(InterestsCluster)
+        .values(
+            cluster_summaries.rename(
+                {
+                    "cluster_label": "pipelineClusterId",
+                    "activity_type": "clusterType",
+                    "cluster_summary": "summary",
+                }
+            )
+            .with_columns(
+                userInterestsId=pl.Series(
+                    [user_interests_record_id] * len(cluster_summaries)
+                )
+            )
+            .to_dicts()
+        )
+        .on_conflict_do_nothing()
+        .returning(InterestsCluster)
+    ).fetchall()
+
+    # Get the InterestsCluster for the other users that we need to match with
+    # including the UserInterests
+    other_user_interests_clusters = (
+        db_conn.query(InterestsCluster, UserInterests)
+        .filter(
+            or_(
+                *[
+                    (InterestsCluster.userId == other_user_id)
+                    & (InterestsCluster.pipelineClusterId == other_user_cluster_label)
+                    for other_user_id, other_user_cluster_label in summaries_user_matches[
+                        ["other_user_id", "other_user_cluster_label"]
+                    ]
+                    .unique()
+                    .to_numpy()
+                ]
+            )
+        )
+        .filter(UserInterests.id == InterestsCluster.userInterestsId)
+        .all()
+    )
+
+    # Match the newly created clusters with the current user's clusters
+    # by mapping the dataframe cluster ids to the database pipelineClusterIds
+    current_user_map = {
+        cluster.pipelineClusterId: cluster.id
+        for cluster in current_user_interests_clusters
+    }
+    other_users_map = {}
+    for cluster_record, user_interests_record in other_user_interests_clusters:
+        user_id = user_interests_record.userId
+        if user_id not in other_users_map:
+            other_users_map[user_id] = {}
+        other_users_map[user_id][cluster_record.pipelineClusterId] = cluster_record.id
+
+    matches_to_insert = (
+        summaries_user_matches.rename(
+            {
+                "cosine_similarity": "cosineSimilarity",
+            }
+        )
+        .with_columns(
+            [
+                pl.col("user_cluster_label")
+                .apply(lambda x: current_user_map.get(x))
+                .alias("fromClusterId"),
+                pl.struct(["other_user_id", "other_user_cluster_label"])
+                .apply(lambda x: other_users_map.get(x[0], {}).get(x[1]))
+                .alias("toClusterId"),
+            ]
+        )
+        .select(
+            [
+                "cosineSimilarity",
+                "fromClusterId",
+                "toClusterId",
+            ]
+        )
+        .to_dicts()
+    )
+
+    db_conn.execute(
+        pg_insert(api_db.get_mapped_class("InterestsClusterMatch"))
+        .values(matches_to_insert)
+        .on_conflict_do_nothing()
+    )

@@ -1,11 +1,20 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"] // One for local dev, one for nodejs docker
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+  // One for local dev, one for nodejs docker
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("API_DATABASE_URL")
+  //extensions = [postgis(version: "3.4.2")]
+}
+
+enum Gender {
+  MA
+  FE
+  OT
 }
 
 model User {
@@ -18,6 +27,13 @@ model User {
   confirmationCode String    @default(cuid())
   confirmedAt      DateTime?
   session          Session?
+
+  displayName String @unique
+  gender      Gender
+  //geography   Unsupported("GEOGRAPHY(Point, 4326)")
+
+  userInterests   UserInterests @relation(fields: [userInterestsId], references: [id])
+  userInterestsId String        @unique
 
   userTraits   UserTraits @relation(fields: [userTraitsId], references: [id])
   userTraitsId String     @unique
@@ -71,7 +87,7 @@ model UserTraits {
   moralFoundations         MoralFoundations[]
   riasec                   Riasec[]
 
-  userId String? @unique
+  userId String @unique
   user   User?
 }
 
@@ -180,4 +196,58 @@ model SixteenPersonalityFactor {
 
   userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id])
   userTraitsId String?
+}
+
+// DATA PIPELINE OUTPUT --------------------------------------------
+model UserInterests {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dataProvider DataProvider
+  interests    InterestsCluster[]
+
+  userId String @unique
+  User   User?
+
+  @@unique([userId, dataProvider])
+}
+
+enum InterestsClusterType {
+  REACTIVE
+  PROACTIVE
+}
+
+model InterestsCluster {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pipelineClusterId Int
+  clusterType       InterestsClusterType
+  summary           String
+
+  userInterestsId String
+  userInterests   UserInterests @relation(fields: [userInterestsId], references: [id])
+
+  fromMatches InterestClusterMatch[] @relation(name: "FromInterestsCluster")
+  toMatches   InterestClusterMatch[] @relation(name: "ToInterestsCluster")
+
+  @@unique([userInterestsId, pipelineClusterId, clusterType])
+}
+
+model InterestClusterMatch {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cosineSimilarity Float
+
+  fromClusterId String
+  toClusterId   String
+
+  fromCluster InterestsCluster @relation(name: "FromInterestsCluster", fields: [fromClusterId], references: [id])
+  toCluster   InterestsCluster @relation(name: "ToInterestsCluster", fields: [toClusterId], references: [id])
+
+  @@unique([fromClusterId, toClusterId])
 }
