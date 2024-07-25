@@ -15,7 +15,9 @@ from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bReso
 from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
     SentenceTransformerResource,
 )
+from data_pipeline.resources.postgres_resource import PGVectorClientResource
 from data_pipeline.utils.maximum_bipartite_matching import maximum_bipartite_matching
+from data_pipeline.utils.postgres import pg_insert_on_conflict_replace
 
 from ..constants.custom_config import RowLimitConfig
 from ..constants.k8s import k8s_gpu_config
@@ -303,6 +305,7 @@ def general_summaries_embeddings(
 def general_user_matching(
     context: AssetExecutionContext,
     config: RowLimitConfig,
+    pgvector: PGVectorClientResource,
 ) -> pl.DataFrame:
     current_user_df = pl.read_parquet(
         DAGSTER_STORAGE_BUCKET
@@ -365,5 +368,15 @@ def general_user_matching(
                 )
 
                 result_df = result_df.vstack(match_df)
+
+    pg_client = pgvector.get_client()
+    with pg_client._get_conn() as conn:
+        result_df.to_pandas().to_sql(
+            "user_cluster_match",
+            con=conn,  # type: ignore
+            if_exists="append",
+            index=False,
+            method=pg_insert_on_conflict_replace,
+        )
 
     return result_df.sort(by="cosine_similarity", descending=True)

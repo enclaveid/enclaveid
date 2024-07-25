@@ -43,6 +43,8 @@ tqdm = "^4.66.2"
 mistralai = "^0.1.8"
 dagster-k8s = "^0.23.7"
 curlify2 = "^2.0.0"
+pandas = "2.2.1"
+sqlalchemy = "^2.0.31"
 
 [tool.poetry.group.ml.dependencies]
 # These are very large packages.

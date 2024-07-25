@@ -9,21 +9,21 @@ from data_pipeline.resources.llm_inference.sentence_transformer_resource import 
     SentenceTransformerResource,
 )
 from data_pipeline.resources.mistral_resource import MistralResource
-from data_pipeline.resources.postgres_resource import PGVectorClientResource
+from data_pipeline.resources.postgres_resource import (
+    PGVectorClientResource,
+    PostgresClientResource,
+)
+from data_pipeline.utils.postgres import conn_string_to_conn_args
 
 resources = {
     "parquet_io_manager": PolarsParquetIOManager(
         extension=".snappy", base_dir=str(DAGSTER_STORAGE_BUCKET)
     ),
     "mistral": MistralResource(api_key=EnvVar("MISTRAL_API_KEY")),
-    # TODO: use a single env var with the uri
     "pgvector": PGVectorClientResource(
-        host=EnvVar("PGHOST"),
-        port=EnvVar.int("PGPORT"),
-        user=EnvVar("PGUSER"),
-        password=EnvVar("PGPASSWORD"),
-        dbname=EnvVar("PGDATABASE"),
+        **conn_string_to_conn_args(EnvVar("DATA_PIPELINE_DB_URL"))
     ),
+    "api_db": PostgresClientResource(**conn_string_to_conn_args(EnvVar("API_DB_URL"))),
     "llama8b": Llama8bResource(),
     "llama70b": Llama70bResource(api_key=EnvVar("AZURE_AI_LLAMA70B_API_KEY")),
     "gpt4": Gpt4Resource(api_key=EnvVar("AZURE_AI_GPT4_API_KEY")),
