@@ -1,14 +1,12 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
+  provider      = "prisma-client-js"
   // One for local dev, one for nodejs docker
-  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("API_DATABASE_URL")
-  //extensions = [postgis(version: "3.4.2")]
 }
 
 enum Gender {
@@ -28,9 +26,10 @@ model User {
   confirmedAt      DateTime?
   session          Session?
 
-  displayName String @unique
-  gender      Gender
-  //geography   Unsupported("GEOGRAPHY(Point, 4326)")
+  displayName  String @unique
+  gender       Gender
+  geographyLat Float
+  geographyLon Float
 
   userInterests   UserInterests @relation(fields: [userInterestsId], references: [id])
   userInterestsId String        @unique
@@ -40,6 +39,9 @@ model User {
 
   chromePod   ChromePod? @relation(fields: [chromePodId], references: [id])
   chromePodId String?    @unique
+
+  fromMatches UserMatch[] @relation(name: "FromUser")
+  toMatches   UserMatch[] @relation(name: "ToUser")
 }
 
 model Session {
@@ -209,8 +211,6 @@ model UserInterests {
 
   userId String @unique
   User   User?
-
-  @@unique([userId, dataProvider])
 }
 
 model InterestsCluster {
@@ -245,4 +245,30 @@ model InterestsClusterMatch {
   toCluster   InterestsCluster @relation(name: "ToInterestsCluster", fields: [toClusterId], references: [id])
 
   @@unique([fromClusterId, toClusterId])
+}
+
+model UserMatch {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  overallMatch Float
+
+  // bigFiveMatch          Float
+  // moralFoundationsMatch Float
+  // mbtiMatch             Float
+  // sixteenPersonalityFactorMatch Float
+  // politicalCompassMatch         Float
+  // riasecMatch                   Float
+
+  // proactiveInterestsMatch Float
+  // reactiveInterestsMatch  Float
+
+  fromUserId String
+  toUserId   String
+
+  fromUser User @relation(fields: [fromUserId], references: [id], name: "FromUser")
+  toUser   User @relation(fields: [toUserId], references: [id], name: "ToUser")
+
+  @@unique([fromUserId, toUserId])
 }

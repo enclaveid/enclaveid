@@ -12,6 +12,7 @@ import { personality } from './routers/dashboard/personality';
 import { fakeOauth } from './routers/fakeOauth';
 import { fileUpload } from './routers/fileUpload';
 import { authUtils } from './routers/authUtils';
+import { matches } from './routers/dashboard/matches';
 
 export const appRouter = router({
   [TRPC_PRIVATE_NAMESPACE]: mergeRouters(
@@ -21,6 +22,7 @@ export const appRouter = router({
     fakeOauth,
     fileUpload,
     authUtils,
+    matches,
   ),
   [TRPC_PUBLIC_NAMESPACE]: mergeRouters(attestation, authentication),
 });
