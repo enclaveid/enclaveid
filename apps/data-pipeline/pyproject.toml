@@ -45,6 +45,7 @@ dagster-k8s = "^0.23.7"
 curlify2 = "^2.0.0"
 pandas = "2.2.1"
 sqlalchemy = "^2.0.31"
+cuid2 = "^2.0.1"
 
 [tool.poetry.group.ml.dependencies]
 # These are very large packages.

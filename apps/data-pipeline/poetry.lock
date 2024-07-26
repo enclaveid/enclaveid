@@ -845,6 +845,17 @@ url = "https://pypi.nvidia.com"
 reference = "nvidia"
 
 [[package]]
+name = "cuid2"
+version = "2.0.1"
+description = "Next generation GUIDs. Collision-resistant ids optimized for horizontal scaling and performance."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "cuid2-2.0.1-py3-none-any.whl", hash = "sha256:943bdf86dc3ed07f32253e1be6e3c34dda8c7bda1c453f851f4ebaaa5a2dcfbf"},
+    {file = "cuid2-2.0.1.tar.gz", hash = "sha256:8d262eb467c16b81419361e18e47f41da77c4446dd2cf0640eac2616680bc924"},
+]
+
+[[package]]
 name = "cuml-cu12"
 version = "24.4.0"
 description = "cuML - RAPIDS ML Algorithms"
@@ -6466,4 +6477,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "c23da63dcaf171a40f1cfba1f0dac22438a9d3624fcfecefab27b1751613d05e"
+content-hash = "e6a41aecd5242b7ab7ae870c83b1f57d2042fd5703827e89d0b480e4ff43f903"

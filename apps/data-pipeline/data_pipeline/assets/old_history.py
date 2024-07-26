@@ -19,6 +19,7 @@ from data_pipeline.resources.llm_inference.sentence_transformer_resource import 
     SentenceTransformerResource,
 )
 from data_pipeline.utils.maximum_bipartite_matching import maximum_bipartite_matching
+from data_pipeline.utils.postgres import generate_cuid
 
 from ..constants.custom_config import RowLimitConfig
 from ..constants.k8s import k8s_gpu_config
@@ -385,111 +386,156 @@ def api_user_matches(
     api_db: ApiDbSession,
     summaries_user_matches: pl.DataFrame,
     cluster_summaries: pl.DataFrame,
-):
+) -> None:
     db_conn = api_db.get_session()
+    with db_conn.begin():
+        UserInterests = api_db.get_mapped_class("UserInterests")
 
-    UserInterests = api_db.get_mapped_class("UserInterests")
-    user_interests_record_id = db_conn.execute(
-        pg_insert(UserInterests)
-        .values(
-            userId=context.partition_key,
-            dataProvider="GOOGLE",
-            updatedAt=func.now(),
+        user_interests_record_id = db_conn.execute(
+            pg_insert(UserInterests)
+            .values(
+                id=generate_cuid(),
+                userId=context.partition_key,
+                dataProvider="GOOGLE",
+                updatedAt=func.now(),
+            )
+            .on_conflict_do_update(
+                index_elements=[
+                    UserInterests.userId,
+                    UserInterests.dataProvider,
+                ],
+                set_={
+                    "id": UserInterests.id,
+                },
+            )
+            .returning(UserInterests.id)
+        ).fetchone()
+
+        if user_interests_record_id is None:
+            raise Exception(
+                f"UserInterests record for {context.partition_key} could not be created"
+            )
+
+        # Inser clusters with summaries into the database
+        InterestsCluster = api_db.get_mapped_class("InterestsCluster")
+        current_user_interests_clusters = db_conn.execute(
+            pg_insert(InterestsCluster)
+            .values(
+                cluster_summaries.rename(
+                    {
+                        "cluster_label": "pipelineClusterId",
+                        "activity_type": "clusterType",
+                        "cluster_summary": "summary",
+                    }
+                )
+                .with_columns(
+                    userInterestsId=pl.Series(
+                        [user_interests_record_id[0]] * len(cluster_summaries)
+                    ),
+                    id=pl.Series(
+                        [generate_cuid() for _ in range(len(cluster_summaries))]
+                    ),
+                    updatedAt=pl.Series([func.now()] * len(cluster_summaries)),
+                )
+                .to_dicts()
+            )
+            .on_conflict_do_update(
+                index_elements=[
+                    InterestsCluster.userInterestsId,
+                    InterestsCluster.pipelineClusterId,
+                    InterestsCluster.clusterType,
+                ],
+                set_={
+                    "id": InterestsCluster.id,
+                },
+            )
+            .returning(InterestsCluster)
+        ).fetchall()
+
+        # Get the InterestsCluster for the other users that we need to match with
+        # including the UserInterests
+        other_user_interests_clusters = (
+            db_conn.query(InterestsCluster, UserInterests)
+            .filter(
+                or_(
+                    *[
+                        (UserInterests.userId == other_user_id)
+                        & (
+                            InterestsCluster.pipelineClusterId
+                            == other_user_cluster_label
+                        )
+                        for other_user_id, other_user_cluster_label in summaries_user_matches[
+                            ["other_user_id", "other_user_cluster_label"]
+                        ]
+                        .unique()
+                        .to_numpy()
+                    ]
+                )
+            )
+            .filter(UserInterests.id == InterestsCluster.userInterestsId)
+            .all()
         )
-        .on_conflict_do_nothing()
-        .returning(UserInterests.c.id)
-    ).fetchone()
 
-    if user_interests_record_id is None:
-        raise Exception(
-            f"UserInterests record for {context.partition_key} could not be created"
-        )
+        # Match the newly created clusters with the current user's clusters
+        # by mapping the dataframe cluster ids to the database pipelineClusterIds
+        current_user_map = {
+            cluster[0].pipelineClusterId: cluster[0].id
+            for cluster in current_user_interests_clusters
+        }
 
-    # Inser clusters with summaries into the database
-    InterestsCluster = api_db.get_mapped_class("InterestsCluster")
-    current_user_interests_clusters = db_conn.execute(
-        pg_insert(InterestsCluster)
-        .values(
-            cluster_summaries.rename(
+        # Edge case for the first user
+        if len(other_user_interests_clusters) == 0:
+            db_conn.commit()
+            return
+
+        other_users_map = {}
+        for cluster_record, user_interests_record in other_user_interests_clusters:
+            user_id = user_interests_record.userId
+            if user_id not in other_users_map:
+                other_users_map[user_id] = {}
+            other_users_map[user_id][
+                cluster_record.pipelineClusterId
+            ] = cluster_record.id
+
+        matches_to_insert = (
+            summaries_user_matches.rename(
                 {
-                    "cluster_label": "pipelineClusterId",
-                    "activity_type": "clusterType",
-                    "cluster_summary": "summary",
+                    "cosine_similarity": "cosineSimilarity",
                 }
             )
             .with_columns(
-                userInterestsId=pl.Series(
-                    [user_interests_record_id] * len(cluster_summaries)
-                )
+                [
+                    pl.col("user_cluster_label")
+                    .apply(lambda x: current_user_map.get(x))
+                    .alias("fromClusterId"),
+                    pl.struct(["other_user_id", "other_user_cluster_label"])
+                    .apply(
+                        lambda x: other_users_map[x["other_user_id"]][  # type: ignore
+                            x["other_user_cluster_label"]  # type: ignore
+                        ]
+                    )
+                    .alias("toClusterId"),
+                ]
+            )
+            .select(
+                [
+                    "cosineSimilarity",
+                    "fromClusterId",
+                    "toClusterId",
+                ]
+            )
+            .with_columns(
+                id=pl.Series(
+                    [generate_cuid() for _ in range(len(summaries_user_matches))]
+                ),
+                updatedAt=pl.Series([func.now()] * len(summaries_user_matches)),
             )
             .to_dicts()
         )
-        .on_conflict_do_nothing()
-        .returning(InterestsCluster)
-    ).fetchall()
 
-    # Get the InterestsCluster for the other users that we need to match with
-    # including the UserInterests
-    other_user_interests_clusters = (
-        db_conn.query(InterestsCluster, UserInterests)
-        .filter(
-            or_(
-                *[
-                    (InterestsCluster.userId == other_user_id)
-                    & (InterestsCluster.pipelineClusterId == other_user_cluster_label)
-                    for other_user_id, other_user_cluster_label in summaries_user_matches[
-                        ["other_user_id", "other_user_cluster_label"]
-                    ]
-                    .unique()
-                    .to_numpy()
-                ]
-            )
+        db_conn.execute(
+            pg_insert(api_db.get_mapped_class("InterestsClusterMatch"))
+            .values(matches_to_insert)
+            .on_conflict_do_nothing()
         )
-        .filter(UserInterests.id == InterestsCluster.userInterestsId)
-        .all()
-    )
-
-    # Match the newly created clusters with the current user's clusters
-    # by mapping the dataframe cluster ids to the database pipelineClusterIds
-    current_user_map = {
-        cluster.pipelineClusterId: cluster.id
-        for cluster in current_user_interests_clusters
-    }
-    other_users_map = {}
-    for cluster_record, user_interests_record in other_user_interests_clusters:
-        user_id = user_interests_record.userId
-        if user_id not in other_users_map:
-            other_users_map[user_id] = {}
-        other_users_map[user_id][cluster_record.pipelineClusterId] = cluster_record.id
-
-    matches_to_insert = (
-        summaries_user_matches.rename(
-            {
-                "cosine_similarity": "cosineSimilarity",
-            }
-        )
-        .with_columns(
-            [
-                pl.col("user_cluster_label")
-                .apply(lambda x: current_user_map.get(x))
-                .alias("fromClusterId"),
-                pl.struct(["other_user_id", "other_user_cluster_label"])
-                .apply(lambda x: other_users_map.get(x[0], {}).get(x[1]))
-                .alias("toClusterId"),
-            ]
-        )
-        .select(
-            [
-                "cosineSimilarity",
-                "fromClusterId",
-                "toClusterId",
-            ]
-        )
-        .to_dicts()
-    )
-
-    db_conn.execute(
-        pg_insert(api_db.get_mapped_class("InterestsClusterMatch"))
-        .values(matches_to_insert)
-        .on_conflict_do_nothing()
-    )
+        db_conn.commit()

@@ -1,8 +1,11 @@
 import polars as pl
 import psycopg
+from cuid2 import Cuid
 from dagster import get_dagster_logger
 from psycopg import sql
 from sqlalchemy import make_url
+
+CUID_GENERATOR = Cuid(length=25)
 
 
 def conn_string_to_conn_args(conn_string: str):
@@ -14,6 +17,10 @@ def conn_string_to_conn_args(conn_string: str):
         "password": url.password,
         "dbname": url.database,
     }
+
+
+def generate_cuid():
+    return CUID_GENERATOR.generate()
 
 
 # TODO: Handle conflicts

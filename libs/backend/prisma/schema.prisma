@@ -213,30 +213,25 @@ model UserInterests {
   @@unique([userId, dataProvider])
 }
 
-enum InterestsClusterType {
-  REACTIVE
-  PROACTIVE
-}
-
 model InterestsCluster {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   pipelineClusterId Int
-  clusterType       InterestsClusterType
+  clusterType       String // Would be cool to have an enum here but string enums are not supported
   summary           String
 
   userInterestsId String
   userInterests   UserInterests @relation(fields: [userInterestsId], references: [id])
 
-  fromMatches InterestClusterMatch[] @relation(name: "FromInterestsCluster")
-  toMatches   InterestClusterMatch[] @relation(name: "ToInterestsCluster")
+  fromMatches InterestsClusterMatch[] @relation(name: "FromInterestsCluster")
+  toMatches   InterestsClusterMatch[] @relation(name: "ToInterestsCluster")
 
   @@unique([userInterestsId, pipelineClusterId, clusterType])
 }
 
-model InterestClusterMatch {
+model InterestsClusterMatch {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

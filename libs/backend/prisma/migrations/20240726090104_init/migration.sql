@@ -4,9 +4,6 @@ CREATE TYPE "Gender" AS ENUM ('MA', 'FE', 'OT');
 -- CreateEnum
 CREATE TYPE "DataProvider" AS ENUM ('GOOGLE', 'FACEBOOK', 'OPENAI');
 
--- CreateEnum
-CREATE TYPE "InterestsClusterType" AS ENUM ('REACTIVE', 'PROACTIVE');
-
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -183,7 +180,7 @@ CREATE TABLE "InterestsCluster" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "pipelineClusterId" INTEGER NOT NULL,
-    "clusterType" "InterestsClusterType" NOT NULL,
+    "clusterType" TEXT NOT NULL,
     "summary" TEXT NOT NULL,
     "userInterestsId" TEXT NOT NULL,
 
