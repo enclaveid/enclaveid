@@ -114,10 +114,10 @@ export const matches = router({
           ? [userMatch.fromUser, userMatch.toUser]
           : [userMatch.toUser, userMatch.fromUser];
 
-      const currentUserInterestsIds = currentUser.userInterests.interests.map(
+      const currentInterestsIds = currentUser.userInterests.interests.map(
         (r) => r.id,
       );
-      const otherUserInterestsIds = otherUser.userInterests.interests.map(
+      const otherInterestsIds = otherUser.userInterests.interests.map(
         (r) => r.id,
       );
 
@@ -126,14 +126,14 @@ export const matches = router({
           OR: [
             {
               AND: [
-                { fromClusterId: { in: otherUserInterestsIds } },
-                { toClusterId: { in: currentUserInterestsIds } },
+                { fromClusterId: { in: otherInterestsIds } },
+                { toClusterId: { in: currentInterestsIds } },
               ],
             },
             {
               AND: [
-                { fromClusterId: { in: currentUserInterestsIds } },
-                { toClusterId: { in: otherUserInterestsIds } },
+                { fromClusterId: { in: currentInterestsIds } },
+                { toClusterId: { in: otherInterestsIds } },
               ],
             },
           ],
@@ -147,9 +147,7 @@ export const matches = router({
       const allInterests = userInterestMatches
         .map((r) => {
           // We show the current user's summaries for privacy
-          const interestRecord = currentUserInterestsIds.includes(
-            r.fromClusterId,
-          )
+          const interestRecord = currentInterestsIds.includes(r.fromClusterId)
             ? r.fromCluster
             : r.toCluster;
 

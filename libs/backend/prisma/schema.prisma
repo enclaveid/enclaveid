@@ -20,22 +20,21 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  email            String    @unique
-  password         String
+  email    String @unique
+  password String
+
   confirmationCode String    @default(cuid())
   confirmedAt      DateTime?
   session          Session?
+  streamChatToken  String?
 
   displayName  String @unique
   gender       Gender
   geographyLat Float
   geographyLon Float
 
-  userInterests   UserInterests @relation(fields: [userInterestsId], references: [id])
-  userInterestsId String        @unique
-
-  userTraits   UserTraits @relation(fields: [userTraitsId], references: [id])
-  userTraitsId String     @unique
+  userInterests UserInterests?
+  userTraits    UserTraits?
 
   chromePod   ChromePod? @relation(fields: [chromePodId], references: [id])
   chromePodId String?    @unique
@@ -90,7 +89,7 @@ model UserTraits {
   riasec                   Riasec[]
 
   userId String @unique
-  user   User?
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model Riasec {
@@ -210,7 +209,7 @@ model UserInterests {
   interests    InterestsCluster[]
 
   userId String @unique
-  User   User?
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model InterestsCluster {

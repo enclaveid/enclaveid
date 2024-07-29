@@ -10,7 +10,6 @@ import {
 } from '@enclaveid/shared';
 import { connectFreePod } from '../services/fakeOauth/kubernetes';
 import { redis } from '@enclaveid/backend';
-import { logger } from '@azure/storage-blob';
 
 export const fakeOauth = router({
   startSession: authenticatedProcedure

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Gender, PrismaClient } from '@prisma/client';
 import { hash } from 'argon2';
 
 const prisma = new PrismaClient({
@@ -14,7 +14,21 @@ async function main() {
     data: {
       email: 'john.doe@example.com',
       password: await hash('password'),
+
+      confirmationCode: '',
       confirmedAt: new Date(),
+
+      displayName: 'John Doe',
+      gender: Gender.OT,
+      geographyLat: 0.0,
+      geographyLon: 0.0,
+
+      userInterests: {
+        create: {
+          dataProvider: 'GOOGLE',
+        },
+      },
+
       userTraits: {
         create: {
           sixteenPersonalityFactor: {
@@ -67,17 +81,6 @@ async function main() {
             },
           },
         },
-      },
-    },
-  });
-
-  await prisma.user.create({
-    data: {
-      email: 'john.doesnt@example.com',
-      password: await hash('password'),
-      confirmedAt: new Date(),
-      userTraits: {
-        create: {},
       },
     },
   });

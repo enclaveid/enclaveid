@@ -5,6 +5,7 @@ import { TRPCError } from '@trpc/server';
 import { asymmetricDecrypt } from '../services/crypto/asymmetricNode';
 import { prisma } from '@enclaveid/backend';
 import { hashPassword, verifyPassword } from '../services/crypto/passwords';
+import { Gender } from '@prisma/client';
 
 export const authentication = router({
   login: publicProcedure
@@ -85,6 +86,11 @@ export const authentication = router({
           userTraits: {
             create: {},
           },
+          // TODO
+          displayName: 'test',
+          gender: Gender.OT,
+          geographyLat: 0.0,
+          geographyLon: 0.0,
         },
       });
     }),
