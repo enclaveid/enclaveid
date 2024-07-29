@@ -1,10 +1,12 @@
 import { Outlet } from 'react-router-dom';
 import { CommonLayout } from './CommonLayout';
 
-export function AccountSettingsLayout() {
+function LifeJourneyLayout() {
   return (
     <CommonLayout>
       <Outlet />
     </CommonLayout>
   );
 }
+
+export { LifeJourneyLayout };

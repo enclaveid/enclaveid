@@ -27,6 +27,7 @@ import { AuthProvider } from './providers/AuthProvider';
 import { AccountSettings } from './pages/AccountSettingsPage';
 import { AccountSettingsLayout } from './components/AccountSettingsLayout';
 import { LifeJourneys } from './components/NonLatentDetails';
+import { LifeJourneyLayout } from './components/LifeJourneyLayout';
 
 const reactRouter = createBrowserRouter([
   {
@@ -79,7 +80,16 @@ const reactRouter = createBrowserRouter([
       { path: 'career/radar', element: <RadarChartDetails /> },
     ],
   },
-  { path: '/life-journeys', element: <LifeJourneys /> },
+  {
+    path: '/life-journeys',
+    element: <LifeJourneyLayout />,
+    children: [
+      {
+        index: true,
+        element: <LifeJourneys />,
+      },
+    ],
+  },
   {
     path: '/socials',
     element: <SocialLayout />,
