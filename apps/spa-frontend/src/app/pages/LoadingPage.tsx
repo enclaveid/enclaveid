@@ -1,4 +1,8 @@
-export function LoadingPage() {
+interface LoadingPageProps {
+  customMessage?: string;
+}
+
+export function LoadingPage(props: LoadingPageProps) {
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <div className="flex items-center space-x-4">
@@ -22,7 +26,9 @@ export function LoadingPage() {
             d="M12 2a10 10 0 000 20m0-18v4m0 14v4m-8-8h4m10 0h4"
           ></path>
         </svg>
-        <span className="text-gray-600">Connecting to server...</span>
+        <span className="text-gray-600">
+          {props.customMessage ?? 'Connecting to server...'}
+        </span>
       </div>
     </div>
   );

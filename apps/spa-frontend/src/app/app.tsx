@@ -28,6 +28,7 @@ import { AccountSettingsLayout } from './components/AccountSettingsLayout';
 import { LifeJourneys } from './components/NonLatentDetails';
 import { LifeJourneyLayout } from './components/LifeJourneyLayout';
 import { StreamChatPage } from './pages/StreamChatPage';
+import { StreamChatProvider } from './providers/StreamChatProvider';
 
 const reactRouter = createBrowserRouter([
   {
@@ -131,10 +132,12 @@ const reactRouter = createBrowserRouter([
 export function App() {
   return (
     <AuthProvider>
-      <BreadcrumbProvider>
-        <RouterProvider router={reactRouter} />
-        <Toaster position="bottom-right" reverseOrder={false} />
-      </BreadcrumbProvider>
+      <StreamChatProvider>
+        <BreadcrumbProvider>
+          <RouterProvider router={reactRouter} />
+          <Toaster position="bottom-right" reverseOrder={false} />
+        </BreadcrumbProvider>
+      </StreamChatProvider>
     </AuthProvider>
   );
 }
