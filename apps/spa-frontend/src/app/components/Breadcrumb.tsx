@@ -3,12 +3,17 @@ import classNames from 'classnames';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useEffect } from 'react';
+import { sidebarItems } from '../utils/sidebarItems';
 
-const pathToLabelMap = {
-  '/dashboard': 'Traits Dashboard',
-  '/socials': 'Explore Social',
-  '/life-journeys': 'Life Journeys',
-};
+const pathToLabelMap = Object.entries(sidebarItems).reduce(
+  (acc, [title, items]) => {
+    items.forEach((item) => {
+      acc[item.href] = item.text;
+    });
+    return acc;
+  },
+  {} as Record<string, string>,
+);
 
 function Breadcrumb() {
   const navigate = useNavigate();

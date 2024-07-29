@@ -1,8 +1,6 @@
 import { SidebarSection } from './SidebarSection';
 import { SidebarItem } from './SidebarItem';
-import { UserCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { TrophyIcon } from '@heroicons/react/24/outline';
-import { UsersIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import { ArrowLeftStartOnRectangleIcon } from '@heroicons/react/24/outline';
 import { CogIcon } from '@heroicons/react/24/outline';
@@ -10,6 +8,7 @@ import { SimilarProfileBadge } from './SimilarProfileBadge';
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Logo } from './Logo';
+import { sidebarItems } from '../utils/sidebarItems';
 
 export interface SidebarProps {
   onLogout?: () => void;
@@ -35,25 +34,17 @@ function Sidebar(props: SidebarProps) {
       </div>
       <div className="sm:flex hidden flex-col justify-between flex-1 py-5">
         <div className="flex flex-col gap-[18px]">
-          <SidebarSection title={'Social Discovery'}>
-            <SidebarItem
-              icon={<UsersIcon />}
-              text="Find similar users"
-              href="/socials"
-            />
-          </SidebarSection>
-          <SidebarSection title={'Your profile'}>
-            <SidebarItem
-              icon={<UserCircleIcon />}
-              text="Traits Dashboard"
-              href="/dashboard"
-            />
-            <SidebarItem
-              icon={<TrophyIcon />}
-              text="Life Journeys"
-              href="/life-journeys"
-            />
-          </SidebarSection>
+          {Object.entries(sidebarItems).map(([title, items]) => (
+            <SidebarSection title={title}>
+              {items.map((item) => (
+                <SidebarItem
+                  icon={<item.icon />}
+                  text={item.text}
+                  href={item.href}
+                />
+              ))}
+            </SidebarSection>
+          ))}
           <SimilarProfileBadge peopleCount={1123} />
         </div>
         <SidebarSection noGap={true}>
@@ -128,26 +119,18 @@ function Sidebar(props: SidebarProps) {
                   </div>
                   <div className="flex flex-col justify-between flex-1 py-5">
                     <div className="flex flex-col gap-[18px]">
-                      <SidebarSection title={'Data'}>
-                        <SidebarItem
-                          icon={<UserCircleIcon />}
-                          text="Traits Dashboard"
-                          href="/dashboard"
-                        />
-                        <SidebarItem
-                          icon={<TrophyIcon />}
-                          text="Life Journeys"
-                          href="/life-journeys"
-                        />
-                      </SidebarSection>
-                      <SidebarSection title={'Social'}>
-                        <SidebarItem
-                          icon={<UsersIcon />}
-                          text="Explore Social"
-                          href="/socials"
-                        />
-                        <SimilarProfileBadge peopleCount={1123} />
-                      </SidebarSection>
+                      {Object.entries(sidebarItems).map(([title, items]) => (
+                        <SidebarSection title={title}>
+                          {items.map((item) => (
+                            <SidebarItem
+                              icon={<item.icon />}
+                              text={item.text}
+                              href={item.href}
+                            />
+                          ))}
+                        </SidebarSection>
+                      ))}
+                      <SimilarProfileBadge peopleCount={1123} />
                     </div>
                     <SidebarSection noGap={true}>
                       <SidebarItem
