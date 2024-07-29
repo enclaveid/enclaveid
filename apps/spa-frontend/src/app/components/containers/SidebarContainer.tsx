@@ -13,11 +13,14 @@ export function SidebarContainer({
   const navigate = useNavigate();
 
   return cloneElement(children, {
-    onLogout: () =>
-      logoutMutation.mutate(null, {
+    onLogout: () => {
+      localStorage.removeItem('userId');
+
+      return logoutMutation.mutate(null, {
         onSuccess: () => {
           navigate('/login');
         },
-      }),
+      });
+    },
   });
 }

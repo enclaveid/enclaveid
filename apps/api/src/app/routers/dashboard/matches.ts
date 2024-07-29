@@ -46,6 +46,9 @@ const userMatchDetailsSelector = {
 };
 
 export const matches = router({
+  getPeopleCount: authenticatedProcedure.query(async () => {
+    return await prisma.user.count();
+  }),
   getUserMatches: authenticatedProcedure.query(async (opts) => {
     const {
       user: { id: userId },

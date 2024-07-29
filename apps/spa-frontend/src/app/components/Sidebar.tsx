@@ -9,6 +9,7 @@ import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Logo } from './Logo';
 import { sidebarItems } from '../utils/sidebarItems';
+import { trpc } from '../utils/trpc';
 
 export interface SidebarProps {
   onLogout?: () => void;
@@ -17,6 +18,8 @@ export interface SidebarProps {
 function Sidebar(props: SidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { onLogout } = props;
+
+  const peopleCount = trpc.private.getPeopleCount.useQuery().data;
 
   return (
     <aside className="w-full sm:w-[296px] bg-[#F3F5F7] px-[18px] sm:px-[22px] flex flex-col sm:h-full h-max border-b border-b-[#E5E8EE] sm:border-none relative">
@@ -45,7 +48,7 @@ function Sidebar(props: SidebarProps) {
               ))}
             </SidebarSection>
           ))}
-          <SimilarProfileBadge peopleCount={1123} />
+          <SimilarProfileBadge peopleCount={peopleCount} />
         </div>
         <SidebarSection noGap={true}>
           <SidebarItem
@@ -61,7 +64,7 @@ function Sidebar(props: SidebarProps) {
         </SidebarSection>
       </div>
       <div className="sm:hidden block pb-[18px]">
-        <SimilarProfileBadge peopleCount={1123} />
+        <SimilarProfileBadge peopleCount={peopleCount} />
       </div>{' '}
       <Transition.Root show={sidebarOpen} as={Fragment}>
         <Dialog className="relative z-50 lg:hidden" onClose={setSidebarOpen}>
@@ -130,7 +133,7 @@ function Sidebar(props: SidebarProps) {
                           ))}
                         </SidebarSection>
                       ))}
-                      <SimilarProfileBadge peopleCount={1123} />
+                      <SimilarProfileBadge peopleCount={peopleCount} />
                     </div>
                     <SidebarSection noGap={true}>
                       <SidebarItem

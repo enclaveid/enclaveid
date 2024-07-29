@@ -35,7 +35,7 @@ function SimilarProfileBadge({
           ))}
         </div>
         <span className="text-[#6C7A8A] text-xs">
-          {`${peopleCount.toLocaleString()} people have a similar profile`}
+          {`${peopleCount.toLocaleString()} users on the platform`}
         </span>
       </div>
     </div>
