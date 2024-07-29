@@ -52,15 +52,24 @@ export function AuthenticationContainer({
 
   useEffect(() => {
     if (authMutation.isSuccess) {
+      // Save the user's id in local storage
+      localStorage.setItem('userId', authMutation.data);
+
       authCheck.refetch().then(() => {
-        if (authenticationType === 'login') {
-          navigate(from.pathname);
-        } else {
-          navigate('/fileUpload');
-        }
+        const navigateTo =
+          authenticationType === 'login' ? from.pathname : '/fileUpload';
+
+        navigate(navigateTo);
       });
     }
-  }, [authMutation.isSuccess, navigate, from, authenticationType, authCheck]);
+  }, [
+    authMutation.isSuccess,
+    navigate,
+    from,
+    authenticationType,
+    authCheck,
+    authMutation.data,
+  ]);
 
   return React.cloneElement(children, { handleSubmit, authenticationType });
 }

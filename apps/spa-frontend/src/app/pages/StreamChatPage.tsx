@@ -10,17 +10,27 @@ import {
   useCreateChatClient,
 } from 'stream-chat-react';
 import 'stream-chat-react/dist/css/v2/index.css';
-import { trpc } from '../utils/trpc';
+import { trpcClient } from '../utils/trpc';
 import { LoadingPage } from './LoadingPage';
+import { useEffect } from 'react';
+
+async function tokenProvider() {
+  const result = await trpcClient.query('private.getStreamChatToken', null);
+
+  return result as string;
+}
 
 export function StreamChatPage() {
-  const streamChatTokenQuery = trpc.private.getStreamChatToken.useQuery();
+  useEffect(() => {
+    // @ts-expect-error Type '{ env: {}; }' is missing the following properties from type 'Process': stdout, stderr, stdin, openStdin, and 52 more.
+    window.process = { env: {} };
+  }, []);
 
-  const { token, userId } = streamChatTokenQuery.data;
+  const userId = localStorage.getItem('userId');
 
   const client = useCreateChatClient({
     apiKey: import.meta.env.VITE_STREAM_CHAT_API_KEY,
-    tokenOrProvider: token,
+    tokenOrProvider: tokenProvider,
     userData: { id: userId },
   });
 

@@ -26,9 +26,6 @@ export const streamChat = router({
         },
       }));
 
-    return {
-      userId,
-      token: user.streamChatToken,
-    };
+    return user.streamChatToken;
   }),
 });

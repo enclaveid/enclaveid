@@ -51,6 +51,8 @@ export const authentication = router({
       });
 
       await setJwtCookie({ id: user.id });
+
+      return user.id;
     }),
   signup: publicProcedure
     .input(
@@ -78,7 +80,7 @@ export const authentication = router({
         });
       }
 
-      await prisma.user.create({
+      const user = await prisma.user.create({
         data: {
           email,
           password: await hashPassword(password),
@@ -93,5 +95,7 @@ export const authentication = router({
           geographyLon: 0.0,
         },
       });
+
+      return user.id;
     }),
 });

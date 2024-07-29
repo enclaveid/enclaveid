@@ -15,7 +15,6 @@ import { LandingPage } from './pages/LandingPage';
 
 import { CareerContent } from './components/CareerContent';
 import { RadarChartDetails } from './components/RadarChartDetails';
-import { ChatPage } from './components/ChatUI/ChatPage';
 import { PersonalityContainer } from './components/containers/PersonalityContainer';
 
 import { SocialLayout } from './components/SocialLayout';
@@ -28,6 +27,7 @@ import { AccountSettings } from './pages/AccountSettingsPage';
 import { AccountSettingsLayout } from './components/AccountSettingsLayout';
 import { LifeJourneys } from './components/NonLatentDetails';
 import { LifeJourneyLayout } from './components/LifeJourneyLayout';
+import { StreamChatPage } from './pages/StreamChatPage';
 
 const reactRouter = createBrowserRouter([
   {
@@ -114,7 +114,7 @@ const reactRouter = createBrowserRouter([
   },
   {
     path: '/chat',
-    element: <ChatPage />,
+    element: <StreamChatPage />,
   },
   {
     path: '/account-settings',
