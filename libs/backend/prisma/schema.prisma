@@ -205,8 +205,7 @@ model UserInterests {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  dataProvider DataProvider
-  interests    InterestsCluster[]
+  interests InterestsCluster[]
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

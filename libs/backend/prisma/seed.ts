@@ -10,6 +10,25 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  // User with incomplete profile
+  await prisma.user.create({
+    data: {
+      id: 'do_not_use',
+
+      email: 'john.does.not@example.com',
+      password: await hash('password'),
+
+      confirmationCode: '',
+      confirmedAt: new Date(),
+
+      displayName: 'John Does Not',
+      gender: Gender.FE,
+      geographyLat: 0.0,
+      geographyLon: 0.0,
+    },
+  });
+
+  // User with complete profile
   await prisma.user.create({
     data: {
       id: 'clxenc3fw0007gzz3pdz6enfe',
@@ -21,15 +40,9 @@ async function main() {
       confirmedAt: new Date(),
 
       displayName: 'John Doe',
-      gender: Gender.OT,
+      gender: Gender.MA,
       geographyLat: 0.0,
       geographyLon: 0.0,
-
-      userInterests: {
-        create: {
-          dataProvider: 'GOOGLE',
-        },
-      },
 
       userTraits: {
         create: {

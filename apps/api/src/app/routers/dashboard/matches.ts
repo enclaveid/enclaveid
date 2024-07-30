@@ -4,15 +4,21 @@ import { router, authenticatedProcedure } from '../../trpc';
 import { UserMatch } from '@prisma/client';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
+import { UserMatchOverview } from '@enclaveid/shared';
+import { localGeocoderLookup } from '../../services/localGeocoder';
 
-function parseMatch(userMatch: UserMatch, direction: 'fromUser' | 'toUser') {
+async function parseMatch(
+  userMatch: UserMatch,
+  direction: 'fromUser' | 'toUser',
+) {
   return {
     displayName: userMatch[direction].displayName,
     gender: userMatch[direction].gender,
-    geography: {
-      latitude: userMatch[direction].geographyLat,
-      longitude: userMatch[direction].geographyLon,
-    },
+    humanReadableGeography: await localGeocoderLookup(
+      userMatch[direction].geographyLat,
+      userMatch[direction].geographyLon,
+    ),
+
     userMatchId: userMatch.id,
     overallMatch: userMatch.overallMatch,
   };
@@ -70,12 +76,17 @@ export const matches = router({
       },
     });
 
-    return [
-      user.fromMatches.map((match) => parseMatch(match, 'toUser')),
-      user.toMatches.map((match) => parseMatch(match, 'fromUser')),
-    ]
-      .flat()
-      .sort((a, b) => b.overallMatch - a.overallMatch);
+    return await Promise.all([
+      ...user.fromMatches.map((match) => parseMatch(match, 'toUser')),
+      ...user.toMatches.map((match) => parseMatch(match, 'fromUser')),
+    ]).then(
+      (r) =>
+        r
+          .flat()
+          .sort(
+            (a, b) => b.overallMatch - a.overallMatch,
+          ) as UserMatchOverview[],
+    );
   }),
   getUserMatchDetails: authenticatedProcedure
     .input(

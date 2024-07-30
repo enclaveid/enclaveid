@@ -57,7 +57,9 @@ export function AuthenticationContainer({
 
       authCheck.refetch().then(() => {
         const navigateTo =
-          authenticationType === 'login' ? from.pathname : '/fileUpload';
+          authenticationType === 'login'
+            ? from.pathname ?? '/dashboard'
+            : '/fileUpload';
 
         navigate(navigateTo);
       });

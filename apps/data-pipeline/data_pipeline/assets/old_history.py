@@ -396,13 +396,11 @@ def api_user_matches(
             .values(
                 id=generate_cuid(),
                 userId=context.partition_key,
-                dataProvider="GOOGLE",
                 updatedAt=func.now(),
             )
             .on_conflict_do_update(
                 index_elements=[
                     UserInterests.userId,
-                    UserInterests.dataProvider,
                 ],
                 set_={
                     "id": UserInterests.id,

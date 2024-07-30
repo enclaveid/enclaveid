@@ -1,27 +1,20 @@
 import { Link } from 'react-router-dom';
 import { LocationPinIcon } from './Icons';
 import classNames from 'classnames';
-import { getIdenticon } from '../utils/identicons';
+import { getIdenticon } from '../utils/ui/identicons';
+import { UserMatchOverview } from '@enclaveid/shared';
 
-type User = {
-  name: string;
-  gender: string;
-  location: string;
-  type: string;
-  image: string;
-  loading?: boolean;
-  matchPercentage: number;
-};
+interface SocialCardProps {
+  userMatchOverview: UserMatchOverview;
+  loading: boolean;
+}
 
-function SocialCard({
-  name,
-  gender,
-  location,
-  loading,
-  matchPercentage,
-}: User) {
-  const formattedLink = (name: string) => {
-    return name
+function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
+  const { displayName, gender, geography, overallMatch, userMatchId } =
+    userMatchOverview;
+
+  const formattedLink = (displayName: string) => {
+    return displayName
       .split(' ')
       .map((word) => word.toLowerCase())
       .join('-');
@@ -43,30 +36,30 @@ function SocialCard({
   }
 
   const getMatchBackgroundColor = (percentage: number) => {
-    if (percentage < 50) {
-      return 'bg-[#FF5C00]/10 text-[#FF5C00]';
-    } else if (percentage < 80) {
-      return 'bg-[#2F5FA6]/20 text-[#2F5FA6]';
-    } else {
-      return 'bg-greenBg/10 text-greenBg';
-    }
+    // if (percentage < 50) {
+    //   return 'bg-[#FF5C00]/10 text-[#FF5C00]';
+    // } else if (percentage < 80) {
+    //   return 'bg-[#2F5FA6]/20 text-[#2F5FA6]';
+    // }
+
+    return 'bg-greenBg/10 text-greenBg';
   };
 
   return (
     <Link
-      to={`/socials/${formattedLink(name)}`}
-      state={{ name, gender, location }}
+      to={`/socials/${formattedLink(displayName)}`}
+      state={{ displayName, gender, location }}
       className="p-6 flex items-center gap-4 border border-[#E5E8EE] rounded-3xl"
     >
       <img
-        src={getIdenticon(name)}
+        src={getIdenticon(displayName)}
         alt=""
         className="w-[101px] h-[101px] rounded-full"
       />
       <div className="flex justify-between w-full flex-wrap gap-3">
         <div className="flex flex-col">
           <h4 className="text-passiveLinkColor font-medium text-2xl leading-7">
-            {name}
+            {displayName}
           </h4>
 
           <h5 className="text-passiveLinkColor font-medium leading-[18px] mt-[9px]">

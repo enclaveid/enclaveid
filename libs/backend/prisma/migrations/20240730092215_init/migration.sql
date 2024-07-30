@@ -169,7 +169,6 @@ CREATE TABLE "UserInterests" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "dataProvider" "DataProvider" NOT NULL,
     "userId" TEXT NOT NULL,
 
     CONSTRAINT "UserInterests_pkey" PRIMARY KEY ("id")

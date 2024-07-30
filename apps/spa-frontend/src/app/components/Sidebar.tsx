@@ -8,11 +8,26 @@ import { SimilarProfileBadge } from './SimilarProfileBadge';
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Logo } from './Logo';
-import { sidebarItems } from '../utils/sidebarItems';
+import { sidebarItems } from '../utils/ui/sidebarItems';
 import { trpc } from '../utils/trpc';
 
 export interface SidebarProps {
   onLogout?: () => void;
+}
+
+function renderSidebarItems() {
+  return Object.entries(sidebarItems).map(([title, items]) => (
+    <SidebarSection title={title} key={title}>
+      {items.map((item) => (
+        <SidebarItem
+          key={item.text}
+          icon={<item.icon />}
+          text={item.text}
+          href={item.href}
+        />
+      ))}
+    </SidebarSection>
+  ));
 }
 
 function Sidebar(props: SidebarProps) {
@@ -37,17 +52,7 @@ function Sidebar(props: SidebarProps) {
       </div>
       <div className="sm:flex hidden flex-col justify-between flex-1 py-5">
         <div className="flex flex-col gap-[18px]">
-          {Object.entries(sidebarItems).map(([title, items]) => (
-            <SidebarSection title={title}>
-              {items.map((item) => (
-                <SidebarItem
-                  icon={<item.icon />}
-                  text={item.text}
-                  href={item.href}
-                />
-              ))}
-            </SidebarSection>
-          ))}
+          {renderSidebarItems()}
           <SimilarProfileBadge peopleCount={peopleCount} />
         </div>
         <SidebarSection noGap={true}>
@@ -122,17 +127,7 @@ function Sidebar(props: SidebarProps) {
                   </div>
                   <div className="flex flex-col justify-between flex-1 py-5">
                     <div className="flex flex-col gap-[18px]">
-                      {Object.entries(sidebarItems).map(([title, items]) => (
-                        <SidebarSection title={title}>
-                          {items.map((item) => (
-                            <SidebarItem
-                              icon={<item.icon />}
-                              text={item.text}
-                              href={item.href}
-                            />
-                          ))}
-                        </SidebarSection>
-                      ))}
+                      {renderSidebarItems()}
                       <SimilarProfileBadge peopleCount={peopleCount} />
                     </div>
                     <SidebarSection noGap={true}>

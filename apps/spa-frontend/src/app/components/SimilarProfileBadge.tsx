@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { getIdenticon } from '../utils/identicons';
+import { getIdenticon } from '../utils/ui/identicons';
 
 interface SimilarProfileBadgeProps {
   peopleCount: number;

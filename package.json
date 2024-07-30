@@ -161,6 +161,7 @@
     "ioredis": "^5.4.1",
     "jdenticon": "^3.3.0",
     "jszip": "^3.10.1",
+    "local-reverse-geocoder": "^0.16.7",
     "proxy-chain": "^2.4.0",
     "puppeteer": "^22.9.0",
     "puppeteer-extra": "^3.3.6",

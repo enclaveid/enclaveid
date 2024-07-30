@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useEffect } from 'react';
-import { sidebarItems } from '../utils/sidebarItems';
+import { sidebarItems } from '../utils/ui/sidebarItems';
 
 const pathToLabelMap = Object.entries(sidebarItems).reduce(
   (acc, [title, items]) => {
