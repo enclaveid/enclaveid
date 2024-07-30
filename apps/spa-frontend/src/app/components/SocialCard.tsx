@@ -6,7 +6,7 @@ import { UserMatchOverview } from '@enclaveid/shared';
 
 interface SocialCardProps {
   userMatchOverview: UserMatchOverview;
-  loading: boolean;
+  loading?: boolean;
 }
 
 function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
@@ -18,6 +18,10 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
       .split(' ')
       .map((word) => word.toLowerCase())
       .join('-');
+  };
+
+  const formattedPercentage = (raw: number) => {
+    return (raw * 100).toFixed(2);
   };
 
   if (loading) {
@@ -36,11 +40,8 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
   }
 
   const getMatchBackgroundColor = (percentage: number) => {
-    // if (percentage < 50) {
-    //   return 'bg-[#FF5C00]/10 text-[#FF5C00]';
-    // } else if (percentage < 80) {
-    //   return 'bg-[#2F5FA6]/20 text-[#2F5FA6]';
-    // }
+    if (percentage < 0.5) return 'bg-[#FF5C00]/10 text-[#FF5C00]';
+    // if (percentage < 0.8) return 'bg-[#2F5FA6]/20 text-[#2F5FA6]';
 
     return 'bg-greenBg/10 text-greenBg';
   };
@@ -48,7 +49,7 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
   return (
     <Link
       to={`/socials/${formattedLink(displayName)}`}
-      state={{ displayName, gender, humanReadableGeography }}
+      state={{ userMatchOverview }}
       className="p-6 flex items-center gap-4 border border-[#E5E8EE] rounded-3xl"
     >
       <img
@@ -79,7 +80,7 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
               getMatchBackgroundColor(overallMatch),
             )}
           >
-            {overallMatch}% overall match
+            {formattedPercentage(overallMatch)}% overall match
           </div>
         </div>
       </div>

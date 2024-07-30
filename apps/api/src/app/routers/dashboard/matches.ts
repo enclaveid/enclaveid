@@ -18,11 +18,12 @@ async function parseMatch(
       userMatch[direction].geographyLat,
       userMatch[direction].geographyLon,
     ),
-
     userMatchId: userMatch.id,
     overallMatch: userMatch.overallMatch,
   };
 }
+
+const SIMILARITY_THRESHOLD = 0.95;
 
 const userMatchDetailsSelector = {
   select: {
@@ -30,8 +31,6 @@ const userMatchDetailsSelector = {
     gender: true,
     geographyLat: true,
     geographyLon: true,
-  },
-  include: {
     userTraits: {
       include: {
         bigFive: true,
@@ -91,7 +90,7 @@ export const matches = router({
   getUserMatchDetails: authenticatedProcedure
     .input(
       z.object({
-        userMatchId: z.string(),
+        userMatchId: z.string().min(1),
       }),
     )
     .query(async (opts) => {
@@ -137,6 +136,7 @@ export const matches = router({
 
       const userInterestMatches = await prisma.interestsClusterMatch.findMany({
         where: {
+          cosineSimilarity: { gte: SIMILARITY_THRESHOLD },
           OR: [
             {
               AND: [

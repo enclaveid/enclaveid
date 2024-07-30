@@ -550,11 +550,12 @@ def api_user_matches(
         UserTraits = api_db.get_mapped_class("UserTraits")
         MoralFoundations = api_db.get_mapped_class("MoralFoundations")
         BigFive = api_db.get_mapped_class("BigFive")
+
         current_user_traits = (
             db_conn.query(UserTraits, MoralFoundations, BigFive)
+            .join(MoralFoundations, UserTraits.id == MoralFoundations.userTraitsId)
+            .join(BigFive, UserTraits.id == BigFive.userTraitsId)
             .filter(UserTraits.userId == context.partition_key)
-            .filter(UserTraits.id == MoralFoundations.userTraitsId)
-            .filter(UserTraits.id == BigFive.userTraitsId)
             .first()
         )
 
@@ -575,7 +576,7 @@ def api_user_matches(
             )
 
             user_matches_to_insert = []
-            current_user_mft, current_user_big5 = current_user_traits[0]
+            _, current_user_mft, current_user_big5 = current_user_traits
 
             interests_similarities = summaries_user_matches.groupby(
                 ["other_user_id", "activity_type"]
@@ -615,12 +616,13 @@ def api_user_matches(
                     }
                 )
 
-            UserMatch = api_db.get_mapped_class("UserMatch")
-            db_conn.execute(
-                pg_insert(UserMatch)
-                .values(user_matches_to_insert)
-                .on_conflict_do_nothing()
-            )
+            if len(user_matches_to_insert) > 0:
+                UserMatch = api_db.get_mapped_class("UserMatch")
+                db_conn.execute(
+                    pg_insert(UserMatch)
+                    .values(user_matches_to_insert)
+                    .on_conflict_do_nothing()
+                )
 
         # TODO Clean duplicates
 

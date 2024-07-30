@@ -10,9 +10,9 @@ datasource db {
 }
 
 enum Gender {
-  MA
-  FE
-  OT
+  Male
+  Female
+  Other
 }
 
 model User {

@@ -70,7 +70,7 @@ CREATE TABLE "Riasec" (
     "enterprising" DOUBLE PRECISION NOT NULL,
     "conventional" DOUBLE PRECISION NOT NULL,
     "summary" TEXT,
-    "userTraitsId" TEXT,
+    "userTraitsId" TEXT NOT NULL,
 
     CONSTRAINT "Riasec_pkey" PRIMARY KEY ("id")
 );
@@ -88,7 +88,7 @@ CREATE TABLE "MoralFoundations" (
     "summary" TEXT,
     "goodCheck" DOUBLE PRECISION NOT NULL,
     "mathCheck" DOUBLE PRECISION NOT NULL,
-    "userTraitsId" TEXT,
+    "userTraitsId" TEXT NOT NULL,
 
     CONSTRAINT "MoralFoundations_pkey" PRIMARY KEY ("id")
 );
@@ -101,7 +101,7 @@ CREATE TABLE "PoliticalCompass" (
     "economic" DOUBLE PRECISION NOT NULL,
     "social" DOUBLE PRECISION NOT NULL,
     "summary" TEXT,
-    "userTraitsId" TEXT,
+    "userTraitsId" TEXT NOT NULL,
 
     CONSTRAINT "PoliticalCompass_pkey" PRIMARY KEY ("id")
 );
@@ -117,7 +117,7 @@ CREATE TABLE "BigFive" (
     "agreeableness" DOUBLE PRECISION NOT NULL,
     "neuroticism" DOUBLE PRECISION NOT NULL,
     "summary" TEXT,
-    "userTraitsId" TEXT,
+    "userTraitsId" TEXT NOT NULL,
 
     CONSTRAINT "BigFive_pkey" PRIMARY KEY ("id")
 );
@@ -132,7 +132,7 @@ CREATE TABLE "Mbti" (
     "thinking" BOOLEAN NOT NULL,
     "judging" BOOLEAN NOT NULL,
     "summary" TEXT,
-    "userTraitsId" TEXT,
+    "userTraitsId" TEXT NOT NULL,
 
     CONSTRAINT "Mbti_pkey" PRIMARY KEY ("id")
 );
@@ -159,7 +159,7 @@ CREATE TABLE "SixteenPersonalityFactor" (
     "perfectionism" DOUBLE PRECISION NOT NULL,
     "tension" DOUBLE PRECISION NOT NULL,
     "summary" TEXT,
-    "userTraitsId" TEXT,
+    "userTraitsId" TEXT NOT NULL,
 
     CONSTRAINT "SixteenPersonalityFactor_pkey" PRIMARY KEY ("id")
 );

@@ -1,9 +1,12 @@
 import { useLocation } from 'react-router-dom';
-import { Tabs } from '../components/Tabs';
 import { SocialCard } from '../components/SocialCard';
 import { useEffect, useState } from 'react';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { RequireAuth } from '../providers/AuthProvider';
+import { SimilarInterestsCharts } from '../components/SimilarInterestsCharts';
+import { UserMatchOverview } from '@enclaveid/shared';
+import { trpc } from '../utils/trpc';
+import { LoadingPage } from './LoadingPage';
 
 const tabs = [
   { title: 'Personality', path: '/socials/:title/personality' },
@@ -46,12 +49,27 @@ function ProfilePage() {
     setLink(formatUsernameFromPath(location.pathname));
   }, [location.pathname]);
 
+  const userMatchOverview = location.state
+    .userMatchOverview as UserMatchOverview;
+
+  const matchDetailsQuery = trpc.private.getUserMatchDetails.useQuery({
+    userMatchId: userMatchOverview.userMatchId,
+  });
+
   return (
     <RequireAuth>
       <div className="px-4 mt-5 pb-2">
-        <SocialCard {...location.state} />
+        <SocialCard userMatchOverview={userMatchOverview} />
       </div>
-      <Tabs tabs={userTabs} />
+      {matchDetailsQuery.isLoading ? (
+        <LoadingPage />
+      ) : (
+        <SimilarInterestsCharts
+          proactiveInterests={matchDetailsQuery.data.proactiveInterests}
+          reactiveInterests={matchDetailsQuery.data.reactiveInterests}
+        />
+      )}
+      {/* <Tabs tabs={userTabs} /> */}
     </RequireAuth>
   );
 }
