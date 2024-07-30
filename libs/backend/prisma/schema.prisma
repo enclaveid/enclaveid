@@ -50,7 +50,7 @@ model Session {
 
   sessionSecret Bytes
 
-  user   User?   @relation(fields: [userId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String? @unique
 }
 
@@ -89,7 +89,7 @@ model UserTraits {
   riasec                   Riasec[]
 
   userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Riasec {
@@ -105,7 +105,7 @@ model Riasec {
   conventional  Float
   summary       String?
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id])
+  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
   userTraitsId String?
 }
 
@@ -124,7 +124,7 @@ model MoralFoundations {
   goodCheck Float // more than 3 invalidates the test
   mathCheck Float // less than 3 invalidates the test
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id])
+  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
   userTraitsId String?
 }
 
@@ -137,7 +137,7 @@ model PoliticalCompass {
   social   Float
   summary  String?
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id])
+  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
   userTraitsId String?
 }
 
@@ -153,7 +153,7 @@ model BigFive {
   neuroticism       Float
   summary           String?
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id])
+  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
   userTraitsId String?
 }
 
@@ -168,7 +168,7 @@ model Mbti {
   judging      Boolean
   summary      String?
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id])
+  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
   userTraitsId String?
 }
 
@@ -195,7 +195,7 @@ model SixteenPersonalityFactor {
   tension            Float
   summary            String?
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id])
+  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
   userTraitsId String?
 }
 
@@ -209,7 +209,7 @@ model UserInterests {
   interests    InterestsCluster[]
 
   userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model InterestsCluster {
@@ -222,7 +222,7 @@ model InterestsCluster {
   summary           String
 
   userInterestsId String
-  userInterests   UserInterests @relation(fields: [userInterestsId], references: [id])
+  userInterests   UserInterests @relation(fields: [userInterestsId], references: [id], onDelete: Cascade)
 
   fromMatches InterestsClusterMatch[] @relation(name: "FromInterestsCluster")
   toMatches   InterestsClusterMatch[] @relation(name: "ToInterestsCluster")
@@ -240,8 +240,8 @@ model InterestsClusterMatch {
   fromClusterId String
   toClusterId   String
 
-  fromCluster InterestsCluster @relation(name: "FromInterestsCluster", fields: [fromClusterId], references: [id])
-  toCluster   InterestsCluster @relation(name: "ToInterestsCluster", fields: [toClusterId], references: [id])
+  fromCluster InterestsCluster @relation(name: "FromInterestsCluster", fields: [fromClusterId], references: [id], onDelete: Cascade)
+  toCluster   InterestsCluster @relation(name: "ToInterestsCluster", fields: [toClusterId], references: [id], onDelete: Cascade)
 
   @@unique([fromClusterId, toClusterId])
 }
@@ -266,8 +266,8 @@ model UserMatch {
   fromUserId String
   toUserId   String
 
-  fromUser User @relation(fields: [fromUserId], references: [id], name: "FromUser")
-  toUser   User @relation(fields: [toUserId], references: [id], name: "ToUser")
+  fromUser User @relation(fields: [fromUserId], references: [id], name: "FromUser", onDelete: Cascade)
+  toUser   User @relation(fields: [toUserId], references: [id], name: "ToUser", onDelete: Cascade)
 
   @@unique([fromUserId, toUserId])
 }

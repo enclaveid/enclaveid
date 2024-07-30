@@ -246,43 +246,43 @@ CREATE UNIQUE INDEX "UserMatch_fromUserId_toUserId_key" ON "UserMatch"("fromUser
 ALTER TABLE "User" ADD CONSTRAINT "User_chromePodId_fkey" FOREIGN KEY ("chromePodId") REFERENCES "ChromePod"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserTraits" ADD CONSTRAINT "UserTraits_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserTraits" ADD CONSTRAINT "UserTraits_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Riasec" ADD CONSTRAINT "Riasec_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Riasec" ADD CONSTRAINT "Riasec_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MoralFoundations" ADD CONSTRAINT "MoralFoundations_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "MoralFoundations" ADD CONSTRAINT "MoralFoundations_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PoliticalCompass" ADD CONSTRAINT "PoliticalCompass_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "PoliticalCompass" ADD CONSTRAINT "PoliticalCompass_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BigFive" ADD CONSTRAINT "BigFive_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "BigFive" ADD CONSTRAINT "BigFive_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Mbti" ADD CONSTRAINT "Mbti_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Mbti" ADD CONSTRAINT "Mbti_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SixteenPersonalityFactor" ADD CONSTRAINT "SixteenPersonalityFactor_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "SixteenPersonalityFactor" ADD CONSTRAINT "SixteenPersonalityFactor_userTraitsId_fkey" FOREIGN KEY ("userTraitsId") REFERENCES "UserTraits"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserInterests" ADD CONSTRAINT "UserInterests_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserInterests" ADD CONSTRAINT "UserInterests_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "InterestsCluster" ADD CONSTRAINT "InterestsCluster_userInterestsId_fkey" FOREIGN KEY ("userInterestsId") REFERENCES "UserInterests"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InterestsCluster" ADD CONSTRAINT "InterestsCluster_userInterestsId_fkey" FOREIGN KEY ("userInterestsId") REFERENCES "UserInterests"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_fromClusterId_fkey" FOREIGN KEY ("fromClusterId") REFERENCES "InterestsCluster"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_fromClusterId_fkey" FOREIGN KEY ("fromClusterId") REFERENCES "InterestsCluster"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_toClusterId_fkey" FOREIGN KEY ("toClusterId") REFERENCES "InterestsCluster"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_toClusterId_fkey" FOREIGN KEY ("toClusterId") REFERENCES "InterestsCluster"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_fromUserId_fkey" FOREIGN KEY ("fromUserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_fromUserId_fkey" FOREIGN KEY ("fromUserId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_toUserId_fkey" FOREIGN KEY ("toUserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_toUserId_fkey" FOREIGN KEY ("toUserId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

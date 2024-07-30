@@ -4,6 +4,8 @@ import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Button } from '../components/Button';
 import { MarkIcon } from '../components/Icons';
+import { useNavigate } from 'react-router-dom';
+import { trpc } from '../utils/trpc';
 
 interface SettingOption {
   label: string;
@@ -34,19 +36,18 @@ interface ModalProps {
 }
 
 const accountSettings: AccountSettings = {
-  personality: [
+  'Social features': [
     {
-      label: 'Do not match over sensitive psychosocial topics',
+      label: 'Enable matching with other users',
       value: true,
     },
     {
-      label: 'Disable social matching',
+      label: 'Match with others over sensitive topics',
       value: true,
     },
   ],
-  more: {
-    deleteAccount: 'Delete my account and all of my history',
-    //logOut: 'Log Out',
+  'Danger zone': {
+    deleteAccount: 'Delete my account and all of my data',
   },
 };
 
@@ -159,6 +160,10 @@ const SectionTab = ({
 };
 
 const DeleteModal = ({ isOpen, closeModal }: ModalProps) => {
+  const navigate = useNavigate();
+
+  const deleteEverythingMutation = trpc.private.deleteEverything.useMutation();
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-10" onClose={closeModal}>
@@ -206,14 +211,21 @@ const DeleteModal = ({ isOpen, closeModal }: ModalProps) => {
                     </p>
                   </div>
                   <div className="flex flex-col gap-4">
-                    <input
+                    {/* <input
                       type="text"
                       className="border border-[#D2DAE8] rounded-lg py-[11px] pl-[11px] pr-[15px] text-passiveLinkColor leading-[18px]"
                       placeholder="Enter your password to confirm"
-                    />
+                    /> */}
                     <Button
                       label="Confirm and Delete Account"
                       variant="error"
+                      onClick={() =>
+                        deleteEverythingMutation.mutate(null, {
+                          onSuccess: () => {
+                            navigate('/login');
+                          },
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -229,14 +241,6 @@ const DeleteModal = ({ isOpen, closeModal }: ModalProps) => {
 export function AccountSettings() {
   const [isOpen, setIsOpen] = useState(false);
 
-  function closeModal() {
-    setIsOpen(false);
-  }
-
-  function openModal() {
-    setIsOpen(true);
-  }
-
   return (
     <div className="flex flex-col gap-7 px-6">
       <h1 className="text-passiveLinkColor text-[23px] leading-[27px] font-medium">
@@ -251,7 +255,7 @@ export function AccountSettings() {
                 key={key}
                 title={key.charAt(0).toUpperCase() + key.slice(1)}
                 settings={settings}
-                openModal={openModal}
+                openModal={() => setIsOpen(true)}
               />
             );
           } else {
@@ -260,13 +264,13 @@ export function AccountSettings() {
                 key={key}
                 title={key.charAt(0).toUpperCase() + key.slice(1)}
                 moreOptions={settings}
-                openModal={openModal}
+                openModal={() => setIsOpen(true)}
               />
             );
           }
         })}
       </div>
-      <DeleteModal closeModal={closeModal} isOpen={isOpen} />
+      <DeleteModal closeModal={() => setIsOpen(false)} isOpen={isOpen} />
     </div>
   );
 }

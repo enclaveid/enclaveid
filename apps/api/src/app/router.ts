@@ -14,6 +14,7 @@ import { fileUpload } from './routers/fileUpload';
 import { authUtils } from './routers/authUtils';
 import { matches } from './routers/dashboard/matches';
 import { streamChat } from './routers/dashboard/streamChat';
+import { settings } from './routers/dashboard/settings';
 
 export const appRouter = router({
   [TRPC_PRIVATE_NAMESPACE]: mergeRouters(
@@ -25,6 +26,7 @@ export const appRouter = router({
     authUtils,
     matches,
     streamChat,
+    settings,
   ),
   [TRPC_PUBLIC_NAMESPACE]: mergeRouters(attestation, authentication),
 });

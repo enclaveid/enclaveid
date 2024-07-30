@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { SocialCard } from '../components/SocialCard';
-import { SocialFilter } from '../components/SocialFilter';
 import { userData } from '../components/mock-data';
 import { RequireAuth } from '../providers/AuthProvider';
 function SocialPage() {
@@ -18,12 +17,12 @@ function SocialPage() {
   return (
     <RequireAuth>
       <div className="flex flex-col py-3.5 px-6 gap-3.5">
-        <SocialFilter
+        {/* <SocialFilter
           selectedFilters={selectedFilters}
           setSelectedFilters={setSelectedFilters}
           setSearchQuery={setSearchQuery}
           loading={loading}
-        />
+        /> */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-5 gap-y-4">
           {filteredUsers.map((user, index) => (
             <SocialCard key={index} {...user} loading={loading} />
