@@ -18,7 +18,15 @@ from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bReso
 from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
     SentenceTransformerResource,
 )
-from data_pipeline.utils.maximum_bipartite_matching import maximum_bipartite_matching
+from data_pipeline.utils.matching.maximum_bipartite_matching import (
+    maximum_bipartite_matching,
+)
+from data_pipeline.utils.matching.overall_similarity_formula import (
+    calculate_big5_similarity,
+    calculate_interests_similarity,
+    calculate_mft_similarity,
+    calculate_overall_similarity,
+)
 from data_pipeline.utils.postgres import generate_cuid
 
 from ..constants.custom_config import RowLimitConfig
@@ -476,7 +484,7 @@ def api_user_matches(
 
         # Match the newly created clusters with the current user's clusters
         # by mapping the dataframe cluster ids to the database pipelineClusterIds
-        current_user_map = {
+        current_user_cluster_ids_map = {
             cluster[0].pipelineClusterId: cluster[0].id
             for cluster in current_user_interests_clusters
         }
@@ -486,12 +494,12 @@ def api_user_matches(
             db_conn.commit()
             return
 
-        other_users_map = {}
+        other_users_clusters_ids_map = {}
         for cluster_record, user_interests_record in other_user_interests_clusters:
             user_id = user_interests_record.userId
-            if user_id not in other_users_map:
-                other_users_map[user_id] = {}
-            other_users_map[user_id][
+            if user_id not in other_users_clusters_ids_map:
+                other_users_clusters_ids_map[user_id] = {}
+            other_users_clusters_ids_map[user_id][
                 cluster_record.pipelineClusterId
             ] = cluster_record.id
 
@@ -504,11 +512,11 @@ def api_user_matches(
             .with_columns(
                 [
                     pl.col("user_cluster_label")
-                    .apply(lambda x: current_user_map.get(x))
+                    .apply(lambda x: current_user_cluster_ids_map.get(x))
                     .alias("fromClusterId"),
                     pl.struct(["other_user_id", "other_user_cluster_label"])
                     .apply(
-                        lambda x: other_users_map[x["other_user_id"]][  # type: ignore
+                        lambda x: other_users_clusters_ids_map[x["other_user_id"]][  # type: ignore
                             x["other_user_cluster_label"]  # type: ignore
                         ]
                     )
@@ -531,9 +539,89 @@ def api_user_matches(
             .to_dicts()
         )
 
+        InterestsClusterMatch = api_db.get_mapped_class("InterestsClusterMatch")
         db_conn.execute(
-            pg_insert(api_db.get_mapped_class("InterestsClusterMatch"))
+            pg_insert(InterestsClusterMatch)
             .values(matches_to_insert)
             .on_conflict_do_nothing()
         )
+
+        # Calculate the overall similarities
+        UserTraits = api_db.get_mapped_class("UserTraits")
+        MoralFoundations = api_db.get_mapped_class("MoralFoundations")
+        BigFive = api_db.get_mapped_class("BigFive")
+        current_user_traits = (
+            db_conn.query(UserTraits, MoralFoundations, BigFive)
+            .filter(UserTraits.userId == context.partition_key)
+            .filter(UserTraits.id == MoralFoundations.userTraitsId)
+            .filter(UserTraits.id == BigFive.userTraitsId)
+            .first()
+        )
+
+        if current_user_traits:
+            other_users_traits = (
+                db_conn.query(UserTraits, MoralFoundations, BigFive)
+                .filter(
+                    UserTraits.userId.in_(
+                        [
+                            user_interests_record.userId
+                            for _, user_interests_record in other_user_interests_clusters
+                        ]
+                    )
+                )
+                .filter(UserTraits.id == MoralFoundations.userTraitsId)
+                .filter(UserTraits.id == BigFive.userTraitsId)
+                .all()
+            )
+
+            user_matches_to_insert = []
+            current_user_mft, current_user_big5 = current_user_traits[0]
+
+            interests_similarities = summaries_user_matches.groupby(
+                ["other_user_id", "activity_type"]
+            ).agg([pl.col("cosine_similarity").apply(calculate_interests_similarity)])
+
+            for other_user_t, other_user_mft, other_user_big5 in other_users_traits:
+                mft_similarity = calculate_mft_similarity(
+                    current_user_mft, other_user_mft
+                )
+                big5_similarity = calculate_big5_similarity(
+                    current_user_big5, other_user_big5
+                )
+                proactive_interests_similarity = interests_similarities.filter(
+                    (pl.col("other_user_id") == other_user_t.userId)
+                    & (pl.col("activity_type") == "proactive")
+                )["cosine_similarity"][0]
+
+                reactive_interests_similarity = interests_similarities.filter(
+                    (pl.col("other_user_id") == other_user_t.userId)
+                    & (pl.col("activity_type") == "reactive")
+                )["cosine_similarity"][0]
+
+                overall_similarity = calculate_overall_similarity(
+                    big5_similarity,
+                    mft_similarity,
+                    proactive_interests_similarity,
+                    reactive_interests_similarity,
+                )
+
+                user_matches_to_insert.append(
+                    {
+                        "id": generate_cuid(),
+                        "fromUserId": context.partition_key,
+                        "toUserId": other_user_t.userId,
+                        "overallMatch": overall_similarity,
+                        "updatedAt": func.now(),
+                    }
+                )
+
+            UserMatch = api_db.get_mapped_class("UserMatch")
+            db_conn.execute(
+                pg_insert(UserMatch)
+                .values(user_matches_to_insert)
+                .on_conflict_do_nothing()
+            )
+
+        # TODO Clean duplicates
+
         db_conn.commit()

@@ -105,8 +105,8 @@ model Riasec {
   conventional  Float
   summary       String?
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
-  userTraitsId String?
+  userTraits   UserTraits @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
+  userTraitsId String
 }
 
 model MoralFoundations {
@@ -124,8 +124,8 @@ model MoralFoundations {
   goodCheck Float // more than 3 invalidates the test
   mathCheck Float // less than 3 invalidates the test
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
-  userTraitsId String?
+  userTraits   UserTraits @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
+  userTraitsId String
 }
 
 model PoliticalCompass {
@@ -137,8 +137,8 @@ model PoliticalCompass {
   social   Float
   summary  String?
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
-  userTraitsId String?
+  userTraits   UserTraits @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
+  userTraitsId String
 }
 
 model BigFive {
@@ -153,8 +153,8 @@ model BigFive {
   neuroticism       Float
   summary           String?
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
-  userTraitsId String?
+  userTraits   UserTraits @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
+  userTraitsId String
 }
 
 model Mbti {
@@ -168,8 +168,8 @@ model Mbti {
   judging      Boolean
   summary      String?
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
-  userTraitsId String?
+  userTraits   UserTraits @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
+  userTraitsId String
 }
 
 model SixteenPersonalityFactor {
@@ -195,8 +195,8 @@ model SixteenPersonalityFactor {
   tension            Float
   summary            String?
 
-  userTraits   UserTraits? @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
-  userTraitsId String?
+  userTraits   UserTraits @relation(fields: [userTraitsId], references: [id], onDelete: Cascade)
+  userTraitsId String
 }
 
 // DATA PIPELINE OUTPUT --------------------------------------------

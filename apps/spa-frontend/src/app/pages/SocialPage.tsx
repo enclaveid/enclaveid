@@ -2,13 +2,8 @@ import { SocialCard } from '../components/SocialCard';
 import { RequireAuth } from '../providers/AuthProvider';
 import { trpc } from '../utils/trpc';
 
-const ENABLE_CLIENT_FILTERING = false;
-
 function SocialPage() {
-
-  const userMatches = trpc.private.getUserMatches.useQuery()
-
-  userMatches.data
+  const userMatches = trpc.private.getUserMatches.useQuery();
 
   return (
     <RequireAuth>
@@ -20,9 +15,15 @@ function SocialPage() {
             loading={loading}
           /> */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-5 gap-y-4">
-          {filteredUsers.map((user, index) => (
-            <SocialCard key={index} {...user} loading={userMatches.isLoading} />
-          ))}
+          {userMatches.isFetched &&
+            userMatches.data.map((userMatchOverview, index) => (
+              <SocialCard
+                key={index}
+                //@ts-ignore
+                userMatchOverview={userMatchOverview}
+                loading={userMatches.isLoading}
+              />
+            ))}
         </div>
       </div>
     </RequireAuth>

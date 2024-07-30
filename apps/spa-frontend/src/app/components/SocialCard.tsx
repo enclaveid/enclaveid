@@ -10,7 +10,7 @@ interface SocialCardProps {
 }
 
 function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
-  const { displayName, gender, geography, overallMatch, userMatchId } =
+  const { displayName, gender, humanReadableGeography, overallMatch } =
     userMatchOverview;
 
   const formattedLink = (displayName: string) => {
@@ -48,7 +48,7 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
   return (
     <Link
       to={`/socials/${formattedLink(displayName)}`}
-      state={{ displayName, gender, location }}
+      state={{ displayName, gender, humanReadableGeography }}
       className="p-6 flex items-center gap-4 border border-[#E5E8EE] rounded-3xl"
     >
       <img
@@ -68,21 +68,19 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
           <div className="flex items-center gap-2 mt-3">
             <LocationPinIcon />
             <h6 className="text-passiveLinkColor font-medium leading-[18px]">
-              {location}
+              {humanReadableGeography}
             </h6>
           </div>
         </div>
         <div>
-          {matchPercentage && (
-            <div
-              className={classNames(
-                'p-2.5 rounded-full text-sm leading-[16.4px] font-medium',
-                getMatchBackgroundColor(matchPercentage),
-              )}
-            >
-              {matchPercentage}% overall match
-            </div>
-          )}
+          <div
+            className={classNames(
+              'p-2.5 rounded-full text-sm leading-[16.4px] font-medium',
+              getMatchBackgroundColor(overallMatch),
+            )}
+          >
+            {overallMatch}% overall match
+          </div>
         </div>
       </div>
     </Link>
