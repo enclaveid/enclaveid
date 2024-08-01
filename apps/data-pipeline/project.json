@@ -96,7 +96,7 @@
       "executor": "@nx-tools/nx-container:build",
       "dependsOn": ["build"],
       "options": {
-        "engine": "docker",
+        "engine": "podman",
         "push": true,
         "file": "apps/data-pipeline/Dockerfile.ml",
         "platforms": ["linux/amd64"],
@@ -118,7 +118,7 @@
       "executor": "@nx-tools/nx-container:build",
       "dependsOn": ["build"],
       "options": {
-        "engine": "docker",
+        "engine": "podman",
         "push": true,
         "file": "apps/data-pipeline/Dockerfile.base",
         "platforms": ["linux/amd64"],
