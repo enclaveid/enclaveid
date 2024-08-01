@@ -38,12 +38,6 @@ jobs:
       - name: Install poetry
         uses: abatilo/actions-poetry@v2
 
-      - uses: actions/cache@v3
-        name: Define a cache for the data-pipeline virtual environment based on the dependencies lock file
-        with:
-          path: ./apps/data-pipeline/.venv
-          key: venv-${{ hashFiles('./apps/data-pipeline/poetry.lock') }}
-
       - uses: pnpm/action-setup@v2
         with:
           version: 9.4.0
