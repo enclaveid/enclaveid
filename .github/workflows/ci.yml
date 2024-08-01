@@ -28,19 +28,16 @@ jobs:
 
       - name: Install Python
         uses: actions/setup-python@v4
-        # see details (matrix, python-version, python-version-file, etc.)
-        # https://github.com/actions/setup-python
+        with:
+          python-version: '3.10.14'
       - name: Install poetry
         uses: abatilo/actions-poetry@v2
-      - name: Setup a local virtual environment (if no poetry.toml file)
-        run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
+
       - uses: actions/cache@v3
-        name: Define a cache for the virtual environment based on the dependencies lock file
+        name: Define a cache for the data-pipeline virtual environment based on the dependencies lock file
         with:
-          path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
+          path: ./apps/data-pipeline/.venv
+          key: venv-${{ hashFiles('./apps/data-pipeline/poetry.lock') }}
 
       - uses: pnpm/action-setup@v2
         with:
@@ -59,4 +56,4 @@ jobs:
           main-branch-name: master
 
       - run: pnpm exec nx-cloud record -- nx format:check
-      - run: pnpm exec nx affected -t container container-base container-ml --parallel=3
+      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx affected -t container container-base container-ml --parallel=3
