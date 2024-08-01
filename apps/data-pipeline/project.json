@@ -109,7 +109,9 @@
             "type=ref,event=pr",
             "type=sha,prefix=sha-"
           ]
-        }
+        },
+        "cache-from": ["type=gha"],
+        "cache-to": ["type=gha,mode=max"]
       }
     },
     "container-base": {
@@ -129,7 +131,9 @@
             "type=ref,event=pr",
             "type=sha,prefix=sha-"
           ]
-        }
+        },
+        "cache-from": ["type=gha"],
+        "cache-to": ["type=gha,mode=max"]
       }
     },
     "container-jupyter": {
