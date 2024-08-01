@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Free Disk Space (Ubuntu)
         # uses: jlumbroso/free-disk-space@v1.3.1
-        uses: xc2/free-disk-space@b8bde45f32dc1b55cd995af61b15ec8144e6dea1
+        uses: xc2/free-disk-space@v1.0.0
         with:
           # This might remove tools that are actually needed, if set to "true" but frees about 6 GB
           tool-cache: true
