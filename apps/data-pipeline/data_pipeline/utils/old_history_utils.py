@@ -1,7 +1,7 @@
 import datetime
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 import polars as pl
 from dagster import get_dagster_logger
@@ -13,7 +13,7 @@ from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResour
 class InterestsSpec(BaseModel):
     name_prefix: str = Field(description="A prefix to add to the name of the asset.")
     enrichment_prompt_sequence: List[str]
-    summary_prompt_sequence: List[Any]
+    classification_prompt_sequence: List[Callable[[str], str]]
 
 
 @dataclass
@@ -111,3 +111,37 @@ def get_full_history_sessions(
         output_df=output_df,
         count_invalid_responses=int(output_df["count_invalid_responses"].sum()),
     )
+
+
+def parse_classification_result(raw_output: str):
+    # Extract classification
+    classification_match = re.search(r"Classification:\s*(.*)", raw_output)
+    classification = classification_match.group(1) if classification_match else None
+
+    # Extract confidence
+    confidence_match = re.search(r"Confidence:\s*(\d+)%", raw_output)
+    confidence = int(confidence_match.group(1)) / 100.0 if confidence_match else None
+
+    # Extract explanation
+    explanation_match = re.search(r"Explanation:\s*(.*)", raw_output, re.DOTALL)
+    explanation = explanation_match.group(1).strip() if explanation_match else None
+
+    parsed_classification = (
+        None
+        if classification is None
+        else {
+            "classification": classification,
+            "confidence": confidence,
+            "explanation": explanation,
+        }
+    )
+
+    if parsed_classification is None or parsed_classification["confidence"] < 0.5:
+        return "unknown"
+    else:
+        if "Knowledge Progression" in parsed_classification["classification"]:
+            return "proactive"
+        elif "Reactive Needs" in parsed_classification["classification"]:
+            return "reactive"
+        else:
+            return "unknown"

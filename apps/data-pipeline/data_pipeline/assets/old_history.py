@@ -36,6 +36,7 @@ from ..utils.is_cuda_available import is_cuda_available
 from ..utils.old_history_utils import (
     InterestsSpec,
     get_full_history_sessions,
+    parse_classification_result,
 )
 
 if is_cuda_available() or TYPE_CHECKING:
@@ -48,36 +49,76 @@ general_interests_spec = InterestsSpec(
     name_prefix="general",
     enrichment_prompt_sequence=[
         (
-            "Here is a list of my recent Google search activity. "
-            "What have I been doing? What were my goals?"
+            "Here is a list of my recent Google search activity."
+            " What have I been doing? What were my goals?"
+            " Be as specific as possible, using exact terms from the search activity."
         ),
         (
-            "Format the previous answer as a semicolon-separated array of strings delimited by square brackets. "
-            "Focus on the goal of the search activity in realtion to the specific topic."
+            "Format the previous answer as a semicolon-separated array of strings delimited by square brackets."
+            " Focus on the goal of the search activity in relation to the specific topic."
         ),
     ],
-    summary_prompt_sequence=[
+    # The goal of this prompt sequence is classifying the user's search activity
+    # similarly to the SEO categories of informational, navigational, and transactional
+    classification_prompt_sequence=[
         lambda search_activity: (
-            f"Here is a list of my recent Google search activity.\n{search_activity}\n"
-            "Consider the possible usages of Google Search that do not deeply engage "
-            "one's identity. Does this activity seem rather reactive and based on "
-            "circumstance, or does it seem proactive and curiosity driven with a sense "
-            "of purpose and direction? Answer YES in the first case, NO otherwise."
+            f"""
+Analyze the provided cluster of search activity data for a single topic. Determine whether this cluster primarily represents:
+
+1. A progression in knowledge acquisition and long-term interest, or
+2. Reactive searches driven by occasional or recurring needs.
+
+Consider the following factors in your analysis:
+- Frequency and regularity of searches
+- Diversity of subtopics within the main theme
+- Presence of time-bound or event-specific queries
+- Indications of recurring but intermittent activities
+- Signs of problem-solving for specific occasions rather than general learning
+
+Provide a classification as either 'Knowledge Progression' or 'Reactive Needs', along with a confidence score (0-100%).
+
+Then, offer a brief explanation (2-3 sentences) supporting your classification, highlighting the key factors that influenced your decision.
+
+Format your response as follows:
+Classification: [Knowledge Progression/Reactive Needs]
+Confidence: [0-100%]
+Explanation: [Your 2-3 sentence explanation]
+
+{search_activity}
+"""
         ),
-        (
-            "If you answered NO: What can you learn about the user from this trend? Provide a general summary of"
-            " the trend and a fine grained summary which includes specific niche topics that "
-            " make this activity unique. \n"
-            "If you answered YES: What kind of circumstances must the user have found themselves to prompt this"
-            " activity? Include specific details on the circumstances."
-        ),
+        lambda cluster_classification: {
+            "unknown": None,
+            "reactive": """
+Summarize this 'Reactive Needs' search activity cluster in about 100-300 words. Focus on:
+
+- The main category of reactive needs
+- Top 3-5 specific types of occasions or needs
+- Frequency pattern of these needs
+- User's apparent level of experience in addressing these needs
+- Any unique elements in the user's approach
+
+Conclude with a single sentence capturing the essence of the user's reactive search behavior.
+""",
+            "proactive": """
+Summarize this 'Knowledge Progression' search activity cluster in about 100-300 words, focusing on the user's learning journey. Describe:
+
+- The main topic or starting point of interest
+- 3-5 key areas or subtopics the user explored from this starting point
+- How the user's understanding seemed to deepen or branch out in each area
+- Any connections or jumps between different areas of exploration
+- The most advanced or recent concepts the user has searched for
+
+Conclude with a single sentence capturing the overall trajectory and breadth of the user's learning path.
+""",
+        }[parse_classification_result(cluster_classification)],
     ],
 )
 
 
 class InterestsConfig(RowLimitConfig):
     ml_model_name: str = Field(
-        default="meta-llama/Meta-Llama-3-8B-Instruct",
+        default="meta-llama/Meta-Llama-3.1-8B-Instruct",
         description=(
             "The Hugging Face model to use as the LLM. See the vLLMs docs for a "
             "list of the support models:\n"
@@ -86,7 +127,7 @@ class InterestsConfig(RowLimitConfig):
     )
 
     chunk_size: int = Field(
-        default=15,
+        default=10,
         description=(
             "Split the raw history into chunks of this size. We allow vLLM to "
             "determine the ideal batch size by itsef, so this has no impact on "
@@ -243,8 +284,10 @@ async def general_cluster_summaries(
 
     prompt_sequences = [
         [
-            general_interests_spec.summary_prompt_sequence[0](row["cluster_items"]),
-            general_interests_spec.summary_prompt_sequence[1],
+            general_interests_spec.classification_prompt_sequence[0](
+                row["cluster_items"]
+            ),
+            general_interests_spec.classification_prompt_sequence[1],
         ]
         for row in df.to_dicts()
     ]
@@ -258,16 +301,13 @@ async def general_cluster_summaries(
         map(lambda x: x[0] if len(x) > 0 else None, summaries_completions)
     )
 
-    # Tag the clusters with the type of activity: YES = reactive, NO = proactive
+    # Tag the clusters with the type of activity: reactive, proactive
     activity_types = []
     for cluster_split in cluster_splits:
         if cluster_split is None:
             activity_types.append("unknown")
         else:
-            if "YES" in cluster_split:
-                activity_types.append("reactive")
-            else:
-                activity_types.append("proactive")
+            activity_types.append(parse_classification_result(cluster_split))
 
     cluster_summaries = list(
         map(lambda x: x[1] if len(x) > 0 else None, summaries_completions)

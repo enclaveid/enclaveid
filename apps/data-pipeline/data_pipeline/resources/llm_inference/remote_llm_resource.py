@@ -1,10 +1,12 @@
 import asyncio
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List
 
 import httpx
 from curlify2 import Curlify
 from dagster import ConfigurableResource, InitResourceContext, get_dagster_logger
 from pydantic import PrivateAttr
+
+PromptSequence = List[str] | List[Callable[[str], str]]
 
 
 class RemoteLlmResource(ConfigurableResource):
@@ -82,12 +84,17 @@ class RemoteLlmResource(ConfigurableResource):
         return None
 
     async def _get_prompt_sequence_completion(
-        self, prompts_sequence: List[str], conversation_id: int
+        self, prompts_sequence: PromptSequence, conversation_id: int
     ) -> List[Dict[str, str]]:
         conversation: List[Dict[str, str]] = []
 
         for prompt in prompts_sequence:
-            conversation.append({"role": "user", "content": prompt})
+            if callable(prompt):
+                content = prompt(conversation[-1]["content"])
+            else:
+                content = prompt
+
+            conversation.append({"role": "user", "content": content})
             response = await self._get_completion(conversation, conversation_id)
             if not response:
                 return []
@@ -97,8 +104,12 @@ class RemoteLlmResource(ConfigurableResource):
         return conversation
 
     async def get_prompt_sequences_completions(
-        self, prompt_sequences: List[List[str]]
+        self, prompt_sequences: List[PromptSequence]
     ) -> List[List[str]]:
+        """
+        This method is used to get completions for multiple prompt sequences in parallel.
+        Prompt sequence items (other than the first in the list) can be callables that take
+        the previous assistant response as input and return the next user prompt based on custom logic"""
         conversations = await asyncio.gather(
             *(
                 self._get_prompt_sequence_completion(prompt_sequence, i)
