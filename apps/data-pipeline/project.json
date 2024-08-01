@@ -9,7 +9,8 @@
       "options": {
         "command": "poetry lock --no-update",
         "cwd": "apps/data-pipeline"
-      }
+      },
+      "outputs": ["{projectRoot}/poetry.lock"]
     },
     "dev": {
       "executor": "@nxlv/python:run-commands",
@@ -24,7 +25,11 @@
       "options": {
         "command": "poetry export --only ml -f requirements.txt --output requirements.ml.txt --without-hashes && poetry export --without ml,dev -f requirements.txt --output requirements.prod.txt --without-hashes",
         "cwd": "apps/data-pipeline"
-      }
+      },
+      "outputs": [
+        "{projectRoot}/requirements.ml.txt",
+        "{projectRoot}/requirements.prod.txt"
+      ]
     },
     "add": {
       "executor": "@nxlv/python:add",
@@ -41,9 +46,9 @@
     "build": {
       "executor": "@nxlv/python:build",
       "dependsOn": ["export"],
-      "outputs": ["{projectRoot}/dist"],
+      "outputs": ["{workspaceRoot}/dist/apps/data-pipeline"],
       "options": {
-        "outputPath": "dist/apps/data-pipeline",
+        "outputPath": "{workspaceRoot}/dist/apps/data-pipeline",
         "publish": false,
         "lockedVersions": false,
         "bundleLocalDependencies": true
