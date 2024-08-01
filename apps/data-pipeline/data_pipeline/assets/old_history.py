@@ -45,8 +45,7 @@ if is_cuda_available() or TYPE_CHECKING:
     from cuml.cluster.hdbscan import HDBSCAN
 
 
-general_interests_spec = InterestsSpec(
-    name_prefix="general",
+interests_spec = InterestsSpec(
     enrichment_prompt_sequence=[
         (
             "Here is a list of my recent Google search activity."
@@ -161,7 +160,7 @@ class InterestsEmbeddingsConfig(RowLimitConfig):
     io_manager_key="parquet_io_manager",
     op_tags=k8s_gpu_config,
 )
-def general_interests(
+def interests(
     context: AssetExecutionContext,
     config: InterestsConfig,
     llama8b: Llama8bResource,
@@ -172,8 +171,8 @@ def general_interests(
     sessions_output = get_full_history_sessions(
         full_takeout=full_takeout,
         chunk_size=config.chunk_size,
-        first_instruction=general_interests_spec.enrichment_prompt_sequence[0],
-        second_instruction=general_interests_spec.enrichment_prompt_sequence[1],
+        first_instruction=interests_spec.enrichment_prompt_sequence[0],
+        second_instruction=interests_spec.enrichment_prompt_sequence[1],
         llama8b=llama8b,
     )
 
@@ -187,10 +186,10 @@ def general_interests(
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
-    ins={"interests": AssetIn(key=["general_interests"])},
+    ins={"interests": AssetIn(key=["interests"])},
     op_tags=k8s_gpu_config,
 )
-def general_interests_embeddings(
+def interests_embeddings(
     context: AssetExecutionContext,
     config: InterestsEmbeddingsConfig,
     sentence_transformer: SentenceTransformerResource,
@@ -214,10 +213,10 @@ def general_interests_embeddings(
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
-    ins={"interests_embeddings": AssetIn(key=["general_interests_embeddings"])},
+    ins={"interests_embeddings": AssetIn(key=["interests_embeddings"])},
     op_tags=k8s_gpu_config,
 )
-def general_interests_clusters(
+def interests_clusters(
     context: AssetExecutionContext,
     config: RowLimitConfig,
     interests_embeddings: pl.DataFrame,
@@ -262,12 +261,12 @@ def general_interests_clusters(
     io_manager_key="parquet_io_manager",
     ins={
         "interests_clusters": AssetIn(
-            key=["general_interests_clusters"],
+            key=["interests_clusters"],
         ),
     },
     op_tags={"dagster/concurrency_key": "llama70b"},
 )
-async def general_cluster_summaries(
+async def cluster_summaries(
     context: AssetExecutionContext,
     config: RowLimitConfig,
     llama70b: Llama70bResource,
@@ -284,10 +283,8 @@ async def general_cluster_summaries(
 
     prompt_sequences = [
         [
-            general_interests_spec.classification_prompt_sequence[0](
-                row["cluster_items"]
-            ),
-            general_interests_spec.classification_prompt_sequence[1],
+            interests_spec.classification_prompt_sequence[0](row["cluster_items"]),
+            interests_spec.classification_prompt_sequence[1],
         ]
         for row in df.to_dicts()
     ]
@@ -326,10 +323,10 @@ async def general_cluster_summaries(
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
-    ins={"cluster_summaries": AssetIn(key=["general_cluster_summaries"])},
+    ins={"cluster_summaries": AssetIn(key=["cluster_summaries"])},
     op_tags=k8s_gpu_config,
 )
-def general_summaries_embeddings(
+def summaries_embeddings(
     context: AssetExecutionContext,
     config: RowLimitConfig,
     sentence_transformer: SentenceTransformerResource,
@@ -347,17 +344,17 @@ def general_summaries_embeddings(
 
 @asset(
     partitions_def=user_partitions_def,
-    deps=[general_summaries_embeddings],
+    deps=[summaries_embeddings],
     io_manager_key="parquet_io_manager",
     op_tags=k8s_gpu_config,
 )
-def general_summaries_user_matches(
+def summaries_user_matches(
     context: AssetExecutionContext,
     config: RowLimitConfig,
 ) -> pl.DataFrame:
     current_user_df = pl.read_parquet(
         DAGSTER_STORAGE_BUCKET
-        / "general_summaries_embeddings"
+        / "summaries_embeddings"
         / f"{context.partition_key}.snappy"
     ).sort(by="cluster_label")
 
@@ -373,7 +370,7 @@ def general_summaries_user_matches(
 
     # Get a list of ready partitions in the parent asset
     other_user_ids = context.instance.get_materialized_partitions(
-        context.asset_key_for_input("general_summaries_embeddings")
+        context.asset_key_for_input("summaries_embeddings")
     )
 
     context.log.info(f"Matching with {len(other_user_ids)-1} users")
@@ -384,9 +381,7 @@ def general_summaries_user_matches(
             continue
 
         other_user_df = pl.read_parquet(
-            DAGSTER_STORAGE_BUCKET
-            / "general_summaries_embeddings"
-            / f"{other_user_id}.snappy"
+            DAGSTER_STORAGE_BUCKET / "summaries_embeddings" / f"{other_user_id}.snappy"
         ).sort(by="cluster_label")
 
         for activity_type in ["proactive", "reactive"]:
@@ -424,8 +419,8 @@ def general_summaries_user_matches(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
-        "summaries_user_matches": AssetIn(key=["general_summaries_user_matches"]),
-        "cluster_summaries": AssetIn(key=["general_cluster_summaries"]),
+        "summaries_user_matches": AssetIn(key=["summaries_user_matches"]),
+        "cluster_summaries": AssetIn(key=["cluster_summaries"]),
     },
 )
 def api_user_matches(

@@ -11,7 +11,6 @@ from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResour
 
 
 class InterestsSpec(BaseModel):
-    name_prefix: str = Field(description="A prefix to add to the name of the asset.")
     enrichment_prompt_sequence: List[str]
     classification_prompt_sequence: List[Callable[[str], str]]
 
