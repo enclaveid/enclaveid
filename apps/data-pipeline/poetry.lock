@@ -764,20 +764,17 @@ files = [
 
 [[package]]
 name = "cudf-cu12"
-version = "24.4.0"
+version = "24.6.1"
 description = "cuDF - GPU Dataframe"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "cudf_cu12-24.4.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:acb14d340a2d31c538ea342ebeb4180963b8e60200acb4b38dbe9bfba912af11"},
-    {file = "cudf_cu12-24.4.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:18b67d810718d663a414c1e945b0169e36149a8535101d3b5ddec15f89328a15"},
-    {file = "cudf_cu12-24.4.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:7112c569116b7895ab6ad8edf1665f5e792a2b99ad80e3ba7b0a391126e7a100"},
-    {file = "cudf_cu12-24.4.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f3314fd3d198138303bf216b64e2af3e4c7b25284d05f916dfba11a9f9e9edc1"},
-    {file = "cudf_cu12-24.4.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:af8a6199b93caa01e8e1304fb6fafa170551e560d7ade9e21843ccf943f93a27"},
-    {file = "cudf_cu12-24.4.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:d8b0c7eb57229f548772e42309054b75098b548a4f6b0942f09baf43f7c23332"},
-    {file = "cudf_cu12-24.4.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:55d8244e251162fd8a0a2122dbb6a37c0e2448397dbe8c4e40a0cbfd395799b9"},
-    {file = "cudf_cu12-24.4.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:53a84e682a8f3d99cd0a7cdc5c6fc93bf76215770888c494467957477d37dfba"},
-    {file = "cudf_cu12-24.4.0-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:9551794386bd462ef69cc9e2548ca79fffc8b34ee2ef10aa489e60e12a93ec1e"},
+    {file = "cudf_cu12-24.6.1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:c5c2d974ea9dc1a46e2690838bf857448c235142c3711298c0d40aa664df4ca0"},
+    {file = "cudf_cu12-24.6.1-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:6fdd6fd412117503ad23dca75aabb5b536348d3af459b59920152be1a0af6f15"},
+    {file = "cudf_cu12-24.6.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:4292bde2cc7c0d1a81710ab60078efae51759dc9d22ad0baa28e071498238196"},
+    {file = "cudf_cu12-24.6.1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:f7d33ee460c925087e582174c62b14fbae4932b3708bdc5217b970e1dcbc3c1a"},
+    {file = "cudf_cu12-24.6.1-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:725fcfe9adf74c7ccd8a4ed3a4247f96b405115dd570979752f04192bc974573"},
+    {file = "cudf_cu12-24.6.1-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:d9937f89ee2559a048975c9b33fce884956ed93b21f6a7ce0920502f217b7187"},
 ]
 
 [package.dependencies]
@@ -789,18 +786,17 @@ numba = ">=0.57"
 numpy = ">=1.23,<2.0a0"
 nvtx = ">=0.2.1"
 packaging = "*"
-pandas = ">=2.0,<2.2.2dev0"
-protobuf = ">=4.21,<5"
-pyarrow = ">=14.0.1,<15.0.0a0"
+pandas = ">=2.0,<2.2.3dev0"
+pyarrow = ">=16.1.0,<16.2.0a0"
 pynvjitlink-cu12 = "*"
 rich = "*"
-rmm-cu12 = "==24.4.*"
+rmm-cu12 = "==24.6.*"
 typing_extensions = ">=4.0.0"
 
 [package.extras]
 cudf-pandas-tests = ["ipython", "openpyxl"]
 pandas-tests = ["pandas[clipboard,compression,computation,excel,feather,fss,hdf5,html,output-formatting,parquet,performance,plot,pyarrow,spss,test,xml]", "pytest-reportlog"]
-test = ["cramjam", "fastavro (>=0.22.9)", "hypothesis", "msgpack", "pytest (<8)", "pytest-benchmark", "pytest-cases (>=3.8.2)", "pytest-cov", "pytest-xdist", "scipy", "tokenizers (==0.15.2)", "transformers (==4.38.1)", "tzdata"]
+test = ["cramjam", "fastavro (>=0.22.9)", "hypothesis", "msgpack", "pytest (<8)", "pytest-benchmark", "pytest-cases (>=3.8.2)", "pytest-cov", "pytest-xdist", "scipy", "tokenizers (==0.15.2)", "transformers (==4.39.3)", "tzdata"]
 
 [package.source]
 type = "legacy"
@@ -809,35 +805,35 @@ reference = "nvidia"
 
 [[package]]
 name = "cugraph-cu12"
-version = "24.4.0"
+version = "24.6.1"
 description = "cuGraph - RAPIDS GPU Graph Analytics"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "cugraph_cu12-24.4.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:71fdb23f670a2f82f90014f7f2d67b9eb40b576c07a18bb5e893fc62898e9bd3"},
-    {file = "cugraph_cu12-24.4.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:8218abb18f1076a3185feaccde75498d5e8c1b8071a0ef22072aa2f152ee6aa7"},
-    {file = "cugraph_cu12-24.4.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:968d3733a8559812574ffa4dd226b6c6eac19ef8dc395088121f2e37e1f00f38"},
-    {file = "cugraph_cu12-24.4.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:e6028c37394c5848a64b43bd3cb306d6275db69db2c8154347dd0317b3936068"},
-    {file = "cugraph_cu12-24.4.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:793d0f12b68d477922d23601212bb3e1bc5311cf47f2f4f1bc21844fabf26cce"},
-    {file = "cugraph_cu12-24.4.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:3c9734ede9e6e7dd449111d7d3bd4ee6b80826d74f5fb080a09f95084dac7ec8"},
+    {file = "cugraph_cu12-24.6.1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:a1437b343e041567364fd918760aadb78a198cece1e13e64a0061e37e94cae36"},
+    {file = "cugraph_cu12-24.6.1-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:100e1aa8b2c5358543ccb927b9ad65f901b07890d67c84195d3b5f4749696339"},
+    {file = "cugraph_cu12-24.6.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:a6e332bbbbabdd1d1ad649149171ed7bf23a677d997a54414e59df5c95b4f0c1"},
+    {file = "cugraph_cu12-24.6.1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:ee0c4b98bb22cf13d8f941c7a15370b1ac8e9a3b9b997f03f6445854fab3d87e"},
+    {file = "cugraph_cu12-24.6.1-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:fc78dae61ec41a1d8bfc2bb053da63b4417394d9bc9d5d5889809a4927c6563b"},
+    {file = "cugraph_cu12-24.6.1-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:2a9f556d9d0701c3e903c2dae6df64c1632790f8de22b83afe0dda5be653631d"},
 ]
 
 [package.dependencies]
-cudf-cu12 = "==24.4.*"
+cudf-cu12 = "==24.6.*"
 cupy-cuda12x = ">=12.0.0"
-dask-cuda = "==24.4.*"
-dask-cudf-cu12 = "==24.4.*"
+dask-cuda = "==24.6.*"
+dask-cudf-cu12 = "==24.6.*"
 fsspec = {version = ">=0.6.0", extras = ["http"]}
 numba = ">=0.57"
 numpy = ">=1.23,<2.0a0"
-pylibcugraph-cu12 = "==24.4.*"
-raft-dask-cu12 = "==24.4.*"
-rapids-dask-dependency = "==24.4.*"
-rmm-cu12 = "==24.4.*"
-ucx-py-cu12 = "==0.37.*"
+pylibcugraph-cu12 = "==24.6.*"
+raft-dask-cu12 = "==24.6.*"
+rapids-dask-dependency = "==24.6.*"
+rmm-cu12 = "==24.6.*"
+ucx-py-cu12 = "==0.38.*"
 
 [package.extras]
-test = ["networkx (>=2.5.1)", "numpy (>=1.23,<2.0a0)", "pandas", "pytest", "pytest-benchmark", "pytest-cov", "pytest-xdist", "python-louvain", "scikit-learn (>=0.23.1)", "scipy"]
+test = ["networkx (>=2.5.1)", "numpy (>=1.23,<2.0a0)", "pandas", "pylibwholegraph-cu12 (==24.6.*)", "pytest", "pytest-benchmark", "pytest-cov", "pytest-xdist", "python-louvain", "scikit-learn (>=0.23.1)", "scipy"]
 
 [package.source]
 type = "legacy"
@@ -857,35 +853,36 @@ files = [
 
 [[package]]
 name = "cuml-cu12"
-version = "24.4.0"
+version = "24.6.1"
 description = "cuML - RAPIDS ML Algorithms"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "cuml_cu12-24.4.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bdbe2c284375a1564f41844ac06c2ce9ddcb39150db922078d53bed0c63b3e28"},
-    {file = "cuml_cu12-24.4.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:36415fbc94bc0f5f5b2941cd3fb624fbfc5f454a4b20a888f996e6a18eb6d60e"},
-    {file = "cuml_cu12-24.4.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c7e7209a01a872a9699bfb851678b30dde47cb003859bca059ca5395add46d3"},
-    {file = "cuml_cu12-24.4.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:b2f24364279e35b9966c6f3cf28b5acad656d48c8a80854db191ac9357cf2b85"},
-    {file = "cuml_cu12-24.4.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fd875033eaf90c8a2f3eb2f70cffde5093678748a12be19221b26422a1d930ed"},
-    {file = "cuml_cu12-24.4.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:f0dd2a7f1cf52e485b4888552992ba8147657e9f0e181a7a2d19b433dbd1ad0a"},
+    {file = "cuml_cu12-24.6.1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:bd03c8fede19e6d3e1861f6c2b55240dc39dec9a0da829e1f31ecb92bb41c62d"},
+    {file = "cuml_cu12-24.6.1-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:ccf0796d61a5ef1e14fcb96a06925e0efca24e068e65d9e62c419270ad1c8bce"},
+    {file = "cuml_cu12-24.6.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:923a08fbe3ff6f56a30f5a75c1ca4cee8e329e2668c3c80faeb7a942eb5145ff"},
+    {file = "cuml_cu12-24.6.1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:8eefd7ebb67d2600ea9358005d14974495bfbc221b0ac6a34c9995893edf40eb"},
+    {file = "cuml_cu12-24.6.1-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:baa7e2964ea187915a72ea02bb1fa2dd6a957b665bef7717b81ced9ff4d4a32f"},
+    {file = "cuml_cu12-24.6.1-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:41c562a936f8e36218a8d55b0f4efed9c0c949a978ef72d3e547860faee111fa"},
 ]
 
 [package.dependencies]
-cudf-cu12 = "==24.4.*"
+cudf-cu12 = "==24.6.*"
 cupy-cuda12x = ">=12.0.0"
-dask-cuda = "==24.4.*"
-dask-cudf-cu12 = "==24.4.*"
+dask-cuda = "==24.6.*"
+dask-cudf-cu12 = "==24.6.*"
 joblib = ">=0.11"
 numba = ">=0.57"
-pylibraft-cu12 = "==24.4.*"
-raft-dask-cu12 = "==24.4.*"
-rapids-dask-dependency = "==24.4.*"
-rmm-cu12 = "==24.4.*"
+packaging = "*"
+pylibraft-cu12 = "==24.6.*"
+raft-dask-cu12 = "==24.6.*"
+rapids-dask-dependency = "==24.6.*"
+rmm-cu12 = "==24.6.*"
 scipy = ">=1.8.0"
 treelite = "4.1.2"
 
 [package.extras]
-test = ["dask-glm (==0.3.0)", "dask-ml", "hdbscan @ git+https://github.com/scikit-learn-contrib/hdbscan.git@master", "hypothesis (>=6.0,<7)", "nltk", "numpydoc", "pynndescent (==0.5.8)", "pytest (==7.*)", "pytest-benchmark", "pytest-cases", "pytest-cov", "pytest-xdist", "scikit-learn (==1.2)", "seaborn", "statsmodels", "umap-learn (==0.5.3)"]
+test = ["dask-glm (==0.3.0)", "dask-ml", "hdbscan @ git+https://github.com/scikit-learn-contrib/hdbscan.git@master", "hypothesis (>=6.0,<7)", "nltk", "numpydoc", "pynndescent (==0.5.8)", "pytest (==7.*)", "pytest-benchmark", "pytest-cases", "pytest-cov", "pytest-xdist", "scikit-learn (==1.5)", "seaborn", "statsmodels", "umap-learn (==0.5.3)"]
 
 [package.source]
 type = "legacy"
@@ -1180,20 +1177,20 @@ test = ["starlette[full]"]
 
 [[package]]
 name = "dask"
-version = "2024.1.1"
+version = "2024.5.1"
 description = "Parallel PyData with Task Scheduling"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "dask-2024.1.1-py3-none-any.whl", hash = "sha256:860ce2797905095beff0187c214840b80c77d752dcb9098a8283e3655a762bf5"},
-    {file = "dask-2024.1.1.tar.gz", hash = "sha256:d0dc92e81ce68594a0a0ce23ba33f4d648f2c2f4217ab9b79068b7ecfb0416c7"},
+    {file = "dask-2024.5.1-py3-none-any.whl", hash = "sha256:af1cadd1fd1d1d44600ff5de43dd029e5668fdf87422131f4e3e3aa2a6a63555"},
+    {file = "dask-2024.5.1.tar.gz", hash = "sha256:e071fda67031c314569e37ca70b3e88bb30f1d91ff8ee4122b541845847cc264"},
 ]
 
 [package.dependencies]
 click = ">=8.1"
 cloudpickle = ">=1.5.0"
 fsspec = ">=2021.09.0"
-importlib-metadata = ">=4.13.0"
+importlib-metadata = {version = ">=4.13.0", markers = "python_version < \"3.12\""}
 packaging = ">=20.0"
 partd = ">=1.2.0"
 pyyaml = ">=5.3.1"
@@ -1202,19 +1199,20 @@ toolz = ">=0.10.0"
 [package.extras]
 array = ["numpy (>=1.21)"]
 complete = ["dask[array,dataframe,diagnostics,distributed]", "lz4 (>=4.3.2)", "pyarrow (>=7.0)", "pyarrow-hotfix"]
-dataframe = ["dask[array]", "pandas (>=1.3)"]
+dataframe = ["dask-expr (>=1.1,<1.2)", "dask[array]", "pandas (>=1.3)"]
 diagnostics = ["bokeh (>=2.4.2)", "jinja2 (>=2.10.3)"]
-distributed = ["distributed (==2024.1.1)"]
+distributed = ["distributed (==2024.5.1)"]
 test = ["pandas[test]", "pre-commit", "pytest", "pytest-cov", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist"]
 
 [[package]]
 name = "dask-cuda"
-version = "24.4.0"
+version = "24.6.0"
 description = "Utilities for Dask and CUDA interactions"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "dask_cuda-24.4.0-py3-none-any.whl", hash = "sha256:0f70bbbac8c7f19071ad9a78398ce7a3d17f10e5c70212810a9f1de8c50eae7f"},
+    {file = "dask_cuda-24.6.0-py3-none-any.whl", hash = "sha256:f8691b679b0a14ade9a57c32947fd228a9ac3b0a6ab809a40207d7dd11f9b20b"},
+    {file = "dask_cuda-24.6.0.tar.gz", hash = "sha256:0d6fdb90de1694d5a157967a37703adf8910aea948d5cbaa59fe55ba06376b4f"},
 ]
 
 [package.dependencies]
@@ -1223,33 +1221,33 @@ numba = ">=0.57"
 numpy = ">=1.23,<2.0a0"
 pandas = ">=1.3"
 pynvml = ">=11.0.0,<11.5"
-rapids-dask-dependency = "==24.4.*"
+rapids-dask-dependency = "==24.6.*"
 zict = ">=2.0.0"
 
 [package.extras]
 docs = ["numpydoc (>=1.1.0)", "sphinx", "sphinx-click (>=2.7.1)", "sphinx-rtd-theme (>=0.5.1)"]
-test = ["cudf (==24.4.*)", "dask-cudf (==24.4.*)", "kvikio (==24.4.*)", "pytest", "pytest-cov", "ucx-py (==0.37.*)"]
+test = ["cudf (==24.6.*)", "dask-cudf (==24.6.*)", "kvikio (==24.6.*)", "pytest", "pytest-cov", "ucx-py (==0.38.*)"]
 
 [[package]]
 name = "dask-cudf-cu12"
-version = "24.4.0"
+version = "24.6.1"
 description = "Utilities for Dask and cuDF interactions"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "dask_cudf_cu12-24.4.0-py3-none-any.whl", hash = "sha256:d7b846bb4bec254d71917c30521c7060f2953ff5c254513cd6fc28b09b3fb1fe"},
+    {file = "dask_cudf_cu12-24.6.1-py3-none-any.whl", hash = "sha256:d182aa83479ee980976ecb26b45fbad15311089c39555a0e7625d70af6b24632"},
 ]
 
 [package.dependencies]
-cudf-cu12 = "==24.4.*"
+cudf-cu12 = "==24.6.*"
 cupy-cuda12x = ">=12.0.0"
 fsspec = ">=0.6.0"
 numpy = ">=1.23,<2.0a0"
-pandas = ">=2.0,<2.2.2dev0"
-rapids-dask-dependency = "==24.4.*"
+pandas = ">=2.0,<2.2.3dev0"
+rapids-dask-dependency = "==24.6.*"
 
 [package.extras]
-test = ["dask-cuda (==24.4.*)", "numba (>=0.57)", "pytest (<8)", "pytest-cov", "pytest-xdist"]
+test = ["dask-cuda (==24.6.*)", "numba (>=0.57)", "pytest (<8)", "pytest-cov", "pytest-xdist"]
 
 [package.source]
 type = "legacy"
@@ -1344,19 +1342,19 @@ files = [
 
 [[package]]
 name = "distributed"
-version = "2024.1.1"
+version = "2024.5.1"
 description = "Distributed scheduler for Dask"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "distributed-2024.1.1-py3-none-any.whl", hash = "sha256:cf05d3b38e1700339b3e36395729ab62110e723efefaecc21a8260fdc7555cf9"},
-    {file = "distributed-2024.1.1.tar.gz", hash = "sha256:28cf5e9f4f07197b03ea8e5272e374ce2b9e9dc6742f6c9b525fd81645213c67"},
+    {file = "distributed-2024.5.1-py3-none-any.whl", hash = "sha256:cf77583ce67f6696aa716c30f1cba3403ac866241c00d6e9a0bc1500c6818b40"},
+    {file = "distributed-2024.5.1.tar.gz", hash = "sha256:c4e641e5fc014de3b43c584c70f703a7d44557b51b1143db812b8bc861aa84e2"},
 ]
 
 [package.dependencies]
 click = ">=8.0"
 cloudpickle = ">=1.5.0"
-dask = "2024.1.1"
+dask = "2024.5.1"
 jinja2 = ">=2.10.3"
 locket = ">=1.0.0"
 msgpack = ">=1.0.0"
@@ -1369,6 +1367,25 @@ toolz = ">=0.10.0"
 tornado = ">=6.0.4"
 urllib3 = ">=1.24.3"
 zict = ">=3.0.0"
+
+[[package]]
+name = "distributed-ucxx-cu12"
+version = "0.38.0"
+description = "UCX communication module for Dask Distributed"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "distributed_ucxx_cu12-0.38.0.tar.gz", hash = "sha256:8be0f5f9fda11e4ed1c58b5f7caed949cb9effb2c270afccb3857696d284b8c3"},
+]
+
+[package.dependencies]
+numba = ">=0.57.1"
+rapids-dask-dependency = "==24.6.*"
+ucxx-cu12 = "==0.38.*"
+
+[package.extras]
+docs = ["sphinx", "sphinx-click (>=2.7.1)", "sphinx-rtd-theme (>=0.5.1)"]
+test = ["cudf-cu12 (==24.6.*)", "cupy-cuda12x (>=12.0.0)", "numpy (>=1.23,<2.0a0)", "pytest (==7.*)", "pytest-rerunfailures"]
 
 [[package]]
 name = "distro"
@@ -2288,6 +2305,17 @@ atomic-cache = ["atomicwrites"]
 interegular = ["interegular (>=0.3.1,<0.4.0)"]
 nearley = ["js2py"]
 regex = ["regex"]
+
+[[package]]
+name = "libucx-cu12"
+version = "1.15.0.post1"
+description = "The Unified Communication X library (UCX)"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "libucx_cu12-1.15.0.post1-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:7e22087665a9dd693040a3fa3878aa7d4fe9cf769c016b5d567c47fc6d9b188d"},
+    {file = "libucx_cu12-1.15.0.post1-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:b4f09b208d8b213be6523ef1268151adb34b91752ada931188b0fd93536f90fa"},
+]
 
 [[package]]
 name = "llvmlite"
@@ -3788,47 +3816,47 @@ files = [
 
 [[package]]
 name = "pyarrow"
-version = "14.0.2"
+version = "16.1.0"
 description = "Python library for Apache Arrow"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pyarrow-14.0.2-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:ba9fe808596c5dbd08b3aeffe901e5f81095baaa28e7d5118e01354c64f22807"},
-    {file = "pyarrow-14.0.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:22a768987a16bb46220cef490c56c671993fbee8fd0475febac0b3e16b00a10e"},
-    {file = "pyarrow-14.0.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2dbba05e98f247f17e64303eb876f4a80fcd32f73c7e9ad975a83834d81f3fda"},
-    {file = "pyarrow-14.0.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a898d134d00b1eca04998e9d286e19653f9d0fcb99587310cd10270907452a6b"},
-    {file = "pyarrow-14.0.2-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:87e879323f256cb04267bb365add7208f302df942eb943c93a9dfeb8f44840b1"},
-    {file = "pyarrow-14.0.2-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:76fc257559404ea5f1306ea9a3ff0541bf996ff3f7b9209fc517b5e83811fa8e"},
-    {file = "pyarrow-14.0.2-cp310-cp310-win_amd64.whl", hash = "sha256:b0c4a18e00f3a32398a7f31da47fefcd7a927545b396e1f15d0c85c2f2c778cd"},
-    {file = "pyarrow-14.0.2-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:87482af32e5a0c0cce2d12eb3c039dd1d853bd905b04f3f953f147c7a196915b"},
-    {file = "pyarrow-14.0.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:059bd8f12a70519e46cd64e1ba40e97eae55e0cbe1695edd95384653d7626b23"},
-    {file = "pyarrow-14.0.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3f16111f9ab27e60b391c5f6d197510e3ad6654e73857b4e394861fc79c37200"},
-    {file = "pyarrow-14.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:06ff1264fe4448e8d02073f5ce45a9f934c0f3db0a04460d0b01ff28befc3696"},
-    {file = "pyarrow-14.0.2-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:6dd4f4b472ccf4042f1eab77e6c8bce574543f54d2135c7e396f413046397d5a"},
-    {file = "pyarrow-14.0.2-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:32356bfb58b36059773f49e4e214996888eeea3a08893e7dbde44753799b2a02"},
-    {file = "pyarrow-14.0.2-cp311-cp311-win_amd64.whl", hash = "sha256:52809ee69d4dbf2241c0e4366d949ba035cbcf48409bf404f071f624ed313a2b"},
-    {file = "pyarrow-14.0.2-cp312-cp312-macosx_10_14_x86_64.whl", hash = "sha256:c87824a5ac52be210d32906c715f4ed7053d0180c1060ae3ff9b7e560f53f944"},
-    {file = "pyarrow-14.0.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a25eb2421a58e861f6ca91f43339d215476f4fe159eca603c55950c14f378cc5"},
-    {file = "pyarrow-14.0.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5c1da70d668af5620b8ba0a23f229030a4cd6c5f24a616a146f30d2386fec422"},
-    {file = "pyarrow-14.0.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2cc61593c8e66194c7cdfae594503e91b926a228fba40b5cf25cc593563bcd07"},
-    {file = "pyarrow-14.0.2-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:78ea56f62fb7c0ae8ecb9afdd7893e3a7dbeb0b04106f5c08dbb23f9c0157591"},
-    {file = "pyarrow-14.0.2-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:37c233ddbce0c67a76c0985612fef27c0c92aef9413cf5aa56952f359fcb7379"},
-    {file = "pyarrow-14.0.2-cp312-cp312-win_amd64.whl", hash = "sha256:e4b123ad0f6add92de898214d404e488167b87b5dd86e9a434126bc2b7a5578d"},
-    {file = "pyarrow-14.0.2-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:e354fba8490de258be7687f341bc04aba181fc8aa1f71e4584f9890d9cb2dec2"},
-    {file = "pyarrow-14.0.2-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:20e003a23a13da963f43e2b432483fdd8c38dc8882cd145f09f21792e1cf22a1"},
-    {file = "pyarrow-14.0.2-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fc0de7575e841f1595ac07e5bc631084fd06ca8b03c0f2ecece733d23cd5102a"},
-    {file = "pyarrow-14.0.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:66e986dc859712acb0bd45601229021f3ffcdfc49044b64c6d071aaf4fa49e98"},
-    {file = "pyarrow-14.0.2-cp38-cp38-manylinux_2_28_aarch64.whl", hash = "sha256:f7d029f20ef56673a9730766023459ece397a05001f4e4d13805111d7c2108c0"},
-    {file = "pyarrow-14.0.2-cp38-cp38-manylinux_2_28_x86_64.whl", hash = "sha256:209bac546942b0d8edc8debda248364f7f668e4aad4741bae58e67d40e5fcf75"},
-    {file = "pyarrow-14.0.2-cp38-cp38-win_amd64.whl", hash = "sha256:1e6987c5274fb87d66bb36816afb6f65707546b3c45c44c28e3c4133c010a881"},
-    {file = "pyarrow-14.0.2-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:a01d0052d2a294a5f56cc1862933014e696aa08cc7b620e8c0cce5a5d362e976"},
-    {file = "pyarrow-14.0.2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:a51fee3a7db4d37f8cda3ea96f32530620d43b0489d169b285d774da48ca9785"},
-    {file = "pyarrow-14.0.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:64df2bf1ef2ef14cee531e2dfe03dd924017650ffaa6f9513d7a1bb291e59c15"},
-    {file = "pyarrow-14.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3c0fa3bfdb0305ffe09810f9d3e2e50a2787e3a07063001dcd7adae0cee3601a"},
-    {file = "pyarrow-14.0.2-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:c65bf4fd06584f058420238bc47a316e80dda01ec0dfb3044594128a6c2db794"},
-    {file = "pyarrow-14.0.2-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:63ac901baec9369d6aae1cbe6cca11178fb018a8d45068aaf5bb54f94804a866"},
-    {file = "pyarrow-14.0.2-cp39-cp39-win_amd64.whl", hash = "sha256:75ee0efe7a87a687ae303d63037d08a48ef9ea0127064df18267252cfe2e9541"},
-    {file = "pyarrow-14.0.2.tar.gz", hash = "sha256:36cef6ba12b499d864d1def3e990f97949e0b79400d08b7cf74504ffbd3eb025"},
+    {file = "pyarrow-16.1.0-cp310-cp310-macosx_10_15_x86_64.whl", hash = "sha256:17e23b9a65a70cc733d8b738baa6ad3722298fa0c81d88f63ff94bf25eaa77b9"},
+    {file = "pyarrow-16.1.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4740cc41e2ba5d641071d0ab5e9ef9b5e6e8c7611351a5cb7c1d175eaf43674a"},
+    {file = "pyarrow-16.1.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:98100e0268d04e0eec47b73f20b39c45b4006f3c4233719c3848aa27a03c1aef"},
+    {file = "pyarrow-16.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f68f409e7b283c085f2da014f9ef81e885d90dcd733bd648cfba3ef265961848"},
+    {file = "pyarrow-16.1.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:a8914cd176f448e09746037b0c6b3a9d7688cef451ec5735094055116857580c"},
+    {file = "pyarrow-16.1.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:48be160782c0556156d91adbdd5a4a7e719f8d407cb46ae3bb4eaee09b3111bd"},
+    {file = "pyarrow-16.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:9cf389d444b0f41d9fe1444b70650fea31e9d52cfcb5f818b7888b91b586efff"},
+    {file = "pyarrow-16.1.0-cp311-cp311-macosx_10_15_x86_64.whl", hash = "sha256:d0ebea336b535b37eee9eee31761813086d33ed06de9ab6fc6aaa0bace7b250c"},
+    {file = "pyarrow-16.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:2e73cfc4a99e796727919c5541c65bb88b973377501e39b9842ea71401ca6c1c"},
+    {file = "pyarrow-16.1.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bf9251264247ecfe93e5f5a0cd43b8ae834f1e61d1abca22da55b20c788417f6"},
+    {file = "pyarrow-16.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ddf5aace92d520d3d2a20031d8b0ec27b4395cab9f74e07cc95edf42a5cc0147"},
+    {file = "pyarrow-16.1.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:25233642583bf658f629eb230b9bb79d9af4d9f9229890b3c878699c82f7d11e"},
+    {file = "pyarrow-16.1.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:a33a64576fddfbec0a44112eaf844c20853647ca833e9a647bfae0582b2ff94b"},
+    {file = "pyarrow-16.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:185d121b50836379fe012753cf15c4ba9638bda9645183ab36246923875f8d1b"},
+    {file = "pyarrow-16.1.0-cp312-cp312-macosx_10_15_x86_64.whl", hash = "sha256:2e51ca1d6ed7f2e9d5c3c83decf27b0d17bb207a7dea986e8dc3e24f80ff7d6f"},
+    {file = "pyarrow-16.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:06ebccb6f8cb7357de85f60d5da50e83507954af617d7b05f48af1621d331c9a"},
+    {file = "pyarrow-16.1.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b04707f1979815f5e49824ce52d1dceb46e2f12909a48a6a753fe7cafbc44a0c"},
+    {file = "pyarrow-16.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0d32000693deff8dc5df444b032b5985a48592c0697cb6e3071a5d59888714e2"},
+    {file = "pyarrow-16.1.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:8785bb10d5d6fd5e15d718ee1d1f914fe768bf8b4d1e5e9bf253de8a26cb1628"},
+    {file = "pyarrow-16.1.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:e1369af39587b794873b8a307cc6623a3b1194e69399af0efd05bb202195a5a7"},
+    {file = "pyarrow-16.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:febde33305f1498f6df85e8020bca496d0e9ebf2093bab9e0f65e2b4ae2b3444"},
+    {file = "pyarrow-16.1.0-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:b5f5705ab977947a43ac83b52ade3b881eb6e95fcc02d76f501d549a210ba77f"},
+    {file = "pyarrow-16.1.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:0d27bf89dfc2576f6206e9cd6cf7a107c9c06dc13d53bbc25b0bd4556f19cf5f"},
+    {file = "pyarrow-16.1.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0d07de3ee730647a600037bc1d7b7994067ed64d0eba797ac74b2bc77384f4c2"},
+    {file = "pyarrow-16.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fbef391b63f708e103df99fbaa3acf9f671d77a183a07546ba2f2c297b361e83"},
+    {file = "pyarrow-16.1.0-cp38-cp38-manylinux_2_28_aarch64.whl", hash = "sha256:19741c4dbbbc986d38856ee7ddfdd6a00fc3b0fc2d928795b95410d38bb97d15"},
+    {file = "pyarrow-16.1.0-cp38-cp38-manylinux_2_28_x86_64.whl", hash = "sha256:f2c5fb249caa17b94e2b9278b36a05ce03d3180e6da0c4c3b3ce5b2788f30eed"},
+    {file = "pyarrow-16.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:e6b6d3cd35fbb93b70ade1336022cc1147b95ec6af7d36906ca7fe432eb09710"},
+    {file = "pyarrow-16.1.0-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:18da9b76a36a954665ccca8aa6bd9f46c1145f79c0bb8f4f244f5f8e799bca55"},
+    {file = "pyarrow-16.1.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:99f7549779b6e434467d2aa43ab2b7224dd9e41bdde486020bae198978c9e05e"},
+    {file = "pyarrow-16.1.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f07fdffe4fd5b15f5ec15c8b64584868d063bc22b86b46c9695624ca3505b7b4"},
+    {file = "pyarrow-16.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ddfe389a08ea374972bd4065d5f25d14e36b43ebc22fc75f7b951f24378bf0b5"},
+    {file = "pyarrow-16.1.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:3b20bd67c94b3a2ea0a749d2a5712fc845a69cb5d52e78e6449bbd295611f3aa"},
+    {file = "pyarrow-16.1.0-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:ba8ac20693c0bb0bf4b238751d4409e62852004a8cf031c73b0e0962b03e45e3"},
+    {file = "pyarrow-16.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:31a1851751433d89a986616015841977e0a188662fcffd1a5677453f1df2de0a"},
+    {file = "pyarrow-16.1.0.tar.gz", hash = "sha256:15fbb22ea96d11f0b5768504a3f961edab25eaf4197c341720c4a387f6c60315"},
 ]
 
 [package.dependencies]
@@ -4050,35 +4078,35 @@ tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
 name = "pylibcugraph-cu12"
-version = "24.4.0"
+version = "24.6.1"
 description = "pylibcugraph - Python bindings for the libcugraph cuGraph C/C++/CUDA library"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "pylibcugraph_cu12-24.4.0.tar.gz", hash = "sha256:9c4e8c6d52df0958d1cf182d8f1a5b63b5b9558a3cec9e24877d92b4f0750014"},
+    {file = "pylibcugraph_cu12-24.6.1.tar.gz", hash = "sha256:ab0b432b6a19edd781650cc761f468e484c6c07635748328bd620e7f393ab4cc"},
 ]
 
 [package.dependencies]
-pylibraft-cu12 = "==24.4.*"
-rmm-cu12 = "==24.4.*"
+pylibraft-cu12 = "==24.6.*"
+rmm-cu12 = "==24.6.*"
 
 [package.extras]
-test = ["cudf-cu12 (==24.4.*)", "numpy (>=1.23,<2.0a0)", "pandas", "pytest", "pytest-benchmark", "pytest-cov", "pytest-xdist", "scipy"]
+test = ["cudf-cu12 (==24.6.*)", "numpy (>=1.23,<2.0a0)", "pandas", "pytest", "pytest-benchmark", "pytest-cov", "pytest-xdist", "scipy"]
 
 [[package]]
 name = "pylibraft-cu12"
-version = "24.4.0"
+version = "24.6.0"
 description = "RAFT: Reusable Algorithms Functions and other Tools"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "pylibraft_cu12-24.4.0.tar.gz", hash = "sha256:b7ad6044217d74d6ef9ff888185cced85d5745ac7dd3876924d76f2b301f201c"},
+    {file = "pylibraft_cu12-24.6.0.tar.gz", hash = "sha256:c9b3e2be9e3470de3a36ceaec5bc1c4adee5c3d718be3d4d2e88cb9d254e480a"},
 ]
 
 [package.dependencies]
 cuda-python = ">=12.0,<13.0a0"
 numpy = ">=1.23,<2.0a0"
-rmm-cu12 = "==24.4.*"
+rmm-cu12 = "==24.6.*"
 
 [package.extras]
 test = ["cupy-cuda12x (>=12.0.0)", "pytest (==7.*)", "pytest-cov", "scikit-learn", "scipy"]
@@ -4451,41 +4479,42 @@ prompt_toolkit = ">=2.0,<=3.0.36"
 
 [[package]]
 name = "raft-dask-cu12"
-version = "24.4.0"
+version = "24.6.0"
 description = "Reusable Accelerated Functions & Tools Dask Infrastructure"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "raft_dask_cu12-24.4.0.tar.gz", hash = "sha256:b2ebca9b1f0810c302b1a5143add6d38d3dcadcf9b797a807dcaf3bf7e0b6e97"},
+    {file = "raft_dask_cu12-24.6.0.tar.gz", hash = "sha256:628a6c30f3b7d3227afeadf6cc48ee2a87b3218f2127813890ebe9ce057247e6"},
 ]
 
 [package.dependencies]
-dask-cuda = "==24.4.*"
+dask-cuda = "==24.6.*"
+distributed-ucxx-cu12 = "==0.38.*"
 joblib = ">=0.11"
 numba = ">=0.57"
 numpy = ">=1.23,<2.0a0"
-pylibraft-cu12 = "==24.4.*"
-rapids-dask-dependency = "==24.4.*"
-ucx-py-cu12 = "==0.37.*"
+pylibraft-cu12 = "==24.6.*"
+rapids-dask-dependency = "==24.6.*"
+ucx-py-cu12 = "==0.38.*"
 
 [package.extras]
 test = ["pytest (==7.*)", "pytest-cov"]
 
 [[package]]
 name = "rapids-dask-dependency"
-version = "24.4.1"
+version = "24.6.0"
 description = "Dask and Distributed version pinning for RAPIDS"
 optional = false
 python-versions = "*"
 files = [
-    {file = "rapids_dask_dependency-24.4.1-py3-none-any.whl", hash = "sha256:0713b99711cc2beda5e9bc52e4436c9d9131e9ab63c67c6628511703a7fefe3f"},
-    {file = "rapids_dask_dependency-24.4.1.tar.gz", hash = "sha256:c90c166297aa911642b2a5cad3735b8e1cf21de895ce9303dd6cae3a4d6c9057"},
+    {file = "rapids_dask_dependency-24.6.0-py3-none-any.whl", hash = "sha256:07793bc70545ebab1bfae6d64b6896dd18102b61b6d0523a4908739ec185a33f"},
+    {file = "rapids_dask_dependency-24.6.0.tar.gz", hash = "sha256:99dd1efa283e2ff1ac3948d4e8044bb398cb2b74a2fa994716da52895bbcf7b7"},
 ]
 
 [package.dependencies]
-dask = "2024.1.1"
-dask-expr = "0.4.0"
-distributed = "2024.1.1"
+dask = "2024.5.1"
+dask-expr = "*"
+distributed = "2024.5.1"
 
 [package.extras]
 test = ["pytest"]
@@ -4710,12 +4739,12 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "rmm-cu12"
-version = "24.4.0"
+version = "24.6.0"
 description = "rmm - RAPIDS Memory Manager"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "rmm_cu12-24.4.0.tar.gz", hash = "sha256:ffe4b82d3d1540176107c8a516468e8cbbcf5f5290eefedd38661d3a87abfcce"},
+    {file = "rmm_cu12-24.6.0.tar.gz", hash = "sha256:f32677b5e5af26cd45f91dd61f334ab1b41c637297356ceb0b18fb8d41b9f733"},
 ]
 
 [package.dependencies]
@@ -5914,20 +5943,40 @@ files = [
 
 [[package]]
 name = "ucx-py-cu12"
-version = "0.37.0"
+version = "0.38.0"
 description = "Python Bindings for the Unified Communication X library (UCX)"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "ucx_py_cu12-0.37.0.tar.gz", hash = "sha256:683c3b318873589358ba6577b6a3f5fa0282db256dbc62eab34b621cb43378fe"},
+    {file = "ucx_py_cu12-0.38.0.tar.gz", hash = "sha256:34e6b20e4de99a542f4d349816de6331a9417bf247f99baed1ba9daef941bcd4"},
 ]
 
 [package.dependencies]
+libucx-cu12 = ">=1.15.0,<1.16"
 numpy = ">=1.23,<2.0a0"
 pynvml = ">=11.4.1"
 
 [package.extras]
-test = ["cloudpickle", "cudf-cu12 (==24.4.*)", "cupy-cuda12x (>=12.0.0)", "dask", "distributed", "numba (>=0.57)", "pytest (==7.*)", "pytest-asyncio", "pytest-rerunfailures"]
+test = ["cloudpickle", "cudf-cu12 (==24.6.*)", "cupy-cuda12x (>=12.0.0)", "dask", "distributed", "numba (>=0.57)", "pytest (==7.*)", "pytest-asyncio", "pytest-rerunfailures"]
+
+[[package]]
+name = "ucxx-cu12"
+version = "0.38.0"
+description = "Python Bindings for the Unified Communication X library (UCX)"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "ucxx_cu12-0.38.0.tar.gz", hash = "sha256:d33778bd8174525ae135f3f653d5b1dcfa0af9c805d6fab07b5843fac2b56705"},
+]
+
+[package.dependencies]
+libucx-cu12 = ">=1.15.0"
+numpy = ">=1.23,<2.0a0"
+pynvml = ">=11.4.1"
+rmm-cu12 = "==24.6.*"
+
+[package.extras]
+test = ["cloudpickle", "cudf-cu12 (==24.6.*)", "cupy-cuda12x (>=12.0.0)", "numba (>=0.57.1)", "pytest (==7.*)", "pytest-asyncio", "pytest-rerunfailures", "rapids-dask-dependency (==24.6.*)"]
 
 [[package]]
 name = "universal-pathlib"
@@ -6616,4 +6665,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "c3ed3b661ca5698abd84793e337e538caf70f78f3510143f01774bfeb4167bc8"
+content-hash = "c9f199df9a94ea751fd51d19087e2ef7b027f0b531d822f5aa5337e5ca8372af"

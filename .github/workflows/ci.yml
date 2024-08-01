@@ -53,8 +53,8 @@ jobs:
           node-version: 22
           cache: 'pnpm'
 
-      - name: Start CI run
-        run: pnpm exec nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --stop-agents-after="container"
+      # - name: Start distributed CI run
+      #   run: pnpm exec nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --stop-agents-after="container"
 
       - run: CI=true pnpm install
 
