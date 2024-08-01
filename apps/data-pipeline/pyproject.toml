@@ -55,10 +55,10 @@ vllm = "0.5.3.post1"
 transformers = "4.43.3"
 sentence-transformers = "3.0.0"
 hdbscan = "^0.8.37"
-dask-cudf-cu12 = { version = "24.4.0", source = "nvidia" }
-cuml-cu12 = { version = "24.4.0", source = "nvidia" }
-cudf-cu12 = { version = "24.4.0", source = "nvidia" }
-cugraph-cu12 = { version = "24.4.0", source = "nvidia" }
+dask-cudf-cu12 = { version = "24.6.1", source = "nvidia" }
+cuml-cu12 = { version = "24.6.1", source = "nvidia" }
+cudf-cu12 = { version = "24.6.1", source = "nvidia" }
+cugraph-cu12 = { version = "24.6.1", source = "nvidia" }
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "2.0.2"
