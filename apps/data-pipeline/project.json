@@ -110,8 +110,8 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=gha"],
-        "cache-to": ["type=gha,mode=max"]
+        "cache-from": ["type=registry,ref=enclaveid/data-pipeline-ml:buildcache"],
+        "cache-to": ["type=registry,ref=enclaveid/data-pipeline-ml:buildcache,mode=max"]
       }
     },
     "container-base": {
@@ -132,8 +132,8 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=gha"],
-        "cache-to": ["type=gha,mode=max"]
+        "cache-from": ["type=registry,ref=enclaveid/data-pipeline-base:buildcache"],
+        "cache-to": ["type=registry,ref=enclaveid/data-pipeline-base:buildcache,mode=max"]
       }
     },
     "container-jupyter": {
