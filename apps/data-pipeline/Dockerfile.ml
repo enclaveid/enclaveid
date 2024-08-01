@@ -1,6 +1,6 @@
 # TODO: it would be nice to use nvcr.io/nvidia/pytorch:24.04-py3 since it comes
 # with all the stuff preinstalled, but they use some weird versioning for the packages
-# which results in the existing packages being reinstalled.
+# which results in the included packages being reinstalled.
 FROM pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime
 
 SHELL ["/bin/bash", "--login","-c"]
