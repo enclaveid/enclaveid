@@ -146,15 +146,6 @@
           ]
         }
       }
-    },
-    "container": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "pnpm exec nx run data-pipeline:container-base",
-          "pnpm exec nx run data-pipeline:container-ml"
-        ]
-      }
     }
   },
   "tags": []
