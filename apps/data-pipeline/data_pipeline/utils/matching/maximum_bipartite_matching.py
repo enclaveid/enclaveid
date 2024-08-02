@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING
 import polars as pl
 from numpy import ndarray, pad
 
-from data_pipeline.utils.is_cuda_available import is_cuda_available
+from data_pipeline.utils.capabilities import is_rapids_image
 
-if is_cuda_available() or TYPE_CHECKING:
+if is_rapids_image() or TYPE_CHECKING:
     import cudf
     import cugraph
     import cupy as cp

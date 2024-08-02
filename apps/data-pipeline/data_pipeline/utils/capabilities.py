@@ -1,9 +1,14 @@
+import importlib.util
 import subprocess
 
 MIN_CUDA_COMPUTE_CAPABILITY = 7.0
 
 
-# Check if CUDA is available without having to import torch
+def is_package_installed(package_name):
+    spec = importlib.util.find_spec(package_name)
+    return spec is not None
+
+
 def is_cuda_available():
     try:
         compute_capability = subprocess.run(
@@ -16,3 +21,11 @@ def is_cuda_available():
         return float(compute_capability) >= MIN_CUDA_COMPUTE_CAPABILITY
     except Exception:
         return False
+
+
+def is_vllm_image():
+    return is_package_installed("torch") and is_cuda_available()
+
+
+def is_rapids_image():
+    return is_package_installed("cudf") and is_cuda_available()

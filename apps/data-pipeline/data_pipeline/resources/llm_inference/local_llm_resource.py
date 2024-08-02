@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, Dict, List, Union
 from dagster import ConfigurableResource, InitResourceContext, get_dagster_logger
 from pydantic import PrivateAttr
 
-from data_pipeline.utils.is_cuda_available import is_cuda_available
+from data_pipeline.utils.capabilities import is_vllm_image
 
-if is_cuda_available() or TYPE_CHECKING:
+if is_vllm_image() or TYPE_CHECKING:
     import torch
     from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
     from vllm import LLM, SamplingParams

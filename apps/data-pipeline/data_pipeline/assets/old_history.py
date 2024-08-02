@@ -32,14 +32,14 @@ from data_pipeline.utils.postgres import generate_cuid
 from ..constants.custom_config import RowLimitConfig
 from ..constants.k8s import k8s_rapids_config, k8s_vllm_config
 from ..partitions import user_partitions_def
-from ..utils.is_cuda_available import is_cuda_available
+from ..utils.capabilities import is_rapids_image
 from ..utils.old_history_utils import (
     InterestsSpec,
     get_full_history_sessions,
     parse_classification_result,
 )
 
-if is_cuda_available() or TYPE_CHECKING:
+if is_rapids_image() or TYPE_CHECKING:
     import cuml
     import cupy as cp
     from cuml.cluster.hdbscan import HDBSCAN

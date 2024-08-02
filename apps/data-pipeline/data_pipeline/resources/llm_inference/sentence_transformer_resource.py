@@ -4,9 +4,9 @@ import polars as pl
 from dagster import ConfigurableResource, InitResourceContext, get_dagster_logger
 from pydantic import PrivateAttr
 
-from data_pipeline.utils.is_cuda_available import is_cuda_available
+from data_pipeline.utils.capabilities import is_vllm_image
 
-if is_cuda_available() or TYPE_CHECKING:
+if is_vllm_image() or TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
 else:
     SentenceTransformer = None
