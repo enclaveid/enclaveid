@@ -53,8 +53,8 @@ jobs:
           node-version: 22
           cache: 'pnpm'
 
-      # - name: Start distributed CI run
-      #   run: pnpm exec nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --stop-agents-after="container"
+      - name: Start distributed CI run
+        run: pnpm exec nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
 
       - run: CI=true pnpm install
 
@@ -62,5 +62,7 @@ jobs:
         with:
           main-branch-name: master
 
-      #- run: pnpm exec nx-cloud record -- nx format:check
       - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx affected -t container container-vllm container-rapids
+
+      - name: Stop distributed CI run
+        run: pnpm exec nx-cloud complete-ci-run
