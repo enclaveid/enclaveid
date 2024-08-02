@@ -387,9 +387,6 @@ importers:
       nx:
         specifier: 19.1.1
         version: 19.1.1(@swc-node/register@1.9.2(@swc/core@1.4.17(@swc/helpers@0.5.11))(@swc/types@0.1.9)(typescript@5.4.5))(@swc/core@1.4.17(@swc/helpers@0.5.11))
-      nx-cloud:
-        specifier: ^19.0.0
-        version: 19.0.0
       postcss:
         specifier: 8.4.35
         version: 8.4.35
@@ -1965,9 +1962,6 @@ packages:
 
   '@nrwl/node@19.1.1':
     resolution: {integrity: sha512-AKnLdm0YWYFNr2b2bx4+vW3khzS0npL9v4s7LlDRiS78p6Ncbz70hc6Db3mRU55aYG0/TRWrSzUgFoSXPF855A==}
-
-  '@nrwl/nx-cloud@19.0.0':
-    resolution: {integrity: sha512-3WuXq3KKXwKnbjOkYK0OXosjD02LIjC3kEkyMIbaE36O9dMp3k/sa4ZtDVC3tAoIrj17VLVmjKfoDYbED1rapw==}
 
   '@nrwl/react@19.1.1':
     resolution: {integrity: sha512-Qy9eorgzXC8Q7Rx0pyBOY7f4Yde5pwQHslv0s6AERH80+tO0iODLGX5x3Qwod1hdWj2YQsUOX8C+0xvGDB9luQ==}
@@ -5445,10 +5439,6 @@ packages:
     resolution: {integrity: sha512-GopVGCpVS1UKH75VKHGuQFqS1Gusej0z4FyQkPdwjil2gNIv+LNsqBlboOzpJFZKVT95GkCyWJbBSdFEFUWI2A==}
     engines: {node: '>=12'}
 
-  dotenv@10.0.0:
-    resolution: {integrity: sha512-rlBi9d8jpv9Sf1klPjNfFAuWDjKLwTIJJ/VxtoTwIR6hnZxcEOQCZg2oIL3MWBYw5GpUDKOEnND7LXTbIpQ03Q==}
-    engines: {node: '>=10'}
-
   dotenv@16.3.2:
     resolution: {integrity: sha512-HTlk5nmhkm8F6JcdXvHIzaorzCoziNQT9mGxLPVXW8wJF1TiGSL60ZGB4gHWabHOaMmWmhvk2/lPHfnBiT78AQ==}
     engines: {node: '>=12'}
@@ -8157,10 +8147,6 @@ packages:
 
   nwsapi@2.2.10:
     resolution: {integrity: sha512-QK0sRs7MKv0tKe1+5uZIQk/C8XGza4DAnztJG8iD+TpJIORARrCxczA738awHrZoHeTjSSoHqao2teO0dC/gFQ==}
-
-  nx-cloud@19.0.0:
-    resolution: {integrity: sha512-Aq1vQD8yBIdb5jLVpzsqmu8yDmMvRVdjaM30Pp1hghhlSvorGBlpTwY+TccZJv/hBtVO+SpXK8SnnegRZMrxdw==}
-    hasBin: true
 
   nx@18.3.5:
     resolution: {integrity: sha512-wWcvwoTgiT5okdrG0RIWm1tepC17bDmSpw+MrOxnjfBjARQNTURkiq4U6cxjCVsCxNHxCrlAaBSQLZeBgJZTzQ==}
@@ -13303,12 +13289,6 @@ snapshots:
       - typescript
       - verdaccio
 
-  '@nrwl/nx-cloud@19.0.0':
-    dependencies:
-      nx-cloud: 19.0.0
-    transitivePeerDependencies:
-      - debug
-
   '@nrwl/react@19.1.1(@babel/traverse@7.24.7)(@swc-node/register@1.9.2(@swc/core@1.4.17(@swc/helpers@0.5.11))(@swc/types@0.1.9)(typescript@5.4.5))(@swc/core@1.4.17(@swc/helpers@0.5.11))(@types/node@20.11.24)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@19.1.1(@swc-node/register@1.9.2(@swc/core@1.4.17(@swc/helpers@0.5.11))(@swc/types@0.1.9)(typescript@5.4.5))(@swc/core@1.4.17(@swc/helpers@0.5.11)))(typescript@5.4.5)(webpack@5.92.1(@swc/core@1.4.17(@swc/helpers@0.5.11))(esbuild@0.19.12))':
     dependencies:
       '@nx/react': 19.1.1(@babel/traverse@7.24.7)(@swc-node/register@1.9.2(@swc/core@1.4.17(@swc/helpers@0.5.11))(@swc/types@0.1.9)(typescript@5.4.5))(@swc/core@1.4.17(@swc/helpers@0.5.11))(@types/node@20.11.24)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@19.1.1(@swc-node/register@1.9.2(@swc/core@1.4.17(@swc/helpers@0.5.11))(@swc/types@0.1.9)(typescript@5.4.5))(@swc/core@1.4.17(@swc/helpers@0.5.11)))(typescript@5.4.5)(webpack@5.92.1(@swc/core@1.4.17(@swc/helpers@0.5.11))(esbuild@0.19.12))
@@ -17993,8 +17973,6 @@ snapshots:
 
   dotenv-expand@10.0.0: {}
 
-  dotenv@10.0.0: {}
-
   dotenv@16.3.2: {}
 
   dotenv@16.4.5: {}
@@ -21533,21 +21511,6 @@ snapshots:
       boolbase: 1.0.0
 
   nwsapi@2.2.10: {}
-
-  nx-cloud@19.0.0:
-    dependencies:
-      '@nrwl/nx-cloud': 19.0.0
-      axios: 1.7.2
-      chalk: 4.1.2
-      dotenv: 10.0.0
-      fs-extra: 11.2.0
-      node-machine-id: 1.1.12
-      open: 8.4.2
-      strip-json-comments: 3.1.1
-      tar: 6.2.1
-      yargs-parser: 21.1.1
-    transitivePeerDependencies:
-      - debug
 
   nx@18.3.5(@swc-node/register@1.9.2(@swc/core@1.4.17(@swc/helpers@0.5.11))(@swc/types@0.1.9)(typescript@5.4.5))(@swc/core@1.4.17(@swc/helpers@0.5.11)):
     dependencies:
