@@ -32,7 +32,7 @@ from data_pipeline.utils.postgres import generate_cuid
 from ..constants.custom_config import RowLimitConfig
 from ..constants.k8s import k8s_rapids_config, k8s_vllm_config
 from ..partitions import user_partitions_def
-from ..utils.capabilities import is_rapids_image
+from ..utils.capabilities import get_cuda_version, is_rapids_image
 from ..utils.old_history_utils import (
     InterestsSpec,
     get_full_history_sessions,
@@ -221,6 +221,7 @@ def interests_clusters(
     config: RowLimitConfig,
     interests_embeddings: pl.DataFrame,
 ) -> pl.DataFrame:
+    context.log.info("CUDA version: %s", get_cuda_version())
     # Apply the row limit (if any)
     df = interests_embeddings.slice(0, config.row_limit)
 

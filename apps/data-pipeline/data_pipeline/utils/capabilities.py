@@ -9,6 +9,20 @@ def is_package_installed(package_name):
     return spec is not None
 
 
+def get_cuda_version():
+    try:
+        cuda_version = subprocess.run(
+            "nvcc --version",
+            shell=True,
+            text=True,
+            capture_output=True,
+        ).stdout.strip()
+
+        return cuda_version
+    except Exception:
+        return None
+
+
 def is_cuda_available():
     try:
         compute_capability = subprocess.run(
