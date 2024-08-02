@@ -48,7 +48,7 @@ sqlalchemy = "^2.0.31"
 cuid2 = "^2.0.1"
 
 # The following are very large packages, they are cached as docker layers and shouldn't be changed often.
-# We split ML deps in two grups to avoid cuBLAS conflicts.
+# We split ML deps in two grups to avoid conflicts.
 
 [tool.poetry.group.vllm.dependencies]
 torch = "2.3.1"
@@ -58,6 +58,7 @@ sentence-transformers = "3.0.0"
 
 [tool.poetry.group.rapids.dependencies]
 hdbscan = "^0.8.37"
+# Installing rapids packages in the CI makes CUBLAS error for some reason.
 # dask-cudf-cu12 = { version = "24.4.0", source = "nvidia" }
 # cuml-cu12 = { version = "24.4.0", source = "nvidia" }
 # cudf-cu12 = { version = "24.4.0", source = "nvidia" }

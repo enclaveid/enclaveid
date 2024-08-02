@@ -2,7 +2,7 @@
 # with all the stuff preinstalled, but they use some weird versioning for the packages
 # which results in the included packages being reinstalled
 
-FROM rapidsai/base:24.04-cuda12.0-py3.10
+FROM rapidsai/base:24.06-cuda12.2-py3.11
 
 SHELL ["/bin/bash", "--login","-c"]
 
