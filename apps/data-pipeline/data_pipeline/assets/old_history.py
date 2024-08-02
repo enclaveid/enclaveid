@@ -30,7 +30,7 @@ from data_pipeline.utils.matching.overall_similarity_formula import (
 from data_pipeline.utils.postgres import generate_cuid
 
 from ..constants.custom_config import RowLimitConfig
-from ..constants.k8s import k8s_gpu_config
+from ..constants.k8s import k8s_rapids_config, k8s_vllm_config
 from ..partitions import user_partitions_def
 from ..utils.is_cuda_available import is_cuda_available
 from ..utils.old_history_utils import (
@@ -158,7 +158,7 @@ class InterestsEmbeddingsConfig(RowLimitConfig):
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
-    op_tags=k8s_gpu_config,
+    op_tags=k8s_vllm_config,
 )
 def interests(
     context: AssetExecutionContext,
@@ -187,7 +187,7 @@ def interests(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={"interests": AssetIn(key=["interests"])},
-    op_tags=k8s_gpu_config,
+    op_tags=k8s_vllm_config,
 )
 def interests_embeddings(
     context: AssetExecutionContext,
@@ -214,7 +214,7 @@ def interests_embeddings(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={"interests_embeddings": AssetIn(key=["interests_embeddings"])},
-    op_tags=k8s_gpu_config,
+    op_tags=k8s_rapids_config,
 )
 def interests_clusters(
     context: AssetExecutionContext,
@@ -324,7 +324,7 @@ async def cluster_summaries(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={"cluster_summaries": AssetIn(key=["cluster_summaries"])},
-    op_tags=k8s_gpu_config,
+    op_tags=k8s_vllm_config,
 )
 def summaries_embeddings(
     context: AssetExecutionContext,
@@ -346,7 +346,7 @@ def summaries_embeddings(
     partitions_def=user_partitions_def,
     deps=[summaries_embeddings],
     io_manager_key="parquet_io_manager",
-    op_tags=k8s_gpu_config,
+    op_tags=k8s_rapids_config,
 )
 def summaries_user_matches(
     context: AssetExecutionContext,
@@ -534,9 +534,9 @@ def api_user_matches(
             user_id = user_interests_record.userId
             if user_id not in other_users_clusters_ids_map:
                 other_users_clusters_ids_map[user_id] = {}
-            other_users_clusters_ids_map[user_id][
-                cluster_record.pipelineClusterId
-            ] = cluster_record.id
+            other_users_clusters_ids_map[user_id][cluster_record.pipelineClusterId] = (
+                cluster_record.id
+            )
 
         matches_to_insert = (
             summaries_user_matches.rename(

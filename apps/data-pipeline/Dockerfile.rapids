@@ -2,16 +2,15 @@
 # with all the stuff preinstalled, but they use some weird versioning for the packages
 # which results in the included packages being reinstalled
 
-#FROM pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime
 FROM rapidsai/base:24.06-cuda12.2-py3.11
 
 SHELL ["/bin/bash", "--login","-c"]
 
 WORKDIR /app
 
-# Install ML dependencies
-COPY apps/data-pipeline/requirements.ml.txt /app/
-RUN pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com -r requirements.ml.txt
+# Install RAPIDS dependencies
+COPY apps/data-pipeline/requirements.rapids.txt /app/
+RUN pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com -r requirements.rapids.txt
 
 # Install prod dependencies
 COPY apps/data-pipeline/requirements.prod.txt /app/

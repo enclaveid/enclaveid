@@ -23,11 +23,16 @@
       "executor": "@nxlv/python:run-commands",
       "dependsOn": ["lock"],
       "options": {
-        "command": "poetry export --only ml -f requirements.txt --output requirements.ml.txt --without-hashes && poetry export --without ml,dev -f requirements.txt --output requirements.prod.txt --without-hashes",
+        "commands": [
+          "poetry export --only vllm -f requirements.txt --output requirements.vllm.txt --without-hashes",
+          "poetry export --only rapids -f requirements.txt --output requirements.rapids.txt --without-hashes",
+          "poetry export --without rapids,vllm,dev -f requirements.txt --output requirements.prod.txt --without-hashes"
+        ],
         "cwd": "apps/data-pipeline"
       },
       "outputs": [
-        "{projectRoot}/requirements.ml.txt",
+        "{projectRoot}/requirements.rapids.txt",
+        "{projectRoot}/requirements.vllm.txt",
         "{projectRoot}/requirements.prod.txt"
       ]
     },
@@ -92,16 +97,16 @@
         "cwd": "apps/data-pipeline"
       }
     },
-    "container-ml": {
+    "container-rapids": {
       "executor": "@nx-tools/nx-container:build",
       "dependsOn": ["build"],
       "options": {
         "engine": "docker",
         "push": true,
-        "file": "apps/data-pipeline/Dockerfile.ml",
+        "file": "apps/data-pipeline/Dockerfile.rapids",
         "platforms": ["linux/amd64"],
         "metadata": {
-          "images": ["docker.io/enclaveid/data-pipeline-ml"],
+          "images": ["docker.io/enclaveid/data-pipeline-rapids"],
           "tags": [
             "type=schedule",
             "type=ref,event=branch",
@@ -110,8 +115,30 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=registry,ref=enclaveid/data-pipeline-ml:buildcache"],
-        "cache-to": ["type=registry,ref=enclaveid/data-pipeline-ml:buildcache,mode=max"]
+        "cache-from": ["type=registry,ref=enclaveid/data-pipeline-rapids:buildcache"],
+        "cache-to": ["type=registry,ref=enclaveid/data-pipeline-rapids:buildcache,mode=max"]
+      }
+    },
+    "container-vllm": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "push": true,
+        "file": "apps/data-pipeline/Dockerfile.vllm",
+        "platforms": ["linux/amd64"],
+        "metadata": {
+          "images": ["docker.io/enclaveid/data-pipeline-vllm"],
+          "tags": [
+            "type=schedule",
+            "type=ref,event=branch",
+            "type=ref,event=tag",
+            "type=ref,event=pr",
+            "type=sha,prefix=sha-"
+          ]
+        },
+        "cache-from": ["type=registry,ref=enclaveid/data-pipeline-vllm:buildcache"],
+        "cache-to": ["type=registry,ref=enclaveid/data-pipeline-vllm:buildcache,mode=max"]
       }
     },
     "container-base": {

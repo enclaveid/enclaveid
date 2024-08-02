@@ -47,13 +47,15 @@ pandas = "2.2.1"
 sqlalchemy = "^2.0.31"
 cuid2 = "^2.0.1"
 
-[tool.poetry.group.ml.dependencies]
-# These are very large packages.
-# They are cached as a docker layer and shouldn't be changed often.
+# The following are very large packages, they are cached as docker layers and shouldn't be changed often.
+
+[tool.poetry.group.vllm.dependencies]
 torch = "2.3.1"
 vllm = "0.5.3.post1"
 transformers = "4.43.3"
 sentence-transformers = "3.0.0"
+
+[tool.poetry.group.rapids.dependencies]
 hdbscan = "^0.8.37"
 dask-cudf-cu12 = { version = "24.6.1", source = "nvidia" }
 cuml-cu12 = { version = "24.6.1", source = "nvidia" }
