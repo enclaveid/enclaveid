@@ -11,6 +11,10 @@ k8s_gpu_config = {
                 },
             },
             "volumeMounts": [{"name": "model-cache", "mountPath": "/model-cache"}],
+            "securityContext": {
+                "allowPrivilegeEscalation": False,
+                "runAsUser": 0,
+            },
         },
         "pod_spec_config": {
             "tolerations": [
