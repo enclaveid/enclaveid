@@ -141,7 +141,7 @@
         "cache-to": ["type=registry,ref=enclaveid/data-pipeline-vllm:buildcache,mode=max"]
       }
     },
-    "container-base": {
+    "container": {
       "executor": "@nx-tools/nx-container:build",
       "dependsOn": ["build"],
       "options": {
