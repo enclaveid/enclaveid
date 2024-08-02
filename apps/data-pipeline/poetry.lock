@@ -772,17 +772,17 @@ files = [
 
 [[package]]
 name = "cudf-cu12"
-version = "24.6.1"
+version = "24.6.0"
 description = "cuDF - GPU Dataframe"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "cudf_cu12-24.6.1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:c5c2d974ea9dc1a46e2690838bf857448c235142c3711298c0d40aa664df4ca0"},
-    {file = "cudf_cu12-24.6.1-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:6fdd6fd412117503ad23dca75aabb5b536348d3af459b59920152be1a0af6f15"},
-    {file = "cudf_cu12-24.6.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:4292bde2cc7c0d1a81710ab60078efae51759dc9d22ad0baa28e071498238196"},
-    {file = "cudf_cu12-24.6.1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:f7d33ee460c925087e582174c62b14fbae4932b3708bdc5217b970e1dcbc3c1a"},
-    {file = "cudf_cu12-24.6.1-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:725fcfe9adf74c7ccd8a4ed3a4247f96b405115dd570979752f04192bc974573"},
-    {file = "cudf_cu12-24.6.1-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:d9937f89ee2559a048975c9b33fce884956ed93b21f6a7ce0920502f217b7187"},
+    {file = "cudf_cu12-24.6.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:489c6364c33da3d4ca7c5489dbf77cb56baadbde6e43357df88bb482ff209a53"},
+    {file = "cudf_cu12-24.6.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:07bad4f4565e515804f77e76d05a825950c809f5b190e6ee897c56a93a91bc11"},
+    {file = "cudf_cu12-24.6.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:48d92b3be16a014583bb0a21928c27667f6dec802c4f7901beb65729db12da0b"},
+    {file = "cudf_cu12-24.6.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:8b1bb928e4aa7b5f051c73ac1e05a3d3a8e29e7aadd2bc365a5bfe1f12f6c768"},
+    {file = "cudf_cu12-24.6.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:ccf3a7a1b5e9127f04e2312fe68602fbb108112ee50885de661db565b9c5a86d"},
+    {file = "cudf_cu12-24.6.0-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:f499a82763a15517a131bc386bb079325d10ea930bdb78a982c2319bc851eb13"},
 ]
 
 [package.dependencies]
@@ -813,17 +813,17 @@ reference = "nvidia"
 
 [[package]]
 name = "cugraph-cu12"
-version = "24.6.1"
+version = "24.6.0"
 description = "cuGraph - RAPIDS GPU Graph Analytics"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "cugraph_cu12-24.6.1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:a1437b343e041567364fd918760aadb78a198cece1e13e64a0061e37e94cae36"},
-    {file = "cugraph_cu12-24.6.1-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:100e1aa8b2c5358543ccb927b9ad65f901b07890d67c84195d3b5f4749696339"},
-    {file = "cugraph_cu12-24.6.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:a6e332bbbbabdd1d1ad649149171ed7bf23a677d997a54414e59df5c95b4f0c1"},
-    {file = "cugraph_cu12-24.6.1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:ee0c4b98bb22cf13d8f941c7a15370b1ac8e9a3b9b997f03f6445854fab3d87e"},
-    {file = "cugraph_cu12-24.6.1-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:fc78dae61ec41a1d8bfc2bb053da63b4417394d9bc9d5d5889809a4927c6563b"},
-    {file = "cugraph_cu12-24.6.1-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:2a9f556d9d0701c3e903c2dae6df64c1632790f8de22b83afe0dda5be653631d"},
+    {file = "cugraph_cu12-24.6.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:e194d9c4625d817910fd2113dd88eae1cb4383fc2159269fbd641c23a4bbfc99"},
+    {file = "cugraph_cu12-24.6.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:9a94ab16c9be1bfa5ea16ca1ab6bf11a39cbc5d4e2fa83d4fb312ba9fbdd708c"},
+    {file = "cugraph_cu12-24.6.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:11c8cc8d13c450a7118767f4e8722a8c4c64627852048b7d1f02cd04c60f3b48"},
+    {file = "cugraph_cu12-24.6.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:473a839a47cbfdf57bf50ee69ed4745ad0bf28fc4f6b4feba3cf716be4b3795f"},
+    {file = "cugraph_cu12-24.6.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:bfc86b0a3c9153c6c3c63795339cb0df15fbf0d9e88575ca67d72268095fb73a"},
+    {file = "cugraph_cu12-24.6.0-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:eb110f1436ee16ab47f9c3d714a41c83a8ceafd81f97ec4120cdec047b93e648"},
 ]
 
 [package.dependencies]
@@ -861,17 +861,17 @@ files = [
 
 [[package]]
 name = "cuml-cu12"
-version = "24.6.1"
+version = "24.6.0"
 description = "cuML - RAPIDS ML Algorithms"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "cuml_cu12-24.6.1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:bd03c8fede19e6d3e1861f6c2b55240dc39dec9a0da829e1f31ecb92bb41c62d"},
-    {file = "cuml_cu12-24.6.1-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:ccf0796d61a5ef1e14fcb96a06925e0efca24e068e65d9e62c419270ad1c8bce"},
-    {file = "cuml_cu12-24.6.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:923a08fbe3ff6f56a30f5a75c1ca4cee8e329e2668c3c80faeb7a942eb5145ff"},
-    {file = "cuml_cu12-24.6.1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:8eefd7ebb67d2600ea9358005d14974495bfbc221b0ac6a34c9995893edf40eb"},
-    {file = "cuml_cu12-24.6.1-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:baa7e2964ea187915a72ea02bb1fa2dd6a957b665bef7717b81ced9ff4d4a32f"},
-    {file = "cuml_cu12-24.6.1-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:41c562a936f8e36218a8d55b0f4efed9c0c949a978ef72d3e547860faee111fa"},
+    {file = "cuml_cu12-24.6.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:b88b00c7d36ab4a8bffdf36aecb9bd53a48205e9853c0fdd7904ccd6d98d0b75"},
+    {file = "cuml_cu12-24.6.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:e34ce51bf2d2f97a1e4788b54543d38fe048d50f4bc5be7c4c1d7ff61554371f"},
+    {file = "cuml_cu12-24.6.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:6781de57cc374306983b8ac79d26edaff8a5a1c318642a377797e16ac56c50cb"},
+    {file = "cuml_cu12-24.6.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:83fca354d1b7371860ca9dad86fe3f2b2c20b572fd81337af7bddbb7daa04707"},
+    {file = "cuml_cu12-24.6.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:ccd48d1a244f028d1ac442fe70438818ee8132b7613c302b6d7d427f963d7494"},
+    {file = "cuml_cu12-24.6.0-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:de20fcd95c081d9cab028bcb90b9cb6ed5145f6d0c0f4940082293de96c52c7b"},
 ]
 
 [package.dependencies]
@@ -1240,12 +1240,12 @@ test = ["cudf (==24.6.*)", "dask-cudf (==24.6.*)", "kvikio (==24.6.*)", "pytest"
 
 [[package]]
 name = "dask-cudf-cu12"
-version = "24.6.1"
+version = "24.6.0"
 description = "Utilities for Dask and cuDF interactions"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "dask_cudf_cu12-24.6.1-py3-none-any.whl", hash = "sha256:d182aa83479ee980976ecb26b45fbad15311089c39555a0e7625d70af6b24632"},
+    {file = "dask_cudf_cu12-24.6.0-py3-none-any.whl", hash = "sha256:edfb070f010e03f57632bbf6514a06a630cf9c9a9f4f99c4f928ad5e91535b1c"},
 ]
 
 [package.dependencies]
@@ -6775,4 +6775,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "35b59c77270bf0a899ca57f7d537b15350cf5289c077bcf1e7303c0a398bb7f9"
+content-hash = "ab1073cb2c60b27207fc0989e3848478ca7df01d602584c914f54908914c1dd6"
