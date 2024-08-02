@@ -63,7 +63,7 @@ jobs:
         with:
           main-branch-name: master
 
-      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx affected -t data-pipeline:container data-pipeline:container-vllm data-pipeline:container-rapids
+      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container data-pipeline:container-vllm data-pipeline:container-rapids
 
       # - name: Stop distributed CI run
       #   run: pnpx nx-cloud complete-ci-run
