@@ -48,6 +48,7 @@ sqlalchemy = "^2.0.31"
 cuid2 = "^2.0.1"
 
 # The following are very large packages, they are cached as docker layers and shouldn't be changed often.
+# We split ML deps in two grups to avoid cuBLAS conflicts.
 
 [tool.poetry.group.vllm.dependencies]
 torch = "2.3.1"
