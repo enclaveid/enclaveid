@@ -18,6 +18,16 @@ from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bReso
 from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
     SentenceTransformerResource,
 )
+from data_pipeline.utils.database.db_models import (
+    BigFive,
+    InterestsCluster,
+    MoralFoundations,
+    UserInterests,
+    UserMatch,
+    UserTraits,
+)
+from data_pipeline.utils.database.matching import insert_cluster_matches
+from data_pipeline.utils.database.postgres import generate_cuid
 from data_pipeline.utils.matching.maximum_bipartite_matching import (
     maximum_bipartite_matching,
 )
@@ -27,7 +37,6 @@ from data_pipeline.utils.matching.overall_similarity_formula import (
     calculate_mft_similarity,
     calculate_overall_similarity,
 )
-from data_pipeline.utils.postgres import generate_cuid
 
 from ..constants.custom_config import RowLimitConfig
 from ..constants.k8s import k8s_rapids_config, k8s_vllm_config
@@ -433,8 +442,6 @@ def api_user_matches(
 ) -> None:
     db_conn = api_db.get_session()
     with db_conn.begin():
-        UserInterests = api_db.get_mapped_class("UserInterests")
-
         user_interests_record_id = db_conn.execute(
             pg_insert(UserInterests)
             .values(
@@ -459,7 +466,6 @@ def api_user_matches(
             )
 
         # Inser clusters with summaries into the database
-        InterestsCluster = api_db.get_mapped_class("InterestsCluster")
         current_user_interests_clusters = db_conn.execute(
             pg_insert(InterestsCluster)
             .values(
@@ -518,75 +524,14 @@ def api_user_matches(
             .all()
         )
 
-        # Match the newly created clusters with the current user's clusters
-        # by mapping the dataframe cluster ids to the database pipelineClusterIds
-        current_user_cluster_ids_map = {
-            cluster[0].pipelineClusterId: cluster[0].id
-            for cluster in current_user_interests_clusters
-        }
-
-        # Edge case for the first user
-        if len(other_user_interests_clusters) == 0:
-            db_conn.commit()
-            return
-
-        other_users_clusters_ids_map = {}
-        for cluster_record, user_interests_record in other_user_interests_clusters:
-            user_id = user_interests_record.userId
-            if user_id not in other_users_clusters_ids_map:
-                other_users_clusters_ids_map[user_id] = {}
-            other_users_clusters_ids_map[user_id][cluster_record.pipelineClusterId] = (
-                cluster_record.id
-            )
-
-        matches_to_insert = (
-            summaries_user_matches.rename(
-                {
-                    "cosine_similarity": "cosineSimilarity",
-                }
-            )
-            .with_columns(
-                [
-                    pl.col("user_cluster_label")
-                    .apply(lambda x: current_user_cluster_ids_map.get(x))
-                    .alias("fromClusterId"),
-                    pl.struct(["other_user_id", "other_user_cluster_label"])
-                    .apply(
-                        lambda x: other_users_clusters_ids_map[x["other_user_id"]][  # type: ignore
-                            x["other_user_cluster_label"]  # type: ignore
-                        ]
-                    )
-                    .alias("toClusterId"),
-                ]
-            )
-            .select(
-                [
-                    "cosineSimilarity",
-                    "fromClusterId",
-                    "toClusterId",
-                ]
-            )
-            .with_columns(
-                id=pl.Series(
-                    [generate_cuid() for _ in range(len(summaries_user_matches))]
-                ),
-                updatedAt=pl.Series([func.now()] * len(summaries_user_matches)),
-            )
-            .to_dicts()
-        )
-
-        InterestsClusterMatch = api_db.get_mapped_class("InterestsClusterMatch")
-        db_conn.execute(
-            pg_insert(InterestsClusterMatch)
-            .values(matches_to_insert)
-            .on_conflict_do_nothing()
+        insert_cluster_matches(
+            current_user_interests_clusters,
+            other_user_interests_clusters,
+            summaries_user_matches,
+            db_conn,
         )
 
         # Calculate the overall similarities
-        UserTraits = api_db.get_mapped_class("UserTraits")
-        MoralFoundations = api_db.get_mapped_class("MoralFoundations")
-        BigFive = api_db.get_mapped_class("BigFive")
-
         current_user_traits = (
             db_conn.query(UserTraits, MoralFoundations, BigFive)
             .join(MoralFoundations, UserTraits.id == MoralFoundations.userTraitsId)
@@ -653,7 +598,6 @@ def api_user_matches(
                 )
 
             if len(user_matches_to_insert) > 0:
-                UserMatch = api_db.get_mapped_class("UserMatch")
                 db_conn.execute(
                     pg_insert(UserMatch)
                     .values(user_matches_to_insert)

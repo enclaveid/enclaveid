@@ -72,6 +72,7 @@ pytest-sugar = "0.9.7"
 pytest-cov = "4.1.0"
 pytest-html = "3.2.0"
 dagster-webserver = "^1.7.3"
+sqlacodegen_v2 = "0.1.4"
 
 [build-system]
 requires = ["poetry-core"]

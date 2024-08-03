@@ -53,7 +53,7 @@ function ProfilePage() {
     .userMatchOverview as UserMatchOverview;
 
   const matchDetailsQuery = trpc.private.getUserMatchDetails.useQuery({
-    userMatchId: userMatchOverview.userMatchId,
+    usersOverallMatchId: userMatchOverview.usersOverallMatchId,
   });
 
   return (
