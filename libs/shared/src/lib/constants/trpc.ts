@@ -8,6 +8,6 @@ export interface UserMatchOverview {
   displayName: string;
   gender: Gender;
   humanReadableGeography: string;
-  userMatchId: string;
-  overallMatch: number;
+  usersOverallMatchId: string;
+  overallSimilarity: number;
 }

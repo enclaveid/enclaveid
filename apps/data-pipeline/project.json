@@ -73,7 +73,7 @@
       "executor": "@nxlv/python:install",
       "options": {
         "silent": false,
-        "args": "--without ml",
+        "args": "--without vllm,rapids",
         "cacheDir": ".cache/pypoetry",
         "verbose": false,
         "debug": false

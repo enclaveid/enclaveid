@@ -39,8 +39,7 @@ model User {
   chromePod   ChromePod? @relation(fields: [chromePodId], references: [id])
   chromePodId String?    @unique
 
-  fromMatches UserMatch[] @relation(name: "FromUser")
-  toMatches   UserMatch[] @relation(name: "ToUser")
+  userMatches UserMatch[]
 }
 
 model Session {
@@ -223,34 +222,57 @@ model InterestsCluster {
   userInterestsId String
   userInterests   UserInterests @relation(fields: [userInterestsId], references: [id], onDelete: Cascade)
 
-  fromMatches InterestsClusterMatch[] @relation(name: "FromInterestsCluster")
-  toMatches   InterestsClusterMatch[] @relation(name: "ToInterestsCluster")
+  interestsClusterMatches InterestsClusterMatch[]
 
   @@unique([userInterestsId, pipelineClusterId, clusterType])
 }
 
+// Join table
 model InterestsClusterMatch {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  interestsCluster   InterestsCluster @relation(fields: [interestsClusterId], references: [id])
+  interestsClusterId String
+
+  interestsClustersSimilarity   InterestsClustersSimilarity @relation(fields: [interestsClustersSimilarityId], references: [id])
+  interestsClustersSimilarityId String
+
+  @@unique([interestsClusterId, interestsClustersSimilarityId])
+}
+
+model InterestsClustersSimilarity {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   cosineSimilarity Float
 
-  fromClusterId String
-  toClusterId   String
-
-  fromCluster InterestsCluster @relation(name: "FromInterestsCluster", fields: [fromClusterId], references: [id], onDelete: Cascade)
-  toCluster   InterestsCluster @relation(name: "ToInterestsCluster", fields: [toClusterId], references: [id], onDelete: Cascade)
-
-  @@unique([fromClusterId, toClusterId])
+  interestsClusterMatches InterestsClusterMatch[]
 }
 
+// Join table
 model UserMatch {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  overallMatch Float
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  usersOverallMatch   UsersOverallMatch @relation(fields: [usersOverallMatchId], references: [id])
+  usersOverallMatchId String
+
+  @@unique([userId, usersOverallMatchId])
+}
+
+model UsersOverallMatch {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  overallSimilarity Float
 
   // bigFiveMatch          Float
   // moralFoundationsMatch Float
@@ -262,11 +284,5 @@ model UserMatch {
   // proactiveInterestsMatch Float
   // reactiveInterestsMatch  Float
 
-  fromUserId String
-  toUserId   String
-
-  fromUser User @relation(fields: [fromUserId], references: [id], name: "FromUser", onDelete: Cascade)
-  toUser   User @relation(fields: [toUserId], references: [id], name: "ToUser", onDelete: Cascade)
-
-  @@unique([fromUserId, toUserId])
+  userMatches UserMatch[]
 }

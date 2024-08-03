@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Gender" AS ENUM ('MA', 'FE', 'OT');
+CREATE TYPE "Gender" AS ENUM ('Male', 'Female', 'Other');
 
 -- CreateEnum
 CREATE TYPE "DataProvider" AS ENUM ('GOOGLE', 'FACEBOOK', 'OPENAI');
@@ -192,11 +192,20 @@ CREATE TABLE "InterestsClusterMatch" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "cosineSimilarity" DOUBLE PRECISION NOT NULL,
-    "fromClusterId" TEXT NOT NULL,
-    "toClusterId" TEXT NOT NULL,
+    "interestsClusterId" TEXT NOT NULL,
+    "interestsClustersSimilarityId" TEXT NOT NULL,
 
     CONSTRAINT "InterestsClusterMatch_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "InterestsClustersSimilarity" (
+    "id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "cosineSimilarity" DOUBLE PRECISION NOT NULL,
+
+    CONSTRAINT "InterestsClustersSimilarity_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -204,11 +213,20 @@ CREATE TABLE "UserMatch" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "overallMatch" DOUBLE PRECISION NOT NULL,
-    "fromUserId" TEXT NOT NULL,
-    "toUserId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "usersOverallMatchId" TEXT NOT NULL,
 
     CONSTRAINT "UserMatch_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UsersOverallMatch" (
+    "id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "overallSimilarity" DOUBLE PRECISION NOT NULL,
+
+    CONSTRAINT "UsersOverallMatch_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -236,10 +254,10 @@ CREATE UNIQUE INDEX "UserInterests_userId_key" ON "UserInterests"("userId");
 CREATE UNIQUE INDEX "InterestsCluster_userInterestsId_pipelineClusterId_clusterT_key" ON "InterestsCluster"("userInterestsId", "pipelineClusterId", "clusterType");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "InterestsClusterMatch_fromClusterId_toClusterId_key" ON "InterestsClusterMatch"("fromClusterId", "toClusterId");
+CREATE UNIQUE INDEX "InterestsClusterMatch_interestsClusterId_interestsClustersS_key" ON "InterestsClusterMatch"("interestsClusterId", "interestsClustersSimilarityId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "UserMatch_fromUserId_toUserId_key" ON "UserMatch"("fromUserId", "toUserId");
+CREATE UNIQUE INDEX "UserMatch_userId_usersOverallMatchId_key" ON "UserMatch"("userId", "usersOverallMatchId");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_chromePodId_fkey" FOREIGN KEY ("chromePodId") REFERENCES "ChromePod"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -275,13 +293,13 @@ ALTER TABLE "UserInterests" ADD CONSTRAINT "UserInterests_userId_fkey" FOREIGN K
 ALTER TABLE "InterestsCluster" ADD CONSTRAINT "InterestsCluster_userInterestsId_fkey" FOREIGN KEY ("userInterestsId") REFERENCES "UserInterests"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_fromClusterId_fkey" FOREIGN KEY ("fromClusterId") REFERENCES "InterestsCluster"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_interestsClusterId_fkey" FOREIGN KEY ("interestsClusterId") REFERENCES "InterestsCluster"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_toClusterId_fkey" FOREIGN KEY ("toClusterId") REFERENCES "InterestsCluster"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_interestsClustersSimilarityId_fkey" FOREIGN KEY ("interestsClustersSimilarityId") REFERENCES "InterestsClustersSimilarity"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_fromUserId_fkey" FOREIGN KEY ("fromUserId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_toUserId_fkey" FOREIGN KEY ("toUserId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_usersOverallMatchId_fkey" FOREIGN KEY ("usersOverallMatchId") REFERENCES "UsersOverallMatch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

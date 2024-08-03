@@ -1,54 +1,12 @@
 import { prisma } from '@enclaveid/backend';
 import { AppContext } from '../../context';
 import { router, authenticatedProcedure } from '../../trpc';
-import { UserMatch } from '@prisma/client';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { UserMatchOverview } from '@enclaveid/shared';
 import { localGeocoderLookup } from '../../services/localGeocoder';
 
-async function parseMatch(
-  userMatch: UserMatch,
-  direction: 'fromUser' | 'toUser',
-) {
-  return {
-    displayName: userMatch[direction].displayName,
-    gender: userMatch[direction].gender,
-    humanReadableGeography: await localGeocoderLookup(
-      userMatch[direction].geographyLat,
-      userMatch[direction].geographyLon,
-    ),
-    userMatchId: userMatch.id,
-    overallMatch: userMatch.overallMatch,
-  };
-}
-
-const SIMILARITY_THRESHOLD = 0.95;
-
-const userMatchDetailsSelector = {
-  select: {
-    displayName: true,
-    gender: true,
-    geographyLat: true,
-    geographyLon: true,
-    userTraits: {
-      include: {
-        bigFive: true,
-        moralFoundations: true,
-      },
-    },
-    userInterests: {
-      include: {
-        interests: {
-          include: {
-            fromMatches: true,
-            toMatches: true,
-          },
-        },
-      },
-    },
-  },
-};
+const SIMILARITY_THRESHOLD = 0.9;
 
 export const matches = router({
   getPeopleCount: authenticatedProcedure.query(async () => {
@@ -62,35 +20,55 @@ export const matches = router({
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        fromMatches: {
+        userMatches: {
           include: {
-            toUser: true,
-          },
-        },
-        toMatches: {
-          include: {
-            fromUser: true,
+            usersOverallMatch: {
+              include: {
+                userMatches: {
+                  include: {
+                    user: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
     });
 
-    return await Promise.all([
-      ...user.fromMatches.map((match) => parseMatch(match, 'toUser')),
-      ...user.toMatches.map((match) => parseMatch(match, 'fromUser')),
-    ]).then(
+    return await Promise.all(
+      user.userMatches
+        .map(async (userMatch) => {
+          const { user: otherUser } =
+            userMatch.usersOverallMatch.userMatches.find(
+              (r) => r.user.id != userId,
+            );
+
+          if (!otherUser) return null;
+
+          return {
+            displayName: otherUser.displayName,
+            gender: otherUser.gender,
+            humanReadableGeography: await localGeocoderLookup(
+              otherUser.geographyLat,
+              otherUser.geographyLon,
+            ),
+            usersOverallMatchId: userMatch.usersOverallMatch.id,
+            overallSimilarity: userMatch.usersOverallMatch.overallSimilarity,
+          };
+        })
+        .filter((r) => r != null),
+    ).then(
       (r) =>
-        r
-          .flat()
-          .sort(
-            (a, b) => b.overallMatch - a.overallMatch,
-          ) as UserMatchOverview[],
+        r.sort(
+          (a, b) => b.overallSimilarity - a.overallSimilarity,
+        ) as UserMatchOverview[],
     );
   }),
   getUserMatchDetails: authenticatedProcedure
     .input(
       z.object({
-        userMatchId: z.string().min(1),
+        usersOverallMatchId: z.string().min(1),
       }),
     )
     .query(async (opts) => {
@@ -98,21 +76,37 @@ export const matches = router({
         user: { id: userId },
       } = opts.ctx as AppContext;
 
-      const { userMatchId } = opts.input;
+      const { usersOverallMatchId } = opts.input;
 
-      const userMatch = await prisma.userMatch
+      const userMatch = await prisma.usersOverallMatch
         .findUniqueOrThrow({
           where: {
-            id: userMatchId,
-            AND: [
-              {
-                OR: [{ fromUserId: userId }, { toUserId: userId }],
-              },
-            ],
+            id: usersOverallMatchId,
           },
           include: {
-            toUser: userMatchDetailsSelector,
-            fromUser: userMatchDetailsSelector,
+            userMatches: {
+              include: {
+                user: {
+                  include: {
+                    userTraits: {
+                      include: {
+                        bigFive: true,
+                        moralFoundations: true,
+                      },
+                    },
+                    userInterests: {
+                      include: {
+                        interests: {
+                          include: {
+                            interestsClusterMatches: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         })
         .catch((e) => {
@@ -122,10 +116,9 @@ export const matches = router({
           });
         });
 
-      const [currentUser, otherUser] =
-        userMatch.fromUserId == userId
-          ? [userMatch.fromUser, userMatch.toUser]
-          : [userMatch.toUser, userMatch.fromUser];
+      const [currentUser, otherUser] = userMatch.userMatches
+        .map((r) => r.user)
+        .sort((a, b) => (a.id == userId ? -1 : 1));
 
       const currentInterestsIds = currentUser.userInterests.interests.map(
         (r) => r.id,
@@ -134,44 +127,55 @@ export const matches = router({
         (r) => r.id,
       );
 
-      const userInterestMatches = await prisma.interestsClusterMatch.findMany({
-        where: {
-          cosineSimilarity: { gte: SIMILARITY_THRESHOLD },
-          OR: [
-            {
-              AND: [
-                { fromClusterId: { in: otherInterestsIds } },
-                { toClusterId: { in: currentInterestsIds } },
-              ],
+      const interestsClustersSimilarities =
+        await prisma.interestsClustersSimilarity
+          .findMany({
+            where: {
+              cosineSimilarity: {
+                gte: SIMILARITY_THRESHOLD,
+              },
             },
-            {
-              AND: [
-                { fromClusterId: { in: currentInterestsIds } },
-                { toClusterId: { in: otherInterestsIds } },
-              ],
+            include: {
+              interestsClusterMatches: {
+                where: {
+                  OR: [
+                    {
+                      interestsClusterId: {
+                        in: currentInterestsIds,
+                      },
+                    },
+                    {
+                      interestsClusterId: {
+                        in: otherInterestsIds,
+                      },
+                    },
+                  ],
+                },
+                include: {
+                  interestsCluster: true,
+                },
+              },
             },
-          ],
-        },
-        include: {
-          fromCluster: true,
-          toCluster: true,
-        },
-      });
+          })
+          .then((r) => {
+            // Filter out matches that don't have both users
+            return r.filter((r) => r.interestsClusterMatches.length == 2);
+          });
 
-      const allInterests = userInterestMatches
-        .map((r) => {
-          // We show the current user's summaries for privacy
-          const interestRecord = currentInterestsIds.includes(r.fromClusterId)
-            ? r.fromCluster
-            : r.toCluster;
-
-          return {
-            summary: interestRecord.summary,
-            activityType: interestRecord.clusterType,
-            cosineSimilarity: r.cosineSimilarity,
-          };
-        })
-        .sort((a, b) => b.cosineSimilarity - a.cosineSimilarity);
+      const matchingCurrentUserInterests =
+        interestsClustersSimilarities.flatMap((ics) => {
+          return ics.interestsClusterMatches
+            .filter((icm) =>
+              currentInterestsIds.includes(icm.interestsClusterId),
+            )
+            .flatMap((r) => {
+              return {
+                summary: r.interestsCluster.summary,
+                activityType: r.interestsCluster.clusterType,
+                cosineSimilarity: ics.cosineSimilarity,
+              };
+            });
+        });
 
       return {
         userInfo: {
@@ -186,10 +190,10 @@ export const matches = router({
           bigFive: otherUser.userTraits.bigFive,
           moralFoundations: otherUser.userTraits.moralFoundations,
         },
-        proactiveInterests: allInterests.filter(
+        proactiveInterests: matchingCurrentUserInterests.filter(
           (r) => r.activityType == 'proactive',
         ),
-        reactiveInterests: allInterests.filter(
+        reactiveInterests: matchingCurrentUserInterests.filter(
           (r) => r.activityType == 'reactive',
         ),
       };
