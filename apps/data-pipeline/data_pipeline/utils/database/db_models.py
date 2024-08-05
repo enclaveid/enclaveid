@@ -69,9 +69,9 @@ class InterestsClustersSimilarity(Base):
     )
 
 
-class UsersOverallMatch(Base):
-    __tablename__ = "UsersOverallMatch"
-    __table_args__ = (PrimaryKeyConstraint("id", name="UsersOverallMatch_pkey"),)
+class UsersOverallSimilarity(Base):
+    __tablename__ = "UsersOverallSimilarity"
+    __table_args__ = (PrimaryKeyConstraint("id", name="UsersOverallSimilarity_pkey"),)
 
     id = mapped_column(Text)
     createdAt = mapped_column(
@@ -81,7 +81,7 @@ class UsersOverallMatch(Base):
     overallSimilarity = mapped_column(Double(53), nullable=False)
 
     UserMatch: Mapped[List["UserMatch"]] = relationship(
-        "UserMatch", uselist=True, back_populates="UsersOverallMatch_"
+        "UserMatch", uselist=True, back_populates="UsersOverallSimilarity_"
     )
 
 
@@ -217,17 +217,17 @@ class UserMatch(Base):
             name="UserMatch_userId_fkey",
         ),
         ForeignKeyConstraint(
-            ["usersOverallMatchId"],
-            ["UsersOverallMatch.id"],
+            ["usersOverallSimilarityId"],
+            ["UsersOverallSimilarity.id"],
             ondelete="RESTRICT",
             onupdate="CASCADE",
-            name="UserMatch_usersOverallMatchId_fkey",
+            name="UserMatch_usersOverallSimilarityId_fkey",
         ),
         PrimaryKeyConstraint("id", name="UserMatch_pkey"),
         Index(
-            "UserMatch_userId_usersOverallMatchId_key",
+            "UserMatch_userId_usersOverallSimilarityId_key",
             "userId",
-            "usersOverallMatchId",
+            "usersOverallSimilarityId",
             unique=True,
         ),
     )
@@ -238,11 +238,11 @@ class UserMatch(Base):
     )
     updatedAt = mapped_column(TIMESTAMP(precision=3), nullable=False)
     userId = mapped_column(Text, nullable=False)
-    usersOverallMatchId = mapped_column(Text, nullable=False)
+    usersOverallSimilarityId = mapped_column(Text, nullable=False)
 
     User_: Mapped["User"] = relationship("User", back_populates="UserMatch")
-    UsersOverallMatch_: Mapped["UsersOverallMatch"] = relationship(
-        "UsersOverallMatch", back_populates="UserMatch"
+    UsersOverallSimilarity_: Mapped["UsersOverallSimilarity"] = relationship(
+        "UsersOverallSimilarity", back_populates="UserMatch"
     )
 
 

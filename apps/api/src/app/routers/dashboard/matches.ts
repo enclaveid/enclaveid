@@ -22,7 +22,7 @@ export const matches = router({
       include: {
         userMatches: {
           include: {
-            usersOverallMatch: {
+            usersOverallSimilarity: {
               include: {
                 userMatches: {
                   include: {
@@ -40,7 +40,7 @@ export const matches = router({
       user.userMatches
         .map(async (userMatch) => {
           const { user: otherUser } =
-            userMatch.usersOverallMatch.userMatches.find(
+            userMatch.usersOverallSimilarity.userMatches.find(
               (r) => r.user.id != userId,
             );
 
@@ -53,8 +53,9 @@ export const matches = router({
               otherUser.geographyLat,
               otherUser.geographyLon,
             ),
-            usersOverallMatchId: userMatch.usersOverallMatch.id,
-            overallSimilarity: userMatch.usersOverallMatch.overallSimilarity,
+            usersOverallSimilarityId: userMatch.usersOverallSimilarity.id,
+            overallSimilarity:
+              userMatch.usersOverallSimilarity.overallSimilarity,
           };
         })
         .filter((r) => r != null),
@@ -68,7 +69,7 @@ export const matches = router({
   getUserMatchDetails: authenticatedProcedure
     .input(
       z.object({
-        usersOverallMatchId: z.string().min(1),
+        usersOverallSimilarityId: z.string().min(1),
       }),
     )
     .query(async (opts) => {
@@ -76,12 +77,12 @@ export const matches = router({
         user: { id: userId },
       } = opts.ctx as AppContext;
 
-      const { usersOverallMatchId } = opts.input;
+      const { usersOverallSimilarityId } = opts.input;
 
-      const userMatch = await prisma.usersOverallMatch
+      const userMatch = await prisma.usersOverallSimilarity
         .findUniqueOrThrow({
           where: {
-            id: usersOverallMatchId,
+            id: usersOverallSimilarityId,
           },
           include: {
             userMatches: {

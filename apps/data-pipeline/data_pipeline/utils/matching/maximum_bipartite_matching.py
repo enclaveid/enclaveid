@@ -62,12 +62,12 @@ def maximum_bipartite_matching(
     cost, assignment = cugraph.dense_hungarian(df["weight"], rows, cols)
 
     # Remapping indices to cluster labels
-    if len1 < len2:
-        user2_indices = cp.arange(len(assignment))
-        user1_indices = cp.array(assignment.values)
-    else:
+    if len1 >= len2:
         user1_indices = cp.arange(len(assignment))
         user2_indices = cp.array(assignment.values)
+    else:
+        user1_indices = cp.array(assignment.values)
+        user2_indices = cp.arange(len(assignment))
 
     # Calculate similarity from cosine distances
     similarities = 1 - cost_matrix[user1_indices, user2_indices].get()

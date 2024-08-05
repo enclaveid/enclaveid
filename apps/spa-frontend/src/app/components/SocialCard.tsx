@@ -10,7 +10,7 @@ interface SocialCardProps {
 }
 
 function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
-  const { displayName, gender, humanReadableGeography, overallMatch } =
+  const { displayName, gender, humanReadableGeography, overallSimilarity } =
     userMatchOverview;
 
   const formattedLink = (displayName: string) => {
@@ -77,10 +77,10 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
           <div
             className={classNames(
               'p-2.5 rounded-full text-sm leading-[16.4px] font-medium',
-              getMatchBackgroundColor(overallMatch),
+              getMatchBackgroundColor(overallSimilarity),
             )}
           >
-            {formattedPercentage(overallMatch)}% overall match
+            {formattedPercentage(overallSimilarity)}% overall match
           </div>
         </div>
       </div>

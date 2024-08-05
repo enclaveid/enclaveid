@@ -1,9 +1,12 @@
 from typing import List, Sequence, Tuple
 
 import polars as pl
-from sqlalchemy import Row, func
+from dagster import get_dagster_logger
+from sqlalchemy import Row, func, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
+from data_pipeline.utils.data_structures import flatten, get_dict_leaf_values
 from data_pipeline.utils.database.db_models import (
     InterestsCluster,
     InterestsClusterMatch,
@@ -13,27 +16,10 @@ from data_pipeline.utils.database.db_models import (
 from data_pipeline.utils.database.postgres import generate_cuid
 
 
-def flatten(xss):
-    return [x for xs in xss for x in xs]
-
-
-def get_dict_leaf_values(d, leaves=None):
-    if leaves is None:
-        leaves = []
-
-    if isinstance(d, dict):
-        for value in d.values():
-            get_dict_leaf_values(value, leaves)
-    else:
-        leaves.append(d)
-
-    return leaves
-
-
-def get_existing_matches(session: Session, cluster_ids: List[str]):
+def _get_existing_matches(session: Session, cluster_ids: List[str]):
     return (
         session.query(InterestsClustersSimilarity)
-        .join(InterestsClustersSimilarity.interestsClusterMatches)
+        .join(InterestsClustersSimilarity.InterestsClusterMatch)
         .filter(InterestsClusterMatch.interestsClusterId.in_(cluster_ids))
         .group_by(InterestsClustersSimilarity.id)
         .having(func.count(InterestsClusterMatch.id) == 2)
@@ -41,6 +27,8 @@ def get_existing_matches(session: Session, cluster_ids: List[str]):
     )
 
 
+# This function adds the matches between the current user's clusters and the other user's clusters
+# to the database. It also updates the existing matches if they are already present in the database.
 def insert_cluster_matches(
     current_user_interests_clusters: Sequence[Row[Tuple[InterestsCluster]]],
     other_user_interests_clusters: List[Row[Tuple[InterestsCluster, UserInterests]]],
@@ -78,7 +66,7 @@ def insert_cluster_matches(
             [
                 pl.col("user_cluster_label")
                 .apply(lambda x: current_user_cluster_ids_map.get(x))
-                .alias("currenClusterId"),
+                .alias("currentClusterId"),
                 pl.struct(["other_user_id", "other_user_cluster_label"])
                 .apply(
                     lambda x: other_users_clusters_ids_map[x["other_user_id"]][  # type: ignore
@@ -91,7 +79,7 @@ def insert_cluster_matches(
         .select(
             [
                 "cosineSimilarity",
-                "currenClusterId",
+                "currentClusterId",
                 "otherClusterId",
             ]
         )
@@ -102,12 +90,12 @@ def insert_cluster_matches(
         .to_dicts()
     )
 
-    current_cluster_ids = set(get_dict_leaf_values(current_user_cluster_ids_map))
-    other_cluster_ids = set(get_dict_leaf_values(other_users_clusters_ids_map))
-    all_cluster_ids = current_cluster_ids.union(other_cluster_ids)
+    all_cluster_ids = set(get_dict_leaf_values(current_user_cluster_ids_map)).union(
+        set(get_dict_leaf_values(other_users_clusters_ids_map))
+    )
 
     # Get existing matches
-    existing_matches = get_existing_matches(db_conn, list(all_cluster_ids))
+    existing_matches = _get_existing_matches(db_conn, list(all_cluster_ids))
 
     # Create a dictionary for fast lookup of existing matches
     existing_match_dict = {
@@ -121,13 +109,13 @@ def insert_cluster_matches(
     matches_to_insert_set = set(
         map(
             frozenset,
-            ((m["currenClusterId"], m["otherClusterId"]) for m in matches_to_insert),
+            ((m["currentClusterId"], m["otherClusterId"]) for m in matches_to_insert),
         )
     )
 
     # Process matches in a single loop
     for match in matches_to_insert.copy():
-        match_set = frozenset([match["currenClusterId"], match["otherClusterId"]])
+        match_set = frozenset([match["currentClusterId"], match["otherClusterId"]])
         if match_set in existing_match_dict:
             matches_to_update.append(
                 {
@@ -141,50 +129,54 @@ def insert_cluster_matches(
 
     # Update existing matches
     if matches_to_update:
-        db_conn.bulk_update_mappings(InterestsClustersSimilarity, matches_to_update)
+        db_conn.execute(update(InterestsClustersSimilarity).values(matches_to_update))
 
     if matches_to_insert:
         # Insert new matches
-        db_conn.bulk_insert_mappings(
-            InterestsClustersSimilarity,
-            map(
-                lambda x: {
-                    "id": generate_cuid(),
-                    "cosineSimilarity": x["cosineSimilarity"],
-                    "updatedAt": func.now(),
-                },
-                matches_to_insert,
-            ),
-        )
-
-        # Connect the new matches with the clusters
-        db_conn.bulk_insert_mappings(
-            InterestsClusterMatch,
-            flatten(
+        interest_clusters_similarity_ids = db_conn.execute(
+            pg_insert(InterestsClustersSimilarity)
+            .values(
                 list(
                     map(
-                        lambda x: [
-                            {
-                                "id": generate_cuid(),
-                                "interestsClusterId": x["currenClusterId"],
-                                "interestsClustersSimilarityId": existing_match_dict[
-                                    frozenset(
-                                        [x["currenClusterId"], x["otherClusterId"]]
-                                    )
-                                ],
-                            },
-                            {
-                                "id": generate_cuid(),
-                                "interestsClusterId": x["currenClusterId"],
-                                "interestsClustersSimilarityId": existing_match_dict[
-                                    frozenset(
-                                        [x["currenClusterId"], x["otherClusterId"]]
-                                    )
-                                ],
-                            },
-                        ],
+                        lambda x: {
+                            "id": x["id"],
+                            "cosineSimilarity": x["cosineSimilarity"],
+                            "updatedAt": x["updatedAt"],
+                        },
                         matches_to_insert,
                     )
                 )
-            ),
+            )
+            .returning(InterestsClustersSimilarity.id)
+        ).fetchall()
+
+        logger = get_dagster_logger()
+
+        logger.info(matches_to_insert)
+        # Connect the new matches with the clusters
+        db_conn.execute(
+            pg_insert(InterestsClusterMatch).values(
+                flatten(
+                    list(
+                        map(
+                            lambda m, i: [
+                                {
+                                    "id": generate_cuid(),
+                                    "updatedAt": func.now(),
+                                    "interestsClusterId": m["currentClusterId"],
+                                    "interestsClustersSimilarityId": i[0],
+                                },
+                                {
+                                    "id": generate_cuid(),
+                                    "updatedAt": func.now(),
+                                    "interestsClusterId": m["otherClusterId"],
+                                    "interestsClustersSimilarityId": i[0],
+                                },
+                            ],
+                            matches_to_insert,
+                            interest_clusters_similarity_ids,
+                        )
+                    )
+                ),
+            )
         )

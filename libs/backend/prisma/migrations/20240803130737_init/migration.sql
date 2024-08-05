@@ -214,19 +214,19 @@ CREATE TABLE "UserMatch" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "userId" TEXT NOT NULL,
-    "usersOverallMatchId" TEXT NOT NULL,
+    "usersOverallSimilarityId" TEXT NOT NULL,
 
     CONSTRAINT "UserMatch_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "UsersOverallMatch" (
+CREATE TABLE "UsersOverallSimilarity" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "overallSimilarity" DOUBLE PRECISION NOT NULL,
 
-    CONSTRAINT "UsersOverallMatch_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "UsersOverallSimilarity_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -257,7 +257,7 @@ CREATE UNIQUE INDEX "InterestsCluster_userInterestsId_pipelineClusterId_clusterT
 CREATE UNIQUE INDEX "InterestsClusterMatch_interestsClusterId_interestsClustersS_key" ON "InterestsClusterMatch"("interestsClusterId", "interestsClustersSimilarityId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "UserMatch_userId_usersOverallMatchId_key" ON "UserMatch"("userId", "usersOverallMatchId");
+CREATE UNIQUE INDEX "UserMatch_userId_usersOverallSimilarityId_key" ON "UserMatch"("userId", "usersOverallSimilarityId");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_chromePodId_fkey" FOREIGN KEY ("chromePodId") REFERENCES "ChromePod"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -302,4 +302,4 @@ ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_intere
 ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_usersOverallMatchId_fkey" FOREIGN KEY ("usersOverallMatchId") REFERENCES "UsersOverallMatch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_usersOverallSimilarityId_fkey" FOREIGN KEY ("usersOverallSimilarityId") REFERENCES "UsersOverallSimilarity"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

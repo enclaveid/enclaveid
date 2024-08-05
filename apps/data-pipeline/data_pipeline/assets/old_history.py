@@ -23,11 +23,11 @@ from data_pipeline.utils.database.db_models import (
     InterestsCluster,
     MoralFoundations,
     UserInterests,
-    UserMatch,
     UserTraits,
 )
-from data_pipeline.utils.database.matching import insert_cluster_matches
 from data_pipeline.utils.database.postgres import generate_cuid
+from data_pipeline.utils.matching.database_interests import insert_cluster_matches
+from data_pipeline.utils.matching.database_users import insert_user_matches
 from data_pipeline.utils.matching.maximum_bipartite_matching import (
     maximum_bipartite_matching,
 )
@@ -465,7 +465,7 @@ def api_user_matches(
                 f"UserInterests record for {context.partition_key} could not be created"
             )
 
-        # Inser clusters with summaries into the database
+        # Insert clusters with summaries into the database
         current_user_interests_clusters = db_conn.execute(
             pg_insert(InterestsCluster)
             .values(
@@ -590,20 +590,14 @@ def api_user_matches(
                 user_matches_to_insert.append(
                     {
                         "id": generate_cuid(),
-                        "fromUserId": context.partition_key,
-                        "toUserId": other_user_t.userId,
-                        "overallMatch": overall_similarity,
+                        "currentUserId": context.partition_key,
+                        "otherUserId": other_user_t.userId,
+                        "overallSimilarity": overall_similarity,
                         "updatedAt": func.now(),
                     }
                 )
 
-            if len(user_matches_to_insert) > 0:
-                db_conn.execute(
-                    pg_insert(UserMatch)
-                    .values(user_matches_to_insert)
-                    .on_conflict_do_nothing()
-                )
-
-        # TODO Clean duplicates
+            if user_matches_to_insert:
+                insert_user_matches(db_conn, user_matches_to_insert)
 
         db_conn.commit()

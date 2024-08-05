@@ -261,13 +261,13 @@ model UserMatch {
   user   User   @relation(fields: [userId], references: [id])
   userId String
 
-  usersOverallMatch   UsersOverallMatch @relation(fields: [usersOverallMatchId], references: [id])
-  usersOverallMatchId String
+  usersOverallSimilarity   UsersOverallSimilarity @relation(fields: [usersOverallSimilarityId], references: [id])
+  usersOverallSimilarityId String
 
-  @@unique([userId, usersOverallMatchId])
+  @@unique([userId, usersOverallSimilarityId])
 }
 
-model UsersOverallMatch {
+model UsersOverallSimilarity {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
