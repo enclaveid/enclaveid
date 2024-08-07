@@ -1,6 +1,6 @@
 # EnclaveID
 
-[Figma mocks](https://www.figma.com/file/tSGSLE1L5AlOLq80oV27Xu/EnclaveID?type=design&node-id=0%3A1&mode=design&t=XdBNuLxnG8pWEQtd-1) |
+[Figma mocks](https://www.figma.com/design/sCKxY4WbgHs13Sd3sNp1GF?fuid=899291250420012310&prev-plan-id=899291252722142386&prev-plan-type=team&prev-selected-view=recentsAndSharing&prev-tab=recently-viewed) |
 [Trello board](https://trello.com/b/jsbSDdMQ/enclaveid)
 
 ## Docs
