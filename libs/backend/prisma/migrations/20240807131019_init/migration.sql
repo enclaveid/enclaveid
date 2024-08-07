@@ -182,6 +182,7 @@ CREATE TABLE "InterestsCluster" (
     "pipelineClusterId" INTEGER NOT NULL,
     "clusterType" TEXT NOT NULL,
     "summary" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
     "userInterestsId" TEXT NOT NULL,
 
     CONSTRAINT "InterestsCluster_pkey" PRIMARY KEY ("id")

@@ -68,7 +68,7 @@ interests_spec = InterestsSpec(
     ],
     # The goal of this prompt sequence is classifying the user's search activity
     # similarly to the SEO categories of informational, navigational, and transactional
-    classification_prompt_sequence=[
+    summarization_prompt_sequence=[
         lambda search_activity: (
             f"""
 Analyze the provided cluster of search activity data for a single topic. Determine whether this cluster primarily represents:
@@ -120,6 +120,7 @@ Summarize this 'Knowledge Progression' search activity cluster in about 100-300 
 Conclude with a single sentence capturing the overall trajectory and breadth of the user's learning path.
 """,
         }[parse_classification_result(cluster_classification)],
+        "Provide a title for the summary. Do not output any additional text other than the title.",
     ],
 )
 
@@ -293,8 +294,8 @@ async def cluster_summaries(
 
     prompt_sequences = [
         [
-            interests_spec.classification_prompt_sequence[0](row["cluster_items"]),
-            interests_spec.classification_prompt_sequence[1],
+            interests_spec.summarization_prompt_sequence[0](row["cluster_items"]),
+            interests_spec.summarization_prompt_sequence[1],
         ]
         for row in df.to_dicts()
     ]
@@ -320,8 +321,12 @@ async def cluster_summaries(
         map(lambda x: x[1] if len(x) > 0 else None, summaries_completions)
     )
 
+    cluster_titles = list(
+        map(lambda x: x[2] if len(x) > 0 else None, summaries_completions)
+    )
     return (
         df.with_columns(
+            cluster_title=pl.Series(cluster_titles),
             cluster_summary=pl.Series(cluster_summaries),
             activity_type=pl.Series(activity_types),
         )
@@ -474,6 +479,7 @@ def api_user_matches(
                         "cluster_label": "pipelineClusterId",
                         "activity_type": "clusterType",
                         "cluster_summary": "summary",
+                        "cluster_title": "title",
                     }
                 )
                 .with_columns(

@@ -90,7 +90,7 @@ export const authentication = router({
           },
           // TODO
           displayName: 'test',
-          gender: Gender.OT,
+          gender: Gender.Other,
           geographyLat: 0.0,
           geographyLon: 0.0,
         },
