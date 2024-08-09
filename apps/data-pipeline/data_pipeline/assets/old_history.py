@@ -288,7 +288,12 @@ async def cluster_summaries(
             (pl.col("date") + pl.lit(":") + pl.col("interests")).alias("date_interests")
         )
         .group_by("cluster_label")
-        .agg([pl.col("date_interests").str.concat("\n").alias("cluster_items")])
+        .agg(
+            [
+                pl.col("date_interests").str.concat("\n").alias("cluster_items"),
+                pl.col("date").sort().alias("cluster_dates"),
+            ]
+        )
         .filter(pl.col("cluster_label") != -1)
     )
 
@@ -326,6 +331,7 @@ async def cluster_summaries(
     )
     return (
         df.with_columns(
+            cluster_dates=df["cluster_dates"],
             cluster_title=pl.Series(cluster_titles),
             cluster_summary=pl.Series(cluster_summaries),
             activity_type=pl.Series(activity_types),
@@ -480,6 +486,7 @@ def api_user_matches(
                         "activity_type": "clusterType",
                         "cluster_summary": "summary",
                         "cluster_title": "title",
+                        "cluster_dates": "activityDates",
                     }
                 )
                 .with_columns(

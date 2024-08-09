@@ -219,6 +219,7 @@ model InterestsCluster {
   clusterType       String // Would be cool to have an enum here but string enums are not supported
   summary           String
   title             String
+  activityDates     String[]
 
   userInterestsId String
   userInterests   UserInterests @relation(fields: [userInterestsId], references: [id], onDelete: Cascade)
