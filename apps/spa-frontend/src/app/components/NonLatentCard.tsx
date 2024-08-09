@@ -1,12 +1,26 @@
 import classNames from 'classnames';
+import { Button } from './Button';
+import { PercentageCircle } from './PercentageCircle';
+import { useState } from 'react';
+import { TinyBarChart } from './TinyBarChart';
 
 interface NonLatentCardProps {
   title: string;
   description: string;
   isSelected?: boolean;
+  similarityPercentage?: number;
+  activityDates?: string[];
 }
 
-function NonLatentCard({ title, description, isSelected }: NonLatentCardProps) {
+function NonLatentCard({
+  title,
+  description,
+  isSelected: initSelected,
+  similarityPercentage,
+  activityDates,
+}: NonLatentCardProps) {
+  const [isSelected, setIsSelected] = useState(initSelected);
+
   return (
     <article
       className={classNames(
@@ -20,7 +34,17 @@ function NonLatentCard({ title, description, isSelected }: NonLatentCardProps) {
         <h1 className="text-passiveLinkColor text-sm font-medium">{title}</h1>
         <p className="text-passiveLinkColor text-sm ">{description}</p>
       </div>
-      {/* <SimilarProfileBadge peopleCount={16} variant="sm" /> */}
+      <div className="flex items-center justify-between">
+        {similarityPercentage && (
+          <PercentageCircle
+            percentage={similarityPercentage}
+            size="md"
+            label="Similarity"
+          />
+        )}
+        {activityDates && <TinyBarChart dates={activityDates} />}
+        <Button label="Expand" size="large" variant="primary" />
+      </div>
     </article>
   );
 }

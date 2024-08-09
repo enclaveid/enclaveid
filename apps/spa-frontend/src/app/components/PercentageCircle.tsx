@@ -23,9 +23,11 @@ function getFontSize(sizeClass) {
 export function PercentageCircle({
   percentage,
   size = 'md',
+  label,
 }: {
   percentage: number;
   size: keyof typeof sizeMap;
+  label?: string;
 }) {
   const sizeClass = sizeMap[size] || sizeMap.md;
   const viewBoxSize = 100;
@@ -41,40 +43,45 @@ export function PercentageCircle({
   };
 
   return (
-    <div className={`relative ${sizeClass} aspect-square`}>
-      <svg
-        className="w-full h-full -rotate-90"
-        viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}
-      >
-        <circle
-          className="text-gray-200"
-          strokeWidth={strokeWidth}
-          stroke="currentColor"
-          fill="transparent"
-          r={radius}
-          cx={viewBoxSize / 2}
-          cy={viewBoxSize / 2}
-        />
-        <circle
-          className="transition-all duration-500 ease-out"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          stroke={getColor(percentage)}
-          fill="transparent"
-          r={radius}
-          cx={viewBoxSize / 2}
-          cy={viewBoxSize / 2}
-          style={{
-            strokeDasharray: circumference,
-            strokeDashoffset: strokeDashoffset,
-          }}
-        />
-      </svg>
-      <div
-        className={`absolute inset-0 flex items-center justify-center text-center font-bold ${getFontSize(sizeClass)}`}
-      >
-        {percentage.toFixed(0)}
+    <div className="flex items-center justify-between">
+      <div className={`relative ${sizeClass} aspect-square`}>
+        <svg
+          className="w-full h-full -rotate-90"
+          viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}
+        >
+          <circle
+            className="text-gray-200"
+            strokeWidth={strokeWidth}
+            stroke="currentColor"
+            fill="transparent"
+            r={radius}
+            cx={viewBoxSize / 2}
+            cy={viewBoxSize / 2}
+          />
+          <circle
+            className="transition-all duration-500 ease-out"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            stroke={getColor(percentage)}
+            fill="transparent"
+            r={radius}
+            cx={viewBoxSize / 2}
+            cy={viewBoxSize / 2}
+            style={{
+              strokeDasharray: circumference,
+              strokeDashoffset: strokeDashoffset,
+            }}
+          />
+        </svg>
+        <div
+          className={`text-passiveLinkColor text-sm absolute inset-0 flex items-center justify-center text-center font-bold ${getFontSize(sizeClass)}`}
+        >
+          {percentage.toFixed(0)}
+        </div>
       </div>
+      <h1 className="text-passiveLinkColor text-sm font-medium ml-2">
+        {label}
+      </h1>
     </div>
   );
 }

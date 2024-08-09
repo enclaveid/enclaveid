@@ -25,7 +25,7 @@ import { QuestionnairePage } from './pages/QuestionnairePage';
 import { AuthProvider } from './providers/AuthProvider';
 import { AccountSettings } from './pages/AccountSettingsPage';
 import { AccountSettingsLayout } from './components/AccountSettingsLayout';
-import { LifeJourneys } from './components/NonLatentDetails';
+import { LifeJourneys } from './components/LifeJourneys';
 import { LifeJourneyLayout } from './components/LifeJourneyLayout';
 import { StreamChatPage } from './pages/StreamChatPage';
 import { StreamChatProvider } from './providers/StreamChatProvider';
