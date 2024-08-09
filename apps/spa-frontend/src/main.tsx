@@ -6,8 +6,10 @@ import { trpc, trpcClient } from './app/utils/trpc';
 
 import { App } from './app/app';
 
+import './styles.css';
+
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+  document.getElementById('root') as HTMLElement,
 );
 
 const queryClient = new QueryClient();
@@ -19,5 +21,5 @@ root.render(
         <App />
       </QueryClientProvider>
     </trpc.Provider>
-  </StrictMode>
+  </StrictMode>,
 );

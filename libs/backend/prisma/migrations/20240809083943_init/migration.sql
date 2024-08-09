@@ -183,6 +183,7 @@ CREATE TABLE "InterestsCluster" (
     "clusterType" TEXT NOT NULL,
     "summary" TEXT NOT NULL,
     "title" TEXT NOT NULL,
+    "activityDates" TEXT[],
     "userInterestsId" TEXT NOT NULL,
 
     CONSTRAINT "InterestsCluster_pkey" PRIMARY KEY ("id")
