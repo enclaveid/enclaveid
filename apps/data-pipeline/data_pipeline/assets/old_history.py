@@ -301,6 +301,7 @@ async def cluster_summaries(
         [
             interests_spec.summarization_prompt_sequence[0](row["cluster_items"]),
             interests_spec.summarization_prompt_sequence[1],
+            interests_spec.summarization_prompt_sequence[2],
         ]
         for row in df.to_dicts()
     ]
