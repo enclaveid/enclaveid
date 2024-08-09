@@ -1,8 +1,7 @@
 from typing import List, Sequence, Tuple
 
 import polars as pl
-from dagster import get_dagster_logger
-from sqlalchemy import Row, func, update
+from sqlalchemy import Row, bindparam, func, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
@@ -44,7 +43,6 @@ def insert_cluster_matches(
 
     # Edge case for the first user
     if len(other_user_interests_clusters) == 0:
-        db_conn.commit()
         return
 
     other_users_clusters_ids_map = {}
@@ -129,7 +127,15 @@ def insert_cluster_matches(
 
     # Update existing matches
     if matches_to_update:
-        db_conn.execute(update(InterestsClustersSimilarity).values(matches_to_update))
+        db_conn.execute(
+            update(InterestsClustersSimilarity)
+            .where(InterestsClustersSimilarity.id == bindparam("id"))
+            .values(
+                overallSimilarity=bindparam("cosineSimilarity"),
+                updatedAt=bindparam("updatedAt"),
+            ),
+            matches_to_update,
+        )
 
     if matches_to_insert:
         # Insert new matches
@@ -150,9 +156,6 @@ def insert_cluster_matches(
             .returning(InterestsClustersSimilarity.id)
         ).fetchall()
 
-        logger = get_dagster_logger()
-
-        logger.info(matches_to_insert)
         # Connect the new matches with the clusters
         db_conn.execute(
             pg_insert(InterestsClusterMatch).values(

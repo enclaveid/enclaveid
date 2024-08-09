@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import func, update
+from sqlalchemy import bindparam, func, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
@@ -47,13 +47,13 @@ def insert_user_matches(db_conn: Session, matches_to_insert: list[dict]):
     matches_to_insert_set = set(
         map(
             frozenset,
-            ((m["currenUserId"], m["otherUserId"]) for m in matches_to_insert),
+            ((m["currentUserId"], m["otherUserId"]) for m in matches_to_insert),
         )
     )
 
     # Process matches in a single loop
     for match in matches_to_insert.copy():
-        match_set = frozenset([match["currenUserId"], match["otherUserId"]])
+        match_set = frozenset([match["currentUserId"], match["otherUserId"]])
         if match_set in existing_match_dict:
             matches_to_update.append(
                 {
@@ -67,7 +67,15 @@ def insert_user_matches(db_conn: Session, matches_to_insert: list[dict]):
 
     # Update existing matches
     if matches_to_update:
-        db_conn.execute(update(UsersOverallSimilarity).values(matches_to_update))
+        db_conn.execute(
+            update(UsersOverallSimilarity)
+            .where(UsersOverallSimilarity.id == bindparam("id"))
+            .values(
+                overallSimilarity=bindparam("overallSimilarity"),
+                updatedAt=bindparam("updatedAt"),
+            ),
+            matches_to_update,
+        )
 
     if matches_to_insert:
         # Insert new matches
@@ -98,7 +106,7 @@ def insert_user_matches(db_conn: Session, matches_to_insert: list[dict]):
                                 {
                                     "id": generate_cuid(),
                                     "updatedAt": func.now(),
-                                    "userId": m["currenUserId"],
+                                    "userId": m["currentUserId"],
                                     "usersOverallSimilarityId": i[0],
                                 },
                                 {

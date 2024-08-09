@@ -238,7 +238,7 @@ model InterestsClusterMatch {
   interestsCluster   InterestsCluster @relation(fields: [interestsClusterId], references: [id])
   interestsClusterId String
 
-  interestsClustersSimilarity   InterestsClustersSimilarity @relation(fields: [interestsClustersSimilarityId], references: [id])
+  interestsClustersSimilarity   InterestsClustersSimilarity @relation(fields: [interestsClustersSimilarityId], references: [id], onDelete: Cascade)
   interestsClustersSimilarityId String
 
   @@unique([interestsClusterId, interestsClustersSimilarityId])
@@ -263,7 +263,7 @@ model UserMatch {
   user   User   @relation(fields: [userId], references: [id])
   userId String
 
-  usersOverallSimilarity   UsersOverallSimilarity @relation(fields: [usersOverallSimilarityId], references: [id])
+  usersOverallSimilarity   UsersOverallSimilarity @relation(fields: [usersOverallSimilarityId], references: [id], onDelete: Cascade)
   usersOverallSimilarityId String
 
   @@unique([userId, usersOverallSimilarityId])

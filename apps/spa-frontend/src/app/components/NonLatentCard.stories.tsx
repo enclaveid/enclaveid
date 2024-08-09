@@ -11,7 +11,7 @@ export const Default: StoryObj<typeof NonLatentCard> = {
   args: {
     title: 'Title',
     description: 'Description',
-    isSelected: false,
+    isViewed: false,
   },
 };
 
@@ -19,7 +19,7 @@ export const Selected: StoryObj<typeof NonLatentCard> = {
   args: {
     title: 'Title',
     description: 'Description',
-    isSelected: true,
+    isViewed: true,
   },
 };
 
@@ -28,7 +28,17 @@ export const WithChart: StoryObj<typeof NonLatentCard> = {
     title: 'Some kind of title used for placeholder',
     description:
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed etiam, ut inchoavit aut inchoare potuit, dissimilem et sui dissimilem esse potest, dissimilem sui dissimilem esse potest.',
-    isSelected: false,
+    isViewed: false,
     activityDates: LotsOfData.args.dates,
+  },
+};
+
+export const WithSimilarity: StoryObj<typeof NonLatentCard> = {
+  args: {
+    title: 'Some kind of title used for placeholder',
+    description:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed etiam, ut inchoavit aut inchoare potuit, dissimilem et sui dissimilem esse potest, dissimilem sui dissimilem esse potest.',
+    isViewed: false,
+    similarityPercentage: 80,
   },
 };
