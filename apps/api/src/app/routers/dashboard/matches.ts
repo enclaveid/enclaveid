@@ -3,8 +3,9 @@ import { AppContext } from '../../context';
 import { router, authenticatedProcedure } from '../../trpc';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { UserMatchOverview } from '@enclaveid/shared';
+import { DisplayableInterest, UserMatchOverview } from '@enclaveid/shared';
 import { localGeocoderLookup } from '../../services/localGeocoder';
+import { MAX_PAGINATION_LIMIT } from '../../constants';
 
 const SIMILARITY_THRESHOLD = 0.9;
 
@@ -70,6 +71,13 @@ export const matches = router({
     .input(
       z.object({
         usersOverallSimilarityId: z.string().min(1),
+        limit: z
+          .number()
+          .min(1)
+          .max(MAX_PAGINATION_LIMIT)
+          .default(MAX_PAGINATION_LIMIT),
+        cursor: z.string().optional(),
+        activityTypes: z.array(z.string()).default(['reactive', 'proactive']),
       }),
     )
     .query(async (opts) => {
@@ -77,7 +85,7 @@ export const matches = router({
         user: { id: userId },
       } = opts.ctx as AppContext;
 
-      const { usersOverallSimilarityId } = opts.input;
+      const { usersOverallSimilarityId, limit, cursor } = opts.input;
 
       const userMatch = await prisma.usersOverallSimilarity
         .findUniqueOrThrow({
@@ -98,6 +106,11 @@ export const matches = router({
                     userInterests: {
                       include: {
                         interests: {
+                          where: {
+                            clusterType: {
+                              in: opts.input.activityTypes,
+                            },
+                          },
                           include: {
                             interestsClusterMatches: true,
                           },
@@ -131,10 +144,15 @@ export const matches = router({
       const interestsClustersSimilarities =
         await prisma.interestsClustersSimilarity
           .findMany({
+            take: limit + 1, // get an extra item at the end which we'll use as next cursor
             where: {
               cosineSimilarity: {
                 gte: SIMILARITY_THRESHOLD,
               },
+            },
+            cursor: cursor ? { id: cursor } : undefined,
+            orderBy: {
+              cosineSimilarity: 'desc',
             },
             include: {
               interestsClusterMatches: {
@@ -171,12 +189,20 @@ export const matches = router({
             )
             .flatMap((r) => {
               return {
-                summary: r.interestsCluster.summary,
+                title: r.interestsCluster.title,
+                description: r.interestsCluster.summary,
                 activityType: r.interestsCluster.clusterType,
-                cosineSimilarity: ics.cosineSimilarity,
+                similarityPercentage: ics.cosineSimilarity,
+                pipelineClusterId: r.interestsCluster.pipelineClusterId,
               };
             });
-        });
+        }) as DisplayableInterest[];
+
+      let nextCursor: typeof cursor | undefined = undefined;
+      if (interestsClustersSimilarities.length > limit) {
+        const nextItem = interestsClustersSimilarities.pop();
+        nextCursor = nextItem.id;
+      }
 
       return {
         userInfo: {
@@ -191,12 +217,10 @@ export const matches = router({
           bigFive: otherUser.userTraits.bigFive,
           moralFoundations: otherUser.userTraits.moralFoundations,
         },
-        proactiveInterests: matchingCurrentUserInterests.filter(
-          (r) => r.activityType == 'proactive',
-        ),
-        reactiveInterests: matchingCurrentUserInterests.filter(
-          (r) => r.activityType == 'reactive',
-        ),
+        interests: {
+          userInterests: matchingCurrentUserInterests,
+          nextCursor,
+        },
       };
     }),
 });

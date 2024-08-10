@@ -1,6 +1,6 @@
 import {
   ChatBubbleLeftRightIcon,
-  TrophyIcon,
+  PuzzlePieceIcon,
   UserCircleIcon,
   UsersIcon,
 } from '@heroicons/react/24/outline';
@@ -25,9 +25,9 @@ export const sidebarItems = {
       href: '/dashboard',
     },
     {
-      icon: TrophyIcon,
-      text: 'Life Journeys',
-      href: '/life-journeys',
+      icon: PuzzlePieceIcon,
+      text: 'Interests',
+      href: '/interests',
     },
   ],
 };

@@ -54,7 +54,7 @@ function LifeJourneys() {
             {data.map((card, index) => (
               <Tab key={index} className="w-full focus-visible:outline-none">
                 {({ selected }) => (
-                  <NonLatentCard {...card} isSelected={selected} />
+                  <NonLatentCard {...card} isViewed={selected} />
                 )}
               </Tab>
             ))}

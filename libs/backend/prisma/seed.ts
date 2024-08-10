@@ -14,13 +14,13 @@ async function main() {
     data: {
       id: 'do_not_use',
 
-      email: 'john.does.not@example.com',
+      email: 'jane.doe@example.com',
       password: await hash('password'),
 
       confirmationCode: '',
       confirmedAt: new Date(),
 
-      displayName: 'John Does Not',
+      displayName: 'Jane Doe',
       gender: Gender.Female,
       geographyLat: 50.0,
       geographyLon: 0.0,

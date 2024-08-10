@@ -15,12 +15,14 @@ import { authUtils } from './routers/authUtils';
 import { matches } from './routers/dashboard/matches';
 import { streamChat } from './routers/dashboard/streamChat';
 import { settings } from './routers/dashboard/settings';
+import { interests } from './routers/dashboard/interests';
 
 export const appRouter = router({
   [TRPC_PRIVATE_NAMESPACE]: mergeRouters(
     personality,
     career,
     politics,
+    interests,
     fakeOauth,
     fileUpload,
     authUtils,

@@ -3,12 +3,16 @@ import { SocialCard } from '../components/SocialCard';
 import { useEffect, useState } from 'react';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { RequireAuth } from '../providers/AuthProvider';
-import { SimilarInterestsCharts } from '../components/SimilarInterestsCharts';
-import { UserMatchOverview } from '@enclaveid/shared';
+import { DisplayableInterest, UserMatchOverview } from '@enclaveid/shared';
 import { trpc } from '../utils/trpc';
-import { LoadingPage } from './LoadingPage';
+import { LoadingCard } from '../components/LoadingCard';
+import React from 'react';
+import { VirtuosoGrid } from 'react-virtuoso';
+import { NonLatentCard } from '../components/NonLatentCard';
+import { Tabs } from '../components/Tabs';
 
 const tabs = [
+  { title: 'Interests', path: '/socials/:title/interests' },
   { title: 'Personality', path: '/socials/:title/personality' },
   { title: 'Politics', path: '/socials/:title/politics' },
   { title: 'Career', path: '/socials/:title/career' },
@@ -25,7 +29,7 @@ function ProfilePage() {
     const formattedName = formatUsernameFromPath(usernameSlug);
     setLink(formattedName);
     setUsernamePath(usernameSlug);
-  }, [location.pathname]);
+  }, [location.pathname, setLink]);
 
   const userTabs = tabs.map((tab) => ({
     title: tab.title,
@@ -47,14 +51,29 @@ function ProfilePage() {
 
   useEffect(() => {
     setLink(formatUsernameFromPath(location.pathname));
-  }, [location.pathname]);
+  }, [location.pathname, setLink]);
 
   const userMatchOverview = location.state
     .userMatchOverview as UserMatchOverview;
 
-  const matchDetailsQuery = trpc.private.getUserMatchDetails.useQuery({
-    usersOverallSimilarityId: userMatchOverview.usersOverallSimilarityId,
-  });
+  const matchDetailsQuery = trpc.private.getUserMatchDetails.useInfiniteQuery(
+    {
+      usersOverallSimilarityId: userMatchOverview.usersOverallSimilarityId,
+      activityTypes: ['proactive'],
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.interests.nextCursor,
+    },
+  );
+
+  const allInterests =
+    matchDetailsQuery.data?.pages.flatMap(
+      (page) => page.interests.userInterests,
+    ) || [];
+
+  const fetchMore = () => {
+    matchDetailsQuery.hasNextPage && matchDetailsQuery.fetchNextPage();
+  };
 
   return (
     <RequireAuth>
@@ -62,14 +81,41 @@ function ProfilePage() {
         <SocialCard userMatchOverview={userMatchOverview} />
       </div>
       {matchDetailsQuery.isLoading ? (
-        <LoadingPage />
+        <>
+          <LoadingCard />
+          <LoadingCard />
+          <LoadingCard />
+        </>
       ) : (
-        <SimilarInterestsCharts
-          proactiveInterests={matchDetailsQuery.data.proactiveInterests}
-          reactiveInterests={matchDetailsQuery.data.reactiveInterests}
-        />
+        <>
+          <Tabs tabs={userTabs} />
+
+          <VirtuosoGrid
+            className="mt-3"
+            style={{ height: '100vh', width: '100%' }}
+            totalCount={allInterests.length}
+            overscan={200}
+            endReached={fetchMore}
+            itemContent={(index) => {
+              return (
+                <NonLatentCard
+                  interest={allInterests[index] as DisplayableInterest}
+                />
+              );
+            }}
+            components={{
+              List: React.forwardRef((props, ref) => (
+                <div
+                  {...props}
+                  ref={ref}
+                  className="flex flex-row flex-wrap gap-6 px-6"
+                />
+              )),
+            }}
+            listClassName="flex flex-row flex-wrap gap-6 px-6"
+          />
+        </>
       )}
-      {/* <Tabs tabs={userTabs} /> */}
     </RequireAuth>
   );
 }

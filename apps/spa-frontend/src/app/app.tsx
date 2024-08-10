@@ -1,4 +1,4 @@
-import { Navigate, createBrowserRouter } from 'react-router-dom';
+import { Navigate, Outlet, createBrowserRouter } from 'react-router-dom';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthenticationPage } from './pages/AuthenticationPage';
@@ -25,10 +25,10 @@ import { QuestionnairePage } from './pages/QuestionnairePage';
 import { AuthProvider } from './providers/AuthProvider';
 import { AccountSettings } from './pages/AccountSettingsPage';
 import { AccountSettingsLayout } from './components/AccountSettingsLayout';
-import { LifeJourneys } from './components/LifeJourneys';
-import { LifeJourneyLayout } from './components/LifeJourneyLayout';
 import { StreamChatPage } from './pages/StreamChatPage';
 import { StreamChatProvider } from './providers/StreamChatProvider';
+import { CommonLayout } from './components/CommonLayout';
+import { OwnInterests } from './components/OwnInterests';
 
 const reactRouter = createBrowserRouter([
   {
@@ -82,12 +82,16 @@ const reactRouter = createBrowserRouter([
     ],
   },
   {
-    path: '/life-journeys',
-    element: <LifeJourneyLayout />,
+    path: '/interests',
+    element: (
+      <CommonLayout>
+        <Outlet />
+      </CommonLayout>
+    ),
     children: [
       {
         index: true,
-        element: <LifeJourneys />,
+        element: <OwnInterests />,
       },
     ],
   },

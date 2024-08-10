@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { LocationPinIcon } from './Icons';
-import classNames from 'classnames';
 import { getIdenticon } from '../utils/ui/identicons';
 import { UserMatchOverview } from '@enclaveid/shared';
 import { LoadingCard } from './LoadingCard';
+import { PercentageCircle } from './PercentageCircle';
+import { Button } from './Button';
 
 interface SocialCardProps {
   userMatchOverview?: UserMatchOverview;
@@ -21,17 +22,6 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
       .split(' ')
       .map((word) => word.toLowerCase())
       .join('-');
-  };
-
-  const formattedPercentage = (raw: number) => {
-    return (raw * 100).toFixed(2);
-  };
-
-  const getMatchBackgroundColor = (percentage: number) => {
-    if (percentage < 0.5) return 'bg-[#FF5C00]/10 text-[#FF5C00]';
-    // if (percentage < 0.8) return 'bg-[#2F5FA6]/20 text-[#2F5FA6]';
-
-    return 'bg-greenBg/10 text-greenBg';
   };
 
   return (
@@ -61,15 +51,13 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
             </h6>
           </div>
         </div>
-        <div>
-          <div
-            className={classNames(
-              'p-2.5 rounded-full text-sm leading-[16.4px] font-medium',
-              getMatchBackgroundColor(overallSimilarity),
-            )}
-          >
-            {formattedPercentage(overallSimilarity)}% overall match
-          </div>
+        <div className="flex flex-col">
+          <PercentageCircle
+            percentage={overallSimilarity}
+            size="lg"
+            label="Overall match"
+          />
+          <Button label="Open chat" size="small" className="mt-5" />
         </div>
       </div>
     </Link>

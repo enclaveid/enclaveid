@@ -34,11 +34,11 @@ export function PercentageCircle({
   const strokeWidth = 10;
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+  const strokeDashoffset = circumference - percentage * circumference;
 
   const getColor = (percent) => {
-    if (percent < 33) return '#FF6B6B';
-    if (percent < 66) return '#FFD93D';
+    if (percent < 0.33) return '#FF6B6B';
+    if (percent < 0.66) return '#FFD93D';
     return '#6BCB77';
   };
 
@@ -76,7 +76,7 @@ export function PercentageCircle({
         <div
           className={`text-passiveLinkColor text-sm absolute inset-0 flex items-center justify-center text-center font-bold ${getFontSize(sizeClass)}`}
         >
-          {percentage.toFixed(0)}
+          {(percentage * 100).toFixed(0)}
         </div>
       </div>
       <h1 className="text-passiveLinkColor text-sm font-medium ml-2">

@@ -4,21 +4,21 @@ import { PercentageCircle } from './PercentageCircle';
 import { useState } from 'react';
 import { TinyBarChart } from './TinyBarChart';
 import { CardDetailsModal } from './CardDetailsModal';
+import { DisplayableInterest } from '@enclaveid/shared';
 
 interface NonLatentCardProps {
-  title: string;
-  description: string;
-  isViewed?: boolean;
-  similarityPercentage?: number;
-  activityDates?: string[];
+  interest: DisplayableInterest;
 }
 
 function NonLatentCard({
-  title,
-  description,
-  isViewed: initViewed,
-  similarityPercentage,
-  activityDates,
+  interest: {
+    title,
+    description,
+    pipelineClusterId,
+    isViewed: initViewed,
+    activityDates,
+    similarityPercentage,
+  },
 }: NonLatentCardProps) {
   const [isViewed, setIsViewed] = useState(initViewed);
   const [openModal, setOpenModal] = useState(false);
@@ -39,7 +39,9 @@ function NonLatentCard({
       )}
     >
       <div className="flex flex-col gap-2.5">
-        <h1 className="text-passiveLinkColor text-sm font-medium">{title}</h1>
+        <h1 className="text-passiveLinkColor text-sm font-medium">
+          [{pipelineClusterId}] {title}
+        </h1>
         <p className="text-passiveLinkColor text-sm ">{shortDescription}</p>
       </div>
       <div className="flex items-center justify-between">
