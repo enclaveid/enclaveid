@@ -129,8 +129,8 @@ def parse_classification_result(raw_output: str):
     confidence = int(confidence_match.group(1)) / 100.0 if confidence_match else None
 
     # Extract sensitivity
-    sensitivity_match = re.search(r"Sensitve:\s*(.*)", raw_output)
-    is_sensitive = bool(sensitivity_match.group(1)) if sensitivity_match else None
+    sensitivity_match = re.search(r"Sensitive:\s*(.*)", raw_output)
+    is_sensitive = sensitivity_match.group(1) == "true" if sensitivity_match else None
 
     # Extract explanation
     explanation_match = re.search(r"Explanation:\s*(.*)", raw_output, re.DOTALL)
