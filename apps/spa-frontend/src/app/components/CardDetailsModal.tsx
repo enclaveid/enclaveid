@@ -1,6 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Fragment } from 'react';
+import Markdown from 'react-markdown';
 
 export function CardDetailsModal({
   isOpen,
@@ -46,8 +47,8 @@ export function CardDetailsModal({
                 >
                   {title}
                 </Dialog.Title>
-                <Dialog.Description className="m-3 text-passiveLinkColor bg-white rounded-xl px-3.5 pt-5 pb-4 border border-[#E5E8EE] h-full flex flex-col justify-between">
-                  {description}
+                <Dialog.Description className="m-3 text-passiveLinkColor bg-white rounded-xl px-3.5 pt-5 pb-4 border border-[#E5E8EE] h-full flex flex-col justify-evenly">
+                  <Markdown>{description}</Markdown>
                 </Dialog.Description>
                 <button onClick={closeModal} className="absolute right-4 top-5">
                   <XMarkIcon className="w-5 h-5 stroke-[3px] text-passiveLinkColor" />
