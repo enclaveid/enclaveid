@@ -215,7 +215,7 @@ class UserMatch(Base):
         ForeignKeyConstraint(
             ["usersOverallSimilarityId"],
             ["UsersOverallSimilarity.id"],
-            ondelete="RESTRICT",
+            ondelete="CASCADE",
             onupdate="CASCADE",
             name="UserMatch_usersOverallSimilarityId_fkey",
         ),
@@ -345,6 +345,7 @@ class InterestsCluster(Base):
     summary = mapped_column(Text, nullable=False)
     title = mapped_column(Text, nullable=False)
     userInterestsId = mapped_column(Text, nullable=False)
+    isSensitive = mapped_column(Boolean, nullable=False, server_default=text("false"))
     activityDates = mapped_column(ARRAY(Text()))
 
     UserInterests_: Mapped["UserInterests"] = relationship(
@@ -533,7 +534,7 @@ class InterestsClusterMatch(Base):
         ForeignKeyConstraint(
             ["interestsClustersSimilarityId"],
             ["InterestsClustersSimilarity.id"],
-            ondelete="RESTRICT",
+            ondelete="CASCADE",
             onupdate="CASCADE",
             name="InterestsClusterMatch_interestsClustersSimilarityId_fkey",
         ),

@@ -220,6 +220,7 @@ model InterestsCluster {
   summary           String
   title             String
   activityDates     String[]
+  isSensitive       Boolean  @default(false)
 
   userInterestsId String
   userInterests   UserInterests @relation(fields: [userInterestsId], references: [id], onDelete: Cascade)

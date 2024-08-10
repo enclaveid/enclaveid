@@ -1,3 +1,4 @@
+from textwrap import dedent
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -69,58 +70,68 @@ interests_spec = InterestsSpec(
     # The goal of this prompt sequence is classifying the user's search activity
     # similarly to the SEO categories of informational, navigational, and transactional
     summarization_prompt_sequence=[
-        lambda search_activity: (
+        lambda search_activity: dedent(
             f"""
-Analyze the provided cluster of search activity data for a single topic. Determine whether this cluster primarily represents:
+            Analyze the provided cluster of search activity data for a single topic. Determine whether this cluster primarily represents:
+            1. A progression in knowledge acquisition and long-term interest, or
+            2. Reactive searches driven by occasional or recurring needs.
 
-1. A progression in knowledge acquisition and long-term interest, or
-2. Reactive searches driven by occasional or recurring needs.
+            Consider the following factors in your analysis:
+            - Frequency and regularity of searches
+            - Diversity of subtopics within the main theme
+            - Presence of time-bound or event-specific queries
+            - Indications of recurring but intermittent activities
+            - Signs of problem-solving for specific occasions rather than general learning
 
-Consider the following factors in your analysis:
-- Frequency and regularity of searches
-- Diversity of subtopics within the main theme
-- Presence of time-bound or event-specific queries
-- Indications of recurring but intermittent activities
-- Signs of problem-solving for specific occasions rather than general learning
+            Provide a classification as either 'Knowledge Progression' or 'Reactive Needs', along with a confidence score (0-100%).
+            Then, offer a brief explanation (2-3 sentences) supporting your classification, highlighting the key factors that influenced your decision.
+            Additionally, assess whether the topic is sensitive in nature, particularly regarding psychosocial aspects.
 
-Provide a classification as either 'Knowledge Progression' or 'Reactive Needs', along with a confidence score (0-100%).
+            Format your response as follows:
+            Classification: [Knowledge Progression/Reactive Needs]
+            Confidence: [0-100%]
+            Sensitive: [true/false]
+            Explanation: [Your 2-3 sentence explanation]
 
-Then, offer a brief explanation (2-3 sentences) supporting your classification, highlighting the key factors that influenced your decision.
-
-Format your response as follows:
-Classification: [Knowledge Progression/Reactive Needs]
-Confidence: [0-100%]
-Explanation: [Your 2-3 sentence explanation]
-
-{search_activity}
-"""
+            {search_activity}
+            """
         ),
         lambda cluster_classification: {
             "unknown": None,
-            "reactive": """
-Summarize this 'Reactive Needs' search activity cluster in about 100-300 words. Focus on:
+            "reactive": dedent(
+                """
+                Summarize the reactive search activity by taking into account the time periods
+                and what the user will have obtained at the end of their search. Describe:
 
-- The main category of reactive needs
-- Top 3-5 specific types of occasions or needs
-- Frequency pattern of these needs
-- User's apparent level of experience in addressing these needs
-- Any unique elements in the user's approach
+                - The main category of reactive needs
+                - The specific types of occasions or needs
+                - Frequency pattern of these needs
+                - User's apparent level of experience in addressing these needs
+                - Any unique elements in the user's approach
+                """
+            ),
+            "proactive": dedent(
+                """
+                Summarize the knowledge progression by taking into account the time periods and how each
+                incremental chunk expands the user's knowledge horizontally or vertically. Describe:
 
-Conclude with a single sentence capturing the essence of the user's reactive search behavior.
-""",
-            "proactive": """
-Summarize this 'Knowledge Progression' search activity cluster in about 100-300 words, focusing on the user's learning journey. Describe:
+                - The main topic or starting point of interest
+                - Key areas or subtopics the user explored from this starting point
+                - How the user's understanding seemed to deepen or branch out in each area
+                - Any connections or jumps between different areas of exploration
+                - The most advanced or recent concepts the user has searched for
 
-- The main topic or starting point of interest
-- 3-5 key areas or subtopics the user explored from this starting point
-- How the user's understanding seemed to deepen or branch out in each area
-- Any connections or jumps between different areas of exploration
-- The most advanced or recent concepts the user has searched for
-
-Conclude with a single sentence capturing the overall trajectory and breadth of the user's learning path.
-""",
-        }[parse_classification_result(cluster_classification)],
-        "Provide a title for the summary. Do not output any additional text other than the title.",
+                Conclude with the overall trajectory and breadth of the user's learning path.
+                """
+            ),
+        }[parse_classification_result(cluster_classification)[0]],
+        dedent(
+            """
+            Provide a descriptive title for the summary.
+            Avoid using generic terms like 'Summary' or 'Analysis' and instead focus on the main theme or outcome of the search activity.
+            Do not output any additional text other than the title.
+            """
+        ),
     ],
 )
 
@@ -317,11 +328,14 @@ async def cluster_summaries(
 
     # Tag the clusters with the type of activity: reactive, proactive
     activity_types = []
+    sensitivities = []
     for cluster_split in cluster_splits:
         if cluster_split is None:
             activity_types.append("unknown")
         else:
-            activity_types.append(parse_classification_result(cluster_split))
+            activity_type, is_sensitive = parse_classification_result(cluster_split)
+            activity_types.append(activity_type)
+            sensitivities.append(is_sensitive)
 
     cluster_summaries = list(
         map(lambda x: x[1] if len(x) > 0 else None, summaries_completions)
@@ -336,6 +350,7 @@ async def cluster_summaries(
             cluster_title=pl.Series(cluster_titles),
             cluster_summary=pl.Series(cluster_summaries),
             activity_type=pl.Series(activity_types),
+            is_sensitive=pl.Series(sensitivities),
         )
         .filter(pl.col("activity_type") != "unknown")
         .drop(["cluster_items", "date_interests", "date", "interests"])
@@ -487,6 +502,7 @@ def api_user_matches(
                         "activity_type": "clusterType",
                         "cluster_summary": "summary",
                         "cluster_title": "title",
+                        "is_sensitive": "isSensitive",
                         "cluster_dates": "activityDates",
                     }
                 )

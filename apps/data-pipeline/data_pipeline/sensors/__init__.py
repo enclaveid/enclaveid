@@ -1,5 +1,4 @@
 import ast
-import os
 
 from dagster import (
     AssetSelection,

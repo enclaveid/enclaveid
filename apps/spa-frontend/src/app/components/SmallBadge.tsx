@@ -10,6 +10,10 @@ const variants = {
     classes: 'bg-green-100 text-green-800',
     text: 'proactive',
   },
+  sensitive: {
+    classes: 'bg-red-100 text-red-800',
+    text: 'sensitive',
+  },
 };
 
 export function SmallBadge({ variant }: { variant: keyof typeof variants }) {

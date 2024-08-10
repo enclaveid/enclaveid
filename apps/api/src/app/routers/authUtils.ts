@@ -4,7 +4,7 @@ import { authenticatedProcedure, router } from '../trpc';
 import { TRPCError } from '@trpc/server';
 
 export const authUtils = router({
-  authCheck: authenticatedProcedure.query(async (opts) => {
+  authCheck: authenticatedProcedure.query(async () => {
     // We always return true since authentication is handled upstream
     return { isAuthenticated: true };
   }),

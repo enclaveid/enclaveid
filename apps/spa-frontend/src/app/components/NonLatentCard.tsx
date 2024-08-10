@@ -20,6 +20,7 @@ function NonLatentCard({
     activityDates,
     activityType,
     similarityPercentage,
+    isSensitive,
   },
 }: NonLatentCardProps) {
   const [isViewed, setIsViewed] = useState(initViewed);
@@ -45,6 +46,7 @@ function NonLatentCard({
           [{pipelineClusterId}] {title}
         </h1>
         <SmallBadge variant={activityType} />
+        {isSensitive && <SmallBadge variant="sensitive" />}
         <p className="text-passiveLinkColor text-sm ">{shortDescription}</p>
       </div>
       <div className="flex items-center justify-between">

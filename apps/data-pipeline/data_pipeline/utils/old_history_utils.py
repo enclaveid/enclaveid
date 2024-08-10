@@ -128,6 +128,10 @@ def parse_classification_result(raw_output: str):
     confidence_match = re.search(r"Confidence:\s*(\d+)%", raw_output)
     confidence = int(confidence_match.group(1)) / 100.0 if confidence_match else None
 
+    # Extract sensitivity
+    sensitivity_match = re.search(r"Sensitve:\s*(.*)", raw_output)
+    is_sensitive = bool(sensitivity_match.group(1)) if sensitivity_match else None
+
     # Extract explanation
     explanation_match = re.search(r"Explanation:\s*(.*)", raw_output, re.DOTALL)
     explanation = explanation_match.group(1).strip() if explanation_match else None
@@ -142,12 +146,18 @@ def parse_classification_result(raw_output: str):
         }
     )
 
+    main_category = None
     if parsed_classification is None or parsed_classification["confidence"] < 0.5:
-        return "unknown"
+        main_category = "unknown"
     else:
-        if "Knowledge Progression" in parsed_classification["classification"]:
-            return "proactive"
-        elif "Reactive Needs" in parsed_classification["classification"]:
-            return "reactive"
+        if (
+            "knowledge progression"
+            in str(parsed_classification["classification"]).lower()
+        ):
+            main_category = "proactive"
+        elif "reactive needs" in str(parsed_classification["classification"]).lower():
+            main_category = "reactive"
         else:
-            return "unknown"
+            main_category = "unknown"
+
+    return main_category, is_sensitive

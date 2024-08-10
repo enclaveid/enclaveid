@@ -187,16 +187,17 @@ export const matches = router({
             .filter((icm) =>
               currentInterestsIds.includes(icm.interestsClusterId),
             )
-            .flatMap((r) => {
+            .flatMap((r): DisplayableInterest => {
               return {
                 title: r.interestsCluster.title,
                 description: r.interestsCluster.summary,
                 activityType: r.interestsCluster.clusterType,
                 similarityPercentage: ics.cosineSimilarity,
                 pipelineClusterId: r.interestsCluster.pipelineClusterId,
+                isSensitive: r.interestsCluster.isSensitive,
               };
             });
-        }) as DisplayableInterest[];
+        });
 
       let nextCursor: typeof cursor | undefined = undefined;
       if (interestsClustersSimilarities.length > limit) {
