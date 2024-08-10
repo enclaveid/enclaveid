@@ -8,7 +8,6 @@ export function OwnInterests() {
   const interestsQuery = trpc.private.getUserInterests.useInfiniteQuery(
     {
       limit: 20,
-      activityTypes: ['proactive'],
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,

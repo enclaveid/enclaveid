@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { TinyBarChart } from './TinyBarChart';
 import { CardDetailsModal } from './CardDetailsModal';
 import { DisplayableInterest } from '@enclaveid/shared';
+import { SmallBadge } from './SmallBadge';
 
 interface NonLatentCardProps {
   interest: DisplayableInterest;
@@ -17,6 +18,7 @@ function NonLatentCard({
     pipelineClusterId,
     isViewed: initViewed,
     activityDates,
+    activityType,
     similarityPercentage,
   },
 }: NonLatentCardProps) {
@@ -42,6 +44,7 @@ function NonLatentCard({
         <h1 className="text-passiveLinkColor text-sm font-medium">
           [{pipelineClusterId}] {title}
         </h1>
+        <SmallBadge variant={activityType} />
         <p className="text-passiveLinkColor text-sm ">{shortDescription}</p>
       </div>
       <div className="flex items-center justify-between">

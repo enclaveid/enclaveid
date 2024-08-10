@@ -64,7 +64,7 @@ export const interests = router({
           description: interest.summary,
           clusterType: interest.clusterType,
           pipelineClusterId: interest.pipelineClusterId,
-          activityType: interest.activityType,
+          activityType: interest.clusterType,
         } as DisplayableInterest & { id: string };
       });
 
