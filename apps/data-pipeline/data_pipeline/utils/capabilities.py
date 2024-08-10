@@ -4,6 +4,18 @@ import subprocess
 MIN_CUDA_COMPUTE_CAPABILITY = 7.0
 
 
+def gpu_info():
+    try:
+        return subprocess.run(
+            "nvidia-smi --query-gpu=index,name,driver_version,memory --format=csv,noheader",
+            shell=True,
+            text=True,
+            capture_output=True,
+        ).stdout.strip()
+    except Exception:
+        return "No GPU information available."
+
+
 def is_package_installed(package_name):
     spec = importlib.util.find_spec(package_name)
     return spec is not None

@@ -42,7 +42,7 @@ from data_pipeline.utils.matching.overall_similarity_formula import (
 from ..constants.custom_config import RowLimitConfig
 from ..constants.k8s import k8s_rapids_config, k8s_vllm_config
 from ..partitions import user_partitions_def
-from ..utils.capabilities import get_cuda_version, is_rapids_image
+from ..utils.capabilities import gpu_info, is_rapids_image
 from ..utils.old_history_utils import (
     InterestsSpec,
     get_full_history_sessions,
@@ -187,6 +187,8 @@ def interests(
     llama8b: Llama8bResource,
     full_takeout: pl.DataFrame,
 ) -> pl.DataFrame:
+    context.log.info(gpu_info())
+
     full_takeout = full_takeout.slice(0, config.row_limit).sort("timestamp")
 
     sessions_output = get_full_history_sessions(
@@ -216,6 +218,8 @@ def interests_embeddings(
     sentence_transformer: SentenceTransformerResource,
     interests: pl.DataFrame,
 ) -> pl.DataFrame:
+    context.log.info(gpu_info())
+
     df = (
         # Enforce row_limit (if any)
         interests.slice(0, config.row_limit)
@@ -242,7 +246,8 @@ def interests_clusters(
     config: RowLimitConfig,
     interests_embeddings: pl.DataFrame,
 ) -> pl.DataFrame:
-    context.log.info("CUDA version: %s", get_cuda_version())
+    context.log.info(gpu_info())
+
     # Apply the row limit (if any)
     df = interests_embeddings.slice(0, config.row_limit)
 
@@ -369,6 +374,8 @@ def summaries_embeddings(
     sentence_transformer: SentenceTransformerResource,
     cluster_summaries: pl.DataFrame,
 ) -> pl.DataFrame:
+    context.log.info(gpu_info())
+
     df = cluster_summaries.slice(0, config.row_limit)
 
     context.log.info("Computing embeddings...")
@@ -389,6 +396,8 @@ def summaries_user_matches(
     context: AssetExecutionContext,
     config: RowLimitConfig,
 ) -> pl.DataFrame:
+    context.log.info(gpu_info())
+
     current_user_df = pl.read_parquet(
         DAGSTER_STORAGE_BUCKET
         / "summaries_embeddings"
