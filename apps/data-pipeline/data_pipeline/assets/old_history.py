@@ -127,7 +127,7 @@ Conclude with a single sentence capturing the overall trajectory and breadth of 
 
 class InterestsConfig(RowLimitConfig):
     ml_model_name: str = Field(
-        default="meta-llama/Meta-Llama-3.1-8B-Instruct",
+        default="meta-llama/Meta-Llama-3-8B-Instruct",
         description=(
             "The Hugging Face model to use as the LLM. See the vLLMs docs for a "
             "list of the support models:\n"

@@ -7,8 +7,8 @@ class Llama70bResource(RemoteLlmResource):
     _inference_url = "https://Meta-Llama-3-1-70B-Instruct-blnf.eastus2.models.ai.azure.com/v1/chat/completions"
     _inference_config = {
         "max_tokens": 2048,
-        "temperature": 0.8,
-        "top_p": 0.1,
+        "temperature": 1,
+        "top_p": 0.5,
         "best_of": 1,
         "presence_penalty": 0,
         "use_beam_search": "false",

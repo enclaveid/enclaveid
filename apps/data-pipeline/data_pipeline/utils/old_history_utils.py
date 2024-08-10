@@ -51,6 +51,7 @@ def generate_chunked_interests(
 ):
     dates = []
     prompt_sequences: List[List[str]] = []
+    raw_interests = []
 
     for date, day_dfs in chunks.items():
         for frame in day_dfs:
@@ -58,17 +59,21 @@ def generate_chunked_interests(
             prompt_sequences.append(
                 [f"{first_instruction}\n{frame}", second_instruction]
             )
+            raw_interests.append(frame["title"].to_list())
 
     results = llama8b.get_prompt_sequences_completions_batch(prompt_sequences)
 
     chunked_interests = [extract_interests_list(resp) for resp in results]
 
-    for date, interests in zip(dates, chunked_interests):
-        interests = [interest for interest in (interests or []) if interest]
+    for date, chunked_interest, raw_interest in zip(
+        dates, chunked_interests, raw_interests
+    ):
+        interests = [interest for interest in (chunked_interest or []) if interest]
 
         yield {
             "date": date,
             "interests": interests,
+            "raw_interests": raw_interest,
             "count_invalid_responses": 1 if len(interests) == 0 else 0,
         }
 
@@ -102,6 +107,7 @@ def get_full_history_sessions(
         .agg(
             [
                 pl.col("interests").flatten().unique(),
+                pl.col("raw_interests").flatten().unique(),
                 pl.col("count_invalid_responses").sum(),
             ]
         )
