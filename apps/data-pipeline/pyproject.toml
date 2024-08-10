@@ -51,8 +51,8 @@ cuid2 = "^2.0.1"
 # We split ML deps in two grups to avoid conflicts.
 
 [tool.poetry.group.vllm.dependencies]
-torch = "2.3.1"
-vllm = "0.5.3.post1"
+torch = "2.4"
+vllm = "0.5.4"
 transformers = "4.43.3"
 sentence-transformers = "3.0.0"
 

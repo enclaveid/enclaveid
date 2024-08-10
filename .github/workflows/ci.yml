@@ -64,7 +64,7 @@ jobs:
           main-branch-name: master
 
       #- run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container
-      #- run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container-vllm
+      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container-vllm
       #- run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container-rapids
 
       # - name: Stop distributed CI run
