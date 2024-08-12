@@ -30,10 +30,6 @@ class SummariesUserMatchesConfig(RowLimitConfig):
             "Options are 'items' or 'summary'."
         ),
     )
-    similarity_threshold: float = Field(
-        default=0.85,
-        description="The threshold of cosine similarity over which to generate a summary for the match.",
-    )
     similarities_summarization_prompt: str = Field(
         default=dedent(
             """
@@ -75,7 +71,7 @@ async def summaries_user_matches(
             "cosine_similarity": pl.Series([], dtype=pl.Float64),
             "other_user_id": pl.Series([], dtype=pl.Utf8),
             "activity_type": pl.Series([], dtype=pl.Utf8),
-            "common_summary": pl.Series([], dtype=pl.Utf8),
+            "common_summary_prompt": pl.Series([], dtype=pl.Utf8),
         }
     )
 
@@ -136,25 +132,11 @@ async def summaries_user_matches(
                                 {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_items"]}
                                 """
                             )
-                            if row["cosine_similarity"] > config.similarity_threshold
-                            else []
                         )
-                        .alias("common_summary"),
+                        .alias("common_summary_prompt"),
                     ]
                 )
 
                 result_df = result_df.vstack(match_df)
 
-    # TODO: move this to another asset to free up the GPU
-    context.log.info(
-        f"Computing {result_df.select(pl.count('common_summary')).item()} summaries..."
-    )
-    summaries_completions = await llama405b.get_prompt_sequences_completions(
-        list(map(lambda x: [x], result_df["common_summary"].to_numpy().tolist()))
-    )
-
-    return result_df.with_columns(
-        common_summary=pl.Series(
-            [x[0] if len(x) > 0 else None for x in summaries_completions]
-        )
-    ).sort(by="cosine_similarity", descending=True)
+    return result_df.sort(by="cosine_similarity", descending=True)

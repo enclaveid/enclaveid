@@ -33,7 +33,9 @@ from ...partitions import user_partitions_def
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
-        "summaries_user_matches": AssetIn(key=["summaries_user_matches"]),
+        "summaries_user_matches_with_desc": AssetIn(
+            key=["summaries_user_matches_with_desc"]
+        ),
         "cluster_summaries": AssetIn(key=["cluster_summaries"]),
     },
 )
@@ -41,7 +43,7 @@ def api_user_matches(
     context: AssetExecutionContext,
     config: RowLimitConfig,
     api_db: ApiDbSession,
-    summaries_user_matches: pl.DataFrame,
+    summaries_user_matches_with_desc: pl.DataFrame,
     cluster_summaries: pl.DataFrame,
 ) -> None:
     db_conn = api_db.get_session()
@@ -119,7 +121,7 @@ def api_user_matches(
                             InterestsCluster.pipelineClusterId
                             == other_user_cluster_label
                         )
-                        for other_user_id, other_user_cluster_label in summaries_user_matches[
+                        for other_user_id, other_user_cluster_label in summaries_user_matches_with_desc[
                             ["other_user_id", "other_user_cluster_label"]
                         ]
                         .unique()
@@ -134,7 +136,7 @@ def api_user_matches(
         insert_cluster_matches(
             current_user_interests_clusters,
             other_user_interests_clusters,
-            summaries_user_matches,
+            summaries_user_matches_with_desc,
             db_conn,
         )
 
@@ -166,7 +168,7 @@ def api_user_matches(
             user_matches_to_insert = []
             _, current_user_mft, current_user_big5 = current_user_traits
 
-            interests_similarities = summaries_user_matches.groupby(
+            interests_similarities = summaries_user_matches_with_desc.groupby(
                 ["other_user_id", "activity_type"]
             ).agg([pl.col("cosine_similarity").apply(calculate_interests_similarity)])
 

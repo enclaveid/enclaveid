@@ -11,6 +11,9 @@ from data_pipeline.assets.search_history.summaries_embeddings import (
 from data_pipeline.assets.search_history.summaries_user_matches import (
     summaries_user_matches,
 )
+from data_pipeline.assets.search_history.summaries_user_matches_with_desc import (
+    summaries_user_matches_with_desc,
+)
 
 __all__ = [
     interests,
@@ -19,5 +22,6 @@ __all__ = [
     cluster_summaries,
     summaries_embeddings,
     summaries_user_matches,
+    summaries_user_matches_with_desc,
     api_user_matches,
 ]

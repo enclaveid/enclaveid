@@ -10,7 +10,7 @@ import { MAX_PAGINATION_LIMIT } from '../../constants';
 /**
  * InterestClusters matching below this threshold do not have a commonSummary, so we filter them out.
  *
- * Keep in sync with SummariesUserMatchesConfig.similarity_threshold.
+ * Keep in sync with UserMatchesSummariesConfig.similarity_threshold.
  */
 const SIMILARITY_THRESHOLD = 0.85;
 
