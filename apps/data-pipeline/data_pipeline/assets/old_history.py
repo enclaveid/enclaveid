@@ -300,7 +300,8 @@ async def cluster_summaries(
     interests_clusters: pl.DataFrame,
 ) -> pl.DataFrame:
     df = (
-        interests_clusters.with_columns(
+        interests_clusters.sort(by=pl.col("date"))
+        .with_columns(
             (pl.col("date") + pl.lit(":") + pl.col("interests")).alias("date_interests")
         )
         .group_by("cluster_label")
@@ -358,14 +359,16 @@ async def cluster_summaries(
             is_sensitive=pl.Series(sensitivities),
         )
         .filter(pl.col("activity_type") != "unknown")
-        .drop(["cluster_items", "date_interests", "date", "interests"])
+        .drop(["date_interests", "date", "interests"])
     )
 
 
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
-    ins={"cluster_summaries": AssetIn(key=["cluster_summaries"])},
+    ins={
+        "cluster_summaries": AssetIn(key=["cluster_summaries"]),
+    },
     op_tags=k8s_vllm_config,
 )
 def summaries_embeddings(
@@ -373,6 +376,7 @@ def summaries_embeddings(
     config: RowLimitConfig,
     sentence_transformer: SentenceTransformerResource,
     cluster_summaries: pl.DataFrame,
+    interests_clusters: pl.DataFrame,
 ) -> pl.DataFrame:
     context.log.info(gpu_info())
 
@@ -380,9 +384,22 @@ def summaries_embeddings(
 
     context.log.info("Computing embeddings...")
     return df.with_columns(
-        embeddings=pl.col("cluster_summary").map_batches(
+        summary_embedding=pl.col("cluster_summary").map_batches(
             sentence_transformer.get_embeddings
-        )
+        ),
+        items_embedding=pl.col("cluster_items").map_batches(
+            sentence_transformer.get_embeddings
+        ),
+    )
+
+
+class SummariesUserMatchesConfig(RowLimitConfig):
+    mean_of_comparison: str = Field(
+        default="items",
+        description=(
+            "The method to use for comparing the embeddings. "
+            "Options are 'items' or 'summary'."
+        ),
     )
 
 
@@ -394,7 +411,7 @@ def summaries_embeddings(
 )
 def summaries_user_matches(
     context: AssetExecutionContext,
-    config: RowLimitConfig,
+    config: SummariesUserMatchesConfig,
 ) -> pl.DataFrame:
     context.log.info(gpu_info())
 
@@ -442,10 +459,12 @@ def summaries_user_matches(
                 not current_user_activity_df.is_empty()
                 and not other_user_activity_df.is_empty()
             ):
+                mean_of_comparison = f"{config.mean_of_comparison}_embedding"
+
                 # Perform the bipartite matching for each user
                 match_df = maximum_bipartite_matching(
-                    current_user_activity_df["embeddings"].to_numpy(),
-                    other_user_activity_df["embeddings"].to_numpy(),
+                    current_user_activity_df[mean_of_comparison].to_numpy(),
+                    other_user_activity_df[mean_of_comparison].to_numpy(),
                     current_user_activity_df["cluster_label"].to_numpy(),
                     other_user_activity_df["cluster_label"].to_numpy(),
                 )

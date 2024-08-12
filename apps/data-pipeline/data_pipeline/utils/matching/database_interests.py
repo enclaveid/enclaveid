@@ -148,6 +148,8 @@ def insert_cluster_matches(
                             "id": x["id"],
                             "cosineSimilarity": x["cosineSimilarity"],
                             "updatedAt": x["updatedAt"],
+                            # TODO
+                            "commonSummary": "",
                         },
                         matches_to_insert,
                     )

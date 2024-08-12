@@ -184,6 +184,7 @@ CREATE TABLE "InterestsCluster" (
     "summary" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "activityDates" TEXT[],
+    "isSensitive" BOOLEAN NOT NULL DEFAULT false,
     "userInterestsId" TEXT NOT NULL,
 
     CONSTRAINT "InterestsCluster_pkey" PRIMARY KEY ("id")
@@ -206,6 +207,7 @@ CREATE TABLE "InterestsClustersSimilarity" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "cosineSimilarity" DOUBLE PRECISION NOT NULL,
+    "commonSummary" TEXT NOT NULL,
 
     CONSTRAINT "InterestsClustersSimilarity_pkey" PRIMARY KEY ("id")
 );
@@ -298,10 +300,10 @@ ALTER TABLE "InterestsCluster" ADD CONSTRAINT "InterestsCluster_userInterestsId_
 ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_interestsClusterId_fkey" FOREIGN KEY ("interestsClusterId") REFERENCES "InterestsCluster"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_interestsClustersSimilarityId_fkey" FOREIGN KEY ("interestsClustersSimilarityId") REFERENCES "InterestsClustersSimilarity"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "InterestsClusterMatch" ADD CONSTRAINT "InterestsClusterMatch_interestsClustersSimilarityId_fkey" FOREIGN KEY ("interestsClustersSimilarityId") REFERENCES "InterestsClustersSimilarity"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_usersOverallSimilarityId_fkey" FOREIGN KEY ("usersOverallSimilarityId") REFERENCES "UsersOverallSimilarity"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserMatch" ADD CONSTRAINT "UserMatch_usersOverallSimilarityId_fkey" FOREIGN KEY ("usersOverallSimilarityId") REFERENCES "UsersOverallSimilarity"("id") ON DELETE CASCADE ON UPDATE CASCADE;
