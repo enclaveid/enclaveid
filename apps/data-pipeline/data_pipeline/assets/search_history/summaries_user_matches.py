@@ -30,19 +30,6 @@ class SummariesUserMatchesConfig(RowLimitConfig):
             "Options are 'items' or 'summary'."
         ),
     )
-    similarities_summarization_prompt: str = Field(
-        default=dedent(
-            """
-            Here are two sequences of search activities around a given topic belonging
-            to two different people. What can you tell of the commonalities and
-            differences between the two people? Focus on the most striking differences
-            and niche similarities.
-            """
-        )
-        .replace("\n", " ")
-        .strip(),
-        description="The prompt to use for summarizing the similarities between the user and the matched user.",
-    )
 
 
 @asset(
@@ -123,8 +110,6 @@ async def summaries_user_matches(
                         .map_elements(
                             lambda row: dedent(
                                 f"""
-                                {config.similarities_summarization_prompt}
-
                                 User {context.partition_key}:
                                 {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_items"].item()}
 

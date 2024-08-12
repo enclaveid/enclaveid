@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 import polars as pl
 from dagster import (
     AssetExecutionContext,
@@ -16,6 +18,20 @@ class UserMatchesSummariesConfig(RowLimitConfig):
     similarity_threshold: float = Field(
         default=0.93,
         description="The threshold of cosine similarity over which to generate a summary for the match.",
+    )
+    similarities_summarization_prompt: str = Field(
+        default=dedent(
+            """
+            Here are two sequences of search activities around a given topic belonging
+            to two different people. What can you tell of the commonalities and
+            differences between the two people? Focus on the most striking differences
+            and niche similarities. If the match is unique and unlikely, make sure to
+            mention it in the conclusion.
+            """
+        )
+        .replace("\n", " ")
+        .strip(),
+        description="The prompt to use for summarizing the similarities between the user and the matched user.",
     )
 
 
@@ -39,7 +55,9 @@ async def summaries_user_matches_with_desc(
     summaries_completions = await llama405b.get_prompt_sequences_completions(
         list(
             map(
-                lambda x: [x["common_summary_prompt"]]
+                lambda x: [
+                    f"{config.similarities_summarization_prompt}\n{x['common_summary_prompt']}"
+                ]
                 if x["cosine_similarity"] > config.similarity_threshold
                 else [],
                 summaries_user_matches.to_dicts(),
