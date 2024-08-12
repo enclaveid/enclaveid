@@ -7,7 +7,7 @@ MIN_CUDA_COMPUTE_CAPABILITY = 7.0
 def gpu_info():
     try:
         return subprocess.run(
-            "nvidia-smi --query-gpu=index,name,driver_version,memory --format=csv,noheader",
+            "nvidia-smi --query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv,noheader",
             shell=True,
             text=True,
             capture_output=True,
