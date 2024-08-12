@@ -39,7 +39,7 @@ async def summaries_user_matches_with_desc(
     summaries_completions = await llama405b.get_prompt_sequences_completions(
         list(
             map(
-                lambda x: [x]
+                lambda x: [x["common_summary_prompt"]]
                 if x["cosine_similarity"] > config.similarity_threshold
                 else [],
                 summaries_user_matches.to_dicts(),
