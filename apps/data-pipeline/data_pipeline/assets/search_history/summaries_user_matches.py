@@ -124,7 +124,7 @@ async def summaries_user_matches(
                 )
 
                 # Add the prompt sequences to be computed later all at once
-                result_df = result_df.with_columns(
+                match_df = match_df.with_columns(
                     pl.struct(result_df.columns)
                     .apply(
                         lambda row: dedent(
@@ -146,6 +146,7 @@ async def summaries_user_matches(
 
                 result_df = result_df.vstack(match_df)
 
+    # TODO: move this to another asset to free up the GPU
     context.log.info(
         f"Computing {result_df.select(pl.count('common_summary')).item()} summaries..."
     )
