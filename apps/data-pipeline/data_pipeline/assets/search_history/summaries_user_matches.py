@@ -24,7 +24,7 @@ from ...utils.capabilities import gpu_info
 
 class SummariesUserMatchesConfig(RowLimitConfig):
     mean_of_comparison: str = Field(
-        default="items",
+        default="summary",
         description=(
             "The method to use for comparing the embeddings. "
             "Options are 'items' or 'summary'."

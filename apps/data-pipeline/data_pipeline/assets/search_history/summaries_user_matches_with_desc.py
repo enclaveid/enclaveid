@@ -14,7 +14,7 @@ from ...partitions import user_partitions_def
 
 class UserMatchesSummariesConfig(RowLimitConfig):
     similarity_threshold: float = Field(
-        default=0.85,
+        default=0.93,
         description="The threshold of cosine similarity over which to generate a summary for the match.",
     )
 
