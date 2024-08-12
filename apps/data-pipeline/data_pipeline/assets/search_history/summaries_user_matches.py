@@ -31,7 +31,7 @@ class SummariesUserMatchesConfig(RowLimitConfig):
         ),
     )
     similarity_threshold: float = Field(
-        default=0.85,
+        default=0.9,
         description="The threshold of cosine similarity over which to generate a summary for the match.",
     )
     similarities_summarization_prompt: str = Field(
@@ -150,7 +150,7 @@ async def summaries_user_matches(
         f"Computing {result_df.select(pl.count('common_summary')).item()} summaries..."
     )
     summaries_completions = await llama405b.get_prompt_sequences_completions(
-        result_df["common_summary"].to_numpy().tolist()
+        list(map(lambda x: [x], result_df["common_summary"].to_numpy().tolist()))
     )
 
     return result_df.with_columns(
