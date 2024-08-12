@@ -7,7 +7,12 @@ import { DisplayableInterest, UserMatchOverview } from '@enclaveid/shared';
 import { localGeocoderLookup } from '../../services/localGeocoder';
 import { MAX_PAGINATION_LIMIT } from '../../constants';
 
-const SIMILARITY_THRESHOLD = 0.9;
+/**
+ * InterestClusters matching below this threshold do not have a commonSummary, so we filter them out.
+ *
+ * Keep in sync with SummariesUserMatchesConfig.similarity_threshold.
+ */
+const SIMILARITY_THRESHOLD = 0.8;
 
 export const matches = router({
   getPeopleCount: authenticatedProcedure.query(async () => {
@@ -189,8 +194,9 @@ export const matches = router({
             )
             .flatMap((r): DisplayableInterest => {
               return {
+                // TODO: Use a common title
                 title: r.interestsCluster.title,
-                description: r.interestsCluster.summary,
+                description: ics.commonSummary,
                 activityType: r.interestsCluster.clusterType,
                 similarityPercentage: ics.cosineSimilarity,
                 pipelineClusterId: r.interestsCluster.pipelineClusterId,
