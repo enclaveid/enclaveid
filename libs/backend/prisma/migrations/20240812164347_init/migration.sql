@@ -207,7 +207,7 @@ CREATE TABLE "InterestsClustersSimilarity" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "cosineSimilarity" DOUBLE PRECISION NOT NULL,
-    "commonSummary" TEXT NOT NULL,
+    "commonSummary" TEXT,
 
     CONSTRAINT "InterestsClustersSimilarity_pkey" PRIMARY KEY ("id")
 );

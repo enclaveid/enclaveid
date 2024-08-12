@@ -58,6 +58,7 @@ def insert_cluster_matches(
         summaries_user_matches.rename(
             {
                 "cosine_similarity": "cosineSimilarity",
+                "common_summary": "commonSummary",
             }
         )
         .with_columns(
@@ -79,6 +80,7 @@ def insert_cluster_matches(
                 "cosineSimilarity",
                 "currentClusterId",
                 "otherClusterId",
+                "commonSummary",
             ]
         )
         .with_columns(
@@ -118,6 +120,7 @@ def insert_cluster_matches(
             matches_to_update.append(
                 {
                     "id": existing_match_dict[match_set],
+                    "commonSummary": match["commonSummary"],
                     "cosineSimilarity": match["cosineSimilarity"],
                     "updatedAt": func.now(),
                 }
@@ -131,7 +134,8 @@ def insert_cluster_matches(
             update(InterestsClustersSimilarity)
             .where(InterestsClustersSimilarity.id == bindparam("id"))
             .values(
-                overallSimilarity=bindparam("cosineSimilarity"),
+                commonSummary=bindparam("commonSummary"),
+                cosineSimilarity=bindparam("cosineSimilarity"),
                 updatedAt=bindparam("updatedAt"),
             ),
             matches_to_update,
@@ -148,8 +152,7 @@ def insert_cluster_matches(
                             "id": x["id"],
                             "cosineSimilarity": x["cosineSimilarity"],
                             "updatedAt": x["updatedAt"],
-                            # TODO
-                            "commonSummary": "",
+                            "commonSummary": x["commonSummary"],
                         },
                         matches_to_insert,
                     )

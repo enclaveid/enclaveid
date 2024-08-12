@@ -58,7 +58,7 @@ class InterestsClustersSimilarity(Base):
     )
     updatedAt = mapped_column(TIMESTAMP(precision=3), nullable=False)
     cosineSimilarity = mapped_column(Double(53), nullable=False)
-    commonSummary = mapped_column(Text, nullable=False)
+    commonSummary = mapped_column(Text)
 
     InterestsClusterMatch: Mapped[List["InterestsClusterMatch"]] = relationship(
         "InterestsClusterMatch",
