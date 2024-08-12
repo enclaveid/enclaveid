@@ -1,19 +1,12 @@
 import datetime
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import polars as pl
 from dagster import get_dagster_logger
-from pydantic import BaseModel
 
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
-
-
-# TODO: types
-class InterestsSpec(BaseModel):
-    enrichment_prompt_sequence: List[Any]
-    summarization_prompt_sequence: List[Any]
 
 
 @dataclass
