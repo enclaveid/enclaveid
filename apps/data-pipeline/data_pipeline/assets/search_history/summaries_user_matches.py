@@ -120,18 +120,19 @@ async def summaries_user_matches(
                         pl.lit(activity_type).alias("activity_type"),
                         # Add the prompt sequences to be computed later all at once
                         pl.struct(match_df.columns)
-                        .apply(
+                        .map_elements(
                             lambda row: dedent(
                                 f"""
                                 {config.similarities_summarization_prompt}
 
                                 User {context.partition_key}:
-                                {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_items"]}
+                                {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_items"].item()}
 
                                 User {other_user_id}:
-                                {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_items"]}
+                                {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_items"].item()}
                                 """
-                            )
+                            ),
+                            return_dtype=pl.Utf8,
                         )
                         .alias("common_summary_prompt"),
                     ]
