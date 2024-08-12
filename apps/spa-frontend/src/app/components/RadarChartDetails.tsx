@@ -10,9 +10,9 @@ function RadarChartDetails() {
     <div className="flex flex-col gap-2.5 items-center mt-[34px] max-w-2xl">
       <h2 className="chart-title">RIASEC</h2>
       <div className="border border-[#E5E8EE] flex flex-col gap-10 items-center justify-center rounded-3xl w-full pt-[30px] pb-3.5 px-3">
-        <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
+        {/* <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
           Your Results
-        </h2>
+        </h2> */}
         <p className="text-center text-lg font-medium leading-[22px] text-passiveLinkColor">
           Strongest trait{' '}
           {findHighestValues(radarChart).length > 1 ? 'are' : 'is'}{' '}

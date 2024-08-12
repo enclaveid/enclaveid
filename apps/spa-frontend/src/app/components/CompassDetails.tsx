@@ -6,9 +6,9 @@ function CompassDetails() {
   const { compassChartData } = location.state;
   return (
     <div className="flex flex-col gap-7 max-w-4xl">
-      <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
+      {/* <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
         Your Results
-      </h2>
+      </h2> */}
       <div className="gap-9 flex flex-col overflow-y-auto">
         <CompassChart {...compassChartData} showDescription={true} />
         <div className="mt-3 mb-8 max-w-max">

@@ -45,8 +45,10 @@ function NonLatentCard({
         <h1 className="text-passiveLinkColor text-sm font-medium">
           [{pipelineClusterId}] {title}
         </h1>
-        <SmallBadge variant={activityType} />
-        {isSensitive && <SmallBadge variant="sensitive" />}
+        <div className="flex gap-2">
+          <SmallBadge variant={activityType} />
+          {isSensitive && <SmallBadge variant="sensitive" />}
+        </div>
         <p className="text-passiveLinkColor text-sm ">{shortDescription}</p>
       </div>
       <div className="flex items-center justify-between">

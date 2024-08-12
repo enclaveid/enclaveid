@@ -35,9 +35,9 @@ function CompassSection() {
         setIsDrawerOpen={setIsDrawerOpen}
       >
         <div className="flex flex-col gap-7">
-          <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
+          {/* <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
             Your Results
-          </h2>
+          </h2> */}
           <div className="gap-9 flex flex-col overflow-y-auto">
             <CompassChart
               {...compassChartData}

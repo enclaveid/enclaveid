@@ -65,9 +65,9 @@ function CareerContent() {
         setIsDrawerOpen={setIsDrawerOpen}
       >
         <div className="flex flex-col gap-7 px-4">
-          <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
+          {/* <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
             Your Results
-          </h2>
+          </h2> */}
           <p className="text-center text-lg font-medium leading-[22px] text-passiveLinkColor">
             Strongest trait{' '}
             {findHighestValues(radarChart).length > 1 ? 'are' : 'is'}{' '}

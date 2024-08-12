@@ -65,9 +65,9 @@ function SixteenPFCard({ title, data }: SixteenPFCardProps) {
       >
         <div className="gap-9 flex flex-col overflow-y-auto px-4">
           <div className="flex flex-col gap-5">
-            <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
+            {/* <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
               Your Results
-            </h2>
+            </h2> */}
             <div className="flex flex-col gap-[34px]">
               {data.map((item, index) => {
                 return (

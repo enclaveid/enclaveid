@@ -19,14 +19,14 @@ function MFTDetails() {
   return (
     <div className="flex divide-y xl:divide-x xl:divide-y-0 border border-[#E5E8EE] rounded-3xl py-7 px-6 xl:flex-row flex-col">
       <div className="xl:max-w-[499px] pr-6 xl:pb-0 pb-10">
-        <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
+        {/* <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
           Your Results
-        </h2>
+        </h2> */}
         <div className="flex flex-col gap-8 w-full mt-7">
-          <p className="text-passiveLinkColor leading-[22px]">{description}</p>
           <div className="w-full py-[13px] bg-[#F3F5F7] rounded-xl text-passiveLinkColor text-[32px] leading-[38px] text-center flex items-center justify-center">
             Moderate
           </div>
+          <p className="text-passiveLinkColor leading-[22px]">{description}</p>
           {/* <SimilarProfileBadge peopleCount={253} /> */}
         </div>
       </div>

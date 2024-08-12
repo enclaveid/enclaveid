@@ -15,7 +15,7 @@
     "dev": {
       "executor": "@nxlv/python:run-commands",
       "options": {
-        "command": "dagster dev",
+        "command": "dagster dev --port 3001",
         "cwd": "apps/data-pipeline"
       }
     },

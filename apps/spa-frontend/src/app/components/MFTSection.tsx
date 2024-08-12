@@ -35,9 +35,9 @@ function MFTSection() {
         setIsDrawerOpen={setIsDrawerOpen}
       >
         <div className="flex flex-col gap-7">
-          <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
+          {/* <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">
             Your Results
-          </h2>
+          </h2> */}
           <div className="-mt-1 flex flex-col gap-[5px]">
             <p className="text-passiveLinkColor leading-[22px] max-w-[369px]">
               {MFTChartData.description}
