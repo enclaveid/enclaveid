@@ -123,7 +123,7 @@ async def summaries_user_matches(
                         pl.lit(other_user_id).alias("other_user_id"),
                         pl.lit(activity_type).alias("activity_type"),
                         # Add the prompt sequences to be computed later all at once
-                        pl.struct(result_df.columns)
+                        pl.struct(match_df.columns)
                         .apply(
                             lambda row: dedent(
                                 f"""
