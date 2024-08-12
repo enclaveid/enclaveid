@@ -251,7 +251,7 @@ model InterestsClustersSimilarity {
   updatedAt DateTime @updatedAt
 
   cosineSimilarity Float
-  commonSummary    String
+  commonSummary    String?
 
   interestsClusterMatches InterestsClusterMatch[]
 }

@@ -16,6 +16,7 @@ from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
 from data_pipeline.resources.api_db_session import ApiDbSession
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
 from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
+from data_pipeline.resources.llm_inference.llama405b_resource import Llama405bResource
 from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
     SentenceTransformerResource,
 )
@@ -376,7 +377,6 @@ def summaries_embeddings(
     config: RowLimitConfig,
     sentence_transformer: SentenceTransformerResource,
     cluster_summaries: pl.DataFrame,
-    interests_clusters: pl.DataFrame,
 ) -> pl.DataFrame:
     context.log.info(gpu_info())
 
@@ -401,6 +401,23 @@ class SummariesUserMatchesConfig(RowLimitConfig):
             "Options are 'items' or 'summary'."
         ),
     )
+    similarity_threshold: float = Field(
+        default=0.8,
+        description="The threshold of cosine similarity over which to generate a summary for the match.",
+    )
+    similarities_summarization_prompt: str = Field(
+        default=dedent(
+            """
+            Here are two sequences of search activities around a given topic belonging
+            to two different people. What can you tell of the commonalities and
+            differences between the two people? Focus on the most striking differences
+            and niche similarities.
+            """
+        )
+        .replace("\n", " ")
+        .strip(),
+        description="The prompt to use for summarizing the similarities between the user and the matched user.",
+    )
 
 
 @asset(
@@ -409,9 +426,10 @@ class SummariesUserMatchesConfig(RowLimitConfig):
     io_manager_key="parquet_io_manager",
     op_tags=k8s_rapids_config,
 )
-def summaries_user_matches(
+async def summaries_user_matches(
     context: AssetExecutionContext,
     config: SummariesUserMatchesConfig,
+    llama405b: Llama405bResource,
 ) -> pl.DataFrame:
     context.log.info(gpu_info())
 
@@ -428,6 +446,7 @@ def summaries_user_matches(
             "cosine_similarity": pl.Series([], dtype=pl.Float64),
             "other_user_id": pl.Series([], dtype=pl.Utf8),
             "activity_type": pl.Series([], dtype=pl.Utf8),
+            "common_summary": pl.Series([], dtype=pl.Utf8),
         }
     )
 
@@ -475,9 +494,41 @@ def summaries_user_matches(
                     activity_type=pl.Series([activity_type] * len(match_df)),
                 )
 
+                # Add the prompt sequences to be computed later all at once
+                result_df = result_df.with_columns(
+                    pl.struct(result_df.columns)
+                    .apply(
+                        lambda row: dedent(
+                            f"""
+                            {config.similarities_summarization_prompt}
+
+                            User {context.partition_key}:
+                            {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_items"]}
+
+                            User {other_user_id}:
+                            {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_items"]}
+                            """
+                        )
+                        if row["cosine_similarity"] > config.similarity_threshold
+                        else None
+                    )
+                    .alias("common_summary")
+                )
+
                 result_df = result_df.vstack(match_df)
 
-    return result_df.sort(by="cosine_similarity", descending=True)
+    context.log.info(
+        f"Computing {result_df.select(pl.count('common_summary')).item()} summaries..."
+    )
+    summaries_completions = await llama405b.get_prompt_sequences_completions(
+        result_df["common_summary"].to_numpy().tolist()
+    )
+
+    return result_df.with_columns(
+        common_summary=pl.Series(
+            [x[0] if len(x) > 0 else None for x in summaries_completions]
+        )
+    ).sort(by="cosine_similarity", descending=True)
 
 
 @asset(

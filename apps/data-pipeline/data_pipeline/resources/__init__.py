@@ -6,6 +6,7 @@ from data_pipeline.resources.api_db_session import ApiDbSession
 from data_pipeline.resources.llm_inference.gpt4_resource import Gpt4Resource
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
 from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
+from data_pipeline.resources.llm_inference.llama405b_resource import Llama405bResource
 from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
     SentenceTransformerResource,
 )
@@ -22,6 +23,7 @@ resources = {
     "api_db": ApiDbSession(conn_string=EnvVar("API_DATABASE_URL")),
     "llama8b": Llama8bResource(),
     "llama70b": Llama70bResource(api_key=EnvVar("AZURE_AI_LLAMA70B_API_KEY")),
+    "llama405b": Llama405bResource(api_key=EnvVar("AZURE_AI_LLAMA405B_API_KEY")),
     "gpt4": Gpt4Resource(api_key=EnvVar("AZURE_AI_GPT4_API_KEY")),
     "sentence_transformer": SentenceTransformerResource(),
 }
