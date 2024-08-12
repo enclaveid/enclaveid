@@ -3,6 +3,7 @@ from typing import List, Optional
 from sqlalchemy import (
     ARRAY,
     Boolean,
+    Column,
     DateTime,
     Double,
     Enum,
@@ -57,6 +58,7 @@ class InterestsClustersSimilarity(Base):
     )
     updatedAt = mapped_column(TIMESTAMP(precision=3), nullable=False)
     cosineSimilarity = mapped_column(Double(53), nullable=False)
+    commonSummary = mapped_column(Text, nullable=False)
 
     InterestsClusterMatch: Mapped[List["InterestsClusterMatch"]] = relationship(
         "InterestsClusterMatch",
@@ -344,8 +346,8 @@ class InterestsCluster(Base):
     clusterType = mapped_column(Text, nullable=False)
     summary = mapped_column(Text, nullable=False)
     title = mapped_column(Text, nullable=False)
-    userInterestsId = mapped_column(Text, nullable=False)
     isSensitive = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    userInterestsId = mapped_column(Text, nullable=False)
     activityDates = mapped_column(ARRAY(Text()))
 
     UserInterests_: Mapped["UserInterests"] = relationship(
