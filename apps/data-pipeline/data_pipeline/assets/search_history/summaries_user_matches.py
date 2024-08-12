@@ -119,24 +119,28 @@ async def summaries_user_matches(
 
                 # Add the other_user_id to the match_df
                 match_df = match_df.with_columns(
-                    other_user_id=pl.Series([other_user_id] * len(match_df)),
-                    activity_type=pl.Series([activity_type] * len(match_df)),
-                    # Add the prompt sequences to be computed later all at once
-                    common_summary=pl.struct(result_df.columns).apply(
-                        lambda row: dedent(
-                            f"""
-                            {config.similarities_summarization_prompt}
+                    [
+                        pl.lit(other_user_id).alias("other_user_id"),
+                        pl.lit(activity_type).alias("activity_type"),
+                        # Add the prompt sequences to be computed later all at once
+                        pl.struct(result_df.columns)
+                        .apply(
+                            lambda row: dedent(
+                                f"""
+                                {config.similarities_summarization_prompt}
 
-                            User {context.partition_key}:
-                            {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_items"]}
+                                User {context.partition_key}:
+                                {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_items"]}
 
-                            User {other_user_id}:
-                            {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_items"]}
-                            """
+                                User {other_user_id}:
+                                {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_items"]}
+                                """
+                            )
+                            if row["cosine_similarity"] > config.similarity_threshold
+                            else None
                         )
-                        if row["cosine_similarity"] > config.similarity_threshold
-                        else None
-                    ),
+                        .alias("common_summary"),
+                    ]
                 )
 
                 result_df = result_df.vstack(match_df)
