@@ -14,5 +14,5 @@ class Llama405bResource(RemoteLlmResource):
         "use_beam_search": "false",
         "ignore_eos": "false",
         "skip_special_tokens": "false",
-        "logprobs": "false",
+        "stream": False,
     }

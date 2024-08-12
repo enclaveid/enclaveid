@@ -31,7 +31,7 @@ class SummariesUserMatchesConfig(RowLimitConfig):
         ),
     )
     similarity_threshold: float = Field(
-        default=0.9,
+        default=0.85,
         description="The threshold of cosine similarity over which to generate a summary for the match.",
     )
     similarities_summarization_prompt: str = Field(
