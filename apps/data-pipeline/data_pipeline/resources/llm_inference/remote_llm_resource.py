@@ -16,6 +16,8 @@ class RemoteLlmResource(ConfigurableResource):
     _timeout: int = PrivateAttr()
     _inference_url: str = PrivateAttr()
     _inference_config: Dict[str, Any] = PrivateAttr()
+    _input_cpm: float = PrivateAttr()
+    _output_cpm: float = PrivateAttr()
 
     _client: httpx.AsyncClient = PrivateAttr()
     _retry_event: asyncio.Event = PrivateAttr(default_factory=asyncio.Event)
@@ -34,7 +36,7 @@ class RemoteLlmResource(ConfigurableResource):
         self,
         conversation: List[Dict[str, str]],
         conversation_id: int,
-    ) -> str | None:
+    ) -> tuple[str | None, float]:
         payload = {
             "messages": conversation,
             **self._inference_config,
@@ -70,23 +72,28 @@ class RemoteLlmResource(ConfigurableResource):
             try:
                 response.raise_for_status()
                 res = response.json()
-                return res["choices"][0]["message"]["content"]
+                answer: str = res["choices"][0]["message"]["content"]
+                cost = (res["usage"]["prompt_tokens"] * self._input_cpm / 1000) + (
+                    res["usage"]["completion_tokens"] * self._output_cpm / 1000
+                )
+                return answer, cost
             except Exception as e:
                 curl = Curlify(response.request)
                 logger.error(
                     f"Error in LLM completion #{conversation_id}: {e}. Request: {curl.to_curl()}"
                 )
-                return None
+                return None, 0
 
         logger.error(
             f"Failed to get completion #{conversation_id} after {max_attempts} attempts."
         )
-        return None
+        return None, 0
 
     async def _get_prompt_sequence_completion(
         self, prompts_sequence: PromptSequence, conversation_id: int
-    ) -> List[Dict[str, str]]:
+    ) -> tuple[list[Dict[str, str]], float]:
         conversation: List[Dict[str, str]] = []
+        total_cost = 0.0
 
         for prompt in prompts_sequence:
             if callable(prompt):
@@ -95,27 +102,31 @@ class RemoteLlmResource(ConfigurableResource):
                 content = prompt
 
             conversation.append({"role": "user", "content": content})
-            response = await self._get_completion(conversation, conversation_id)
+            response, cost = await self._get_completion(conversation, conversation_id)
             if not response:
-                return []
+                return [], total_cost
             else:
                 conversation.append({"role": "assistant", "content": response})
+                total_cost += cost
 
-        return conversation
+        return conversation, total_cost
 
     async def get_prompt_sequences_completions(
         self, prompt_sequences: List[PromptSequence]
-    ) -> List[List[str]]:
+    ) -> tuple[List[List[str]], float]:
         """
         This method is used to get completions for multiple prompt sequences in parallel.
         Prompt sequence items (other than the first in the list) can be callables that take
         the previous assistant response as input and return the next user prompt based on custom logic"""
-        conversations = await asyncio.gather(
+        results = await asyncio.gather(
             *(
                 self._get_prompt_sequence_completion(prompt_sequence, i)
                 for i, prompt_sequence in enumerate(prompt_sequences)
             )
         )
+
+        conversations = [conv for conv, cost in results]
+        costs = [cost for conv, cost in results]
 
         # Assume all prompt sequences have the same length
         prompt_sequences_length = len(prompt_sequences[0])
@@ -128,4 +139,4 @@ class RemoteLlmResource(ConfigurableResource):
                 else [],
                 conversations,
             )
-        )
+        ), sum(costs)

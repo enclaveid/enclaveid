@@ -1,3 +1,5 @@
+import time
+
 import polars as pl
 from dagster import (
     AssetExecutionContext,
@@ -6,7 +8,9 @@ from dagster import (
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
+from data_pipeline.resources.cost_tracker_resource import CostTrackerResource
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
+from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.k8s import k8s_vllm_config
 from ...partitions import user_partitions_def
@@ -60,8 +64,10 @@ def interests(
     context: AssetExecutionContext,
     config: InterestsConfig,
     llama8b: Llama8bResource,
+    cost_tracker: CostTrackerResource,
     full_takeout: pl.DataFrame,
 ) -> pl.DataFrame:
+    start_time = time.time()
     context.log.info(gpu_info())
 
     full_takeout = full_takeout.slice(0, config.row_limit).sort("timestamp")
@@ -77,5 +83,7 @@ def interests(
     context.add_output_metadata(
         {"count_invalid_responses": sessions_output.count_invalid_responses}
     )
+
+    cost_tracker.log_cost(get_gpu_runtime_cost(start_time), context)
 
     return sessions_output.output_df

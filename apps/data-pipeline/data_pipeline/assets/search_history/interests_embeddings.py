@@ -1,3 +1,5 @@
+import time
+
 import polars as pl
 from dagster import (
     AssetExecutionContext,
@@ -7,9 +9,11 @@ from dagster import (
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
+from data_pipeline.resources.cost_tracker_resource import CostTrackerResource
 from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
     SentenceTransformerResource,
 )
+from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.k8s import k8s_vllm_config
 from ...partitions import user_partitions_def
@@ -44,8 +48,10 @@ def interests_embeddings(
     context: AssetExecutionContext,
     config: InterestsEmbeddingsConfig,
     sentence_transformer: SentenceTransformerResource,
+    cost_tracker: CostTrackerResource,
     interests: pl.DataFrame,
 ) -> pl.DataFrame:
+    start_time = time.time()
     context.log.info(gpu_info())
 
     df = (
@@ -58,6 +64,10 @@ def interests_embeddings(
     )
 
     context.log.info("Computing embeddings")
-    return df.with_columns(
+    result = df.with_columns(
         embeddings=pl.col("interests").map_batches(sentence_transformer.get_embeddings)
     )
+
+    cost_tracker.log_cost(get_gpu_runtime_cost(start_time), context)
+
+    return result

@@ -16,3 +16,5 @@ class Llama405bResource(RemoteLlmResource):
         "skip_special_tokens": "false",
         "stream": False,
     }
+    _input_cpm = 0.00533
+    _output_cpm = 0.016

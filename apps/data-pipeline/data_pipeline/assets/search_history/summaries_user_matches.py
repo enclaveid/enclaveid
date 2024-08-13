@@ -1,3 +1,4 @@
+import time
 from textwrap import dedent
 
 import polars as pl
@@ -11,7 +12,8 @@ from data_pipeline.assets.search_history.summaries_embeddings import (
     summaries_embeddings,
 )
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
-from data_pipeline.resources.llm_inference.llama405b_resource import Llama405bResource
+from data_pipeline.resources.cost_tracker_resource import CostTrackerResource
+from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.matching.maximum_bipartite_matching import (
     maximum_bipartite_matching,
 )
@@ -41,8 +43,9 @@ class SummariesUserMatchesConfig(RowLimitConfig):
 async def summaries_user_matches(
     context: AssetExecutionContext,
     config: SummariesUserMatchesConfig,
-    llama405b: Llama405bResource,
+    cost_tracker: CostTrackerResource,
 ) -> pl.DataFrame:
+    start_time = time.time()
     context.log.info(gpu_info())
 
     current_user_df = pl.read_parquet(
@@ -140,4 +143,8 @@ async def summaries_user_matches(
 
                 result_df = result_df.vstack(match_df)
 
-    return result_df.sort(by="cosine_similarity", descending=True)
+    result = result_df.sort(by="cosine_similarity", descending=True)
+
+    cost_tracker.log_cost(get_gpu_runtime_cost(start_time), context)
+
+    return result

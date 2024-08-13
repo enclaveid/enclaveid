@@ -16,3 +16,5 @@ class Llama70bResource(RemoteLlmResource):
         "skip_special_tokens": "false",
         "logprobs": "false",
     }
+    _input_cpm = 0.00268
+    _output_cpm = 0.00354

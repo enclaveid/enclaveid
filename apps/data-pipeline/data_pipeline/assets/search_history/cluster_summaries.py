@@ -8,6 +8,7 @@ from dagster import (
 )
 
 from data_pipeline.constants.custom_config import RowLimitConfig
+from data_pipeline.resources.cost_tracker_resource import CostTrackerResource
 from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
 
 from ...partitions import user_partitions_def
@@ -95,6 +96,7 @@ async def cluster_summaries(
     context: AssetExecutionContext,
     config: RowLimitConfig,
     llama70b: Llama70bResource,
+    cost_tracker: CostTrackerResource,
     interests_clusters: pl.DataFrame,
 ) -> pl.DataFrame:
     df = (
@@ -122,9 +124,11 @@ async def cluster_summaries(
     ]
 
     context.log.info(f"Processing {len(prompt_sequences)} clusters...")
-    summaries_completions = await llama70b.get_prompt_sequences_completions(
+    summaries_completions, cost = await llama70b.get_prompt_sequences_completions(
         prompt_sequences
     )
+
+    cost_tracker.log_cost(cost, context)
 
     cluster_splits = list(
         map(lambda x: x[0] if len(x) > 0 else None, summaries_completions)
