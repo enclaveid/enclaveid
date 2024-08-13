@@ -134,7 +134,7 @@ async def summaries_user_matches(
                             ),
                             return_dtype=pl.Utf8,
                         )
-                        .alias("common_summary_prompt_summariess"),
+                        .alias("common_summary_prompt_summaries"),
                     ]
                 )
 
