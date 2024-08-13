@@ -67,5 +67,6 @@ class CostTrackerResource(ConfigurableResource):
         )
 
     def teardown_after_execution(self, context: InitResourceContext) -> None:
+        self._logger.info(f"Writing cost data to {self._cost_df_path}")
         self._cost_df.write_parquet(self._cost_df_path)
         return super().teardown_after_execution(context)

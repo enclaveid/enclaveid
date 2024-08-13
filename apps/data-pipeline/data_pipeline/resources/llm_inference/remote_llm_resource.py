@@ -67,7 +67,7 @@ class RemoteLlmResource(ConfigurableResource):
                     self._retry_event.clear()  # Block further requests
                     await asyncio.sleep(wait_time)  # Wait as advised by the server
                     self._retry_event.set()  # Allow requests again
-                    continue
+                continue
 
             try:
                 response.raise_for_status()
