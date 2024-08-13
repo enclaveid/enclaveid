@@ -58,7 +58,8 @@ async def summaries_user_matches(
             "cosine_similarity": pl.Series([], dtype=pl.Float64),
             "other_user_id": pl.Series([], dtype=pl.Utf8),
             "activity_type": pl.Series([], dtype=pl.Utf8),
-            "common_summary_prompt": pl.Series([], dtype=pl.Utf8),
+            "common_summary_prompt_items": pl.Series([], dtype=pl.Utf8),
+            "common_summary_prompt_summaries": pl.Series([], dtype=pl.Utf8),
         }
     )
 
@@ -119,7 +120,21 @@ async def summaries_user_matches(
                             ),
                             return_dtype=pl.Utf8,
                         )
-                        .alias("common_summary_prompt"),
+                        .alias("common_summary_prompt_items"),
+                        pl.struct(match_df.columns)
+                        .map_elements(
+                            lambda row: dedent(
+                                f"""
+                                User {context.partition_key}:
+                                {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_summary"].item()}
+
+                                User {other_user_id}:
+                                {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_summary"].item()}
+                                """
+                            ),
+                            return_dtype=pl.Utf8,
+                        )
+                        .alias("common_summary_prompt_summariess"),
                     ]
                 )
 

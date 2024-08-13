@@ -56,7 +56,7 @@ async def summaries_user_matches_with_desc(
         list(
             map(
                 lambda x: [
-                    f"{config.similarities_summarization_prompt}\n{x['common_summary_prompt']}"
+                    f"{config.similarities_summarization_prompt}\n{x['common_summary_prompt_summaries']}"  # common_summary_prompt_items
                 ]
                 if x["cosine_similarity"] > config.similarity_threshold
                 else [],
@@ -69,4 +69,4 @@ async def summaries_user_matches_with_desc(
         common_summary=pl.Series(
             [x[0] if len(x) > 0 else None for x in summaries_completions]
         )
-    ).drop(["common_summary_prompt"])
+    ).drop(["common_summary_prompt_summaries"], ["common_summary_prompt_items"])
