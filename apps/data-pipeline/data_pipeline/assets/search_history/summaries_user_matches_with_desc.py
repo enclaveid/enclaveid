@@ -19,6 +19,15 @@ class UserMatchesSummariesConfig(RowLimitConfig):
         default=0.93,
         description="The threshold of cosine similarity over which to generate a summary for the match.",
     )
+    social_likelihood_threshold: float = Field(
+        default=0.6,
+        description=dedent(
+            """
+            The threshold of social likelihood over which to generate a summary for the match.
+            This is calculated as the average of the two users' social likelihoods.
+            """
+        ),
+    )
     similarities_summarization_prompt: str = Field(
         default=dedent(
             """
@@ -32,6 +41,10 @@ class UserMatchesSummariesConfig(RowLimitConfig):
         .replace("\n", " ")
         .strip(),
         description="The prompt to use for summarizing the similarities between the user and the matched user.",
+    )
+    means_of_comparison: str = Field(
+        default="items",
+        description="The means of comparison between the two users. Can be either 'items' or 'summaries'.",
     )
 
 
@@ -52,13 +65,21 @@ async def summaries_user_matches_with_desc(
         f"Summarizing {len(summaries_user_matches.filter(pl.col('cosine_similarity') > config.similarity_threshold))} matches."
     )
 
+    means_of_comparison = f"common_summary_prompt_{config.means_of_comparison}"
+
     summaries_completions, cost = await llama405b.get_prompt_sequences_completions(
         list(
             map(
                 lambda x: [
-                    f"{config.similarities_summarization_prompt}\n{x['common_summary_prompt_summaries']}"  # common_summary_prompt_items
+                    f"{config.similarities_summarization_prompt}\n{x[means_of_comparison]}"
                 ]
-                if x["cosine_similarity"] > config.similarity_threshold
+                if (
+                    x["cosine_similarity"] > config.similarity_threshold
+                    and (
+                        (sum(x["social_likelihoods"]) / 2)
+                        > config.social_likelihood_threshold
+                    )
+                )
                 else [],
                 summaries_user_matches.to_dicts(),
             )
@@ -71,4 +92,9 @@ async def summaries_user_matches_with_desc(
         common_summary=pl.Series(
             [x[0] if len(x) > 0 else None for x in summaries_completions]
         )
-    ).drop(["common_summary_prompt_summaries", "common_summary_prompt_items"])
+    ).drop(
+        [
+            "common_summary_prompt_summaries",
+            "common_summary_prompt_items",
+        ]
+    )

@@ -61,6 +61,7 @@ async def summaries_user_matches(
             "activity_type": pl.Series([], dtype=pl.Utf8),
             "common_summary_prompt_items": pl.Series([], dtype=pl.Utf8),
             "common_summary_prompt_summaries": pl.Series([], dtype=pl.Utf8),
+            "social_likelihoods": pl.Series([], dtype=pl.List(pl.Float64)),
         }
     )
 
@@ -108,34 +109,45 @@ async def summaries_user_matches(
                         pl.lit(other_user_id).alias("other_user_id"),
                         pl.lit(activity_type).alias("activity_type"),
                         # Add the prompt sequences to be computed later all at once
-                        pl.struct(match_df.columns)
-                        .map_elements(
-                            lambda row: dedent(
-                                f"""
-                                User {context.partition_key}:
-                                {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_items"].item()}
-
-                                User {other_user_id}:
-                                {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_items"].item()}
-                                """
+                        pl.struct(match_df.columns).map_elements(
+                            lambda row: (
+                                dedent(
+                                    f"""
+                                    User {context.partition_key}:
+                                    {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_items"].item()}
+                                    User {other_user_id}:
+                                    {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_items"].item()}
+                                    """
+                                ),
+                                dedent(
+                                    f"""
+                                    User {context.partition_key}:
+                                    {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_summary"].item()}
+                                    User {other_user_id}:
+                                    {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_summary"].item()}
+                                    """
+                                ),
+                                (
+                                    current_user_activity_df.filter(
+                                        pl.col("cluster_label")
+                                        == row["user_cluster_label"]
+                                    )["social_likelihood"].item(),
+                                    other_user_activity_df.filter(
+                                        pl.col("cluster_label")
+                                        == row["other_user_cluster_label"]
+                                    )["social_likelihood"].item(),
+                                ),
                             ),
-                            return_dtype=pl.Utf8,
-                        )
-                        .alias("common_summary_prompt_items"),
-                        pl.struct(match_df.columns)
-                        .map_elements(
-                            lambda row: dedent(
-                                f"""
-                                User {context.partition_key}:
-                                {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_summary"].item()}
-
-                                User {other_user_id}:
-                                {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_summary"].item()}
-                                """
+                            return_dtype=pl.Struct(
+                                [
+                                    pl.Field("common_summary_prompt_items", pl.Utf8),
+                                    pl.Field(
+                                        "common_summary_prompt_summaries", pl.Utf8
+                                    ),
+                                    pl.Field("social_likelihoods", pl.List(pl.Float64)),
+                                ]
                             ),
-                            return_dtype=pl.Utf8,
-                        )
-                        .alias("common_summary_prompt_summaries"),
+                        ),
                     ]
                 )
 
