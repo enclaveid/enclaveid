@@ -153,8 +153,6 @@ async def summaries_user_matches(
 
                 result_df = result_df.vstack(match_df)
 
-    result = result_df.sort(by="cosine_similarity", descending=True)
-
     context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    return result
+    return result_df.sort(by="cosine_similarity", descending=True)

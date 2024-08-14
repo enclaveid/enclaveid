@@ -191,4 +191,6 @@ async def cluster_summaries(
 
     context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    return df.with_columns(results).drop(["date_interests", "date", "interests"])
+    return df.hstack(pl.DataFrame(results)).drop(
+        ["date_interests", "date", "interests"]
+    )
