@@ -115,6 +115,7 @@ async def cluster_summaries(
             ]
         )
         .filter(pl.col("cluster_label") != -1)
+        .slice(0, config.row_limit)
     )
 
     prompt_sequences = [

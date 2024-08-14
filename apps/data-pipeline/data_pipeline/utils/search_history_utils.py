@@ -121,7 +121,7 @@ def parse_classification_result(raw_output: str):
 
     # Extract confidence
     confidence_match = re.search(r"Confidence:\s*(\d+)%", raw_output)
-    confidence = int(confidence_match.group(1)) / 100.0 if confidence_match else None
+    confidence = int(confidence_match.group(1)) / 100.0 if confidence_match else 0
 
     # Extract sensitivity
     sensitivity_match = re.search(r"Sensitive:\s*(.*)", raw_output)
