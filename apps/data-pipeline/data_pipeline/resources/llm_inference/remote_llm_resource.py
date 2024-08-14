@@ -44,6 +44,7 @@ class RemoteLlmResource(ConfigurableResource):
         conversation: List[Dict[str, str]],
         conversation_id: int,
     ) -> tuple[str | None, float]:
+        # TODO: Ensure payload fits the context window
         payload = {
             "messages": conversation,
             **self._inference_config,
@@ -84,6 +85,12 @@ class RemoteLlmResource(ConfigurableResource):
                 )
                 return answer, cost
 
+            except httpx.TimeoutException as e:
+                logger.error(f"LLM completion #{conversation_id} timed out: {e}")
+                return None, 0
+            except httpx.ReadError as e:
+                logger.error(f"LLM completion #{conversation_id} timed out: {e}")
+                return None, 0
             except Exception as e:
                 logger.error(f"Error in LLM completion #{conversation_id}: {e}")
                 return None, 0
@@ -139,7 +146,7 @@ class RemoteLlmResource(ConfigurableResource):
         costs = [cost for conv, cost in results]
 
         # Assume all prompt sequences have the same length
-        prompt_sequences_length = len(prompt_sequences[0])
+        prompt_sequences_length = max(len(sequence) for sequence in prompt_sequences)
 
         # Return all the assistant responses, only for completed conversations
         return list(

@@ -12,7 +12,6 @@ from data_pipeline.assets.search_history.summaries_embeddings import (
     summaries_embeddings,
 )
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
-from data_pipeline.resources.cost_tracker_resource import CostTrackerResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.matching.maximum_bipartite_matching import (
     maximum_bipartite_matching,
@@ -43,7 +42,6 @@ class SummariesUserMatchesConfig(RowLimitConfig):
 async def summaries_user_matches(
     context: AssetExecutionContext,
     config: SummariesUserMatchesConfig,
-    cost_tracker: CostTrackerResource,
 ) -> pl.DataFrame:
     start_time = time.time()
     context.log.info(gpu_info())
@@ -145,6 +143,6 @@ async def summaries_user_matches(
 
     result = result_df.sort(by="cosine_similarity", descending=True)
 
-    cost_tracker.log_cost(get_gpu_runtime_cost(start_time), context)
+    context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     return result

@@ -9,7 +9,6 @@ from dagster import (
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.resources.cost_tracker_resource import CostTrackerResource
 from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
     SentenceTransformerResource,
 )
@@ -48,7 +47,6 @@ def interests_embeddings(
     context: AssetExecutionContext,
     config: InterestsEmbeddingsConfig,
     sentence_transformer: SentenceTransformerResource,
-    cost_tracker: CostTrackerResource,
     interests: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -68,6 +66,6 @@ def interests_embeddings(
         embeddings=pl.col("interests").map_batches(sentence_transformer.get_embeddings)
     )
 
-    cost_tracker.log_cost(get_gpu_runtime_cost(start_time), context)
+    context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     return result

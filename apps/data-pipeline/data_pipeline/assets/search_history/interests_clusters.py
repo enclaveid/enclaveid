@@ -9,7 +9,6 @@ from dagster import (
     asset,
 )
 
-from data_pipeline.resources.cost_tracker_resource import CostTrackerResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.custom_config import RowLimitConfig
@@ -32,7 +31,6 @@ if is_rapids_image() or TYPE_CHECKING:
 def interests_clusters(
     context: AssetExecutionContext,
     config: RowLimitConfig,
-    cost_tracker: CostTrackerResource,
     interests_embeddings: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -72,6 +70,6 @@ def interests_clusters(
     # Remove the embeddings to save space
     result = df.with_columns(cluster_label=pl.Series(cluster_labels)).drop("embeddings")
 
-    cost_tracker.log_cost(get_gpu_runtime_cost(start_time), context)
+    context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     return result

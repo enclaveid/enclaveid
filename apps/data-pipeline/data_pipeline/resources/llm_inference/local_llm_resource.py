@@ -30,7 +30,7 @@ class LocalLlmResource(ConfigurableResource):
         logger = get_dagster_logger()
 
         load_time_start = time.time()
-        self._llm = LLM(self._model_name)
+        self._llm = LLM(self._model_name, enable_prefix_caching=True)
         load_time_end = time.time()
 
         logger.info(
@@ -62,22 +62,19 @@ class LocalLlmResource(ConfigurableResource):
 
     # TODO: the return behavior should be the same as the non-batch implementation
     def get_prompt_sequences_completions_batch(self, prompt_sequences: List[List[str]]):
-        all_completions = []
-        max_length = max(len(sequence) for sequence in prompt_sequences)
-        current_conversations = [[] for _ in prompt_sequences]
+        prompt_sequences_length = max(len(sequence) for sequence in prompt_sequences)
+        conversations = [[] for _ in prompt_sequences]
 
         # Process each step in the prompt sequence up to the longest sequence
-        for step in range(max_length):
+        for step in range(prompt_sequences_length):
             current_prompts = []
             indices_to_process = []
 
             for i, sequence in enumerate(prompt_sequences):
                 if step < len(sequence):
-                    current_conversations[i].append(
-                        {"role": "user", "content": sequence[step]}
-                    )
+                    conversations[i].append({"role": "user", "content": sequence[step]})
                     indices_to_process.append(i)
-                    current_prompts.append(current_conversations[i])
+                    current_prompts.append(conversations[i])
 
             if not current_prompts:
                 continue
@@ -85,13 +82,14 @@ class LocalLlmResource(ConfigurableResource):
             completions = self._get_completions_batch(current_prompts)
 
             for idx, completion in zip(indices_to_process, completions):
-                current_conversations[idx].append(
-                    {"role": "assistant", "content": completion}
-                )
+                conversations[idx].append({"role": "assistant", "content": completion})
 
-        # Extract the final completions for each sequence
-        for conversation in current_conversations:
-            if conversation:
-                all_completions.append(conversation[-1]["content"])
-
-        return all_completions
+        # Return all the assistant responses, only for completed conversations
+        return list(
+            map(
+                lambda x: [message["content"] for message in x[1::2]]
+                if len(x) == prompt_sequences_length * 2
+                else [],
+                conversations,
+            )
+        )

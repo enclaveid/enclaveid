@@ -1,7 +1,7 @@
 import datetime
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import polars as pl
 from dagster import get_dagster_logger
@@ -26,14 +26,14 @@ def generate_chunks(daily_dfs: Dict[datetime.date, pl.DataFrame], chunk_size: in
     return chunks
 
 
-def extract_interests_list(text: str) -> Optional[List[str]]:
+def extract_interests_list(text: str) -> List[str]:
     match = re.search(r"\[(.*?)\]", text)
     if match:
         # If a match is found, split the substring by semicolon
         interests = match.group(1).replace('"', "").replace("'", "").split(";")
         return [interest.strip() for interest in interests]
     else:
-        return None
+        return []
 
 
 def generate_chunked_interests(
@@ -56,12 +56,14 @@ def generate_chunked_interests(
 
     results = llama8b.get_prompt_sequences_completions_batch(prompt_sequences)
 
-    chunked_interests = [extract_interests_list(resp) for resp in results]
+    chunked_interests = [
+        extract_interests_list(res[-1]) if res else [] for res in results
+    ]
 
     for date, chunked_interest, raw_interest in zip(
         dates, chunked_interests, raw_interests
     ):
-        interests = [interest for interest in (chunked_interest or []) if interest]
+        interests = [interest for interest in chunked_interest if interest]
 
         yield {
             "date": date,

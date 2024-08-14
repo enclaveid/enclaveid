@@ -7,7 +7,6 @@ from dagster import (
     asset,
 )
 
-from data_pipeline.resources.cost_tracker_resource import CostTrackerResource
 from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
     SentenceTransformerResource,
 )
@@ -31,7 +30,6 @@ def summaries_embeddings(
     context: AssetExecutionContext,
     config: RowLimitConfig,
     sentence_transformer: SentenceTransformerResource,
-    cost_tracker: CostTrackerResource,
     cluster_summaries: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -49,6 +47,6 @@ def summaries_embeddings(
         ),
     )
 
-    cost_tracker.log_cost(get_gpu_runtime_cost(start_time), context)
+    context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     return result

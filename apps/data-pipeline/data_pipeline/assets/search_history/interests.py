@@ -8,7 +8,6 @@ from dagster import (
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.resources.cost_tracker_resource import CostTrackerResource
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
@@ -64,7 +63,6 @@ def interests(
     context: AssetExecutionContext,
     config: InterestsConfig,
     llama8b: Llama8bResource,
-    cost_tracker: CostTrackerResource,
     full_takeout: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -84,6 +82,6 @@ def interests(
         {"count_invalid_responses": sessions_output.count_invalid_responses}
     )
 
-    cost_tracker.log_cost(get_gpu_runtime_cost(start_time), context)
+    context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     return sessions_output.output_df

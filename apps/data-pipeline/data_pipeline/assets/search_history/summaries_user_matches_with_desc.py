@@ -8,7 +8,6 @@ from dagster import (
 )
 from pydantic import Field
 
-from data_pipeline.resources.cost_tracker_resource import CostTrackerResource
 from data_pipeline.resources.llm_inference.llama405b_resource import Llama405bResource
 
 from ...constants.custom_config import RowLimitConfig
@@ -47,7 +46,6 @@ async def summaries_user_matches_with_desc(
     context: AssetExecutionContext,
     config: UserMatchesSummariesConfig,
     llama405b: Llama405bResource,
-    cost_tracker: CostTrackerResource,
     summaries_user_matches: pl.DataFrame,
 ) -> pl.DataFrame:
     context.log.info(
@@ -67,7 +65,7 @@ async def summaries_user_matches_with_desc(
         )
     )
 
-    cost_tracker.log_cost(cost, context)
+    context.log.info(f"Execution cost: ${cost:.2f}")
 
     return summaries_user_matches.with_columns(
         common_summary=pl.Series(

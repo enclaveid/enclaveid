@@ -1,3 +1,4 @@
+import time
 from textwrap import dedent
 
 import polars as pl
@@ -8,9 +9,10 @@ from dagster import (
 )
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.resources.cost_tracker_resource import CostTrackerResource
-from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
+from data_pipeline.resources.llm_inference.gemma27b_resource import Gemma27bResource
+from data_pipeline.utils.costs import get_gpu_runtime_cost
 
+from ...constants.k8s import k8s_vllm_config
 from ...partitions import user_partitions_def
 from ...utils.search_history_utils import (
     parse_classification_result,
@@ -90,15 +92,16 @@ summarization_prompt_sequence = [
             key=["interests_clusters"],
         ),
     },
-    op_tags={"dagster/concurrency_key": "llama70b"},
+    op_tags=k8s_vllm_config,
 )
 async def cluster_summaries(
     context: AssetExecutionContext,
     config: RowLimitConfig,
-    llama70b: Llama70bResource,
-    cost_tracker: CostTrackerResource,
+    gemma27b: Gemma27bResource,
     interests_clusters: pl.DataFrame,
 ) -> pl.DataFrame:
+    start_time = time.time()
+
     df = (
         interests_clusters.sort(by=pl.col("date"))
         .with_columns(
@@ -124,42 +127,49 @@ async def cluster_summaries(
     ]
 
     context.log.info(f"Processing {len(prompt_sequences)} clusters...")
-    summaries_completions, cost = await llama70b.get_prompt_sequences_completions(
+    summaries_completions = gemma27b.get_prompt_sequences_completions_batch(
         prompt_sequences
     )
 
-    cost_tracker.log_cost(cost, context)
+    results = {
+        "activity_type": [],
+        "is_sensitive": [],
+        "cluster_summary": [],
+        "cluster_title": [],
+    }
 
     cluster_splits = list(
         map(lambda x: x[0] if len(x) > 0 else None, summaries_completions)
     )
 
     # Tag the clusters with the type of activity: reactive, proactive
-    activity_types = []
-    sensitivities = []
     for cluster_split in cluster_splits:
         if cluster_split is None:
-            activity_types.append("unknown")
+            results["activity_type"].append("unknown")
         else:
             activity_type, is_sensitive = parse_classification_result(cluster_split)
-            activity_types.append(activity_type)
-            sensitivities.append(is_sensitive)
+            results["activity_type"].append(activity_type)
+            results["is_sensitive"].append(is_sensitive)
 
-    cluster_summaries = list(
+    results["cluster_summary"] = list(
         map(lambda x: x[1] if len(x) > 0 else None, summaries_completions)
     )
 
-    cluster_titles = list(
+    results["cluster_title"] = list(
         map(lambda x: x[2] if len(x) > 0 else None, summaries_completions)
     )
-    return (
+
+    result = (
         df.with_columns(
-            cluster_dates=df["cluster_dates"],
-            cluster_title=pl.Series(cluster_titles),
-            cluster_summary=pl.Series(cluster_summaries),
-            activity_type=pl.Series(activity_types),
-            is_sensitive=pl.Series(sensitivities),
+            cluster_title=pl.Series(results["cluster_title"]),
+            cluster_summary=pl.Series(results["cluster_summary"]),
+            activity_type=pl.Series(results["activity_type"]),
+            is_sensitive=pl.Series(results["is_sensitive"]),
         )
         .filter(pl.col("activity_type") != "unknown")
         .drop(["date_interests", "date", "interests"])
     )
+
+    context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
+
+    return result
