@@ -25,7 +25,7 @@ CLUSTER_CLASSIFICATION_FORMAT = dedent(
     Finally, provide the most detailed possible category that captures all the topics of the activity.
 
     Format your response as follows:
-    Category: [Category]
+    Title: [The category you found]
     Summary: [Your summary]
     """
 )

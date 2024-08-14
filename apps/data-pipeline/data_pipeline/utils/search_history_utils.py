@@ -159,19 +159,19 @@ def parse_classification_result(raw_output: str):
 
 
 def parse_cluster_summarization(raw_output: str):
-    # Define regex patterns for category and summary
-    category_pattern = r"Category:\s*(.*)"
+    # Define regex patterns for title and summary
+    title_pattern = r"Title:\s*(.*)"
     summary_pattern = r"Summary:\s*(.*)"
 
     # Find matches
-    category_match = re.search(category_pattern, raw_output)
+    title_match = re.search(title_pattern, raw_output)
     summary_match = re.search(summary_pattern, raw_output)
 
-    # Extract category and summary if matches are found
-    category = category_match.group(1).strip() if category_match else None
+    # Extract title and summary if matches are found
+    title = title_match.group(1).strip() if title_match else None
     summary = summary_match.group(1).strip() if summary_match else None
 
-    return category, summary
+    return title, summary
 
 
 def parse_social_likelihood(raw_output: str):
