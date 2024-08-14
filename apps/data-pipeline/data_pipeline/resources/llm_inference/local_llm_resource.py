@@ -2,6 +2,7 @@ import time
 from typing import TYPE_CHECKING, Dict, List, Union
 
 from dagster import ConfigurableResource, InitResourceContext, get_dagster_logger
+from huggingface_hub import scan_cache_dir
 from pydantic import PrivateAttr
 
 from data_pipeline.utils.capabilities import is_vllm_image
@@ -28,6 +29,8 @@ class LocalLlmResource(ConfigurableResource):
 
     def setup_for_execution(self, context: InitResourceContext) -> None:
         logger = get_dagster_logger()
+
+        logger.info(scan_cache_dir())
 
         load_time_start = time.time()
         self._llm = LLM(self._model_name, enable_prefix_caching=True)
