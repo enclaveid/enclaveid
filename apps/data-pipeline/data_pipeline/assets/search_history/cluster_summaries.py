@@ -1,6 +1,6 @@
 import time
+from datetime import datetime
 from textwrap import dedent
-from typing import Callable, List, Union
 
 import polars as pl
 from dagster import (
@@ -17,6 +17,7 @@ from ...constants.k8s import k8s_vllm_config
 from ...partitions import user_partitions_def
 from ...utils.search_history_utils import (
     parse_classification_result,
+    parse_cluster_summarization,
 )
 
 CLUSTER_CLASSIFICATION_FORMAT = dedent(
@@ -29,7 +30,7 @@ CLUSTER_CLASSIFICATION_FORMAT = dedent(
     """
 )
 
-summarization_prompt_sequence: List[Union[str, Callable[[str], str]]] = [
+summarization_prompt_sequence = [
     lambda search_activity: dedent(
         f"""
         Analyze the provided cluster of search activity data for a single topic. Determine whether this cluster primarily represents:
@@ -59,7 +60,7 @@ summarization_prompt_sequence: List[Union[str, Callable[[str], str]]] = [
     lambda cluster_classification: {
         "unknown": None,
         "reactive": dedent(
-            """
+            f"""
             Summarize the reactive search activity by taking into account the time periods
             and what the user will have obtained at the end of their search. Describe:
 
@@ -73,7 +74,7 @@ summarization_prompt_sequence: List[Union[str, Callable[[str], str]]] = [
             """
         ),
         "proactive": dedent(
-            """
+            f"""
             Summarize the knowledge progression by taking into account the time periods and how each
             incremental chunk expands the user's knowledge horizontally or vertically. Describe:
 
@@ -90,10 +91,17 @@ summarization_prompt_sequence: List[Union[str, Callable[[str], str]]] = [
         ),
     }[parse_classification_result(cluster_classification)[0]],
     dedent(
-        """
-        Provide a descriptive title for the summary.
-        Avoid using generic terms like 'Summary' or 'Analysis' and instead focus on the main theme or outcome of the search activity.
-        Do not output any additional text other than the title.
+        f"""
+        Would this type of activity be interesting to connect over with other similar users?
+        In your analysis, take into account:
+        - [IMPORTANT] Whether the topic itself is generally boring (e.g., main job, taxation, laundry) or engaging (e.g., arts, games, hobbies)
+        - How deeply engaged the user seems to be with the topic
+        - Whether the user engaged in very niche areas of the topic
+        - If the activity is sensitive, assume the user is willing to share it with others
+        - The current date is {datetime.today().strftime('%Y-%m-%d')}, if the activity is reactive, consider that it might not be relevant for the user if they did it long ago
+
+        At the end of your analysis, provide a social likelihood score from 0 to 100%, formatted as follows:
+        Likelihood: [0-100%]
         """
     ),
 ]
@@ -152,6 +160,7 @@ async def cluster_summaries(
         "is_sensitive": [],
         "cluster_summary": [],
         "cluster_title": [],
+        "social_likelihood": [],
     }
 
     cluster_splits = list(
@@ -167,25 +176,19 @@ async def cluster_summaries(
             results["activity_type"].append(activity_type)
             results["is_sensitive"].append(is_sensitive)
 
-    results["cluster_summary"] = list(
-        map(lambda x: x[1] if len(x) > 0 else None, summaries_completions)
-    )
-
-    results["cluster_title"] = list(
-        map(lambda x: x[2] if len(x) > 0 else None, summaries_completions)
-    )
-
-    result = (
-        df.with_columns(
-            cluster_title=pl.Series(results["cluster_title"]),
-            cluster_summary=pl.Series(results["cluster_summary"]),
-            activity_type=pl.Series(results["activity_type"]),
-            is_sensitive=pl.Series(results["is_sensitive"]),
+    results["cluster_title"], results["cluster_summary"] = zip(
+        *list(
+            map(
+                lambda x: parse_cluster_summarization(x[1]) if len(x) > 0 else None,
+                summaries_completions,
+            )
         )
-        .filter(pl.col("activity_type") != "unknown")
-        .drop(["date_interests", "date", "interests"])
+    )
+
+    results["social_likelihood"] = list(
+        map(lambda x: x[2] if len(x) > 0 else None, summaries_completions)
     )
 
     context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    return result
+    return df.with_columns(results).drop(["date_interests", "date", "interests"])

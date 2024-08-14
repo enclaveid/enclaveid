@@ -121,7 +121,7 @@ def parse_classification_result(raw_output: str):
 
     # Extract confidence
     confidence_match = re.search(r"Confidence:\s*(\d+)%", raw_output)
-    confidence = int(confidence_match.group(1)) / 100.0 if confidence_match else 0
+    confidence = float(confidence_match.group(1)) / 100.0 if confidence_match else 0.0
 
     # Extract sensitivity
     sensitivity_match = re.search(r"Sensitive:\s*(.*)", raw_output)
@@ -156,3 +156,29 @@ def parse_classification_result(raw_output: str):
             main_category = "unknown"
 
     return main_category, is_sensitive
+
+
+def parse_cluster_summarization(raw_output: str):
+    # Define regex patterns for category and summary
+    category_pattern = r"Category:\s*(.*)"
+    summary_pattern = r"Summary:\s*(.*)"
+
+    # Find matches
+    category_match = re.search(category_pattern, raw_output)
+    summary_match = re.search(summary_pattern, raw_output)
+
+    # Extract category and summary if matches are found
+    category = category_match.group(1).strip() if category_match else None
+    summary = summary_match.group(1).strip() if summary_match else None
+
+    return category, summary
+
+
+def parse_social_likelihood(raw_output: str):
+    # Extract confidence
+    social_likelihood_match = re.search(r"Likelihood:\s*(\d+)%", raw_output)
+    return (
+        float(social_likelihood_match.group(1)) / 100.0
+        if social_likelihood_match
+        else 0.0
+    )
