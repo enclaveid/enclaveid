@@ -1,17 +1,33 @@
+import csv
 import importlib.util
+import json
 import subprocess
+
+
+def csv_to_json(csv_string):
+    # Read the CSV string
+    reader = csv.DictReader([csv_string])
+
+    # Convert the CSV data to a list of dictionaries
+    data = list(reader)[0]
+
+    # Convert to JSON
+    return json.dumps(data, indent=2)
+
 
 MIN_CUDA_COMPUTE_CAPABILITY = 7.0
 
 
 def gpu_info():
     try:
-        return subprocess.run(
+        csv_string = subprocess.run(
             "nvidia-smi --query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv",
             shell=True,
             text=True,
             capture_output=True,
         ).stdout.strip()
+
+        return csv_to_json(csv_string)
     except Exception:
         return "No GPU information available."
 

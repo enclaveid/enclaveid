@@ -35,10 +35,8 @@ def summaries_embeddings(
     start_time = time.time()
     context.log.info(gpu_info())
 
-    df = cluster_summaries.slice(0, config.row_limit)
-
     context.log.info("Computing embeddings...")
-    result = df.with_columns(
+    result = cluster_summaries.with_columns(
         summary_embedding=pl.col("cluster_summary").map_batches(
             sentence_transformer.get_embeddings
         ),
