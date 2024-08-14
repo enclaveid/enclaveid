@@ -5,7 +5,6 @@ from dagster import ConfigurableResource, InitResourceContext, get_dagster_logge
 from pydantic import PrivateAttr
 
 from data_pipeline.utils.capabilities import is_vllm_image
-from data_pipeline.utils.get_hf_cache_info import get_hf_cache_info
 
 if is_vllm_image() or TYPE_CHECKING:
     import torch
@@ -32,7 +31,7 @@ class LocalLlmResource(ConfigurableResource):
     def setup_for_execution(self, context: InitResourceContext) -> None:
         logger = get_dagster_logger()
 
-        logger.info(get_hf_cache_info())
+        # logger.info(get_hf_cache_info())
 
         load_time_start = time.time()
         self._llm = LLM(self._model_name, enable_prefix_caching=True)
