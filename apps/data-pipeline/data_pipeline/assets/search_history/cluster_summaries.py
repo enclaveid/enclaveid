@@ -1,5 +1,6 @@
 import time
 from textwrap import dedent
+from typing import Callable, List, Union
 
 import polars as pl
 from dagster import (
@@ -18,7 +19,17 @@ from ...utils.search_history_utils import (
     parse_classification_result,
 )
 
-summarization_prompt_sequence = [
+CLUSTER_CLASSIFICATION_FORMAT = dedent(
+    """
+    Finally, provide the most detailed possible category that captures all the topics of the activity.
+
+    Format your response as follows:
+    Category: [Category]
+    Summary: [Your summary]
+    """
+)
+
+summarization_prompt_sequence: List[Union[str, Callable[[str], str]]] = [
     lambda search_activity: dedent(
         f"""
         Analyze the provided cluster of search activity data for a single topic. Determine whether this cluster primarily represents:
@@ -57,6 +68,8 @@ summarization_prompt_sequence = [
             - Frequency pattern of these needs
             - User's apparent level of experience in addressing these needs
             - Any unique elements in the user's approach
+
+            {CLUSTER_CLASSIFICATION_FORMAT}
             """
         ),
         "proactive": dedent(
@@ -71,6 +84,8 @@ summarization_prompt_sequence = [
             - The most advanced or recent concepts the user has searched for
 
             Conclude with the overall trajectory and breadth of the user's learning path.
+
+            {CLUSTER_CLASSIFICATION_FORMAT}
             """
         ),
     }[parse_classification_result(cluster_classification)[0]],

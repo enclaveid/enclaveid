@@ -1,11 +1,11 @@
 import time
-from typing import TYPE_CHECKING, Dict, List, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Union
 
 from dagster import ConfigurableResource, InitResourceContext, get_dagster_logger
-from huggingface_hub import scan_cache_dir
 from pydantic import PrivateAttr
 
 from data_pipeline.utils.capabilities import is_vllm_image
+from data_pipeline.utils.get_hf_cache_info import get_hf_cache_info
 
 if is_vllm_image() or TYPE_CHECKING:
     import torch
@@ -15,6 +15,8 @@ else:
     torch = None
     LLM = SamplingParams = None
     AutoTokenizer = PreTrainedTokenizer = PreTrainedTokenizerFast = None
+
+PromptSequence = List[str] | List[Callable[[str], str]]
 
 
 class LocalLlmResource(ConfigurableResource):
@@ -30,7 +32,7 @@ class LocalLlmResource(ConfigurableResource):
     def setup_for_execution(self, context: InitResourceContext) -> None:
         logger = get_dagster_logger()
 
-        logger.info(scan_cache_dir())
+        logger.info(get_hf_cache_info())
 
         load_time_start = time.time()
         self._llm = LLM(self._model_name, enable_prefix_caching=True)
@@ -63,8 +65,9 @@ class LocalLlmResource(ConfigurableResource):
 
         return list(map(lambda res: res.outputs[0].text, results))
 
-    # TODO: the return behavior should be the same as the non-batch implementation
-    def get_prompt_sequences_completions_batch(self, prompt_sequences: List[List[str]]):
+    def get_prompt_sequences_completions_batch(
+        self, prompt_sequences: List[PromptSequence]
+    ):
         prompt_sequences_length = max(len(sequence) for sequence in prompt_sequences)
         conversations = [[] for _ in prompt_sequences]
 
@@ -75,7 +78,17 @@ class LocalLlmResource(ConfigurableResource):
 
             for i, sequence in enumerate(prompt_sequences):
                 if step < len(sequence):
-                    conversations[i].append({"role": "user", "content": sequence[step]})
+                    prompt = sequence[step]
+                    if callable(prompt):
+                        conversations[i].append(
+                            {
+                                "role": "user",
+                                "content": prompt(conversations[i][-1]["content"]),
+                            }
+                        )
+                    else:
+                        conversations[i].append({"role": "user", "content": prompt})
+
                     indices_to_process.append(i)
                     current_prompts.append(conversations[i])
 

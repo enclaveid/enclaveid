@@ -48,24 +48,19 @@ k8s_vllm_config = deep_merge(
         "dagster-k8s/config": {
             "container_config": {
                 "image": "enclaveid/data-pipeline-vllm:master",
-                "volumeMounts": [{"name": "model-cache", "mountPath": "/model-cache"}],
-                # TODO: Figure out a better set of permissions for podman-built
-                # # images to access the model cache
-                "securityContext": {
-                    "allowPrivilegeEscalation": False,
-                    "runAsUser": 0,
-                },
+                # "volumeMounts": [{"name": "model-cache", "mountPath": "/model-cache"}],
             },
-            "pod_spec_config": {
-                "volumes": [
-                    {
-                        "name": "model-cache",
-                        "persistentVolumeClaim": {
-                            "claimName": "enclaveid-model-cache-pvc"
-                        },
-                    }
-                ],
-            },
+            # TODO: Somehow it's faster to redownload the model form HF's CDN every time rather than using the PVC
+            # "pod_spec_config": {
+            #     "volumes": [
+            #         {
+            #             "name": "model-cache",
+            #             "persistentVolumeClaim": {
+            #                 "claimName": "enclaveid-model-cache-pvc"
+            #             },
+            #         }
+            #     ],
+            # },
         }
     },
 )
