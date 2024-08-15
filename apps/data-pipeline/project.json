@@ -161,7 +161,6 @@
       "executor": "@nx-tools/nx-container:build",
       "dependsOn": ["build"],
       "cache": true,
-      "outputs": ["/tmp/.buildx-cache"],
       "options": {
         "engine": "docker",
         "push": true,
@@ -177,9 +176,10 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=local,src=/tmp/.buildx-cache"],
-        "cache-to": ["type=local,dest=/tmp/.buildx-cache,mode=max"]
-      }
+        "cache-from": ["type=local,src=apps/data-pipeline/tmp/.buildx-cache"],
+        "cache-to": ["type=local,dest=apps/data-pipeline/tmp/.buildx-cache,mode=max"]
+      },
+      "outputs": ["{workspaceRoot}/tmp/.buildx-cache"]
     },
     "container-jupyter": {
       "executor": "@nx-tools/nx-container:build",
