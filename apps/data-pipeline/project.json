@@ -160,6 +160,8 @@
     "container": {
       "executor": "@nx-tools/nx-container:build",
       "dependsOn": ["build"],
+      "cache": true,
+      "outputs": ["/tmp/.buildx-cache"],
       "options": {
         "engine": "docker",
         "push": true,
@@ -176,7 +178,7 @@
           ]
         },
         "cache-from": ["type=local,src=/tmp/.buildx-cache"],
-        "cache-to": ["type=local,dest=/tmp/.buildx-cache-new,mode=max"]
+        "cache-to": ["type=local,dest=/tmp/.buildx-cache,mode=max"]
       }
     },
     "container-jupyter": {

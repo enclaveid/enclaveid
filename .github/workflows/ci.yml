@@ -2,7 +2,6 @@ name: CI
 on:
   push:
     branches:
-      # Change this if your primary branch is not main
       - master
 
 # Needed for nx-set-shas when run on the main branch
@@ -15,12 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     steps:
-      - name: Free Disk Space (Ubuntu)
-        # uses: jlumbroso/free-disk-space@v1.3.1
-        uses: xc2/free-disk-space@v1.0.0
-        with:
-          # This might remove tools that are actually needed, if set to "true" but frees about 6 GB
-          tool-cache: false
+      # TODO temporary
+      # - name: Free Disk Space (Ubuntu)
+      #   # uses: jlumbroso/free-disk-space@v1.3.1
+      #   uses: xc2/free-disk-space@v1.0.0
+      #   with:
+      #     # This might remove tools that are actually needed, if set to "true" but frees about 6 GB
+      #     tool-cache: false
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
