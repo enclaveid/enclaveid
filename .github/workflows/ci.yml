@@ -47,7 +47,7 @@ jobs:
 
       - uses: pnpm/action-setup@v2
         with:
-          version: 9.7.1
+          version: 8.15.9
       - uses: actions/setup-node@v3
         with:
           node-version: 22
@@ -55,15 +55,17 @@ jobs:
 
       # TODO: figure out how to cache container builds to enable the distributed CI
       - name: Start distributed CI run
-        run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+        run: pnpx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+
+      - run: CI=true pnpm install
 
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master
 
-      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} npx nx run data-pipeline:container
-      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} npx nx run data-pipeline:container-vllm
-      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} npx nx run data-pipeline:container-rapids
+      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container
+      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container-vllm
+      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container-rapids
 
       - name: Stop distributed CI run
-        run: npx nx-cloud complete-ci-run
+        run: pnpx nx-cloud complete-ci-run
