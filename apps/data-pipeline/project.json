@@ -8,9 +8,30 @@
       "executor": "@nxlv/python:run-commands",
       "options": {
         "command": "poetry lock --no-update",
+        "cwd": "{projectRoot}"
+      },
+      "cache": true,
+      "outputs": ["{projectRoot}/poetry.lock"],
+      "inputs": ["{projectRoot}/pyproject.toml"]
+    },
+    "export": {
+      "executor": "@nxlv/python:run-commands",
+      "dependsOn": ["lock"],
+      "options": {
+        "commands": [
+          "poetry export --only vllm -f requirements.txt --output requirements.vllm.txt --without-hashes",
+          "poetry export --only rapids -f requirements.txt --output requirements.rapids.txt --without-hashes",
+          "poetry export --without rapids,vllm,dev -f requirements.txt --output requirements.prod.txt --without-hashes"
+        ],
         "cwd": "apps/data-pipeline"
       },
-      "outputs": ["{projectRoot}/poetry.lock"]
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/requirements.rapids.txt",
+        "{projectRoot}/requirements.vllm.txt",
+        "{projectRoot}/requirements.prod.txt"
+      ],
+      "inputs": ["{projectRoot}/poetry.lock"]
     },
     "dev": {
       "executor": "@nxlv/python:run-commands",
@@ -29,23 +50,6 @@
         "parallel": false,
         "cwd": "apps/data-pipeline"
       }
-    },
-    "export": {
-      "executor": "@nxlv/python:run-commands",
-      "dependsOn": ["lock"],
-      "options": {
-        "commands": [
-          "poetry export --only vllm -f requirements.txt --output requirements.vllm.txt --without-hashes",
-          "poetry export --only rapids -f requirements.txt --output requirements.rapids.txt --without-hashes",
-          "poetry export --without rapids,vllm,dev -f requirements.txt --output requirements.prod.txt --without-hashes"
-        ],
-        "cwd": "apps/data-pipeline"
-      },
-      "outputs": [
-        "{projectRoot}/requirements.rapids.txt",
-        "{projectRoot}/requirements.vllm.txt",
-        "{projectRoot}/requirements.prod.txt"
-      ]
     },
     "add": {
       "executor": "@nxlv/python:add",
@@ -68,7 +72,8 @@
         "publish": false,
         "lockedVersions": false,
         "bundleLocalDependencies": true
-      }
+      },
+      "cache": true
     },
     "install": {
       "executor": "@nxlv/python:install",
@@ -126,8 +131,8 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=registry,ref=enclaveid/data-pipeline-rapids:buildcache"],
-        "cache-to": ["type=registry,ref=enclaveid/data-pipeline-rapids:buildcache,mode=max"]
+        "cache-from": ["type=local,src=/tmp/.buildx-cache"],
+        "cache-to": ["type=local,dest=/tmp/.buildx-cache-new,mode=max"]
       }
     },
     "container-vllm": {
@@ -148,8 +153,8 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=registry,ref=enclaveid/data-pipeline-vllm:buildcache"],
-        "cache-to": ["type=registry,ref=enclaveid/data-pipeline-vllm:buildcache,mode=max"]
+        "cache-from": ["type=local,src=/tmp/.buildx-cache"],
+        "cache-to": ["type=local,dest=/tmp/.buildx-cache-new,mode=max"]
       }
     },
     "container": {
@@ -170,8 +175,8 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=registry,ref=enclaveid/data-pipeline-base:buildcache"],
-        "cache-to": ["type=registry,ref=enclaveid/data-pipeline-base:buildcache,mode=max"]
+        "cache-from": ["type=local,src=/tmp/.buildx-cache"],
+        "cache-to": ["type=local,dest=/tmp/.buildx-cache-new,mode=max"]
       }
     },
     "container-jupyter": {

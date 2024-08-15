@@ -50,7 +50,6 @@ huggingface-hub = "^0.24.5"
 
 # The following are very large packages, they are cached as docker layers and shouldn't be changed often.
 # We split ML deps in two grups to avoid conflicts.
-
 [tool.poetry.group.vllm.dependencies]
 vllm = "0.5.4"
 transformers = "4.43.3"
