@@ -57,7 +57,7 @@ jobs:
       - name: Start distributed CI run
         run: pnpx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
 
-      - run: CI=true pnpm install
+      - run: pnpm install --frozen-lockfile
 
       - uses: nrwl/nx-set-shas@v4
         with:
