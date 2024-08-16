@@ -14,13 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     steps:
-      # TODO temporary
-      # - name: Free Disk Space (Ubuntu)
-      #   # uses: jlumbroso/free-disk-space@v1.3.1
-      #   uses: xc2/free-disk-space@v1.0.0
-      #   with:
-      #     # This might remove tools that are actually needed, if set to "true" but frees about 6 GB
-      #     tool-cache: false
+      - name: Free Disk Space (Ubuntu)
+        uses: xc2/free-disk-space@v1.0.0 # TODO: wait for merge into jlumbroso/free-disk-space
+        with:
+          # This might remove tools that are actually needed, if set to "true" but frees about 6 GB
+          tool-cache: false
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -47,15 +45,16 @@ jobs:
 
       - uses: pnpm/action-setup@v2
         with:
-          version: 8.15.9
+          version: 9.7.1
       - uses: actions/setup-node@v3
         with:
           node-version: 22
           cache: 'pnpm'
 
-      # TODO: figure out how to cache container builds to enable the distributed CI
-      - name: Start distributed CI run
-        run: pnpx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+      # TODO: In order to make the nx distributed CI work, we need to configure a custom runner
+      # since it doesn't retain the state of the current GHA runner
+      # - name: Start distributed CI run
+      #   run: pnpx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
 
       - run: CI=true pnpm install
 
@@ -63,9 +62,10 @@ jobs:
         with:
           main-branch-name: master
 
+      # TODO: use werf
       - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container
       - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container-vllm
       - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container-rapids
 
-      - name: Stop distributed CI run
-        run: pnpx nx-cloud complete-ci-run
+      # - name: Stop distributed CI run
+      #   run: pnpx nx-cloud complete-ci-run

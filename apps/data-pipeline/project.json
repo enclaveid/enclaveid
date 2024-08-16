@@ -131,8 +131,8 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=local,src=/tmp/.buildx-cache"],
-        "cache-to": ["type=local,dest=/tmp/.buildx-cache-new,mode=max"]
+        "cache-from": ["type=registry,ref=user/app:buildcache"],
+        "cache-to": ["type=registry,ref=user/app:buildcache,mode=max"]
       }
     },
     "container-vllm": {
@@ -153,14 +153,13 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=local,src=/tmp/.buildx-cache"],
-        "cache-to": ["type=local,dest=/tmp/.buildx-cache-new,mode=max"]
+        "cache-from": ["type=registry,ref=user/app:buildcache"],
+        "cache-to": ["type=registry,ref=user/app:buildcache,mode=max"]
       }
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",
       "dependsOn": ["build"],
-      "cache": true,
       "options": {
         "engine": "docker",
         "push": true,
@@ -176,10 +175,9 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=local,src=apps/data-pipeline/tmp/.buildx-cache"],
-        "cache-to": ["type=local,dest=apps/data-pipeline/tmp/.buildx-cache,mode=max"]
-      },
-      "outputs": ["{workspaceRoot}/tmp/.buildx-cache"]
+        "cache-from": ["type=registry,ref=user/app:buildcache"],
+        "cache-to": ["type=registry,ref=user/app:buildcache,mode=max"]
+      }
     },
     "container-jupyter": {
       "executor": "@nx-tools/nx-container:build",
