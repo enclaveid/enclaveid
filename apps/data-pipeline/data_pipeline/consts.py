@@ -27,7 +27,7 @@ DAGSTER_STORAGE_BUCKET = {
     "PROD": UPath("az://enclaveid-dagster-prod-bucket/"),
 }[DEPLOYMENT_TYPE]
 
-DEPLOYMENT_ROW_LIMIT = {"LOCAL": 100, "BRANCH": None, "PROD": None}[DEPLOYMENT_TYPE]
+DEPLOYMENT_ROW_LIMIT = {"LOCAL": 100, "BRANCH": 500, "PROD": 500}[DEPLOYMENT_TYPE]
 
 
 class DataProvider:

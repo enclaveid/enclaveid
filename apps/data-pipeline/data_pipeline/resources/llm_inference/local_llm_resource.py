@@ -4,13 +4,15 @@ import time
 from typing import TYPE_CHECKING, Callable, Dict, List, Union
 
 from dagster import ConfigurableResource, DagsterLogManager, InitResourceContext
-from pydantic import PrivateAttr
+from pydantic import BaseModel, PrivateAttr
 
 from data_pipeline.utils.capabilities import gpu_info, is_vllm_image
 from data_pipeline.utils.get_logger import get_logger
 
 if is_vllm_image() or TYPE_CHECKING:
     import torch
+    from outlines.generate import json as json_generator
+    from outlines.models.vllm import VLLM
     from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
     from vllm import LLM, SamplingParams
     from vllm.distributed.parallel_state import (
@@ -22,8 +24,9 @@ else:
     LLM = SamplingParams = None
     AutoTokenizer = PreTrainedTokenizer = PreTrainedTokenizerFast = None
     destroy_model_parallel = destroy_distributed_environment = None
+    json_generator = VLLM = None
 
-PromptSequence = List[str] | List[Callable[[str], str]]
+PromptSequence = List[str] | List[Callable[[str | BaseModel], str]]
 
 
 class LocalLlmResource(ConfigurableResource):
@@ -61,7 +64,8 @@ class LocalLlmResource(ConfigurableResource):
     def _get_completions_batch(
         self,
         conversations: List[List[Dict[str, str]]],
-    ) -> List[str]:
+        pydantic_model: BaseModel | None,
+    ) -> List[str | BaseModel]:
         # Get the idxs of the inputs over self._context_window
         over_context = list(
             map(
@@ -81,24 +85,46 @@ class LocalLlmResource(ConfigurableResource):
                 f"Conversation IDs over max context ({self._context_window}) length: {list(filter(lambda x: x is not None, over_context))}"
             )
 
-        # TODO: How do we print the progress bar?
-        results = self._llm.generate(
-            self._tokenizer.apply_chat_template(
-                conversations,
-                tokenize=False,
-                add_generation_prompt=True,
-            ),
-            self._sampling_params,
+        templated_conversations = self._tokenizer.apply_chat_template(
+            conversations,
+            tokenize=False,
+            add_generation_prompt=True,
         )
 
-        return list(map(lambda res: res.outputs[0].text, results))
+        # If pydantic_model is provided, constrain the output
+        if pydantic_model:
+            return json_generator(VLLM(self._llm), pydantic_model)(
+                templated_conversations  # type: ignore
+            )
+        else:
+            return list(
+                map(
+                    lambda res: res.outputs[0].text,
+                    self._llm.generate(
+                        templated_conversations,
+                        self._sampling_params,
+                    ),
+                )
+            )
 
     def get_prompt_sequences_completions_batch(
-        self, prompt_sequences: List[PromptSequence]
+        self,
+        prompt_sequences: List[PromptSequence],
+        pydantic_models: List,
     ):
         # Assume that all prompt sequences have the same length
         prompt_sequences_length = len(prompt_sequences[0])
-        conversations = [[] for _ in prompt_sequences]
+        pydantic_models_length = len(pydantic_models)
+
+        if pydantic_models_length != prompt_sequences_length:
+            raise ValueError(
+                f"Prompt sequences and pydantic models have different lengths: {prompt_sequences_length} and {pydantic_models_length}"
+            )
+
+        # The conversations array contains the raw user and assistant messages for generation
+        conversations: List[List[Dict[str, str]]] = [[] for _ in prompt_sequences]
+        # The results array contains the parsed assistant responses
+        results = [[] for _ in prompt_sequences]
 
         # Process each step in the prompt sequence up to the longest sequence
         for step in range(prompt_sequences_length):
@@ -119,13 +145,22 @@ class LocalLlmResource(ConfigurableResource):
                 else:
                     conversations[i].append({"role": "user", "content": prompt})
 
-            completions = self._get_completions_batch(conversations)
+            completions = self._get_completions_batch(
+                conversations, pydantic_models[step]
+            )
 
             for idx, completion in enumerate(completions):
-                conversations[idx].append({"role": "assistant", "content": completion})
+                conversations[idx].append(
+                    {
+                        "role": "assistant",
+                        "content": completion.model_dump_json()
+                        if isinstance(completion, BaseModel)
+                        else completion,
+                    }
+                )
+                results[idx].append(completion)
 
-        # Return all the assistant responses, only for completed conversations
-        return conversations
+        return results, conversations
 
     def teardown_after_execution(self, context: InitResourceContext) -> None:
         self._logger.info("Freeing GPU memory...")

@@ -1,6 +1,9 @@
+from pydantic import BaseModel
+
+
 def get_assistant_responses(
     conversations: list[list[dict[str, str]]]
-) -> list[list[str]]:
+) -> list[list[str | BaseModel]]:
     """
     Return all the assistant responses, only for completed conversations.
     We assume that all prompt sequences have the same length.

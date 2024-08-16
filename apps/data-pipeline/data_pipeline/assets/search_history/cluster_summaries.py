@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 from textwrap import dedent
+from typing import List, Literal, Tuple, cast
 
 import polars as pl
 from dagster import (
@@ -9,34 +10,26 @@ from dagster import (
     AssetOut,
     multi_asset,
 )
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.resources.llm_inference.gemma27b_resource import Gemma27bResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
-from data_pipeline.utils.get_assistant_responses import get_assistant_responses
 from data_pipeline.utils.get_logger import get_logger
-from data_pipeline.utils.parsing import (
-    parse_classification_result,
-    parse_cluster_summarization,
-    parse_social_likelihood,
-)
 
 from ...constants.k8s import k8s_vllm_config
 from ...partitions import user_partitions_def
 
-CLUSTER_CLASSIFICATION_FORMAT = dedent(
-    """
-    Finally, provide the most detailed possible category that captures all the topics of the activity.
 
-    Format your response as follows:
-    Title: [The category you found]
-    Summary: [Your summary]
-    """
-)
+class InitialClassificationResult(BaseModel):
+    activity_type: Literal["knowledge_progression", "reactive_needs", "unknown"]
+    confidence: int
+    sensitive: bool
+    explaination: str
 
-summarization_prompt_sequence = [
-    lambda search_activity: dedent(
+
+def get_initial_classification_prompt(search_activity: str):
+    return dedent(
         f"""
         Analyze the provided cluster of search activity data for a single topic. Determine whether this cluster primarily represents:
         1. A progression in knowledge acquisition and long-term interest, or
@@ -53,16 +46,40 @@ summarization_prompt_sequence = [
         Then, offer a brief explanation (2-3 sentences) supporting your classification, highlighting the key factors that influenced your decision.
         Additionally, assess whether the topic is sensitive in nature, particularly regarding psychosocial aspects.
 
-        Format your response as follows:
-        Classification: [Knowledge Progression/Reactive Needs]
-        Confidence: [0-100%]
-        Sensitive: [true/false]
-        Explanation: [Your 2-3 sentence explanation]
+        Format your response in JSON as follows:
+        {{
+          activity_type: "knowledge_progression" or "reactive_needs" or "unknown",
+          confidence: 0-100,
+          sensitive: true or false,
+          explaination: "Your 2-3 sentence explanation"
+        }}
 
         {search_activity}
         """
-    ),
-    lambda cluster_classification: {
+    )
+
+
+class SummarizationResult(BaseModel):
+    title: str
+    summary: str
+
+
+def get_summarization_prompt(
+    initial_classification_result: InitialClassificationResult
+) -> str:
+    CLUSTER_SUMMARIZATION_FORMAT = dedent(
+        """
+        Finally, provide the most detailed possible category that captures all the topics of the activity.
+
+        Format your response in JSON as follows:
+        {{
+          title: "The category you found",
+          summary: "Your summary"
+        }}
+        """
+    )
+
+    return {
         "unknown": None,
         "reactive": dedent(
             f"""
@@ -75,7 +92,7 @@ summarization_prompt_sequence = [
             - User's apparent level of experience in addressing these needs
             - Any unique elements in the user's approach
 
-            {CLUSTER_CLASSIFICATION_FORMAT}
+            {CLUSTER_SUMMARIZATION_FORMAT}
             """
         ),
         "proactive": dedent(
@@ -91,12 +108,18 @@ summarization_prompt_sequence = [
 
             Conclude with the overall trajectory and breadth of the user's learning path.
 
-            {CLUSTER_CLASSIFICATION_FORMAT}
+            {CLUSTER_SUMMARIZATION_FORMAT}
             """
         ),
-    }[parse_classification_result(cluster_classification)[0]],
-    dedent(
-        f"""
+    }[initial_classification_result.activity_type]
+
+
+class SocialLikelihoodResult(BaseModel):
+    likelihood: int
+
+
+SOCIAL_LIKELIHOOD_PROMPT = dedent(
+    f"""
         Would this type of activity be interesting to connect over with other similar users?
         In your analysis, take into account:
         - [IMPORTANT] Whether the topic itself is generally boring (e.g., main job, taxation, laundry) or engaging (e.g., arts, games, hobbies)
@@ -105,11 +128,12 @@ summarization_prompt_sequence = [
         - If the activity is sensitive, assume the user is willing to share it with others
         - The current date is {datetime.today().strftime('%Y-%m-%d')}, if the activity is reactive, consider that it might not be relevant for the user if they did it long ago
 
-        At the end of your analysis, provide a social likelihood score from 0 to 100%, formatted as follows:
-        Likelihood: [0-100%]
+        At the end of your analysis, provide a social likelihood score from 0 to 100%, formatted  in JSON as follows:
+        {{
+          likelihood: 0-100
+        }}
         """
-    ),
-]
+)
 
 
 class ClusterSummariesConfig(RowLimitConfig):
@@ -169,18 +193,36 @@ async def cluster_summaries(
 
     prompt_sequences = [
         [
-            summarization_prompt_sequence[0](row["cluster_items"]),
-            summarization_prompt_sequence[1],
-            summarization_prompt_sequence[2],
+            get_initial_classification_prompt(row["cluster_items"]),
+            get_summarization_prompt,
+            SOCIAL_LIKELIHOOD_PROMPT,
         ]
         for row in df.to_dicts()
     ]
 
     logger.info(f"Processing {len(prompt_sequences)} clusters...")
-    conversations = gemma27b.get_prompt_sequences_completions_batch(prompt_sequences)
+
+    (
+        summaries_completions,
+        conversations,
+    ) = gemma27b.get_prompt_sequences_completions_batch(
+        prompt_sequences,
+        [
+            InitialClassificationResult,
+            SummarizationResult,
+            SocialLikelihoodResult,
+        ],
+    )
     logger.info(f"Done processing {len(prompt_sequences)} clusters.")
 
-    summaries_completions = get_assistant_responses(conversations)
+    summaries_completions = cast(
+        List[
+            Tuple[
+                InitialClassificationResult, SummarizationResult, SocialLikelihoodResult
+            ]
+        ],
+        summaries_completions,
+    )
 
     results = {
         "activity_type": [],
@@ -188,26 +230,22 @@ async def cluster_summaries(
         "cluster_summary": [],
         "cluster_title": [],
         "social_likelihood": [],
-        "assistant_replies": conversations,
+        "conversations": conversations,
     }
 
-    cluster_splits = list(
-        map(lambda x: x[0] if len(x) > 0 else None, summaries_completions)
+    results["activity_type"], results["is_sensitive"] = zip(
+        *list(
+            map(
+                lambda x: (x[0].activity_type, x[0].sensitive) if x else (None, None),
+                summaries_completions,
+            )
+        )
     )
-
-    # Tag the clusters with the type of activity: reactive, proactive
-    for cluster_split in cluster_splits:
-        if cluster_split is None:
-            results["activity_type"].append("unknown")
-        else:
-            activity_type, is_sensitive = parse_classification_result(cluster_split)
-            results["activity_type"].append(activity_type)
-            results["is_sensitive"].append(is_sensitive)
 
     results["cluster_title"], results["cluster_summary"] = zip(
         *list(
             map(
-                lambda x: parse_cluster_summarization(x[1]) if len(x) > 0 else None,
+                lambda x: (x[1].title, x[1].summary) if x else (None, None),
                 summaries_completions,
             )
         )
@@ -215,7 +253,7 @@ async def cluster_summaries(
 
     results["social_likelihood"] = list(
         map(
-            lambda x: parse_social_likelihood(x[2]) if len(x) > 0 else None,
+            lambda x: x[2].likelihood if x else None,
             summaries_completions,
         )
     )
@@ -240,7 +278,7 @@ async def cluster_summaries(
         logger.warning(f"Found invalid {invalid_results.height} summaries.")
 
     result = result.join(invalid_results, on="cluster_label", how="anti").drop(
-        ["assistant_replies"]
+        ["conversations"]
     )
 
     if config.debug:
