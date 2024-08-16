@@ -125,14 +125,7 @@ class LocalLlmResource(ConfigurableResource):
                 conversations[idx].append({"role": "assistant", "content": completion})
 
         # Return all the assistant responses, only for completed conversations
-        return list(
-            map(
-                lambda x: [message["content"] for message in x[1::2]]
-                if len(x) == prompt_sequences_length * 2
-                else [],
-                conversations,
-            )
-        )
+        return conversations
 
     def teardown_after_execution(self, context: InitResourceContext) -> None:
         self._logger.info("Freeing GPU memory...")

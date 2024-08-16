@@ -6,12 +6,15 @@ import polars as pl
 from dagster import (
     AssetExecutionContext,
     AssetIn,
-    asset,
+    AssetOut,
+    multi_asset,
 )
+from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.resources.llm_inference.gemma27b_resource import Gemma27bResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
+from data_pipeline.utils.get_assistant_responses import get_assistant_responses
 from data_pipeline.utils.get_logger import get_logger
 from data_pipeline.utils.parsing import (
     parse_classification_result,
@@ -109,9 +112,27 @@ summarization_prompt_sequence = [
 ]
 
 
-@asset(
+class ClusterSummariesConfig(RowLimitConfig):
+    debug: bool = Field(
+        default=True,
+        description="Set to True to materialize the cluster_summaries_debug asset, which includes the full assistant replies.",
+    )
+
+
+@multi_asset(
     partitions_def=user_partitions_def,
-    io_manager_key="parquet_io_manager",
+    outs={
+        "cluster_summaries": AssetOut(
+            key=["cluster_summaries"],
+            io_manager_key="parquet_io_manager",
+            is_required=True,
+        ),
+        "cluster_summaries_debug": AssetOut(
+            key=["cluster_summaries_debug"],
+            io_manager_key="parquet_io_manager",
+            is_required=False,
+        ),
+    },
     ins={
         "interests_clusters": AssetIn(
             key=["interests_clusters"],
@@ -121,10 +142,10 @@ summarization_prompt_sequence = [
 )
 async def cluster_summaries(
     context: AssetExecutionContext,
-    config: RowLimitConfig,
+    config: ClusterSummariesConfig,
     gemma27b: Gemma27bResource,
     interests_clusters: pl.DataFrame,
-) -> pl.DataFrame:
+):
     start_time = time.time()
     logger = get_logger(context)
 
@@ -156,11 +177,10 @@ async def cluster_summaries(
     ]
 
     logger.info(f"Processing {len(prompt_sequences)} clusters...")
-    summaries_completions = gemma27b.get_prompt_sequences_completions_batch(
-        prompt_sequences
-    )
-
+    conversations = gemma27b.get_prompt_sequences_completions_batch(prompt_sequences)
     logger.info(f"Done processing {len(prompt_sequences)} clusters.")
+
+    summaries_completions = get_assistant_responses(conversations)
 
     results = {
         "activity_type": [],
@@ -168,6 +188,7 @@ async def cluster_summaries(
         "cluster_summary": [],
         "cluster_title": [],
         "social_likelihood": [],
+        "assistant_replies": conversations,
     }
 
     cluster_splits = list(
@@ -205,17 +226,24 @@ async def cluster_summaries(
         ["date_interests", "date", "interests"]
     )
 
-    invalid_results = (
-        result.filter(pl.col("activity_type") == "unknown")
-        .filter(pl.col("cluster_title").is_null())
-        .filter(pl.col("cluster_summary").is_null())
-        .filter(pl.col("is_sensitive").is_null())
-        .filter(pl.col("social_likelihood").is_infinite())
+    debug_dataframe = result.clone()
+
+    invalid_results = result.filter(
+        pl.col("activity_type").eq("unknown")
+        | pl.col("cluster_title").is_null()
+        | pl.col("cluster_summary").is_null()
+        | pl.col("is_sensitive").is_null()
+        | pl.col("social_likelihood").is_infinite()
     )
 
     if invalid_results.height > 0:
         logger.warning(f"Found invalid {invalid_results.height} summaries.")
 
-        return result.join(invalid_results, on="cluster_label", how="anti")
+    result = result.join(invalid_results, on="cluster_label", how="anti").drop(
+        ["assistant_replies"]
+    )
+
+    if config.debug:
+        return result, debug_dataframe
     else:
         return result

@@ -1,4 +1,4 @@
-from data_pipeline.utils.deep_merge import deep_merge
+from data_pipeline.utils.data_structures import deep_merge
 
 base_k8s_gpu_config = {
     "dagster-k8s/config": {

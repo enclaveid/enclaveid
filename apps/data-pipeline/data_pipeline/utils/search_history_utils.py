@@ -7,6 +7,7 @@ import polars as pl
 from dagster import get_dagster_logger
 
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
+from data_pipeline.utils.get_assistant_responses import get_assistant_responses
 
 
 @dataclass
@@ -43,7 +44,7 @@ def generate_chunked_interests(
     second_instruction: str,
 ):
     dates = []
-    prompt_sequences: List[List[str]] = []
+    prompt_sequences = []
     raw_interests = []
 
     for date, day_dfs in chunks.items():
@@ -54,7 +55,9 @@ def generate_chunked_interests(
             )
             raw_interests.append(frame["title"].to_list())
 
-    results = llama8b.get_prompt_sequences_completions_batch(prompt_sequences)
+    conversations = llama8b.get_prompt_sequences_completions_batch(prompt_sequences)
+
+    results = get_assistant_responses(conversations)
 
     chunked_interests = [
         extract_interests_list(res[-1]) if res else [] for res in results
