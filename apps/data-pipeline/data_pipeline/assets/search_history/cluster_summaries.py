@@ -233,28 +233,26 @@ async def cluster_summaries(
         "conversations": conversations,
     }
 
-    results["activity_type"], results["is_sensitive"] = zip(
+    (
+        results["activity_type"],
+        results["is_sensitive"],
+        results["cluster_title"],
+        results["cluster_summary"],
+        results["social_likelihood"],
+    ) = zip(
         *list(
             map(
-                lambda x: (x[0].activity_type, x[0].sensitive) if x else (None, None),
+                lambda x: (
+                    x[0].activity_type,
+                    x[0].sensitive,
+                    x[1].title,
+                    x[1].summary,
+                    x[2].likelihood / 100.0,
+                )
+                if x
+                else (None, None, None, None, None),
                 summaries_completions,
             )
-        )
-    )
-
-    results["cluster_title"], results["cluster_summary"] = zip(
-        *list(
-            map(
-                lambda x: (x[1].title, x[1].summary) if x else (None, None),
-                summaries_completions,
-            )
-        )
-    )
-
-    results["social_likelihood"] = list(
-        map(
-            lambda x: x[2].likelihood // 100.0 if x else None,
-            summaries_completions,
         )
     )
 

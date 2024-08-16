@@ -53,7 +53,7 @@ def json(
         schema = pyjson.dumps(schema_object.model_json_schema())
         regex_str = build_regex_from_schema(schema, whitespace_pattern)
         generator = regex(model, regex_str, sampler)
-        generator.format_sequence = lambda x: safe_parse(x)
+        generator.format_sequence = lambda x: safe_parse(schema_object, x)
     elif callable(schema_object):
         schema = pyjson.dumps(get_schema_from_signature(schema_object))
         regex_str = build_regex_from_schema(schema, whitespace_pattern)
