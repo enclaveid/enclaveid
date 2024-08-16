@@ -63,7 +63,7 @@ class SummarizationResult(BaseModel):
 
 
 def get_summarization_prompt(
-    initial_classification_result: InitialClassificationResult
+    initial_classification_result: InitialClassificationResult | None
 ) -> str:
     CLUSTER_SUMMARIZATION_FORMAT = dedent(
         """
@@ -109,7 +109,11 @@ def get_summarization_prompt(
             {CLUSTER_SUMMARIZATION_FORMAT}
             """
         ),
-    }[initial_classification_result.activity_type]
+    }[
+        initial_classification_result.activity_type
+        if initial_classification_result
+        else "unknown"
+    ]
 
 
 class SocialLikelihoodResult(BaseModel):
