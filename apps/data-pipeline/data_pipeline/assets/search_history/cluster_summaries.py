@@ -13,13 +13,14 @@ from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.resources.llm_inference.gemma27b_resource import Gemma27bResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.get_logger import get_logger
+from data_pipeline.utils.parsing import (
+    parse_classification_result,
+    parse_cluster_summarization,
+    parse_social_likelihood,
+)
 
 from ...constants.k8s import k8s_vllm_config
 from ...partitions import user_partitions_def
-from ...utils.search_history_utils import (
-    parse_classification_result,
-    parse_cluster_summarization,
-)
 
 CLUSTER_CLASSIFICATION_FORMAT = dedent(
     """
@@ -130,7 +131,9 @@ async def cluster_summaries(
     df = (
         interests_clusters.sort(by=pl.col("date"))
         .with_columns(
-            (pl.col("date") + pl.lit(":") + pl.col("interests")).alias("date_interests")
+            pl.concat_str([pl.col("date"), pl.col("interests")], separator=":").alias(
+                "date_interests"
+            )
         )
         .group_by("cluster_label")
         .agg(
@@ -190,7 +193,10 @@ async def cluster_summaries(
     )
 
     results["social_likelihood"] = list(
-        map(lambda x: x[2] if len(x) > 0 else None, summaries_completions)
+        map(
+            lambda x: parse_social_likelihood(x[2]) if len(x) > 0 else None,
+            summaries_completions,
+        )
     )
 
     logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")

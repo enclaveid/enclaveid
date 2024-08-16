@@ -1,3 +1,4 @@
+import gc
 import logging
 import time
 from typing import TYPE_CHECKING, Callable, Dict, List, Union
@@ -12,10 +13,15 @@ if is_vllm_image() or TYPE_CHECKING:
     import torch
     from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
     from vllm import LLM, SamplingParams
+    from vllm.distributed.parallel_state import (
+        destroy_distributed_environment,
+        destroy_model_parallel,
+    )
 else:
     torch = None
     LLM = SamplingParams = None
     AutoTokenizer = PreTrainedTokenizer = PreTrainedTokenizerFast = None
+    destroy_model_parallel = destroy_distributed_environment = None
 
 PromptSequence = List[str] | List[Callable[[str], str]]
 
@@ -127,3 +133,14 @@ class LocalLlmResource(ConfigurableResource):
                 conversations,
             )
         )
+
+    def teardown_after_execution(self, context: InitResourceContext) -> None:
+        # Free GPU memory (useful for testing)
+        destroy_model_parallel()
+        destroy_distributed_environment()
+        del self._llm.llm_engine.model_executor
+        del self._llm
+        gc.collect()
+        torch.cuda.empty_cache()
+
+        return super().teardown_after_execution(context)
