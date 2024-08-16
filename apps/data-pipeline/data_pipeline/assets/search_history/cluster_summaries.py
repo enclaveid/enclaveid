@@ -243,11 +243,11 @@ async def cluster_summaries(
         *list(
             map(
                 lambda x: (
-                    x[0].activity_type,
-                    x[0].sensitive,
-                    x[1].title,
-                    x[1].summary,
-                    x[2].likelihood / 100.0,
+                    x[0].activity_type if x[0] else "unknown",
+                    x[0].sensitive if x[0] else None,
+                    x[1].title if x[1] else None,
+                    x[1].summary if x[1] else None,
+                    x[2].likelihood / 100.0 if x[2] else None,
                 )
                 if x
                 else (None, None, None, None, None),
@@ -269,7 +269,7 @@ async def cluster_summaries(
         | pl.col("cluster_title").is_null()
         | pl.col("cluster_summary").is_null()
         | pl.col("is_sensitive").is_null()
-        | pl.col("social_likelihood").is_infinite()
+        | pl.col("social_likelihood").is_null()
     )
 
     if invalid_results.height > 0:
