@@ -201,6 +201,23 @@ async def cluster_summaries(
 
     logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    return df.hstack(pl.DataFrame(results)).drop(
+    result = df.hstack(pl.DataFrame(results)).drop(
         ["date_interests", "date", "interests"]
     )
+
+    invalid_results = (
+        result.filter(pl.col("activity_type") == "unknown")
+        .filter(pl.col("cluster_title").is_null() | pl.col("cluster_title").is_nan())
+        .filter(
+            pl.col("cluster_summary").is_null() | pl.col("cluster_summary").is_nan()
+        )
+        .filter(pl.col("is_sensitive").is_null() | pl.col("is_sensitive").is_nan())
+        .filter(pl.col("social_likelihood").is_infinite())
+    )
+
+    if invalid_results.height > 0:
+        logger.warning(f"Found invalid {invalid_results.height} summaries.")
+
+        return result.join(invalid_results, on="cluster_label", how="anti")
+    else:
+        return result

@@ -1,5 +1,7 @@
 import re
 
+import numpy as np
+
 
 def remove_markdown(text):
     text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
@@ -13,7 +15,7 @@ def _extract_text(text, pattern, default=None) -> str | None:
     return match.group(1).strip() if match else default
 
 
-def _extract_number(text, pattern, default=0.0) -> float:
+def _extract_number(text, pattern, default=-np.inf) -> float:
     match = re.search(pattern, text, re.IGNORECASE)
     return float(match.group(1)) if match else default
 

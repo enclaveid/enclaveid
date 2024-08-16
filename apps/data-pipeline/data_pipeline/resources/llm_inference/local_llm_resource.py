@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Callable, Dict, List, Union
 from dagster import ConfigurableResource, DagsterLogManager, InitResourceContext
 from pydantic import PrivateAttr
 
-from data_pipeline.utils.capabilities import is_vllm_image
+from data_pipeline.utils.capabilities import gpu_info, is_vllm_image
 from data_pipeline.utils.get_logger import get_logger
 
 if is_vllm_image() or TYPE_CHECKING:
@@ -135,12 +135,15 @@ class LocalLlmResource(ConfigurableResource):
         )
 
     def teardown_after_execution(self, context: InitResourceContext) -> None:
-        # Free GPU memory (useful for testing)
+        self._logger.info("Freeing GPU memory...")
         destroy_model_parallel()
         destroy_distributed_environment()
         del self._llm.llm_engine.model_executor
         del self._llm
         gc.collect()
         torch.cuda.empty_cache()
+
+        self._logger.info("Done freeing GPU memory...")
+        self._logger.info(gpu_info())
 
         return super().teardown_after_execution(context)
