@@ -12,6 +12,7 @@ from dagster import (
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.resources.llm_inference.gemma27b_resource import Gemma27bResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
+from data_pipeline.utils.get_logger import get_logger
 
 from ...constants.k8s import k8s_vllm_config
 from ...partitions import user_partitions_def
@@ -124,6 +125,7 @@ async def cluster_summaries(
     interests_clusters: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
+    logger = get_logger(context)
 
     df = (
         interests_clusters.sort(by=pl.col("date"))
@@ -150,10 +152,12 @@ async def cluster_summaries(
         for row in df.to_dicts()
     ]
 
-    context.log.info(f"Processing {len(prompt_sequences)} clusters...")
+    logger.info(f"Processing {len(prompt_sequences)} clusters...")
     summaries_completions = gemma27b.get_prompt_sequences_completions_batch(
         prompt_sequences
     )
+
+    logger.info(f"Done processing {len(prompt_sequences)} clusters.")
 
     results = {
         "activity_type": [],
@@ -189,7 +193,7 @@ async def cluster_summaries(
         map(lambda x: x[2] if len(x) > 0 else None, summaries_completions)
     )
 
-    context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
+    logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     return df.hstack(pl.DataFrame(results)).drop(
         ["date_interests", "date", "interests"]

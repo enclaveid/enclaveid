@@ -1,10 +1,12 @@
+import logging
 import time
 from typing import TYPE_CHECKING, Callable, Dict, List, Union
 
-from dagster import ConfigurableResource, InitResourceContext, get_dagster_logger
+from dagster import ConfigurableResource, DagsterLogManager, InitResourceContext
 from pydantic import PrivateAttr
 
 from data_pipeline.utils.capabilities import is_vllm_image
+from data_pipeline.utils.get_logger import get_logger
 
 if is_vllm_image() or TYPE_CHECKING:
     import torch
@@ -28,9 +30,10 @@ class LocalLlmResource(ConfigurableResource):
     _llm: LLM = PrivateAttr()
     _tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = PrivateAttr()
     _sampling_params: SamplingParams = PrivateAttr()
+    _logger: DagsterLogManager | logging.Logger = PrivateAttr()
 
     def setup_for_execution(self, context: InitResourceContext) -> None:
-        logger = get_dagster_logger()
+        self._logger = get_logger(context)
 
         # logger.info(get_hf_cache_info())
 
@@ -38,7 +41,7 @@ class LocalLlmResource(ConfigurableResource):
         self._llm = LLM(self._model_name, enable_prefix_caching=True)
         load_time_end = time.time()
 
-        logger.info(
+        self._logger.info(
             f"Loaded {self._model_name} in {load_time_end - load_time_start:.2f}s"
         )
 
@@ -68,8 +71,8 @@ class LocalLlmResource(ConfigurableResource):
 
         # Print indeces of the inputs that are over the context window
         if any(over_context):
-            get_dagster_logger().warning(
-                f"Inputs over context window max length: {list(filter(lambda x: x is not None, over_context))}"
+            self._logger.warning(
+                f"Conversation IDs over max context ({self._context_window}) length: {list(filter(lambda x: x is not None, over_context))}"
             )
 
         # TODO: How do we print the progress bar?
@@ -87,36 +90,32 @@ class LocalLlmResource(ConfigurableResource):
     def get_prompt_sequences_completions_batch(
         self, prompt_sequences: List[PromptSequence]
     ):
-        prompt_sequences_length = max(len(sequence) for sequence in prompt_sequences)
+        # Assume that all prompt sequences have the same length
+        prompt_sequences_length = len(prompt_sequences[0])
         conversations = [[] for _ in prompt_sequences]
 
         # Process each step in the prompt sequence up to the longest sequence
         for step in range(prompt_sequences_length):
-            current_prompts = []
-            indices_to_process = []
-
             for i, sequence in enumerate(prompt_sequences):
-                if step < len(sequence):
-                    prompt = sequence[step]
-                    if callable(prompt):
+                prompt = sequence[step]
+                if callable(prompt):
+                    if step == 0:
+                        raise ValueError(
+                            "First prompt in the sequence cannot be a function"
+                        )
+                    else:
                         conversations[i].append(
                             {
                                 "role": "user",
                                 "content": prompt(conversations[i][-1]["content"]),
                             }
                         )
-                    else:
-                        conversations[i].append({"role": "user", "content": prompt})
+                else:
+                    conversations[i].append({"role": "user", "content": prompt})
 
-                    indices_to_process.append(i)
-                    current_prompts.append(conversations[i])
+            completions = self._get_completions_batch(conversations)
 
-            if not current_prompts:
-                continue
-
-            completions = self._get_completions_batch(current_prompts)
-
-            for idx, completion in zip(indices_to_process, completions):
+            for idx, completion in enumerate(completions):
                 conversations[idx].append({"role": "assistant", "content": completion})
 
         # Return all the assistant responses, only for completed conversations
