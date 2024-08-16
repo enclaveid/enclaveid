@@ -131,8 +131,12 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=registry,ref=user/app:buildcache"],
-        "cache-to": ["type=registry,ref=user/app:buildcache,mode=max"]
+        "cache-from": [
+          "type=registry,ref=enclaveid/data-pipeline-rapids:buildcache"
+        ],
+        "cache-to": [
+          "type=registry,ref=enclaveid/data-pipeline-rapids:buildcache,mode=max"
+        ]
       }
     },
     "container-vllm": {
@@ -153,8 +157,12 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=registry,ref=user/app:buildcache"],
-        "cache-to": ["type=registry,ref=user/app:buildcache,mode=max"]
+        "cache-from": [
+          "type=registry,ref=enclaveid/data-pipeline-vllm:buildcache"
+        ],
+        "cache-to": [
+          "type=registry,ref=enclaveid/data-pipeline-vllm:buildcache,mode=max"
+        ]
       }
     },
     "container": {
@@ -175,8 +183,12 @@
             "type=sha,prefix=sha-"
           ]
         },
-        "cache-from": ["type=registry,ref=user/app:buildcache"],
-        "cache-to": ["type=registry,ref=user/app:buildcache,mode=max"]
+        "cache-from": [
+          "type=registry,ref=enclaveid/data-pipeline-base:buildcache"
+        ],
+        "cache-to": [
+          "type=registry,ref=enclaveid/data-pipeline-base:buildcache,mode=max"
+        ]
       }
     },
     "container-jupyter": {
