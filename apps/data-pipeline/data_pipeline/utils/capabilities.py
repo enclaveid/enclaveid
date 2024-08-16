@@ -4,13 +4,16 @@ import json
 import subprocess
 
 
-def csv_to_json(csv_string):
-    # Read the CSV string
-    reader = csv.DictReader([csv_string])
-
-    # Convert the CSV data to a list of dictionaries
-    data = list(reader)[0]
-
+def nvsmi_csv_to_json(csv_string):
+    # Split the CSV string into lines
+    csv_lines = csv_string.strip().split("\n")
+    # Read the CSV data
+    reader = csv.DictReader(csv_lines)
+    # Convert the CSV data to a list of dictionaries, cleaning keys and values
+    data = [
+        {k.strip().replace(" ", "_").lower(): v.strip() for k, v in row.items()}
+        for row in reader
+    ]
     # Convert to JSON
     return json.dumps(data, indent=2)
 
@@ -27,7 +30,7 @@ def gpu_info():
             capture_output=True,
         ).stdout.strip()
 
-        return csv_to_json(csv_string)
+        return nvsmi_csv_to_json(csv_string)
     except Exception:
         return "No GPU information available."
 
