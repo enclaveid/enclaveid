@@ -23,6 +23,7 @@ class LocalLlmResource(ConfigurableResource):
     _temperature: float = PrivateAttr()
     _top_p: float = PrivateAttr()
     _max_tokens: int = PrivateAttr()
+    _context_window: int = PrivateAttr()
 
     _llm: LLM = PrivateAttr()
     _tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = PrivateAttr()
@@ -52,6 +53,25 @@ class LocalLlmResource(ConfigurableResource):
         self,
         conversations: List[List[Dict[str, str]]],
     ) -> List[str]:
+        # Get the idxs of the inputs over self._context_window
+        over_context = list(
+            map(
+                lambda x: x[0] if len(x[1]) > self._context_window else None,  # type: ignore
+                enumerate(
+                    self._tokenizer.apply_chat_template(
+                        conversations,
+                        add_generation_prompt=True,
+                    )
+                ),
+            )
+        )
+
+        # Print indeces of the inputs that are over the context window
+        if any(over_context):
+            get_dagster_logger().warning(
+                f"Inputs over context window max length: {list(filter(lambda x: x is not None, over_context))}"
+            )
+
         # TODO: How do we print the progress bar?
         results = self._llm.generate(
             self._tokenizer.apply_chat_template(

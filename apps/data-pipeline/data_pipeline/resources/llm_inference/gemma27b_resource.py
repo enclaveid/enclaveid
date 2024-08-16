@@ -6,3 +6,4 @@ class Gemma27bResource(LocalLlmResource):
     _temperature = 0.8
     _top_p = 0.1
     _max_tokens = 1024
+    _context_window = 1024 * 8
