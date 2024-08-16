@@ -24,7 +24,7 @@ from ...partitions import user_partitions_def
 class InitialClassificationResult(BaseModel):
     activity_type: Literal["knowledge_progression", "reactive_needs", "unknown"]
     sensitive: bool
-    explaination: str
+    explanation: str
 
 
 def get_initial_classification_prompt(search_activity: str):
@@ -49,7 +49,7 @@ def get_initial_classification_prompt(search_activity: str):
         {{
           activity_type: "knowledge_progression" or "reactive_needs" or "unknown",
           sensitive: true or false,
-          explaination: "Your 2-3 sentence explanation"
+          explanation: "Your 2-3 sentence explanation"
         }}
 
         {search_activity}
