@@ -8,10 +8,10 @@ from pydantic import BaseModel, PrivateAttr
 
 from data_pipeline.utils.capabilities import gpu_info, is_vllm_image
 from data_pipeline.utils.get_logger import get_logger
+from data_pipeline.utils.patches.outlines import json as json_generator
 
 if is_vllm_image() or TYPE_CHECKING:
     import torch
-    from outlines.generate import json as json_generator
     from outlines.models.vllm import VLLM
     from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
     from vllm import LLM, SamplingParams
@@ -24,7 +24,7 @@ else:
     LLM = SamplingParams = None
     AutoTokenizer = PreTrainedTokenizer = PreTrainedTokenizerFast = None
     destroy_model_parallel = destroy_distributed_environment = None
-    json_generator = VLLM = None
+    VLLM = None
 
 PromptSequence = List[str] | List[Callable[[str | BaseModel], str]]
 

@@ -23,7 +23,6 @@ from ...partitions import user_partitions_def
 
 class InitialClassificationResult(BaseModel):
     activity_type: Literal["knowledge_progression", "reactive_needs", "unknown"]
-    confidence: int
     sensitive: bool
     explaination: str
 
@@ -49,7 +48,6 @@ def get_initial_classification_prompt(search_activity: str):
         Format your response in JSON as follows:
         {{
           activity_type: "knowledge_progression" or "reactive_needs" or "unknown",
-          confidence: 0-100,
           sensitive: true or false,
           explaination: "Your 2-3 sentence explanation"
         }}
@@ -116,6 +114,7 @@ def get_summarization_prompt(
 
 class SocialLikelihoodResult(BaseModel):
     likelihood: int
+    explaination: str
 
 
 SOCIAL_LIKELIHOOD_PROMPT = dedent(
@@ -128,9 +127,10 @@ SOCIAL_LIKELIHOOD_PROMPT = dedent(
         - If the activity is sensitive, assume the user is willing to share it with others
         - The current date is {datetime.today().strftime('%Y-%m-%d')}, if the activity is reactive, consider that it might not be relevant for the user if they did it long ago
 
-        At the end of your analysis, provide a social likelihood score from 0 to 100%, formatted  in JSON as follows:
+        Provide a social likelihood score from 0 to 100% and format your answer in JSON as follows:
         {{
-          likelihood: 0-100
+          likelihood: 0-100,
+          explaination: "Your explanation"
         }}
         """
 )
@@ -253,7 +253,7 @@ async def cluster_summaries(
 
     results["social_likelihood"] = list(
         map(
-            lambda x: x[2].likelihood if x else None,
+            lambda x: x[2].likelihood // 100.0 if x else None,
             summaries_completions,
         )
     )
