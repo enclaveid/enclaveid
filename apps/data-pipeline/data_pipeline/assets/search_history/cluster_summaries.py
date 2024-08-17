@@ -1,7 +1,8 @@
 import time
 from datetime import datetime
+from enum import Enum
 from textwrap import dedent
-from typing import List, Literal, Tuple, cast
+from typing import List, Tuple, cast
 
 import polars as pl
 from dagster import (
@@ -21,8 +22,14 @@ from ...constants.k8s import k8s_vllm_config
 from ...partitions import user_partitions_def
 
 
+class ActivityType(str, Enum):
+    knowledge_progression = "knowledge_progression"
+    reactive_needs = "reactive_needs"
+    unknown = "unknown"
+
+
 class InitialClassificationResult(BaseModel):
-    activity_type: Literal["knowledge_progression", "reactive_needs", "unknown"]
+    activity_type: ActivityType
     sensitive: bool
     explanation: str
 
@@ -118,7 +125,7 @@ def get_summarization_prompt(
 
 class SocialLikelihoodResult(BaseModel):
     likelihood: int
-    explaination: str
+    explanation: str
 
 
 SOCIAL_LIKELIHOOD_PROMPT = dedent(
@@ -134,7 +141,7 @@ SOCIAL_LIKELIHOOD_PROMPT = dedent(
         Provide a social likelihood score from 0 to 100% and format your answer in JSON as follows:
         {{
           likelihood: 0-100,
-          explaination: "Your explanation"
+          explanation: "Your explanation"
         }}
         """
 )
