@@ -9,11 +9,11 @@ SHELL ["/bin/bash", "--login","-c"]
 WORKDIR /app
 
 # Install RAPIDS dependencies
-COPY apps/data-pipeline/requirements.rapids.txt /app/
+COPY dist/apps/data-pipeline/requirements.rapids.txt /app/
 RUN pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com -r requirements.rapids.txt
 
 # Install prod dependencies
-COPY apps/data-pipeline/requirements.prod.txt /app/
+COPY dist/apps/data-pipeline/requirements.prod.txt /app/
 RUN pip install --no-cache-dir -r requirements.prod.txt
 
 # Install the root only
