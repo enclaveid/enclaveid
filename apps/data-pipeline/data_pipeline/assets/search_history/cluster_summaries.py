@@ -85,8 +85,8 @@ def get_summarization_prompt(
     )
 
     return {
-        "unknown": None,
-        "reactive": dedent(
+        ActivityType.unknown: None,
+        ActivityType.reactive_needs: dedent(
             f"""
             Summarize the reactive search activity by taking into account the time periods
             and what the user will have obtained at the end of their search. Describe:
@@ -100,7 +100,7 @@ def get_summarization_prompt(
             {CLUSTER_SUMMARIZATION_FORMAT}
             """
         ),
-        "proactive": dedent(
+        ActivityType.knowledge_progression: dedent(
             f"""
             Summarize the knowledge progression by taking into account the time periods and how each
             incremental chunk expands the user's knowledge horizontally or vertically. Describe:
@@ -119,7 +119,7 @@ def get_summarization_prompt(
     }[
         initial_classification_result.activity_type
         if initial_classification_result
-        else "unknown"
+        else ActivityType.unknown
     ]
 
 
@@ -254,7 +254,7 @@ async def cluster_summaries(
         *list(
             map(
                 lambda x: (
-                    x[0].activity_type if x[0] else "unknown",
+                    x[0].activity_type if x[0] else ActivityType.unknown,
                     x[0].sensitive if x[0] else None,
                     x[1].title if x[1] else None,
                     x[1].summary if x[1] else None,
@@ -276,7 +276,7 @@ async def cluster_summaries(
     debug_dataframe = result.clone()
 
     invalid_results = result.filter(
-        pl.col("activity_type").eq("unknown")
+        pl.col("activity_type").eq(ActivityType.unknown)
         | pl.col("cluster_title").is_null()
         | pl.col("cluster_summary").is_null()
         | pl.col("is_sensitive").is_null()
