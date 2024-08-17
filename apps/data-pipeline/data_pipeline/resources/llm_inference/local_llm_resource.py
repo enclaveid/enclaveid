@@ -8,7 +8,6 @@ from pydantic import BaseModel, PrivateAttr
 
 from data_pipeline.utils.capabilities import gpu_info, is_vllm_image
 from data_pipeline.utils.get_logger import get_logger
-from data_pipeline.utils.patches.outlines import json as json_generator
 
 if is_vllm_image() or TYPE_CHECKING:
     import torch
@@ -103,20 +102,20 @@ class LocalLlmResource(ConfigurableResource):
         )
 
         # If pydantic_model is provided, constrain the output
-        if pydantic_model:
-            return json_generator(VLLM(self._llm), pydantic_model)(
-                templated_conversations  # type: ignore
+        # if pydantic_model:
+        #     return json_generator(VLLM(self._llm), pydantic_model)(
+        #         templated_conversations  # type: ignore
+        #     )
+        # else:
+        return list(
+            map(
+                lambda res: res.outputs[0].text,
+                self._llm.generate(
+                    templated_conversations,
+                    self._sampling_params,
+                ),
             )
-        else:
-            return list(
-                map(
-                    lambda res: res.outputs[0].text,
-                    self._llm.generate(
-                        templated_conversations,
-                        self._sampling_params,
-                    ),
-                )
-            )
+        )
 
     def get_prompt_sequences_completions_batch(
         self,
