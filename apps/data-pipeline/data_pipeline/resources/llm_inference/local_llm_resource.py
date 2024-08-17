@@ -35,6 +35,7 @@ class LocalLlmResource(ConfigurableResource):
     _top_p: float = PrivateAttr()
     _max_tokens: int = PrivateAttr()
     _context_window: int = PrivateAttr()
+    _max_model_len: int | None = PrivateAttr()
 
     _llm: LLM = PrivateAttr()
     _tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = PrivateAttr()
@@ -47,7 +48,17 @@ class LocalLlmResource(ConfigurableResource):
         # logger.info(get_hf_cache_info())
 
         load_time_start = time.time()
-        self._llm = LLM(self._model_name, enable_prefix_caching=True)
+        self._llm = LLM(
+            self._model_name,
+            enable_prefix_caching=True,
+            tensor_parallel_size=2,
+            # Set a context limit other than default if provided (depends on available GPU memory)
+            **(
+                {"max_model_len": self._max_model_len}
+                if self._max_model_len is not None
+                else {}
+            ),
+        )
         load_time_end = time.time()
 
         self._logger.info(

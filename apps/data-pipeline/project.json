@@ -19,18 +19,14 @@
       "dependsOn": ["lock"],
       "options": {
         "commands": [
-          "poetry export --only vllm -f requirements.txt --output requirements.vllm.txt --without-hashes",
-          "poetry export --only rapids -f requirements.txt --output requirements.rapids.txt --without-hashes",
-          "poetry export --without rapids,vllm,dev -f requirements.txt --output requirements.prod.txt --without-hashes"
+          "poetry export --only vllm -f requirements.txt --output ../../dist/apps/data-pipeline/requirements.vllm.txt --without-hashes",
+          "poetry export --only rapids -f requirements.txt --output ../../dist/apps/data-pipeline/requirements.rapids.txt --without-hashes",
+          "poetry export --without rapids,vllm,dev -f requirements.txt --output ../../dist/apps/data-pipeline/requirements.prod.txt --without-hashes"
         ],
         "cwd": "apps/data-pipeline"
       },
       "cache": true,
-      "outputs": [
-        "{projectRoot}/requirements.rapids.txt",
-        "{projectRoot}/requirements.vllm.txt",
-        "{projectRoot}/requirements.prod.txt"
-      ],
+      "outputs": ["{workspaceRoot}/dist/apps/data-pipeline/requirements.*"],
       "inputs": ["{projectRoot}/poetry.lock"]
     },
     "dev": {
@@ -66,7 +62,7 @@
     "build": {
       "executor": "@nxlv/python:build",
       "dependsOn": ["export"],
-      "outputs": ["{workspaceRoot}/dist/apps/data-pipeline"],
+      "outputs": ["{workspaceRoot}/dist/apps/data-pipeline/*.whl"],
       "options": {
         "outputPath": "{workspaceRoot}/dist/apps/data-pipeline",
         "publish": false,

@@ -35,7 +35,7 @@ az provider register --namespace "Microsoft.ContainerService"
 AZURE_RESOURCE_GROUP=enclaveid-staging
 AZURE_CLUSTER_NAME=enclaveid-cluster-staging
 AZURE_NODE_VM_SIZE=Standard_D4_v5 # Confidential VMs are not available eastus2 but we have the GPU quota here
-AZURE_NODE_VM_SIZE_GPU=standard_nc24ads_a100_v4 # The GPU VM is the same
+AZURE_NODE_VM_SIZE_GPU=standard_nc48ads_a100_v4 # The GPU VM is the same
 AZURE_REGION=eastus2
 ```
 
@@ -45,7 +45,7 @@ AZURE_REGION=eastus2
 AZURE_RESOURCE_GROUP=enclaveid-prod
 AZURE_CLUSTER_NAME=enclaveid-cluster
 AZURE_NODE_VM_SIZE=Standard_DC4as_cc_v5 # Confidential VMs
-AZURE_NODE_VM_SIZE_GPU=standard_nc24ads_a100_v4 # The GPU VM is the same
+AZURE_NODE_VM_SIZE_GPU=standard_nc48ads_a100_v4 # The GPU VM is the same
 AZURE_REGION=westeurope
 AZURE_SERVICE_ACCOUNT_NAME=enclaveid-cluster-identity-sa
 AZURE_SUBSCRIPTION=$(az account show --query id --output tsv)

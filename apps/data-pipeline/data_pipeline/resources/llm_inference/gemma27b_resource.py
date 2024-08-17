@@ -1,6 +1,7 @@
 from data_pipeline.resources.llm_inference.local_llm_resource import LocalLlmResource
 
 
+# Do not use. Generation is buggy as of Aug 2024.
 class Gemma27bResource(LocalLlmResource):
     _model_name = "google/gemma-2-27b-it"
     _temperature = 0.8

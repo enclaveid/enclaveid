@@ -14,12 +14,13 @@ from dagster import (
 from pydantic import BaseModel, Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.resources.llm_inference.gemma27b_resource import Gemma27bResource
+from data_pipeline.constants.k8s import k8s_vllm_config
+from data_pipeline.partitions import user_partitions_def
+from data_pipeline.resources.llm_inference.llama70b_quantized_resource import (
+    Llama70bQuantizedResource,
+)
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.get_logger import get_logger
-
-from ...constants.k8s import k8s_vllm_config
-from ...partitions import user_partitions_def
 
 
 class ActivityType(str, Enum):
@@ -32,6 +33,7 @@ class InitialClassificationResult(BaseModel):
     activity_type: ActivityType
     sensitive: bool
     explanation: str
+    confidence: float
 
 
 def get_initial_classification_prompt(search_activity: str):
@@ -48,15 +50,16 @@ def get_initial_classification_prompt(search_activity: str):
         - Indications of recurring but intermittent activities
         - Signs of problem-solving for specific occasions rather than general learning
 
-        Provide a classification as either 'Knowledge Progression' or 'Reactive Needs', along with a confidence score (0-100%).
-        Then, offer a brief explanation (2-3 sentences) supporting your classification, highlighting the key factors that influenced your decision.
+        Provide a classification as either 'knowledge_progression' or 'reactive_needs', along with a confidence score (0-100%).
+        Offer a an explaination supporting your classification, highlighting the key factors that influenced your decision.
         Additionally, assess whether the topic is sensitive in nature, particularly regarding psychosocial aspects.
 
         Format your response in JSON as follows:
         {{
+          explanation: "Your analysis and explanation",
           activity_type: "knowledge_progression" or "reactive_needs" or "unknown",
           sensitive: true or false,
-          explanation: "Your 2-3 sentence explanation"
+          confidence: 0.0-1.0
         }}
 
         {search_activity}
@@ -78,6 +81,7 @@ def get_summarization_prompt(
 
         Format your response in JSON as follows:
         {{
+          explanation: "Your analysis and explanation",
           title: "The category you found",
           summary: "Your summary"
         }}
@@ -124,7 +128,7 @@ def get_summarization_prompt(
 
 
 class SocialLikelihoodResult(BaseModel):
-    likelihood: int
+    likelihood: float
     explanation: str
 
 
@@ -140,7 +144,7 @@ SOCIAL_LIKELIHOOD_PROMPT = dedent(
 
         Provide a social likelihood score from 0 to 100% and format your answer in JSON as follows:
         {{
-          likelihood: 0-100,
+          likelihood: 0.0 - 1.0,
           explanation: "Your explanation"
         }}
         """
@@ -178,7 +182,7 @@ class ClusterSummariesConfig(RowLimitConfig):
 async def cluster_summaries(
     context: AssetExecutionContext,
     config: ClusterSummariesConfig,
-    gemma27b: Gemma27bResource,
+    llama70b_quantized: Llama70bQuantizedResource,
     interests_clusters: pl.DataFrame,
 ):
     start_time = time.time()
@@ -216,7 +220,7 @@ async def cluster_summaries(
     (
         summaries_completions,
         conversations,
-    ) = gemma27b.get_prompt_sequences_completions_batch(
+    ) = llama70b_quantized.get_prompt_sequences_completions_batch(
         prompt_sequences,
         [
             InitialClassificationResult,
