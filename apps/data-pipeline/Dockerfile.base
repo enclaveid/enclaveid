@@ -8,7 +8,7 @@ SHELL ["/bin/bash", "--login","-c"]
 WORKDIR /app
 
 # Install prod dependencies
-COPY dist/apps/data-pipeline/requirements.prod.txt /app/
+COPY apps/data-pipeline/requirements.prod.txt /app/
 RUN pip install --no-cache-dir -r requirements.prod.txt
 
 # Install the root only
