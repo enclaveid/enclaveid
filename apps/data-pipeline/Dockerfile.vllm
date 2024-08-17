@@ -22,3 +22,4 @@ RUN pip install --no-deps  *.whl
 
 ENV HF_HOME=/model-cache/huggingface
 ENV SENTENCE_TRANSFORMERS_HOME=/model-cache/sentence-transformers
+ENV MKL_THREADING_LAYER=GNU
