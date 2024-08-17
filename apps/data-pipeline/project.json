@@ -200,7 +200,7 @@
         "file": "apps/data-pipeline/notebooks/Dockerfile",
         "platforms": ["linux/amd64"],
         "metadata": {
-          "images": ["docker.io/enclaveid/jupyter"],
+          "images": ["docker.io/enclaveid/data-pipeline-jupyter"],
           "tags": [
             "type=schedule",
             "type=ref,event=branch",
@@ -208,7 +208,13 @@
             "type=ref,event=pr",
             "type=sha,prefix=sha-"
           ]
-        }
+        },
+        "cache-from": [
+          "type=registry,ref=enclaveid/data-pipeline-jupyter:buildcache"
+        ],
+        "cache-to": [
+          "type=registry,ref=enclaveid/data-pipeline-jupyter:buildcache,mode=max"
+        ]
       }
     }
   },
