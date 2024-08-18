@@ -59,7 +59,7 @@ function ProfilePage() {
   const matchDetailsQuery = trpc.private.getUserMatchDetails.useInfiniteQuery(
     {
       usersOverallSimilarityId: userMatchOverview.usersOverallSimilarityId,
-      // activityTypes: ['proactive'],
+      // activityTypes: ['knowledge_progression'],
     },
     {
       getNextPageParam: (lastPage) => lastPage.interests.nextCursor,

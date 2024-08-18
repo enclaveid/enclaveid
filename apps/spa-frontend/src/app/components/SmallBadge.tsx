@@ -4,11 +4,11 @@ const baseClasses =
 const variants = {
   reactive: {
     classes: 'bg-orange-100 text-orange-800',
-    text: 'reactive',
+    text: 'reactive_needs',
   },
   proactive: {
     classes: 'bg-green-100 text-green-800',
-    text: 'proactive',
+    text: 'knowledge_progression',
   },
   sensitive: {
     classes: 'bg-red-100 text-red-800',

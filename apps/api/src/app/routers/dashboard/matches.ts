@@ -82,7 +82,9 @@ export const matches = router({
           .max(MAX_PAGINATION_LIMIT)
           .default(MAX_PAGINATION_LIMIT),
         cursor: z.string().optional(),
-        activityTypes: z.array(z.string()).default(['reactive', 'proactive']),
+        activityTypes: z
+          .array(z.string())
+          .default(['reactive_needs', 'knowledge_progression']),
       }),
     )
     .query(async (opts) => {

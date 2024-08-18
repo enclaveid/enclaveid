@@ -16,12 +16,14 @@ export const interests = router({
             .max(MAX_PAGINATION_LIMIT)
             .default(MAX_PAGINATION_LIMIT),
           cursor: z.string().default(''),
-          activityTypes: z.array(z.string()).default(['reactive', 'proactive']),
+          activityTypes: z
+            .array(z.string())
+            .default(['reactive_needs', 'knowledge_progression']),
         })
         .default({
           limit: MAX_PAGINATION_LIMIT,
           cursor: '',
-          activityTypes: ['reactive', 'proactive'],
+          activityTypes: ['reactive_needs', 'knowledge_progression'],
         }),
     )
     .query(async (opts) => {

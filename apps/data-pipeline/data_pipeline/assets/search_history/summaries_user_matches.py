@@ -81,7 +81,7 @@ async def summaries_user_matches(
             DAGSTER_STORAGE_BUCKET / "summaries_embeddings" / f"{other_user_id}.snappy"
         ).sort(by="cluster_label")
 
-        for activity_type in ["proactive", "reactive"]:
+        for activity_type in ["knowledge_progression", "reactive_needs"]:
             current_user_activity_df = current_user_df.filter(
                 pl.col("activity_type") == activity_type
             )

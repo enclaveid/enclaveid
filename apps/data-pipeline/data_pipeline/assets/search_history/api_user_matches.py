@@ -181,12 +181,12 @@ def api_user_matches(
                 )
                 proactive_interests_similarity = interests_similarities.filter(
                     (pl.col("other_user_id") == other_user_t.userId)
-                    & (pl.col("activity_type") == "proactive")
+                    & (pl.col("activity_type") == "knowledge_progression")
                 )["cosine_similarity"][0]
 
                 reactive_interests_similarity = interests_similarities.filter(
                     (pl.col("other_user_id") == other_user_t.userId)
-                    & (pl.col("activity_type") == "reactive")
+                    & (pl.col("activity_type") == "reactive_needs")
                 )["cosine_similarity"][0]
 
                 overall_similarity = calculate_overall_similarity(
