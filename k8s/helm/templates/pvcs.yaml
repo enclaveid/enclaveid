@@ -20,5 +20,5 @@ spec:
   resources:
     requests:
       storage: 256Gi
-  storageClassName: managed-premium
+  storageClassName: managed-premium # Important. The csi version does not have caching enabled
 
