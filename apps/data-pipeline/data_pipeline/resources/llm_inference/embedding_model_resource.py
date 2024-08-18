@@ -96,7 +96,6 @@ class EmbeddingModelResource(ConfigurableResource):
 
     def teardown_after_execution(self, context: InitResourceContext) -> None:
         del self._model
-        del self._tokenizer
 
         torch.cuda.empty_cache()
         gc.collect()
