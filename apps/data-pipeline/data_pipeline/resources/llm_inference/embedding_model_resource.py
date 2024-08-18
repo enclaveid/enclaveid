@@ -21,7 +21,7 @@ else:
 
 
 class EmbeddingModelResource(ConfigurableResource):
-    normalize_embeddings: bool = False
+    normalize_embeddings: bool = True
 
     _model_name = "Salesforce/SFR-Embedding-2_R"
     _max_length = 4096
