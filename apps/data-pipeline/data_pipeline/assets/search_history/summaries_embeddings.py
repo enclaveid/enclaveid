@@ -7,14 +7,14 @@ from dagster import (
     asset,
 )
 
-from data_pipeline.resources.llm_inference.embedding_model_resource import (
-    EmbeddingModelResource,
+from data_pipeline.assets.search_history.sentence_transfomer_resource import (
+    SentenceTransformerResource,
 )
 from data_pipeline.utils.capabilities import gpu_info
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.custom_config import RowLimitConfig
-from ...constants.k8s import k8s_vllm_config
+from ...constants.k8s import get_k8s_vllm_config
 from ...partitions import user_partitions_def
 
 
@@ -24,12 +24,12 @@ from ...partitions import user_partitions_def
     ins={
         "cluster_summaries": AssetIn(key=["cluster_summaries"]),
     },
-    op_tags=k8s_vllm_config,
+    op_tags=get_k8s_vllm_config(1),
 )
 def summaries_embeddings(
     context: AssetExecutionContext,
     config: RowLimitConfig,
-    embedding_model: EmbeddingModelResource,
+    embedding_model: SentenceTransformerResource,
     cluster_summaries: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()

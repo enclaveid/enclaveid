@@ -12,7 +12,7 @@ from dagster import (
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.custom_config import RowLimitConfig
-from ...constants.k8s import k8s_rapids_config
+from ...constants.k8s import get_k8s_rapids_config
 from ...partitions import user_partitions_def
 from ...utils.capabilities import gpu_info, is_rapids_image
 
@@ -26,7 +26,7 @@ if is_rapids_image() or TYPE_CHECKING:
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={"interests_embeddings": AssetIn(key=["interests_embeddings"])},
-    op_tags=k8s_rapids_config,
+    op_tags=get_k8s_rapids_config(1),
 )
 def interests_clusters(
     context: AssetExecutionContext,

@@ -14,7 +14,7 @@ from dagster import (
 from pydantic import BaseModel, Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.constants.k8s import k8s_vllm_config
+from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.llm_inference.llama70b_quantized_resource import (
     Llama70bQuantizedResource,
@@ -190,7 +190,7 @@ class ClusterSummariesConfig(RowLimitConfig):
             key=["interests_clusters"],
         ),
     },
-    op_tags=k8s_vllm_config,
+    op_tags=get_k8s_vllm_config(2),
 )
 async def cluster_summaries(
     context: AssetExecutionContext,

@@ -20,7 +20,7 @@ else:
     AutoTokenizer = None
 
 
-class EmbeddingModelResource(ConfigurableResource):
+class TransformersEmbeddingResource(ConfigurableResource):
     normalize_embeddings: bool = True
 
     _model_name = "Salesforce/SFR-Embedding-2_R"

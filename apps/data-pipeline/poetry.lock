@@ -4643,13 +4643,13 @@ test = ["Cython", "array-api-strict", "asv", "gmpy2", "hypothesis (>=6.30)", "me
 
 [[package]]
 name = "sentence-transformers"
-version = "3.0.0"
+version = "3.0.1"
 description = "Multilingual text embeddings"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "sentence_transformers-3.0.0-py3-none-any.whl", hash = "sha256:9bf851b688b796e5fb06c920921efd5e5e05ee616e85cb3026fbdfe4dcf15bf3"},
-    {file = "sentence_transformers-3.0.0.tar.gz", hash = "sha256:52d4101654ed107a28e9fa5110fce399084b55e7838fd8256471353ddc299033"},
+    {file = "sentence_transformers-3.0.1-py3-none-any.whl", hash = "sha256:01050cc4053c49b9f5b78f6980b5a72db3fd3a0abb9169b1792ac83875505ee6"},
+    {file = "sentence_transformers-3.0.1.tar.gz", hash = "sha256:8a3d2c537cc4d1014ccc20ac92be3d6135420a3bc60ae29a3a8a9b4bb35fbff6"},
 ]
 
 [package.dependencies]
@@ -6097,4 +6097,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "3330241fa411d7690cd8d27d55d9ed3ecb61490d193769a9af3cf6efecd8f748"
+content-hash = "8204e3c9c04000db92db3139553c69b1e3405c97c7a910bdb95ad48bad6f7d43"

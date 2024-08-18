@@ -1,6 +1,9 @@
 from dagster import EnvVar
 from dagster_polars import PolarsParquetIOManager
 
+from data_pipeline.assets.search_history.sentence_transfomer_resource import (
+    SentenceTransformerResource,
+)
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
 from data_pipeline.resources.api_db_session import ApiDbSession
 from data_pipeline.resources.llm_inference.gemma27b_resource import Gemma27bResource
@@ -11,9 +14,6 @@ from data_pipeline.resources.llm_inference.llama70b_quantized_resource import (
 )
 from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
 from data_pipeline.resources.llm_inference.llama405b_resource import Llama405bResource
-from data_pipeline.resources.llm_inference.embedding_model_resource import (
-    EmbeddingModelResource,
-)
 from data_pipeline.resources.mistral_resource import MistralResource
 
 resources = {
@@ -31,5 +31,5 @@ resources = {
     "llama70b_quantized": Llama70bQuantizedResource(),
     "llama405b": Llama405bResource(api_key=EnvVar("AZURE_AI_LLAMA405B_API_KEY")),
     "gpt4": Gpt4Resource(api_key=EnvVar("AZURE_AI_GPT4_API_KEY")),
-    "embedding_model": EmbeddingModelResource(),
+    "embedding_model": SentenceTransformerResource(),
 }
