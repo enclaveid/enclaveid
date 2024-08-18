@@ -50,7 +50,7 @@ class LocalLlmResource(ConfigurableResource):
         self._llm = LLM(
             self._model_name,
             enable_prefix_caching=True,
-            tensor_parallel_size=2,
+            tensor_parallel_size=torch.cuda.device_count(),
             # Set a context limit other than default if provided (depends on available GPU memory)
             **(
                 {"max_model_len": self._max_model_len}
