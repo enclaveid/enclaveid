@@ -57,7 +57,7 @@ enrichment_prompt_sequence = [
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
-    op_tags=get_k8s_vllm_config(1),
+    op_tags=get_k8s_vllm_config(2),
 )
 def interests(
     context: AssetExecutionContext,
