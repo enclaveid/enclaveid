@@ -40,6 +40,8 @@ class EmbeddingModelResource(ConfigurableResource):
             logger.info(f"Loading the model on {torch.cuda.device_count()} GPUs")
             self._model = DataParallel(self._model)
 
+        self._model.to(self._device)
+
     def _last_token_pool(
         self, last_hidden_states: Tensor, attention_mask: Tensor
     ) -> Tensor:
