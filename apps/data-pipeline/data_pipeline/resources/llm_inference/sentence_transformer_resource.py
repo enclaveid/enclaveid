@@ -26,7 +26,7 @@ class SentenceTransformerResource(ConfigurableResource):
         self._pool = self._model.start_multi_process_pool()
 
     def get_embeddings(self, series: pl.Series):
-        embeddings = self._model.encode(series.to_list(), precision="float32")
+        embeddings = self._model.encode_multi_process(series.to_list(), self._pool)
         return pl.Series(
             name="embeddings",
             values=embeddings,
