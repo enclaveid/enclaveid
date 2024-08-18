@@ -51,19 +51,18 @@ k8s_vllm_config = deep_merge(
         "dagster-k8s/config": {
             "container_config": {
                 "image": "enclaveid/data-pipeline-vllm:master",
-                # "volumeMounts": [{"name": "model-cache", "mountPath": "/model-cache"}],
+                "volumeMounts": [{"name": "model-cache", "mountPath": "/model-cache"}],
             },
-            # TODO: Somehow it's faster to redownload the model form HF's CDN every time rather than using the PVC
-            # "pod_spec_config": {
-            #     "volumes": [
-            #         {
-            #             "name": "model-cache",
-            #             "persistentVolumeClaim": {
-            #                 "claimName": "enclaveid-model-cache-pvc"
-            #             },
-            #         }
-            #     ],
-            # },
+            "pod_spec_config": {
+                "volumes": [
+                    {
+                        "name": "model-cache",
+                        "persistentVolumeClaim": {
+                            "claimName": "enclaveid-model-cache-pvc"
+                        },
+                    }
+                ],
+            },
         }
     },
 )

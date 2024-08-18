@@ -19,6 +19,6 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 100Gi
-  storageClassName: managed-csi-premium
+      storage: 256Gi
+  storageClassName: managed-premium
 
