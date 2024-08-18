@@ -55,7 +55,7 @@ def generate_chunked_interests(
             raw_interests.append(frame["title"].to_list())
 
     results, conversations = llama8b.get_prompt_sequences_completions_batch(
-        prompt_sequences, [None, None]
+        prompt_sequences,  # [None, None]
     )
 
     chunked_interests = [
