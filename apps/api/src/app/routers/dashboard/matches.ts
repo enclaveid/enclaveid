@@ -12,7 +12,7 @@ import { MAX_PAGINATION_LIMIT } from '../../constants';
  *
  * Keep in sync with UserMatchesSummariesConfig.similarity_threshold.
  */
-const SIMILARITY_THRESHOLD = 0.93;
+const SIMILARITY_THRESHOLD = 0.85;
 
 export const matches = router({
   getPeopleCount: authenticatedProcedure.query(async () => {
