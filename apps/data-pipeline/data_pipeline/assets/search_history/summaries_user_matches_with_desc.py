@@ -80,7 +80,7 @@ async def summaries_user_matches_with_desc(
 
     total_matches = len(summaries_user_matches)
     context.log.info(
-        f"Summarizing {total_matches - filtered_summaries_user_matches.sum().item()} matches out of {total_matches}."
+        f"Summarizing {total_matches - filtered_summaries_user_matches.sum()['mask'].item()} matches out of {total_matches}."
     )
 
     means_of_comparison = f"common_summary_prompt_{config.means_of_comparison}"
