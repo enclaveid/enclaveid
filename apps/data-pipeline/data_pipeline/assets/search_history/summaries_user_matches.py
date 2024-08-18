@@ -151,6 +151,10 @@ async def summaries_user_matches(
                     ]
                 )
 
+                context.log.info(match_df.head(5))
+                context.log.info(match_df.columns)
+                context.log.info(result_df.columns)
+
                 result_df = result_df.vstack(match_df)
 
     context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
