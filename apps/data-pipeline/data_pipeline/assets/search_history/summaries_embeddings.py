@@ -7,8 +7,8 @@ from dagster import (
     asset,
 )
 
-from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
-    SentenceTransformerResource,
+from data_pipeline.resources.llm_inference.embedding_model_resource import (
+    EmbeddingModelResource,
 )
 from data_pipeline.utils.capabilities import gpu_info
 from data_pipeline.utils.costs import get_gpu_runtime_cost
@@ -29,7 +29,7 @@ from ...partitions import user_partitions_def
 def summaries_embeddings(
     context: AssetExecutionContext,
     config: RowLimitConfig,
-    sentence_transformer: SentenceTransformerResource,
+    embedding_model: EmbeddingModelResource,
     cluster_summaries: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -40,10 +40,10 @@ def summaries_embeddings(
     context.log.info("Computing embeddings...")
     result = df.with_columns(
         summary_embedding=pl.col("cluster_summary").map_batches(
-            sentence_transformer.get_embeddings
+            embedding_model.get_embeddings
         ),
         items_embedding=pl.col("cluster_items").map_batches(
-            sentence_transformer.get_embeddings
+            embedding_model.get_embeddings
         ),
     )
 

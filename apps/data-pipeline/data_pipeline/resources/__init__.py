@@ -11,8 +11,8 @@ from data_pipeline.resources.llm_inference.llama70b_quantized_resource import (
 )
 from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
 from data_pipeline.resources.llm_inference.llama405b_resource import Llama405bResource
-from data_pipeline.resources.llm_inference.sentence_transformer_resource import (
-    SentenceTransformerResource,
+from data_pipeline.resources.llm_inference.embedding_model_resource import (
+    EmbeddingModelResource,
 )
 from data_pipeline.resources.mistral_resource import MistralResource
 
@@ -31,5 +31,5 @@ resources = {
     "llama70b_quantized": Llama70bQuantizedResource(),
     "llama405b": Llama405bResource(api_key=EnvVar("AZURE_AI_LLAMA405B_API_KEY")),
     "gpt4": Gpt4Resource(api_key=EnvVar("AZURE_AI_GPT4_API_KEY")),
-    "sentence_transformer": SentenceTransformerResource(),
+    "embedding_model": EmbeddingModelResource(),
 }
