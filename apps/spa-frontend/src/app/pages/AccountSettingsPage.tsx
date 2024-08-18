@@ -9,7 +9,7 @@ import { trpc } from '../utils/trpc';
 
 interface SettingOption {
   label: string;
-  value: boolean;
+  value: boolean | string;
 }
 
 interface AccountSettings {
@@ -36,18 +36,37 @@ interface ModalProps {
 }
 
 const accountSettings: AccountSettings = {
+  Profile: [
+    {
+      label: 'Username',
+      value: 'discordusername',
+    },
+    {
+      label: 'Email',
+      value: 'yourdiscord@gmail.com',
+    },
+    {
+      label: 'Gender',
+      value: 'Female',
+    },
+    {
+      label: 'Location',
+      value: 'San Francisco',
+    },
+  ],
   'Social features': [
     {
-      label: 'Enable matching with other users',
+      label: 'Disable social matching',
       value: true,
     },
     {
-      label: 'Match with others over sensitive topics',
+      label: 'Make account private',
       value: true,
     },
   ],
-  'Danger zone': {
+  More: {
     deleteAccount: 'Delete my account and all of my data',
+    logOut: 'Log Out',
   },
 };
 
@@ -108,25 +127,39 @@ const SectionTab = ({
       </h1>
       <div className="flex flex-col gap-3">
         {settings &&
-          settings.map((setting, index) => (
-            <div
-              key={index}
-              className="max-w-[538px] w-full flex items-center justify-between border border-[#E5E8EE] rounded-xl pl-5 pr-3.5 py-3.5"
-            >
-              <label className="leading-[18px] text-passiveLinkColor">
-                {setting.label}
-              </label>
-              <RadioGroup
-                name={setting.label}
-                options={[
-                  { label: 'Yes', value: true },
-                  { label: 'No', value: false },
-                ]}
-                selectedValue={selectedValues[setting.label] ?? setting.value}
-                onChange={(value) => handleChange(setting.label, value)}
-              />
-            </div>
-          ))}
+          settings.map((setting, index) =>
+            typeof setting.value === 'string' ? (
+              <div
+                key={index}
+                className="max-w-[450px] w-full flex items-center justify-between rounded-xl pl-5 pr-3.5 py-3.5"
+              >
+                <label className="leading-[18px] text-passiveLinkColor">
+                  {setting.label}
+                </label>
+                <p className="leading-[18px] text-passiveLinkColor text-sm">
+                  {setting.value}
+                </p>
+              </div>
+            ) : (
+              <div
+                key={index}
+                className="max-w-[538px] w-full flex items-center justify-between border border-[#E5E8EE] rounded-xl pl-5 pr-3.5 py-3.5"
+              >
+                <label className="leading-[18px] text-passiveLinkColor">
+                  {setting.label}
+                </label>
+                <RadioGroup
+                  name={setting.label}
+                  options={[
+                    { label: 'Yes', value: true },
+                    { label: 'No', value: false },
+                  ]}
+                  selectedValue={selectedValues[setting.label] ?? setting.value}
+                  onChange={(value) => handleChange(setting.label, value)}
+                />
+              </div>
+            ),
+          )}
         {moreOptions && (
           <>
             {moreOptions.deleteAccount && (

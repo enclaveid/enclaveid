@@ -28,6 +28,7 @@ export const sidebarItems = {
       icon: PuzzlePieceIcon,
       text: 'Interests',
       href: '/interests',
+      chip: 'soon',
     },
   ],
 };

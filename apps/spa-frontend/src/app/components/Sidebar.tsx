@@ -24,6 +24,7 @@ function renderSidebarItems() {
           icon={<item.icon />}
           text={item.text}
           href={item.href}
+          chip={item.chip}
         />
       ))}
     </SidebarSection>
