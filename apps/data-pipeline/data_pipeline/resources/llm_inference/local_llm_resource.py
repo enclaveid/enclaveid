@@ -33,7 +33,6 @@ class LocalLlmResource(ConfigurableResource):
     _temperature: float = PrivateAttr()
     _top_p: float = PrivateAttr()
     _max_tokens: int = PrivateAttr()
-    _context_window: int = PrivateAttr()
     _max_model_len: int | None = PrivateAttr()
 
     _llm: LLM = PrivateAttr()
@@ -74,27 +73,8 @@ class LocalLlmResource(ConfigurableResource):
     def _get_completions_batch(
         self,
         conversations: List[List[Dict[str, str]]],
-        pydantic_model: BaseModel | None,
-    ) -> List[str | BaseModel]:
-        # Get the idxs of the inputs over self._context_window
-        over_context = list(
-            map(
-                lambda x: x[0] if len(x[1]) > self._context_window else None,  # type: ignore
-                enumerate(
-                    self._tokenizer.apply_chat_template(
-                        conversations,
-                        add_generation_prompt=True,
-                    )
-                ),
-            )
-        )
-
-        # Print indeces of the inputs that are over the context window
-        if any(over_context):
-            self._logger.warning(
-                f"Conversation IDs over max context ({self._context_window}) length: {list(filter(lambda x: x is not None, over_context))}"
-            )
-
+        # pydantic_model: BaseModel | None,
+    ) -> List[str]:
         templated_conversations = self._tokenizer.apply_chat_template(
             conversations,
             tokenize=False,
@@ -120,16 +100,10 @@ class LocalLlmResource(ConfigurableResource):
     def get_prompt_sequences_completions_batch(
         self,
         prompt_sequences: List[PromptSequence],
-        pydantic_models: List,
+        # pydantic_models: List[Type[BaseModel]],
     ):
         # Assume that all prompt sequences have the same length
         prompt_sequences_length = len(prompt_sequences[0])
-        pydantic_models_length = len(pydantic_models)
-
-        if pydantic_models_length != prompt_sequences_length:
-            raise ValueError(
-                f"Prompt sequences and pydantic models have different lengths: {prompt_sequences_length} and {pydantic_models_length}"
-            )
 
         # The conversations array contains the raw user and assistant messages for generation
         conversations: List[List[Dict[str, str]]] = [[] for _ in prompt_sequences]
@@ -156,16 +130,14 @@ class LocalLlmResource(ConfigurableResource):
                     conversations[i].append({"role": "user", "content": prompt})
 
             completions = self._get_completions_batch(
-                conversations, pydantic_models[step]
+                conversations,  # pydantic_models[step]
             )
 
             for idx, completion in enumerate(completions):
                 conversations[idx].append(
                     {
                         "role": "assistant",
-                        "content": completion.model_dump_json()
-                        if isinstance(completion, BaseModel)
-                        else completion,
+                        "content": completion,
                     }
                 )
                 results[idx].append(completion)

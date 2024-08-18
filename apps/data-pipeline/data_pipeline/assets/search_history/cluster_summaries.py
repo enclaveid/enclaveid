@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 from enum import Enum
 from textwrap import dedent
-from typing import List, Tuple, cast
+from typing import Tuple
 
 import polars as pl
 from dagster import (
@@ -21,6 +21,10 @@ from data_pipeline.resources.llm_inference.llama70b_quantized_resource import (
 )
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.get_logger import get_logger
+from data_pipeline.utils.parsing.json import (
+    parse_cluster_classification_json,
+    parse_summaries_completions,
+)
 
 
 class ActivityType(str, Enum):
@@ -54,12 +58,11 @@ def get_initial_classification_prompt(search_activity: str):
         Offer a an explaination supporting your classification, highlighting the key factors that influenced your decision.
         Additionally, assess whether the topic is sensitive in nature, particularly regarding psychosocial aspects.
 
-        Format your response in JSON as follows:
+        Conclude your analysis with a JSON as follows:
         {{
-          explanation: "Your analysis and explanation",
-          activity_type: "knowledge_progression" or "reactive_needs" or "unknown",
-          sensitive: true or false,
-          confidence: 0.0-1.0
+          "activity_type": "knowledge_progression" or "reactive_needs" or "unknown",
+          "sensitive": true or false,
+          "confidence": 0.0-1.0
         }}
 
         {search_activity}
@@ -72,59 +75,66 @@ class SummarizationResult(BaseModel):
     summary: str
 
 
-def get_summarization_prompt(
-    initial_classification_result: InitialClassificationResult | None
-) -> str:
+def get_summarization_prompt(initial_classification_result: str) -> str:
     CLUSTER_SUMMARIZATION_FORMAT = dedent(
         """
         Finally, provide the most detailed possible category that captures all the topics of the activity.
 
-        Format your response in JSON as follows:
-        {{
-          explanation: "Your analysis and explanation",
-          title: "The category you found",
-          summary: "Your summary"
-        }}
+        Conclude your analysis with a JSON as follows:
+        {
+          "title": "The category you found",
+          "summary": "Your summary"
+        }
         """
     )
 
-    return {
-        ActivityType.unknown: None,
-        ActivityType.reactive_needs: dedent(
-            f"""
-            Summarize the reactive search activity by taking into account the time periods
-            and what the user will have obtained at the end of their search. Describe:
+    UNKNOWN_SUMMARY = dedent(
+        """
+        The search activity does not fit the criteria for either knowledge progression or reactive needs.
+        Explain why the activity is ambiguous and provide a brief summary of the main topics covered.
 
-            - The main category of reactive needs
-            - The specific types of occasions or needs
-            - Frequency pattern of these needs
-            - User's apparent level of experience in addressing these needs
-            - Any unique elements in the user's approach
+        {CLUSTER_SUMMARIZATION_FORMAT}
+        """
+    )
 
-            {CLUSTER_SUMMARIZATION_FORMAT}
-            """
-        ),
-        ActivityType.knowledge_progression: dedent(
-            f"""
-            Summarize the knowledge progression by taking into account the time periods and how each
-            incremental chunk expands the user's knowledge horizontally or vertically. Describe:
+    key = parse_cluster_classification_json(initial_classification_result)[0]
 
-            - The main topic or starting point of interest
-            - Key areas or subtopics the user explored from this starting point
-            - How the user's understanding seemed to deepen or branch out in each area
-            - Any connections or jumps between different areas of exploration
-            - The most advanced or recent concepts the user has searched for
+    if key is None:
+        return UNKNOWN_SUMMARY
+    else:
+        return {
+            "unknown": UNKNOWN_SUMMARY,
+            "reactive_needs": dedent(
+                f"""
+              Summarize the reactive search activity by taking into account the time periods
+              and what the user will have obtained at the end of their search. Describe:
 
-            Conclude with the overall trajectory and breadth of the user's learning path.
+              - The main category of reactive needs
+              - The specific types of occasions or needs
+              - Frequency pattern of these needs
+              - User's apparent level of experience in addressing these needs
+              - Any unique elements in the user's approach
 
-            {CLUSTER_SUMMARIZATION_FORMAT}
-            """
-        ),
-    }[
-        initial_classification_result.activity_type
-        if initial_classification_result
-        else ActivityType.unknown
-    ]
+              {CLUSTER_SUMMARIZATION_FORMAT}
+              """
+            ),
+            "knowledge_progression": dedent(
+                f"""
+              Summarize the knowledge progression by taking into account the time periods and how each
+              incremental chunk expands the user's knowledge horizontally or vertically. Describe:
+
+              - The main topic or starting point of interest
+              - Key areas or subtopics the user explored from this starting point
+              - How the user's understanding seemed to deepen or branch out in each area
+              - Any connections or jumps between different areas of exploration
+              - The most advanced or recent concepts the user has searched for
+
+              Conclude with the overall trajectory and breadth of the user's learning path.
+
+              {CLUSTER_SUMMARIZATION_FORMAT}
+              """
+            ),
+        }[key]
 
 
 class SocialLikelihoodResult(BaseModel):
@@ -142,13 +152,16 @@ SOCIAL_LIKELIHOOD_PROMPT = dedent(
         - If the activity is sensitive, assume the user is willing to share it with others
         - The current date is {datetime.today().strftime('%Y-%m-%d')}, if the activity is reactive, consider that it might not be relevant for the user if they did it long ago
 
-        Provide a social likelihood score from 0 to 100% and format your answer in JSON as follows:
+        Provide a social likelihood score from 0 to 100% in JSON as follows:
         {{
-          likelihood: 0.0 - 1.0,
-          explanation: "Your explanation"
+          "likelihood": 0.0 - 1.0,
         }}
         """
 )
+
+SummariesCompletions = Tuple[
+    InitialClassificationResult, SummarizationResult, SocialLikelihoodResult
+]
 
 
 class ClusterSummariesConfig(RowLimitConfig):
@@ -222,54 +235,16 @@ async def cluster_summaries(
         conversations,
     ) = llama70b_quantized.get_prompt_sequences_completions_batch(
         prompt_sequences,
-        [
-            InitialClassificationResult,
-            SummarizationResult,
-            SocialLikelihoodResult,
-        ],
+        # [
+        #     InitialClassificationResult,
+        #     SummarizationResult,
+        #     SocialLikelihoodResult,
+        # ],
     )
     logger.info(f"Done processing {len(prompt_sequences)} clusters.")
 
-    summaries_completions = cast(
-        List[
-            Tuple[
-                InitialClassificationResult, SummarizationResult, SocialLikelihoodResult
-            ]
-        ],
-        summaries_completions,
-    )
-
-    results = {
-        "activity_type": [],
-        "is_sensitive": [],
-        "cluster_summary": [],
-        "cluster_title": [],
-        "social_likelihood": [],
-        "conversations": conversations,
-    }
-
-    (
-        results["activity_type"],
-        results["is_sensitive"],
-        results["cluster_title"],
-        results["cluster_summary"],
-        results["social_likelihood"],
-    ) = zip(
-        *list(
-            map(
-                lambda x: (
-                    x[0].activity_type if x[0] else ActivityType.unknown,
-                    x[0].sensitive if x[0] else None,
-                    x[1].title if x[1] else None,
-                    x[1].summary if x[1] else None,
-                    x[2].likelihood / 100.0 if x[2] else None,
-                )
-                if x
-                else (None, None, None, None, None),
-                summaries_completions,
-            )
-        )
-    )
+    results = parse_summaries_completions(summaries_completions)
+    results["conversations"] = conversations
 
     logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 

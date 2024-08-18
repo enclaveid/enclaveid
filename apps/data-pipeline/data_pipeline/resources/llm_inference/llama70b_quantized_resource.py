@@ -6,5 +6,5 @@ class Llama70bQuantizedResource(LocalLlmResource):
     _temperature = 0.6
     _top_p = 0.3
     _max_tokens = 1024
-    _context_window = 1024 * 8
-    _max_model_len = 1024 * 10 * 8
+    # We use 80k instead of the default 128k to avoid OOM errors
+    _max_model_len = 1024 * 80
