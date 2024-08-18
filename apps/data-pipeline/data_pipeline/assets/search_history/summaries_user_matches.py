@@ -23,6 +23,71 @@ from ...partitions import user_partitions_def
 from ...utils.capabilities import gpu_info
 
 
+def create_prompt(user_id, activity_df, cluster_label, item_type):
+    filtered_df = activity_df.filter(pl.col("cluster_label") == cluster_label)
+    return dedent(
+        f"""
+        User {user_id}:
+        {filtered_df[f"cluster_{item_type}"].item()}
+        """
+    )
+
+
+def get_social_likelihood(activity_df, cluster_label):
+    return activity_df.filter(pl.col("cluster_label") == cluster_label)[
+        "social_likelihood"
+    ].item()
+
+
+def process_row(
+    row,
+    current_user_id,
+    current_user_activity_df,
+    other_user_id,
+    other_user_activity_df,
+):
+    common_summary_prompt_items = dedent(
+        create_prompt(
+            current_user_id,
+            current_user_activity_df,
+            row["user_cluster_label"],
+            "items",
+        )
+        + create_prompt(
+            other_user_id,
+            other_user_activity_df,
+            row["other_user_cluster_label"],
+            "items",
+        )
+    )
+
+    common_summary_prompt_summaries = dedent(
+        create_prompt(
+            current_user_id,
+            current_user_activity_df,
+            row["user_cluster_label"],
+            "summary",
+        )
+        + create_prompt(
+            other_user_id,
+            other_user_activity_df,
+            row["other_user_cluster_label"],
+            "summary",
+        )
+    )
+
+    social_likelihoods = (
+        get_social_likelihood(current_user_activity_df, row["user_cluster_label"]),
+        get_social_likelihood(other_user_activity_df, row["other_user_cluster_label"]),
+    )
+
+    return (
+        common_summary_prompt_items,
+        common_summary_prompt_summaries,
+        social_likelihoods,
+    )
+
+
 class SummariesUserMatchesConfig(RowLimitConfig):
     mean_of_comparison: str = Field(
         default="summary",
@@ -72,7 +137,7 @@ async def summaries_user_matches(
 
     context.log.info(f"Matching with {len(other_user_ids)-1} users")
 
-    # TODO Optimization: Do not recompute the embeddings for the same pair of users
+    # TODO Optimization: Do not recompute matches for the same pair of users
     for other_user_id in other_user_ids:
         if other_user_id == context.partition_key:
             continue
@@ -108,35 +173,13 @@ async def summaries_user_matches(
                     [
                         pl.lit(other_user_id).alias("other_user_id"),
                         pl.lit(activity_type).alias("activity_type"),
-                        # Add the prompt sequences to be computed later all at once
                         pl.struct(match_df.columns).map_elements(
-                            lambda row: (
-                                dedent(
-                                    f"""
-                                    User {context.partition_key}:
-                                    {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_items"].item()}
-                                    User {other_user_id}:
-                                    {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_items"].item()}
-                                    """
-                                ),
-                                dedent(
-                                    f"""
-                                    User {context.partition_key}:
-                                    {current_user_activity_df.filter(pl.col("cluster_label") == row["user_cluster_label"])["cluster_summary"].item()}
-                                    User {other_user_id}:
-                                    {other_user_activity_df.filter(pl.col("cluster_label") == row["other_user_cluster_label"])["cluster_summary"].item()}
-                                    """
-                                ),
-                                (
-                                    current_user_activity_df.filter(
-                                        pl.col("cluster_label")
-                                        == row["user_cluster_label"]
-                                    )["social_likelihood"].item(),
-                                    other_user_activity_df.filter(
-                                        pl.col("cluster_label")
-                                        == row["other_user_cluster_label"]
-                                    )["social_likelihood"].item(),
-                                ),
+                            lambda row: process_row(
+                                row,
+                                context.partition_key,
+                                current_user_activity_df,
+                                other_user_id,
+                                other_user_activity_df,
                             ),
                             return_dtype=pl.Struct(
                                 [
