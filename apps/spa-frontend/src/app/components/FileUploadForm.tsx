@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from './Button';
-import { FacebookIcon, GoogleIcon, OpenAiIcon } from './Icons';
+import { GoogleIcon, OpenAiIcon } from './Icons';
 import { FileUploadSection } from './FileUploadSection';
 import { FormCardLayout } from './FormCardLayout';
 
@@ -62,10 +62,10 @@ export function FileUploadForm({
               </div>
             </div>
 
-            <div className="flex items-center gap-[17px] flex-row rounded-md bg-white shadow pl-[15px] pt-[17pt] pr-[18px] pb-5">
+            {/* <div className="flex items-center gap-[17px] flex-row rounded-md bg-white shadow pl-[15px] pt-[17pt] pr-[18px] pb-5">
               <FacebookIcon />
               <span className="text-[#6C7A8A] text-lg">Coming soon</span>
-            </div>
+            </div> */}
             <div className="mb-9 flex items-center gap-[17px] flex-row rounded-md bg-white shadow pl-[15px] pt-[17pt] pr-[18px] pb-5">
               <OpenAiIcon />
               <span className="text-[#6C7A8A] text-lg">Coming soon</span>

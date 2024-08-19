@@ -78,7 +78,7 @@ export function PurposeSelection() {
             as find similar people [...]
           </h1>
 
-          <div className="h-72 overflow-y-auto border border-[#E5E8EE] rounded-xl p-3 bg-slate-100 mb-4">
+          <div className="h-72 overflow-y-auto border border-[#E5E8EE] rounded-xl p-3 bg-slate-100">
             <div className="grid grid-cols-3 gap-2">
               {Object.keys(options).map((option, index) => (
                 <Button
@@ -99,6 +99,22 @@ export function PurposeSelection() {
               ))}
             </div>
           </div>
+          <Button
+            label={
+              selectedOptions.length == Object.keys(options).length
+                ? 'Deselect all'
+                : 'Select all'
+            }
+            variant="secondary"
+            onClick={() => {
+              if (selectedOptions.length < Object.keys(options).length) {
+                setSelectedOptions(Object.keys(options));
+              } else {
+                setSelectedOptions([]);
+              }
+            }}
+            className="mb-5"
+          />
 
           <div className="flex flex-row justify-between items-center px-5">
             <span className="text-passiveLinkColor text-md leading-5">
