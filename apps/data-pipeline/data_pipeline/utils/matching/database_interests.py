@@ -70,10 +70,14 @@ def insert_cluster_matches(
                     ]
                 )
                 .alias("otherClusterId"),
+                pl.col("social_likelihoods")
+                .apply(lambda x: sum(x) / 2)
+                .alias("averageSocialLikelihood"),
             ]
         )
         .select(
             [
+                "averageSocialLikelihood",
                 "cosineSimilarity",
                 "currentClusterId",
                 "otherClusterId",
@@ -123,6 +127,7 @@ def insert_cluster_matches(
                     "commonSummary": match["commonSummary"],
                     "commonTitle": match["commonTitle"],
                     "cosineSimilarity": match["cosineSimilarity"],
+                    "averageSocialLikelihood": match["averageSocialLikelihood"],
                     "updatedAt": func.now(),
                 }
             )
@@ -138,6 +143,7 @@ def insert_cluster_matches(
                 commonSummary=bindparam("commonSummary"),
                 commonTitle=bindparam("commonTitle"),
                 cosineSimilarity=bindparam("cosineSimilarity"),
+                averageSocialLikelihood=bindparam("averageSocialLikelihood"),
                 updatedAt=bindparam("updatedAt"),
             ),
             matches_to_update,
@@ -153,6 +159,7 @@ def insert_cluster_matches(
                         lambda x: {
                             "id": x["id"],
                             "cosineSimilarity": x["cosineSimilarity"],
+                            "averageSocialLikelihood": x["averageSocialLikelihood"],
                             "updatedAt": x["updatedAt"],
                             "commonSummary": x["commonSummary"],
                             "commonTitle": x["commonTitle"],

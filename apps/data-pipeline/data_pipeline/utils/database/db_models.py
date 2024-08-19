@@ -57,6 +57,7 @@ class InterestsClustersSimilarity(Base):
         TIMESTAMP(precision=3), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
     updatedAt = mapped_column(TIMESTAMP(precision=3), nullable=False)
+    averageSocialLikelihood = mapped_column(Double(53), nullable=False)
     cosineSimilarity = mapped_column(Double(53), nullable=False)
     commonSummary = mapped_column(Text)
     commonTitle = mapped_column(Text)

@@ -208,6 +208,7 @@ CREATE TABLE "InterestsClustersSimilarity" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "averageSocialLikelihood" DOUBLE PRECISION NOT NULL,
     "cosineSimilarity" DOUBLE PRECISION NOT NULL,
     "commonSummary" TEXT,
     "commonTitle" TEXT,

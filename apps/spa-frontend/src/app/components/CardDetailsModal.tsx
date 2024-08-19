@@ -47,8 +47,10 @@ export function CardDetailsModal({
                 >
                   {title}
                 </Dialog.Title>
-                <Dialog.Description className="m-3 text-passiveLinkColor bg-white rounded-xl px-3.5 pt-5 pb-4 border border-[#E5E8EE] h-full flex flex-col justify-evenly">
-                  <Markdown>{description}</Markdown>
+                <Dialog.Description className="m-3 text-passiveLinkColor bg-white rounded-xl px-3.5 pt-5 pb-4 border border-[#E5E8EE] h-full flex flex-col justify-evenly overflow-y-auto">
+                  <div className="overflow-y-auto">
+                    <Markdown>{description}</Markdown>
+                  </div>
                 </Dialog.Description>
                 <button onClick={closeModal} className="absolute right-4 top-5">
                   <XMarkIcon className="w-5 h-5 stroke-[3px] text-passiveLinkColor" />

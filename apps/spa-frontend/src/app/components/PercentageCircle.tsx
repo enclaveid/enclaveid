@@ -43,7 +43,7 @@ export function PercentageCircle({
   };
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center ">
       <div className={`relative ${sizeClass} aspect-square`}>
         <svg
           className="w-full h-full -rotate-90"

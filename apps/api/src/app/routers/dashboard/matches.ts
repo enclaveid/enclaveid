@@ -75,7 +75,7 @@ export const matches = router({
           .min(1)
           .max(MAX_PAGINATION_LIMIT)
           .default(MAX_PAGINATION_LIMIT),
-        cursor: z.string().optional(),
+        cursor: z.string().default(''),
         activityTypes: z
           .array(z.string())
           .default(['reactive_needs', 'knowledge_progression']),
@@ -156,9 +156,10 @@ export const matches = router({
               },
             },
             cursor: cursor ? { id: cursor } : undefined,
-            orderBy: {
-              cosineSimilarity: 'desc',
-            },
+            orderBy: [
+              { averageSocialLikelihood: 'desc' },
+              { cosineSimilarity: 'desc' },
+            ],
             include: {
               interestsClusterMatches: {
                 where: {
@@ -204,7 +205,7 @@ export const matches = router({
                 similarityPercentage: ics.cosineSimilarity,
                 pipelineClusterId: r.interestsCluster.pipelineClusterId,
                 isSensitive: r.interestsCluster.isSensitive,
-                socialLikelihood: r.interestsCluster.socialLikelihood,
+                socialLikelihood: ics.averageSocialLikelihood,
               };
             });
         });

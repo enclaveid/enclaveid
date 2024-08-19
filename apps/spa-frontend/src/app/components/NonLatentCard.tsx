@@ -21,6 +21,8 @@ function NonLatentCard({
     activityType,
     similarityPercentage,
     isSensitive,
+    socialLikelihood,
+    clusterItems,
   },
 }: NonLatentCardProps) {
   const [isViewed, setIsViewed] = useState(initViewed);
@@ -52,13 +54,22 @@ function NonLatentCard({
         <p className="text-passiveLinkColor text-sm ">{shortDescription}</p>
       </div>
       <div className="flex items-center justify-between">
-        {similarityPercentage && (
-          <PercentageCircle
-            percentage={similarityPercentage}
-            size="md"
-            label="Similarity"
-          />
-        )}
+        <div className="flex flex-col gap-2">
+          {socialLikelihood && (
+            <PercentageCircle
+              percentage={socialLikelihood}
+              size="md"
+              label="Relevance"
+            />
+          )}
+          {similarityPercentage && (
+            <PercentageCircle
+              percentage={similarityPercentage}
+              size="md"
+              label="Similarity"
+            />
+          )}
+        </div>
         {activityDates && <TinyBarChart dates={activityDates} />}
         <Button
           label="Expand"
@@ -74,7 +85,13 @@ function NonLatentCard({
         isOpen={openModal}
         closeModal={() => setOpenModal(false)}
         title={title}
-        description={description}
+        description={
+          description +
+          (clusterItems?.length
+            ? '\n\n**Timeline**\n\n' +
+              clusterItems.slice().reverse().join('\n\n')
+            : '')
+        }
       />
     </article>
   );

@@ -252,9 +252,10 @@ model InterestsClustersSimilarity {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cosineSimilarity Float
-  commonSummary    String?
-  commonTitle      String?
+  averageSocialLikelihood Float
+  cosineSimilarity        Float
+  commonSummary           String?
+  commonTitle             String?
 
   interestsClusterMatches InterestsClusterMatch[]
 }

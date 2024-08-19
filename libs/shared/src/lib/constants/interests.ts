@@ -7,5 +7,6 @@ export interface DisplayableInterest {
   pipelineClusterId?: number;
   isViewed?: boolean;
   isSensitive: boolean;
-  socialLikelihood: number;
+  socialLikelihood?: number;
+  clusterItems?: string[];
 }
