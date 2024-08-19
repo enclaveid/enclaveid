@@ -102,7 +102,7 @@ async def summaries_user_matches_with_desc(
 
     common_titles, common_summaries = zip(
         *[
-            parse_cluster_summarization(x[0]) if len(x) > 0 else None
+            parse_cluster_summarization(x[0]) if len(x) > 0 else (None, None)
             for x in summaries_completions
         ]
     )
