@@ -6,13 +6,7 @@ import { TRPCError } from '@trpc/server';
 import { DisplayableInterest, UserMatchOverview } from '@enclaveid/shared';
 import { localGeocoderLookup } from '../../services/localGeocoder';
 import { MAX_PAGINATION_LIMIT } from '../../constants';
-
-/**
- * InterestClusters matching below this threshold do not have a commonSummary, so we filter them out.
- *
- * Keep in sync with UserMatchesSummariesConfig.similarity_threshold.
- */
-const SIMILARITY_THRESHOLD = 0.85;
+import { replaceUserIds } from '../../services/contentPrivacy';
 
 export const matches = router({
   getPeopleCount: authenticatedProcedure.query(async () => {
@@ -153,8 +147,12 @@ export const matches = router({
           .findMany({
             take: limit + 1, // get an extra item at the end which we'll use as next cursor
             where: {
-              cosineSimilarity: {
-                gte: SIMILARITY_THRESHOLD,
+              // Matches without summaries or titles are below the similarity and relevance thresholds
+              commonSummary: {
+                not: null,
+              },
+              commonTitle: {
+                not: null,
               },
             },
             cursor: cursor ? { id: cursor } : undefined,
@@ -196,13 +194,17 @@ export const matches = router({
             )
             .flatMap((r): DisplayableInterest => {
               return {
-                // TODO: Use a common title
-                title: r.interestsCluster.title,
-                description: ics.commonSummary,
+                title: ics.commonTitle,
+                description: replaceUserIds(
+                  ics.commonSummary,
+                  [userId, otherUser.id],
+                  [currentUser.displayName, otherUser.displayName],
+                ),
                 activityType: r.interestsCluster.clusterType,
                 similarityPercentage: ics.cosineSimilarity,
                 pipelineClusterId: r.interestsCluster.pipelineClusterId,
                 isSensitive: r.interestsCluster.isSensitive,
+                socialLikelihood: r.interestsCluster.socialLikelihood,
               };
             });
         });

@@ -185,6 +185,8 @@ CREATE TABLE "InterestsCluster" (
     "title" TEXT NOT NULL,
     "activityDates" TEXT[],
     "isSensitive" BOOLEAN NOT NULL DEFAULT false,
+    "clusterItems" TEXT[],
+    "socialLikelihood" DOUBLE PRECISION NOT NULL,
     "userInterestsId" TEXT NOT NULL,
 
     CONSTRAINT "InterestsCluster_pkey" PRIMARY KEY ("id")
@@ -208,6 +210,7 @@ CREATE TABLE "InterestsClustersSimilarity" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "cosineSimilarity" DOUBLE PRECISION NOT NULL,
     "commonSummary" TEXT,
+    "commonTitle" TEXT,
 
     CONSTRAINT "InterestsClustersSimilarity_pkey" PRIMARY KEY ("id")
 );

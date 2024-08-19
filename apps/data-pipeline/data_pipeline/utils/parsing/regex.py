@@ -26,9 +26,7 @@ def _extract_boolean(text, pattern, default=None) -> bool | None:
 
 
 def parse_cluster_summarization(raw_output: str):
-    clean_output = remove_markdown(raw_output)
-
-    title = _extract_text(clean_output, r"Title:\s*(.+?)(?:\n|$)")
-    summary = _extract_text(clean_output, r"Summary:\s*(.+)(?:\n\n|\Z)")
+    title = _extract_text(raw_output, r"Title:\s*(.+?)(?:\n|$)")
+    summary = _extract_text(raw_output, r"Summary:\s*(.+)(?:\n\n|\Z)")
 
     return title, summary

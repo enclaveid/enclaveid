@@ -2,6 +2,7 @@ import polars as pl
 from dagster import (
     AssetExecutionContext,
     AssetIn,
+    Optional,
     asset,
 )
 from sqlalchemy import func, or_
@@ -34,7 +35,8 @@ from ...partitions import user_partitions_def
     io_manager_key="parquet_io_manager",
     ins={
         "summaries_user_matches_with_desc": AssetIn(
-            key=["summaries_user_matches_with_desc"]
+            key=["summaries_user_matches_with_desc"],
+            dagster_type=Optional[pl.DataFrame],
         ),
         "cluster_summaries": AssetIn(key=["cluster_summaries"]),
     },
@@ -43,7 +45,7 @@ def api_user_matches(
     context: AssetExecutionContext,
     config: RowLimitConfig,
     api_db: ApiDbSession,
-    summaries_user_matches_with_desc: pl.DataFrame,
+    summaries_user_matches_with_desc: pl.DataFrame | None,
     cluster_summaries: pl.DataFrame,
 ) -> None:
     db_conn = api_db.get_session()
@@ -83,6 +85,8 @@ def api_user_matches(
                         "cluster_title": "title",
                         "is_sensitive": "isSensitive",
                         "cluster_dates": "activityDates",
+                        "cluster_items": "clusterItems",
+                        "social_likelihood": "socialLikelihood",
                     }
                 )
                 .with_columns(
@@ -93,6 +97,7 @@ def api_user_matches(
                         [generate_cuid() for _ in range(len(cluster_summaries))]
                     ),
                     updatedAt=pl.Series([func.now()] * len(cluster_summaries)),
+                    clusterItems=pl.col("clusterItems").str.split("\n"),
                 )
                 .to_dicts()
             )
@@ -108,6 +113,11 @@ def api_user_matches(
             )
             .returning(InterestsCluster)
         ).fetchall()
+
+        # Edge case for the first user
+        if summaries_user_matches_with_desc is None:
+            db_conn.commit()
+            return
 
         # Get the InterestsCluster for the other users that we need to match with
         # including the UserInterests

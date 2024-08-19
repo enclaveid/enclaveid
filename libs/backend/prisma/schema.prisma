@@ -221,6 +221,8 @@ model InterestsCluster {
   title             String
   activityDates     String[]
   isSensitive       Boolean  @default(false)
+  clusterItems      String[]
+  socialLikelihood  Float
 
   userInterestsId String
   userInterests   UserInterests @relation(fields: [userInterestsId], references: [id], onDelete: Cascade)
@@ -252,6 +254,7 @@ model InterestsClustersSimilarity {
 
   cosineSimilarity Float
   commonSummary    String?
+  commonTitle      String?
 
   interestsClusterMatches InterestsClusterMatch[]
 }

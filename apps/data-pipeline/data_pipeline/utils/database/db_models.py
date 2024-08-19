@@ -59,6 +59,7 @@ class InterestsClustersSimilarity(Base):
     updatedAt = mapped_column(TIMESTAMP(precision=3), nullable=False)
     cosineSimilarity = mapped_column(Double(53), nullable=False)
     commonSummary = mapped_column(Text)
+    commonTitle = mapped_column(Text)
 
     InterestsClusterMatch: Mapped[List["InterestsClusterMatch"]] = relationship(
         "InterestsClusterMatch",
@@ -347,8 +348,10 @@ class InterestsCluster(Base):
     summary = mapped_column(Text, nullable=False)
     title = mapped_column(Text, nullable=False)
     isSensitive = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    socialLikelihood = mapped_column(Double(53), nullable=False)
     userInterestsId = mapped_column(Text, nullable=False)
     activityDates = mapped_column(ARRAY(Text()))
+    clusterItems = mapped_column(ARRAY(Text()))
 
     UserInterests_: Mapped["UserInterests"] = relationship(
         "UserInterests", back_populates="InterestsCluster"

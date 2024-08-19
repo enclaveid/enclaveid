@@ -31,7 +31,7 @@ def _get_existing_matches(session: Session, cluster_ids: List[str]):
 def insert_cluster_matches(
     current_user_interests_clusters: Sequence[Row[Tuple[InterestsCluster]]],
     other_user_interests_clusters: List[Row[Tuple[InterestsCluster, UserInterests]]],
-    summaries_user_matches: pl.DataFrame,
+    summaries_user_matches_with_desc: pl.DataFrame,
     db_conn: Session,
 ):
     # Match the newly created clusters with the current user's clusters
@@ -40,10 +40,6 @@ def insert_cluster_matches(
         cluster[0].pipelineClusterId: cluster[0].id
         for cluster in current_user_interests_clusters
     }
-
-    # Edge case for the first user
-    if len(other_user_interests_clusters) == 0:
-        return
 
     other_users_clusters_ids_map = {}
     for cluster_record, user_interests_record in other_user_interests_clusters:
@@ -55,10 +51,11 @@ def insert_cluster_matches(
         ] = cluster_record.id
 
     matches_to_insert = (
-        summaries_user_matches.rename(
+        summaries_user_matches_with_desc.rename(
             {
                 "cosine_similarity": "cosineSimilarity",
                 "common_summary": "commonSummary",
+                "common_title": "commonTitle",
             }
         )
         .with_columns(
@@ -81,11 +78,14 @@ def insert_cluster_matches(
                 "currentClusterId",
                 "otherClusterId",
                 "commonSummary",
+                "commonTitle",
             ]
         )
         .with_columns(
-            id=pl.Series([generate_cuid() for _ in range(len(summaries_user_matches))]),
-            updatedAt=pl.Series([func.now()] * len(summaries_user_matches)),
+            id=pl.Series(
+                [generate_cuid() for _ in range(len(summaries_user_matches_with_desc))]
+            ),
+            updatedAt=pl.Series([func.now()] * len(summaries_user_matches_with_desc)),
         )
         .to_dicts()
     )
@@ -121,6 +121,7 @@ def insert_cluster_matches(
                 {
                     "id": existing_match_dict[match_set],
                     "commonSummary": match["commonSummary"],
+                    "commonTitle": match["commonTitle"],
                     "cosineSimilarity": match["cosineSimilarity"],
                     "updatedAt": func.now(),
                 }
@@ -135,6 +136,7 @@ def insert_cluster_matches(
             .where(InterestsClustersSimilarity.id == bindparam("id"))
             .values(
                 commonSummary=bindparam("commonSummary"),
+                commonTitle=bindparam("commonTitle"),
                 cosineSimilarity=bindparam("cosineSimilarity"),
                 updatedAt=bindparam("updatedAt"),
             ),
@@ -153,6 +155,7 @@ def insert_cluster_matches(
                             "cosineSimilarity": x["cosineSimilarity"],
                             "updatedAt": x["updatedAt"],
                             "commonSummary": x["commonSummary"],
+                            "commonTitle": x["commonTitle"],
                         },
                         matches_to_insert,
                     )
