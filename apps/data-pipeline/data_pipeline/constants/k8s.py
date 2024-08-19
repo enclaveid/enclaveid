@@ -21,7 +21,13 @@ def get_base_k8s_gpu_config(gpu_count):
                         "operator": "Equal",
                         "value": "gpu",
                         "effect": "NoSchedule",
-                    }
+                    },
+                    {
+                        "key": "kubernetes.azure.com/scalesetpriority",
+                        "operator": "Equal",
+                        "value": "spot",
+                        "effect": "NoSchedule",
+                    },
                 ],
                 "affinity": {
                     "node_affinity": {
@@ -33,7 +39,12 @@ def get_base_k8s_gpu_config(gpu_count):
                                             "key": "sku",
                                             "operator": "In",
                                             "values": ["gpu"],
-                                        }
+                                        },
+                                        {
+                                            "key": "kubernetes.azure.com/scalesetpriority",
+                                            "operator": "In",
+                                            "values": ["spot"],
+                                        },
                                     ]
                                 }
                             ]
