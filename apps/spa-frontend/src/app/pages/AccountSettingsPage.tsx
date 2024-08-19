@@ -56,17 +56,16 @@ const accountSettings: AccountSettings = {
   ],
   'Social features': [
     {
-      label: 'Disable social matching',
+      label: 'Enable matching with other users',
       value: true,
     },
     {
-      label: 'Make account private',
+      label: 'Match with others over sensitive topics',
       value: true,
     },
   ],
-  More: {
+  'Danger zone': {
     deleteAccount: 'Delete my account and all of my data',
-    logOut: 'Log Out',
   },
 };
 
