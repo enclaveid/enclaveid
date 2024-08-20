@@ -213,6 +213,9 @@ async def cluster_summaries(
             [
                 pl.col("date_interests").str.concat("\n").alias("cluster_items"),
                 pl.col("date").sort().alias("cluster_dates"),
+                pl.col("category_cluster_label")
+                .unique()
+                .alias("category_cluster_labels"),
             ]
         )
         .filter(pl.col("cluster_label") != -1)

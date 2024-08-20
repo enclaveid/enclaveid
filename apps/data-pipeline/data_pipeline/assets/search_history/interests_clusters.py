@@ -48,27 +48,50 @@ def interests_clusters(
     )
     reduced_data_gpu = umap_model.fit_transform(embeddings_gpu)
 
-    clusterer = HDBSCAN(
+    # Clustering for single interests
+    fine_cluster_labels = HDBSCAN(
         min_cluster_size=10,
         gen_min_span_tree=True,
         metric="euclidean",
-        # By specifying an epsilon we can coalesce similar clusters but we rather keep
-        # them separate until after the bipartite matching stage
-        # cluster_selection_epsilon=0.15,
-    )
-    cluster_labels = clusterer.fit_predict(reduced_data_gpu.astype(np.float64).get())
+    ).fit_predict(reduced_data_gpu.astype(np.float64).get())
 
-    cluster_stats = np.unique(cluster_labels, return_counts=True)
+    fine_cluster_stats = np.unique(fine_cluster_labels, return_counts=True)
 
     context.add_output_metadata(
         {
-            "clusters_count": len(cluster_stats[0]),
-            "noise_count": int(cluster_stats[1][0]) if -1 in cluster_stats[0] else 0,
+            "fine_clusters_count": len(fine_cluster_stats[0]),
+            "fine_noise_count": int(fine_cluster_stats[1][0])
+            if -1 in fine_cluster_stats[0]
+            else 0,
+        }
+    )
+
+    # Clustering for interest categories
+    coarse_cluster_labels = HDBSCAN(
+        min_cluster_size=10,
+        gen_min_span_tree=True,
+        metric="euclidean",
+        # By specifying an epsilon we coalesce similar clusters
+        # into a single cluster representing a broader category
+        cluster_selection_epsilon=0.15,
+    ).fit_predict(reduced_data_gpu.astype(np.float64).get())
+
+    coarse_cluster_stats = np.unique(coarse_cluster_labels, return_counts=True)
+
+    context.add_output_metadata(
+        {
+            "coarse_clusters_count": len(coarse_cluster_stats[0]),
+            "coarse_noise_count": int(coarse_cluster_stats[1][0])
+            if -1 in coarse_cluster_stats[0]
+            else 0,
         }
     )
 
     # Remove the embeddings to save space
-    result = df.with_columns(cluster_label=pl.Series(cluster_labels)).drop("embeddings")
+    result = df.with_columns(
+        cluster_label=pl.Series(fine_cluster_labels),
+        category_cluster_label=pl.Series(coarse_cluster_labels),
+    ).drop("embeddings")
 
     context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 

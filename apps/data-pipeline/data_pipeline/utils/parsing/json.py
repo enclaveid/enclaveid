@@ -3,6 +3,16 @@ from typing import List
 from json_repair import repair_json
 
 
+def parse_cluster_categories_json(text) -> List[str]:
+    try:
+        j = repair_json(text, return_objects=True)
+        res = j["cluster_categories"]
+    except Exception:
+        res = []
+
+    return res
+
+
 def parse_cluster_classification_json(text) -> tuple[str | None, bool | None]:
     try:
         j = repair_json(text, return_objects=True)
