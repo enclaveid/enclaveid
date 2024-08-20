@@ -1,28 +1,20 @@
 import { prisma } from '@enclaveid/backend';
 import { DataFrame } from 'nodejs-polars';
-
+import { processUserMatches } from './processUserMatches';
+import { Prisma } from '@prisma/client';
 
 interface ClusterData {
   // InterestsCluster
-  pipelineClusterId: number;
-  clusterType: string;
-  summary: string;
-  title: string;
-  isSensitive: boolean;
-  activityDates: string[];
-  clusterItems: string[];
-  socialLikelihood: number;
+  interestsCluster: Prisma.InterestsClusterCreateInput;
   // InterestsClustersSimilarity
-  cosineSimilarity?: number;
-  commonSummary?: string;
-  commonTitle?: string;
-  averageSocialLikelihood?: number;
+  interestsClustersSimilarity?: Prisma.InterestsClustersSimilarityCreateInput;
+
   // non-db
   other_user_id?: string;
   other_user_cluster_label?: number;
 }
 
-export async function processClusterMatches(dataFrame: DataFrame): Promise<void> {
+export async function processClusterMatches(dataFrame: DataFrame) {
   const userId = dataFrame.getColumn('userId').get(0) as string;
 
   await prisma.$transaction(async (tx) => {
@@ -34,7 +26,31 @@ export async function processClusterMatches(dataFrame: DataFrame): Promise<void>
     });
 
     // Process clusters and matches
-    const clusterData: ClusterData[] = dataFrame.drop(['userId']).toRecords() as ClusterData[];
+    const clusterData: ClusterData[] = dataFrame
+      .drop(['userId'])
+      .toRecords()
+      .map((r) => ({
+        interestsCluster: {
+          pipelineClusterId: r.pipelineClusterId,
+          clusterType: r.clusterType,
+          summary: r.summary,
+          title: r.title,
+          isSensitive: r.isSensitive,
+          activityDates: r.activityDates,
+          clusterItems: r.clusterItems,
+          socialLikelihood: r.socialLikelihood,
+        },
+        interestsClustersSimilarity: r.cosineSimilarity
+          ? {
+              cosineSimilarity: r.cosineSimilarity,
+              commonSummary: r.commonSummary,
+              commonTitle: r.commonTitle,
+              averageSocialLikelihood: r.averageSocialLikelihood,
+            }
+          : undefined,
+        other_user_id: r.other_user_id,
+        other_user_cluster_label: r.other_user_cluster_label,
+      })) as ClusterData[];
 
     for (const cluster of clusterData) {
       // Update or create InterestsCluster
@@ -42,28 +58,18 @@ export async function processClusterMatches(dataFrame: DataFrame): Promise<void>
         where: {
           userInterestsId_pipelineClusterId_clusterType: {
             userInterestsId: userInterests.id,
-            pipelineClusterId: cluster.pipelineClusterId,
-            clusterType: cluster.clusterType,
-          }
+            pipelineClusterId: cluster.interestsCluster.pipelineClusterId,
+            clusterType: cluster.interestsCluster.clusterType,
+          },
         },
         update: {
-          summary: cluster.summary,
-          title: cluster.title,
-          isSensitive: cluster.isSensitive,
-          activityDates: cluster.activityDates,
-          clusterItems: cluster.clusterItems,
-          socialLikelihood: cluster.socialLikelihood,
+          ...cluster.interestsCluster,
         },
         create: {
-          userInterestsId: userInterests.id,
-          pipelineClusterId: cluster.pipelineClusterId,
-          clusterType: cluster.clusterType,
-          summary: cluster.summary,
-          title: cluster.title,
-          isSensitive: cluster.isSensitive,
-          activityDates: cluster.activityDates,
-          clusterItems: cluster.clusterItems,
-          socialLikelihood: cluster.socialLikelihood,
+          ...cluster.interestsCluster,
+          userInterests: {
+            connect: { id: userInterests.id },
+          },
         },
       });
 
@@ -83,37 +89,32 @@ export async function processClusterMatches(dataFrame: DataFrame): Promise<void>
 
           if (otherInterestsCluster) {
             // Find existing InterestsClustersSimilarity
-            const existingSimilarity = await tx.interestsClustersSimilarity.findFirst({
-              where: {
-                interestsClusterMatches: {
-                  every: {
-                    interestsClusterId: {
-                      in: [interestsCluster.id, otherInterestsCluster.id],
+            const existingSimilarity =
+              await tx.interestsClustersSimilarity.findFirst({
+                where: {
+                  interestsClusterMatches: {
+                    every: {
+                      interestsClusterId: {
+                        in: [interestsCluster.id, otherInterestsCluster.id],
+                      },
                     },
                   },
                 },
-              },
-            });
+              });
 
             if (existingSimilarity) {
               // Update existing InterestsClustersSimilarity
               await tx.interestsClustersSimilarity.update({
                 where: { id: existingSimilarity.id },
                 data: {
-                  cosineSimilarity: cluster.cosineSimilarity!,
-                  averageSocialLikelihood: cluster.averageSocialLikelihood!,
-                  commonSummary: cluster.commonSummary!,
-                  commonTitle: cluster.commonTitle!,
+                  ...cluster.interestsClustersSimilarity,
                 },
               });
             } else {
               // Create new InterestsClustersSimilarity and InterestsClusterMatch
               await tx.interestsClustersSimilarity.create({
                 data: {
-                  cosineSimilarity: cluster.cosineSimilarity!,
-                  averageSocialLikelihood: cluster.averageSocialLikelihood!,
-                  commonSummary: cluster.commonSummary!,
-                  commonTitle: cluster.commonTitle!,
+                  ...cluster.interestsClustersSimilarity,
                   interestsClusterMatches: {
                     create: [
                       { interestsClusterId: interestsCluster.id },
@@ -123,8 +124,12 @@ export async function processClusterMatches(dataFrame: DataFrame): Promise<void>
                 },
               });
             }
+          }
         }
       }
     }
-}});
+  });
+
+  // Update all the userMatches for the user
+  return await processUserMatches(userId);
 }

@@ -36,17 +36,6 @@
         "cwd": "apps/data-pipeline"
       }
     },
-    "sqlacodegen": {
-      "executor": "@nxlv/python:run-commands",
-      "options": {
-        "commands": [
-          "sqlacodegen_v2 $API_DATABASE_URL --outfile data_pipeline/utils/database/db_models.py",
-          "ruff format data_pipeline/utils/database/db_models.py"
-        ],
-        "parallel": false,
-        "cwd": "apps/data-pipeline"
-      }
-    },
     "add": {
       "executor": "@nxlv/python:add",
       "options": {}

@@ -10,6 +10,7 @@ import jwtAuth from './app/plugins/jwtAuth';
 import prismaLifecycle from './app/plugins/prismaLifecycle';
 import trpcAdapter from './app/plugins/trpcAdapter';
 import fastifyHealthcheck from 'fastify-healthcheck';
+import webhooks from './app/plugins/webhooks';
 
 const host = process.env.API_HOST ?? 'localhost';
 const port = process.env.API_PORT ? Number(process.env.API_PORT) : 3000;
@@ -27,6 +28,7 @@ server.register(jwtAuth);
 server.register(prismaLifecycle);
 server.register(trpcAdapter);
 server.register(fastifyHealthcheck);
+server.register(webhooks);
 
 // Start listening.
 server.listen({ port, host }, (err) => {
