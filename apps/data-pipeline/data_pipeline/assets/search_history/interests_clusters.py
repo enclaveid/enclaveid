@@ -8,6 +8,7 @@ from dagster import (
     AssetIn,
     asset,
 )
+from pydantic import Field
 
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
@@ -22,6 +23,13 @@ if is_rapids_image() or TYPE_CHECKING:
     from cuml.cluster.hdbscan import HDBSCAN
 
 
+class InterestsClustersConfig(RowLimitConfig):
+    cluster_selection_epsilon: float = Field(
+        default=0.3,
+        description="Epsilon value for merging similar cluster into broader categories. 0.3 = ~100 categories.",
+    )
+
+
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
@@ -30,7 +38,7 @@ if is_rapids_image() or TYPE_CHECKING:
 )
 def interests_clusters(
     context: AssetExecutionContext,
-    config: RowLimitConfig,
+    config: InterestsClustersConfig,
     interests_embeddings: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -71,9 +79,7 @@ def interests_clusters(
         min_cluster_size=10,
         gen_min_span_tree=True,
         metric="euclidean",
-        # By specifying an epsilon we coalesce similar clusters
-        # into a single cluster representing a broader category
-        cluster_selection_epsilon=0.15,
+        cluster_selection_epsilon=config.cluster_selection_epsilon,
     ).fit_predict(reduced_data_gpu.astype(np.float64).get())
 
     coarse_cluster_stats = np.unique(coarse_cluster_labels, return_counts=True)
