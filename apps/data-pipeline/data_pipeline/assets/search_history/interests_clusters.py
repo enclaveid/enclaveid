@@ -24,9 +24,18 @@ if is_rapids_image() or TYPE_CHECKING:
 
 
 class InterestsClustersConfig(RowLimitConfig):
-    cluster_selection_epsilon: float = Field(
+    fine_min_cluster_size: int = Field(
+        default=5,
+        description="Minimum number of samples in an activity cluster to be considered an interest.",
+    )
+    # With these default values we are expeciting ~100 clusters
+    coarse_min_cluster_size: int = Field(
+        default=10,
+        description="Minimum number of samples in an activity cluster to be considered a category. Should be equal or larger than fine_min_cluster_size.",
+    )
+    coarse_cluster_selection_epsilon: float = Field(
         default=0.3,
-        description="Epsilon value for merging similar cluster into broader categories. 0.3 = ~100 categories.",
+        description="Epsilon value for merging similar activities into broader categories.",
     )
 
 
@@ -58,7 +67,7 @@ def interests_clusters(
 
     # Clustering for single interests
     fine_cluster_labels = HDBSCAN(
-        min_cluster_size=10,
+        min_cluster_size=config.fine_min_cluster_size,
         gen_min_span_tree=True,
         metric="euclidean",
     ).fit_predict(reduced_data_gpu.astype(np.float64).get())
@@ -76,10 +85,10 @@ def interests_clusters(
 
     # Clustering for interest categories
     coarse_cluster_labels = HDBSCAN(
-        min_cluster_size=10,
+        min_cluster_size=config.coarse_min_cluster_size,
         gen_min_span_tree=True,
         metric="euclidean",
-        cluster_selection_epsilon=config.cluster_selection_epsilon,
+        cluster_selection_epsilon=config.coarse_cluster_selection_epsilon,
     ).fit_predict(reduced_data_gpu.astype(np.float64).get())
 
     coarse_cluster_stats = np.unique(coarse_cluster_labels, return_counts=True)
