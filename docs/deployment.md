@@ -17,14 +17,14 @@ Depending on which environment you want to deploy to.
 
 ```bash
 # Build the containers
-pnpm exec nx run @enclaveid/enclaveid:containers
-pnpm exec nx run @enclaveid/enclaveid:aux-containers
+bun nx run @enclaveid/enclaveid:containers
+bun nx run @enclaveid/enclaveid:aux-containers
 
 # Render the Helm chart
-CONTEXT=$AZURE_CLUSTER_NAME pnpm exec nx run @enclaveid/enclaveid:helm-chart
+CONTEXT=$AZURE_CLUSTER_NAME bun nx run @enclaveid/enclaveid:helm-chart
 
 # Apply the chart
-CONTEXT=$AZURE_CLUSTER_NAME pnpm exec nx run @enclaveid/enclaveid:deploy
+CONTEXT=$AZURE_CLUSTER_NAME bun nx run @enclaveid/enclaveid:deploy
 ```
 
 ## Secrets management

@@ -11,12 +11,13 @@
 
 ## Getting started
 
-Docker and Node.js are required for local development. The monorepo is managed with pnpm and Nx; to install them and the project dependencies, run:
+Docker and Node.js are required for local development. The monorepo is managed with `bun` and Nx; to install them and the project dependencies, run:
 
 ```bash
-npm install -g pnpm
-pnpm add --global nx@latest
-pnpm install
+brew tap oven-sh/bun
+brew install bun
+bun add --global nx@latest
+bun install
 ```
 
 Additionally, you should install all the [recommended](.vscode/extensions.json) VSCode extensions. Most importantly, the [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) extension.

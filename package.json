@@ -195,9 +195,12 @@
     "ws": "^8.17.0",
     "zod": "^3.23.8"
   },
-  "pnpm": {
-    "overrides": {
-      "clone-deep": "4.0.1"
-    }
-  }
+  "overrides": {
+    "clone-deep": "4.0.1"
+  },
+  "trustedDependencies": [
+    "local-reverse-geocoder",
+    "core-js-pure",
+    "@dynamicss/dynamicss"
+  ]
 }

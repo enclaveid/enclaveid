@@ -143,5 +143,8 @@
         "cacheableOperations": ["build-storybook"]
       }
     }
+  },
+  "cli": {
+    "packageManager": "bun"
   }
 }

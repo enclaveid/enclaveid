@@ -45,30 +45,24 @@ jobs:
       #     path: ./apps/data-pipeline/.venv
       #     key: venv-${{ hashFiles('./apps/data-pipeline/poetry.lock') }}
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 9.7.1
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 22
-          cache: 'pnpm'
+      - uses: oven-sh/setup-bun@v2
 
       # TODO: In order to make the nx distributed CI work, we need to configure a custom runner
       # since it doesn't retain the state of the current GHA runner
       # - name: Start distributed CI run
       #   run: pnpx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
 
-      - run: CI=true pnpm install
+      - run: CI=true bun install
 
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master
 
       # TODO: use werf
-      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container
-      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container-vllm
-      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container-rapids
-      #- run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} pnpm exec nx run data-pipeline:container-jupyter
+      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} bun nx run data-pipeline:container
+      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} bun nx run data-pipeline:container-vllm
+      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} bun nx run data-pipeline:container-rapids
+      #- run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} bun nx run data-pipeline:container-jupyter
 
       # - name: Stop distributed CI run
       #   run: pnpx nx-cloud complete-ci-run
