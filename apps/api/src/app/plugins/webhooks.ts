@@ -7,28 +7,24 @@ import { readParquet } from 'nodejs-polars';
 
 export default fp(async (fastify: FastifyInstance) => {
   fastify.post('/pipeline_finished', async (request, reply) => {
-    // Print current directory
-    console.log('Current directory:', process.cwd());
-
     const { userId } = request.body as { userId: string };
 
     // Check if the user exists in the database
-    const user = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-
-    if (!user) {
-      reply.status(404).send({ error: 'User not found' });
-      return;
-    }
+    const user = await prisma.user
+      .findUnique({
+        where: {
+          id: userId,
+        },
+      })
+      .catch((err) => {
+        reply.status(404).send({ error: 'User not found' });
+      });
 
     const blobName = `results_for_api/${userId}.snappy`;
 
     const df =
       process.env.NODE_ENV === 'development'
-        ? readParquet(blobName)
+        ? readParquet(`${process.cwd()}/apps/data-pipeline/data/${blobName}`)
         : await readPolarsFromAzure(blobName);
 
     await processClusterMatches(df);
