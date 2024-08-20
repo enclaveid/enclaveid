@@ -1,4 +1,3 @@
-from data_pipeline.assets.search_history.api_user_matches import api_user_matches
 from data_pipeline.assets.search_history.cluster_categories import cluster_categories
 from data_pipeline.assets.search_history.cluster_summaries import cluster_summaries
 from data_pipeline.assets.search_history.interests import interests
@@ -6,6 +5,7 @@ from data_pipeline.assets.search_history.interests_clusters import interests_clu
 from data_pipeline.assets.search_history.interests_embeddings import (
     interests_embeddings,
 )
+from data_pipeline.assets.search_history.results_for_api import results_for_api
 from data_pipeline.assets.search_history.summaries_embeddings import (
     summaries_embeddings,
 )
@@ -25,5 +25,5 @@ __all__ = [
     summaries_embeddings,
     summaries_user_matches,
     summaries_user_matches_with_desc,
-    api_user_matches,
+    results_for_api,
 ]
