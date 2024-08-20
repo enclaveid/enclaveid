@@ -203,6 +203,16 @@
   "trustedDependencies": [
     "local-reverse-geocoder",
     "core-js-pure",
-    "@dynamicss/dynamicss"
+    "@dynamicss/dynamicss",
+    "@swc/core",
+    "cypress",
+    "esbuild",
+    "nx",
+    "prisma",
+    "@prisma/client",
+    "argon2",
+    "puppeteer",
+    "@prisma/engines",
+    "@apollo/protobufjs"
   ]
 }
