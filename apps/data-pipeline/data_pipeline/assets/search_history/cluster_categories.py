@@ -155,7 +155,9 @@ async def cluster_categories(
     logger.info(f"Done processing {len(prompt_sequences)} clusters.")
 
     results = {
-        "cluster_categories": parse_cluster_categories_json(completions),
+        "cluster_categories": list(
+            map(lambda x: parse_cluster_categories_json(x[0]) if len(x) > 0 else [], completions)
+        ),
         "conversations": conversations,
     }
 
