@@ -50,4 +50,17 @@ function SidebarItem({
   );
 }
 
+function Chip({ label }: { label: string }) {
+  return (
+    <div
+      className={classNames(
+        'py-[2px] px-1.5 rounded-full font-semibold text-white tracking-[0.05em] text-[10px] flex-1 text-right max-w-max ml-auto uppercase',
+        label.toLowerCase() === 'preview' ? 'bg-[#4D6C8F]' : 'bg-[#676767]',
+      )}
+    >
+      {label}
+    </div>
+  );
+}
+
 export { SidebarItem };

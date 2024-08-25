@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { LoadingPage } from '../pages/LoadingPage';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 const AuthContext = createContext(null);
 
@@ -24,14 +24,18 @@ export function AuthProvider({ children }) {
   );
 }
 
-export function RequireAuth({ children }) {
+interface RequireAuthProps {
+  children?: React.ReactNode;
+}
+
+export function RequireAuth(props: RequireAuthProps) {
   const { isAuthenticated } = useContext(AuthContext);
   const location = useLocation();
 
   return isAuthenticated == null ? (
     <LoadingPage />
   ) : isAuthenticated ? (
-    children
+    (props?.children ?? <Outlet />)
   ) : (
     <Navigate to="/login" state={{ from: location }} replace />
   );

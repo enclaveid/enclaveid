@@ -1,5 +1,5 @@
 import { ReactElement, useCallback, useEffect } from 'react';
-import { StepFormProps } from '../StepForm';
+import { StepFormProps } from '../onboarding/StepForm';
 import React from 'react';
 import { trpc } from '../../utils/trpc';
 import { QuestionnaireId, questionnaires } from '@enclaveid/shared';

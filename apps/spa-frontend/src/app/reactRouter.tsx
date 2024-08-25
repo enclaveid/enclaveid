@@ -27,6 +27,8 @@ import { OwnInterests } from './components/OwnInterests';
 import { IntroPage } from './pages/onboarding/IntroPage';
 import { BasicProfileInfoPage } from './pages/onboarding/BasicProfileInfoPage';
 import { PurposeSelectionPage } from './pages/onboarding/PurposeSelectionPage';
+import { RequireAuth } from './providers/AuthProvider';
+import { OnboardingGuard } from './components/onboarding/OnboardingGuard';
 
 export const reactRouter = createBrowserRouter([
   {
@@ -43,6 +45,7 @@ export const reactRouter = createBrowserRouter([
   },
   {
     path: '/onboarding',
+    element: <RequireAuth />,
     children: [
       {
         index: true,
@@ -50,19 +53,35 @@ export const reactRouter = createBrowserRouter([
       },
       {
         path: 'basicProfileInfo',
-        element: <BasicProfileInfoPage />,
+        element: (
+          <OnboardingGuard>
+            <BasicProfileInfoPage />
+          </OnboardingGuard>
+        ),
       },
       {
         path: 'purposeSelection',
-        element: <PurposeSelectionPage />,
+        element: (
+          <OnboardingGuard>
+            <PurposeSelectionPage />
+          </OnboardingGuard>
+        ),
       },
       {
         path: 'fileUpload',
-        element: <FileUploadPage />,
+        element: (
+          <OnboardingGuard>
+            <FileUploadPage />
+          </OnboardingGuard>
+        ),
       },
       {
         path: 'questionnaire',
-        element: <QuestionnairePage />,
+        element: (
+          <OnboardingGuard>
+            <QuestionnairePage />
+          </OnboardingGuard>
+        ),
       },
       // {
       //   path: '/fakeOauth',

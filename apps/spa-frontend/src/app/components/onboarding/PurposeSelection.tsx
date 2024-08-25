@@ -14,6 +14,11 @@ import LogosSpotifyIcon from '~icons/logos/spotify-icon';
 import LogosGoogleCalendar from '~icons/logos/google-calendar';
 import SkillIconsLinkedin from '~icons/skill-icons/linkedin';
 import { backgroundPattern } from '../../utils/backgroundPattern';
+import { useNavigate } from 'react-router-dom';
+import { WarningModal } from '../WarningModal';
+
+import { Purpose } from '@prisma/client';
+import { fromCamelCase } from '../../utils/ui/fromCamelCase';
 
 const iconsMap = {
   messaging: [LogosWhatsappIcon, LogosMessenger, LogosFacebook],
@@ -31,39 +36,52 @@ const iconsMap = {
 };
 
 const options = {
-  'Analyzing myself': [
+  [Purpose.AnalyzingMyself]: [
     ...iconsMap['messaging'],
     ...iconsMap['social'],
     ...iconsMap['search'],
   ],
-  Dating: [...iconsMap['messaging'], ...iconsMap['social']],
-  'Finding travel buddies': [...iconsMap['location'], ...iconsMap['social']],
-  'Finding roomates': [...iconsMap['location'], ...iconsMap['enterteinment']],
-  'Finding project collaborators': [...iconsMap['productivity']],
-  'Forming a study group': [...iconsMap['productivity'], ...iconsMap['search']],
-  'Making friends in a new city': [
+  [Purpose.Dating]: [...iconsMap['messaging'], ...iconsMap['social']],
+  [Purpose.FindingTravelBuddies]: [
+    ...iconsMap['location'],
+    ...iconsMap['social'],
+  ],
+  [Purpose.FindingRoomates]: [
+    ...iconsMap['location'],
+    ...iconsMap['enterteinment'],
+  ],
+  [Purpose.FindingProjectCollaborators]: [...iconsMap['productivity']],
+  [Purpose.FormingAStudyGroup]: [
+    ...iconsMap['productivity'],
+    ...iconsMap['search'],
+  ],
+  [Purpose.MakingFriendsInANewCity]: [
     ...iconsMap['location'],
     ...iconsMap['social'],
     ...iconsMap['enterteinment'],
   ],
-  'Finding gym buddies': [
+  [Purpose.FindingGymBuddies]: [
     ...iconsMap['location'],
     ...iconsMap['enterteinment'],
   ],
-  'Finding a language teacher': [...iconsMap['search']],
+  [Purpose.FindingALanguageTeacher]: [...iconsMap['search']],
 };
+
 export function PurposeSelection() {
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([
-    'Analyzing myself',
-    'Dating',
+  const [selectedOptions, setSelectedOptions] = useState<Purpose[]>([
+    Purpose.AnalyzingMyself,
+    Purpose.Dating,
   ]);
 
   const [noSocial, setNoSocial] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if "Analyzing myself" is the only selected option
     setNoSocial(
-      selectedOptions.length === 1 && selectedOptions[0] === 'Analyzing myself',
+      selectedOptions.length === 1 &&
+        selectedOptions[0] === Purpose.AnalyzingMyself,
     );
   }, [selectedOptions]);
 
@@ -86,17 +104,19 @@ export function PurposeSelection() {
             <div className="grid grid-cols-3 gap-2">
               {Object.keys(options).map((option, index) => (
                 <Button
-                  label={option}
+                  label={fromCamelCase(option)}
                   variant={
-                    selectedOptions.includes(option) ? 'primary' : 'tertiary'
+                    selectedOptions.includes(option as Purpose)
+                      ? 'primary'
+                      : 'tertiary'
                   }
                   key={index}
                   size="small"
                   onClick={() =>
                     setSelectedOptions((prev) =>
-                      prev.includes(option)
-                        ? prev.filter((item) => item !== option)
-                        : [...prev, option],
+                      prev.includes(option as Purpose)
+                        ? prev.filter((item) => item !== (option as Purpose))
+                        : [...prev, option as Purpose],
                     )
                   }
                 />
@@ -105,14 +125,16 @@ export function PurposeSelection() {
           </div>
           <Button
             label={
-              selectedOptions.length == Object.keys(options).length
+              selectedOptions.length === Object.keys(options).length
                 ? 'Deselect all'
                 : 'Select all'
             }
             variant="secondary"
             onClick={() => {
               if (selectedOptions.length < Object.keys(options).length) {
-                setSelectedOptions(Object.keys(options));
+                setSelectedOptions(
+                  Object.keys(options).map((option) => option as Purpose),
+                );
               } else {
                 setSelectedOptions([]);
               }
@@ -136,6 +158,16 @@ export function PurposeSelection() {
               </div>
             </div>
           </div>
+          <WarningModal
+            isOpen={isModalOpen}
+            closeModal={() => setIsModalOpen(false)}
+            title="Are you sure?"
+            description="The best part of EnclaveID is discovering new people. You can also familiarize yourself with the solo features and revise this decision in your account settings at any other time."
+            onConfirm={() => {
+              // TODO: mutation
+              navigate('/onboarding/questionnaire');
+            }}
+          />
 
           {selectedOptions.length > 0 &&
             (noSocial ? (
@@ -144,7 +176,7 @@ export function PurposeSelection() {
                 variant="secondary"
                 fullWidth
                 className="mt-10 mb-10"
-                //onClick={handleClick}
+                onClick={() => setIsModalOpen(true)}
               />
             ) : (
               <Button
@@ -152,7 +184,9 @@ export function PurposeSelection() {
                 variant="primary"
                 fullWidth
                 className="mt-10 mb-10"
-                //onClick={handleClick}
+                onClick={() => {
+                  navigate('/onboarding/questionnaire');
+                }}
               />
             ))}
         </div>

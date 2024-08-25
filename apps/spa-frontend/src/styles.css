@@ -71,3 +71,13 @@
 .files-ui-footer {
   display: none !important;
 }
+
+.onboarding-gradient {
+  background: linear-gradient(
+    223.7deg,
+    #e1f6ef -2.54%,
+    #ffffff 22.44%,
+    #e7f2ee 63.25%,
+    #fff4e4 113.1%
+  );
+}

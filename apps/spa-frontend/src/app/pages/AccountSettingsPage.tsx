@@ -1,9 +1,6 @@
 import classNames from 'classnames';
-import { useState, Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { Button } from '../components/Button';
-import { MarkIcon } from '../components/Icons';
+import { useState } from 'react';
+import { WarningModal } from '../components/WarningModal';
 import { useNavigate } from 'react-router-dom';
 import { trpc } from '../utils/trpc';
 
@@ -28,11 +25,6 @@ interface RadioGroupProps {
   options: { label: string; value: boolean }[];
   selectedValue: boolean;
   onChange: (value: boolean) => void;
-}
-
-interface ModalProps {
-  isOpen: boolean;
-  closeModal: () => void;
 }
 
 const accountSettings: AccountSettings = {
@@ -159,87 +151,10 @@ const SectionTab = ({
   );
 };
 
-const DeleteModal = ({ isOpen, closeModal }: ModalProps) => {
-  const navigate = useNavigate();
-
-  const deleteEverythingMutation = trpc.private.deleteEverything.useMutation();
-
-  return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={closeModal}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/25" />
-        </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="w-full max-w-[403px] transform overflow-hidden rounded-xl bg-white px-11 pt-5 pb-7 text-left align-middle shadow-xl transition-all relative">
-                <Dialog.Title
-                  as="h3"
-                  className="text-lg font-medium leading-[21px] text-passiveLinkColor text-center"
-                >
-                  Deleting Account
-                </Dialog.Title>
-                <button onClick={closeModal} className="absolute right-4 top-5">
-                  <XMarkIcon className="w-3 h-3 text-passiveLinkColor" />
-                </button>
-
-                <div className="flex flex-col gap-6 mt-6">
-                  <div className="py-[18px] bg-[#A62F2F]/10 rounded-xl flex flex-col gap-5 px-4 items-center justify-center">
-                    <MarkIcon />
-                    <p className="text-[#A62F2F] text-sm text-center">
-                      You’re about to delete your entire account and profile.
-                      Your history will be erased and this action can’t be
-                      reversed.
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    {/* <input
-                      type="text"
-                      className="border border-[#D2DAE8] rounded-lg py-[11px] pl-[11px] pr-[15px] text-passiveLinkColor leading-[18px]"
-                      placeholder="Enter your password to confirm"
-                    /> */}
-                    <Button
-                      label="Confirm and Delete Account"
-                      variant="error"
-                      onClick={() =>
-                        deleteEverythingMutation.mutate(null, {
-                          onSuccess: () => {
-                            navigate('/login');
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition>
-  );
-};
-
 export function AccountSettings() {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const deleteEverythingMutation = trpc.private.deleteEverything.useMutation();
 
   return (
     <div className="flex flex-col gap-7 px-6">
@@ -270,7 +185,19 @@ export function AccountSettings() {
           }
         })}
       </div>
-      <DeleteModal closeModal={() => setIsOpen(false)} isOpen={isOpen} />
+      <WarningModal
+        closeModal={() => setIsOpen(false)}
+        isOpen={isOpen}
+        title="Deleting Account"
+        description="You’re about to delete your entire account and profile. Your history will be erased and this action can’t be undone."
+        onConfirm={() => {
+          deleteEverythingMutation.mutate(null, {
+            onSuccess: () => {
+              navigate('/login');
+            },
+          });
+        }}
+      />
     </div>
   );
 }

@@ -15,6 +15,18 @@ enum Gender {
   Other
 }
 
+enum Purpose {
+  AnalyzingMyself
+  Dating
+  FindingTravelBuddies
+  FindingRoomates
+  FindingProjectCollaborators
+  FormingAStudyGroup
+  MakingFriendsInANewCity
+  FindingGymBuddies
+  FindingALanguageTeacher
+}
+
 model User {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
@@ -32,6 +44,8 @@ model User {
   gender       Gender
   geographyLat Float
   geographyLon Float
+
+  purposes Purpose[]
 
   userInterests UserInterests?
   userTraits    UserTraits?
