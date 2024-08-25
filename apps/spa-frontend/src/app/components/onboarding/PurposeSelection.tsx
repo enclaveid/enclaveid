@@ -17,8 +17,8 @@ import { backgroundPattern } from '../../utils/backgroundPattern';
 import { useNavigate } from 'react-router-dom';
 import { WarningModal } from '../WarningModal';
 
-import { Purpose } from '@prisma/client';
 import { fromCamelCase } from '../../utils/ui/fromCamelCase';
+import { Purpose } from '@prisma/client';
 
 const iconsMap = {
   messaging: [LogosWhatsappIcon, LogosMessenger, LogosFacebook],

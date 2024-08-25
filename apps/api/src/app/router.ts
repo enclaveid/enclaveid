@@ -11,6 +11,7 @@ import { politics } from './routers/dashboard/politics';
 import { personality } from './routers/dashboard/personality';
 import { fakeOauth } from './routers/fakeOauth';
 import { fileUpload } from './routers/onboarding/fileUpload';
+import { basicProfileInfo } from './routers/onboarding/basicProfileInfo';
 import { authUtils } from './routers/authUtils';
 import { matches } from './routers/dashboard/matches';
 import { streamChat } from './routers/dashboard/streamChat';
@@ -31,6 +32,7 @@ export const appRouter = router({
     streamChat,
     settings,
     onboardingStatus,
+    basicProfileInfo,
   ),
   [TRPC_PUBLIC_NAMESPACE]: mergeRouters(attestation, authentication),
 });

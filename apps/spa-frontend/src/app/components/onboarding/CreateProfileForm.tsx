@@ -4,9 +4,40 @@ import { Input } from '../Input';
 import { backgroundPattern } from '../../utils/backgroundPattern';
 import { LocationPicker } from '../LocationPicker';
 import { OptionPicker } from '../OptionPicker';
+import { Gender } from '@prisma/client';
+import { getIdenticon } from '../../utils/ui/identicons';
+import { useEffect, useState } from 'react';
+import { LoadingCheckmark } from '../LoadingCheckmark';
+import { trpc } from '../../utils/trpc';
 
-function CreateProfileForm() {
+function FormLabel({ label }: { label: string }) {
+  return (
+    <label className="text-[#6C7A8A] text-sm font-medium leading-[19.6px] block">
+      {label}
+    </label>
+  );
+}
+
+export function CreateProfileForm() {
   const navigate = useNavigate();
+  const [displayName, setDisplayName] = useState('');
+  const usernameAvailableQuery = trpc.private.isDisplayNameAvailable.useQuery(
+    {
+      displayName,
+    },
+    {
+      enabled: false, // Disable automatic query execution
+    },
+  );
+
+  // Refetch the query if the displayName changes with a debounce of 500ms
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      usernameAvailableQuery.refetch();
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [displayName, usernameAvailableQuery]);
 
   return (
     <section
@@ -22,32 +53,34 @@ function CreateProfileForm() {
             Now, let’s get some basic information to build your profile.
           </h1>
           <div className="flex flex-col gap-3.5 mt-5">
-            <Input
-              label="Username"
-              placeholder="discordusername"
-              type="text"
-              id="username"
-              fullWidth
-              style={{
-                backgroundColor: 'transparent',
-              }}
-            />
-            <Input
-              label="Email"
-              placeholder="yourdiscord@gmail.com"
-              type="email"
-              id="email"
-              fullWidth
-              required
-              style={{
-                backgroundColor: 'transparent',
-              }}
-            />
+            <FormLabel label="Identicon and username" />
+            <div className="flex items-center gap-3.5">
+              <img
+                src={getIdenticon(displayName)}
+                alt=""
+                className="w-[50px] h-[50px] rounded-full"
+              />
+              <Input
+                placeholder="Minimum 4 characters"
+                type="text"
+                id="username"
+                fullWidth
+                style={{
+                  backgroundColor: 'transparent',
+                }}
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+              />
+              <LoadingCheckmark booleanQuery={usernameAvailableQuery} />
+            </div>
+
+            <FormLabel label="Gender" />
             <OptionPicker
-              options={['Male', 'Female', 'Other']}
+              options={Object.values(Gender)}
               label="Gender"
               onChange={(option) => console.log(option)}
             />
+            <FormLabel label="Location" />
             <LocationPicker />
           </div>
           <div className="mt-5">
@@ -71,5 +104,3 @@ function CreateProfileForm() {
     </section>
   );
 }
-
-export { CreateProfileForm };

@@ -15,7 +15,6 @@ export function OptionPicker({
 
   return (
     <div className="flex flex-col space-y-2">
-      <label className="text-[#6C7A8A] font-medium text-sm">{label}</label>
       <div className="flex space-x-2">
         {options.map((option) => (
           <button
