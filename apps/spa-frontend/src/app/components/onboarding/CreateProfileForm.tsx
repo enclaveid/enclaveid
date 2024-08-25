@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../Button';
-import { LocationPinIcon } from '../Icons';
 import { Input } from '../Input';
 import { backgroundPattern } from '../../utils/backgroundPattern';
+import { LocationPicker } from '../LocationPicker';
 
 function CreateProfileForm() {
   const navigate = useNavigate();
@@ -42,18 +42,7 @@ function CreateProfileForm() {
                 backgroundColor: 'transparent',
               }}
             />
-            <Input
-              label="Location"
-              placeholder="Select your location..."
-              type="text"
-              id="location"
-              icon={<LocationPinIcon />}
-              fullWidth
-              required
-              style={{
-                backgroundColor: 'transparent',
-              }}
-            />
+            <LocationPicker />
           </div>
           <div className="mt-5">
             <Button
