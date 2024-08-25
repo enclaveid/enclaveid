@@ -4,16 +4,36 @@ import countryList from 'react-select-country-list';
 import Flag from 'react-world-flags';
 
 const customStyles = {
-  option: (provided) => ({
+  control: (provided) => ({
     ...provided,
-    display: 'flex',
-    alignItems: 'center',
-    padding: '8px 12px',
+    //backgroundColor: '#f8f9fa',
+    borderColor: '#e2e8f0',
+    borderRadius: '0.375rem',
+    padding: '0.5rem',
+    boxShadow: 'none',
+    '&:hover': {
+      borderColor: '#e2e8f0',
+    },
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: '#a0aec0',
   }),
   singleValue: (provided) => ({
     ...provided,
-    display: 'flex',
-    alignItems: 'center',
+    color: '#4a5568',
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected ? '#e2e8f0' : 'white',
+    color: '#4a5568',
+    '&:hover': {
+      backgroundColor: '#edf2f7',
+    },
+  }),
+  dropdownIndicator: (provided) => ({
+    ...provided,
+    color: '#a0aec0',
   }),
 };
 

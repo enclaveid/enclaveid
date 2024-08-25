@@ -3,6 +3,7 @@ import { Button } from '../Button';
 import { Input } from '../Input';
 import { backgroundPattern } from '../../utils/backgroundPattern';
 import { LocationPicker } from '../LocationPicker';
+import { OptionPicker } from '../OptionPicker';
 
 function CreateProfileForm() {
   const navigate = useNavigate();
@@ -41,6 +42,11 @@ function CreateProfileForm() {
               style={{
                 backgroundColor: 'transparent',
               }}
+            />
+            <OptionPicker
+              options={['Male', 'Female', 'Other']}
+              label="Gender"
+              onChange={(option) => console.log(option)}
             />
             <LocationPicker />
           </div>
