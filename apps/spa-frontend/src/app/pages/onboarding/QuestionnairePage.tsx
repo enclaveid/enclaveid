@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { StepForm } from '../components/StepForm';
-import { QuestionnaireContainer } from '../components/containers/QuestionnaireContainer';
-import { RequireAuth } from '../providers/AuthProvider';
+import { StepForm } from '../../components/onboarding/StepForm';
+import { QuestionnaireContainer } from '../../components/containers/QuestionnaireContainer';
+import { RequireAuth } from '../../providers/AuthProvider';
 
 export function QuestionnairePage() {
   const navigate = useNavigate();

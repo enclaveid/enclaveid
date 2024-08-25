@@ -1,12 +1,14 @@
-import { Button } from './Button';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../Button';
 import {
   BrainIcon,
   FacebookIconU,
   GoogleIconU,
   OpenAiIconU,
   UserIcon,
-} from './Icons';
-import { Link } from './Link';
+} from '../Icons';
+import { Link } from '../Link';
+import { backgroundPattern } from '../../utils/backgroundPattern';
 
 const data = [
   {
@@ -37,8 +39,13 @@ const data = [
 ];
 
 function CreateProfile() {
+  const navigate = useNavigate();
+
   return (
-    <section className="min-h-screen onboarding-gradient flex items-center justify-center">
+    <section
+      className="min-h-screen onboarding-gradient flex items-center justify-center"
+      style={{ ...backgroundPattern }}
+    >
       <div className="flex flex-col gap-6 items-center">
         <h1 className="text-passiveLinkColor tracking-[0.02em] leading-[42px] font-medium text-4xl">
           Create a profile
@@ -75,7 +82,10 @@ function CreateProfile() {
             data.{' '}
           </p>
           <div className="mt-5 flex flex-col gap-3">
-            <Button label="Confirm" />
+            <Button
+              label="Confirm"
+              onClick={() => navigate('basicProfileInfo')}
+            />
             <Link>I want to learn more</Link>
           </div>
         </div>

@@ -1,4 +1,5 @@
-import { Button } from './Button';
+import { useEffect, useState } from 'react';
+import { Button } from '../Button';
 
 import RiOpenaiFill from '~icons/ri/openai-fill';
 import LogosGoogleMaps from '~icons/logos/google-maps';
@@ -12,7 +13,7 @@ import SkillIconsGithubDark from '~icons/skill-icons/github-dark';
 import LogosSpotifyIcon from '~icons/logos/spotify-icon';
 import LogosGoogleCalendar from '~icons/logos/google-calendar';
 import SkillIconsLinkedin from '~icons/skill-icons/linkedin';
-import { useEffect, useState } from 'react';
+import { backgroundPattern } from '../../utils/backgroundPattern';
 
 const iconsMap = {
   messaging: [LogosWhatsappIcon, LogosMessenger, LogosFacebook],
@@ -67,7 +68,10 @@ export function PurposeSelection() {
   }, [selectedOptions]);
 
   return (
-    <section className="min-h-screen onboarding-gradient flex items-center justify-center">
+    <section
+      className="min-h-screen onboarding-gradient flex items-center justify-center"
+      style={{ ...backgroundPattern }}
+    >
       <div className="flex flex-col gap-6 items-center">
         <h1 className="text-passiveLinkColor tracking-[0.02em] leading-[42px] font-medium text-4xl">
           How do you want to use EnclaveID?

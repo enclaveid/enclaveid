@@ -1,11 +1,17 @@
-import React from 'react';
-import { Button } from './Button';
-import { LocationPinIcon } from './Icons';
-import { Input } from './Input';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../Button';
+import { LocationPinIcon } from '../Icons';
+import { Input } from '../Input';
+import { backgroundPattern } from '../../utils/backgroundPattern';
 
 function CreateProfileForm() {
+  const navigate = useNavigate();
+
   return (
-    <section className="min-h-screen onboarding-gradient flex items-center justify-center">
+    <section
+      className="min-h-screen onboarding-gradient flex items-center justify-center"
+      style={{ ...backgroundPattern }}
+    >
       <div className="flex flex-col gap-6 items-center">
         <h1 className="text-passiveLinkColor tracking-[0.02em] leading-[42px] font-medium text-4xl">
           Create a profile
@@ -50,7 +56,20 @@ function CreateProfileForm() {
             />
           </div>
           <div className="mt-5">
-            <Button label="Sign Up" fullWidth />
+            <Button
+              label="Sign Up"
+              fullWidth
+              className="mt-5"
+              onClick={() => navigate('/onboarding/purposeSelection')}
+            />
+          </div>
+          <div className="mt-5">
+            <Button
+              label="Go back"
+              variant="secondary"
+              fullWidth
+              onClick={() => navigate('/onboarding')}
+            />
           </div>
         </div>
       </div>

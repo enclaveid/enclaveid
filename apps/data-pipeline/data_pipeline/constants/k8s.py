@@ -63,20 +63,21 @@ def get_k8s_vllm_config(gpu_count):
             "dagster-k8s/config": {
                 "container_config": {
                     "image": "enclaveid/data-pipeline-vllm:master",
-                    "volumeMounts": [
-                        {"name": "model-cache", "mountPath": "/model-cache"}
-                    ],
+                    # "volumeMounts": [
+                    #     {"name": "model-cache", "mountPath": "/model-cache"}
+                    # ],
                 },
-                "pod_spec_config": {
-                    "volumes": [
-                        {
-                            "name": "model-cache",
-                            "persistentVolumeClaim": {
-                                "claimName": "enclaveid-model-cache-pvc"
-                            },
-                        }
-                    ],
-                },
+                # TODO: Explore using striped disks since anything else is too slow
+                # "pod_spec_config": {
+                #     "volumes": [
+                #         {
+                #             "name": "model-cache",
+                #             "persistentVolumeClaim": {
+                #                 "claimName": "enclaveid-model-cache-pvc"
+                #             },
+                #         }
+                #     ],
+                # },
             }
         },
     )

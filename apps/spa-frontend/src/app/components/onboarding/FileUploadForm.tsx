@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Button } from './Button';
-import { GoogleIcon, OpenAiIcon } from './Icons';
+import { Button } from '../Button';
+import { GoogleIcon, OpenAiIcon } from '../Icons';
 import { FileUploadSection } from './FileUploadSection';
-import { FormCardLayout } from './FormCardLayout';
+import { FormCardLayout } from '../FormCardLayout';
 
 export interface FileUploadFormProps {
   uploadUrl?: string;

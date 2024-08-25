@@ -44,8 +44,8 @@ AZURE_REGION=eastus2
 ```bash
 AZURE_RESOURCE_GROUP=enclaveid-prod
 AZURE_CLUSTER_NAME=enclaveid-cluster-prod
-AZURE_NODE_VM_SIZE=Standard_DC4as_cc_v5 # Confidential VMs
 AZURE_NODE_VM_SIZE_GPU=standard_nc48ads_a100_v4 # The GPU VM is the same
+AZURE_NODE_VM_SIZE=Standard_DC4as_cc_v5 # Confidential VMs
 AZURE_REGION=westeurope
 AZURE_SERVICE_ACCOUNT_NAME=enclaveid-cluster-identity-sa
 AZURE_SUBSCRIPTION=$(az account show --query id --output tsv)
@@ -68,7 +68,7 @@ az aks get-credentials --resource-group "${AZURE_RESOURCE_GROUP}" --name "${AZUR
 
 # Add a nodepool for GPU workloads
 # We also add a taint to make sure only GPU workloads are scheduled here
-az aks nodepool add --resource-group "${AZURE_RESOURCE_GROUP}" --name gpupool --cluster-name "${AZURE_CLUSTER_NAME}" --node-count 0 --labels sku=gpu --node-taints sku=gpu:NoSchedule --node-vm-size "${AZURE_NODE_VM_SIZE_GPU}" --min-count 0 --max-count 1 --enable-cluster-autoscaler --aks-custom-headers UseGPUDedicatedVHD=true --priority Spot --eviction-policy Delete  --spot-max-price -1 
+az aks nodepool add --resource-group "${AZURE_RESOURCE_GROUP}" --name gpupool --cluster-name "${AZURE_CLUSTER_NAME}" --node-count 0 --labels sku=gpu --node-taints sku=gpu:NoSchedule --node-vm-size "${AZURE_NODE_VM_SIZE_GPU}" --min-count 0 --max-count 1 --enable-cluster-autoscaler --aks-custom-headers UseGPUDedicatedVHD=true --priority Spot --eviction-policy Delete  --spot-max-price -1
 
 # Configure the autoscaler for the gpu workloads
 az aks update --resource-group "${AZURE_RESOURCE_GROUP}" --name "${AZURE_CLUSTER_NAME}" --cluster-autoscaler-profile skip-nodes-with-system-pods=false

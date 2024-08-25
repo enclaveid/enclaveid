@@ -1,4 +1,4 @@
-// TODO: this library sucks hard
+// TODO: this library kinda sucks
 import { Dropzone, ExtFile, FileMosaic } from '@files-ui/react';
 import * as React from 'react';
 

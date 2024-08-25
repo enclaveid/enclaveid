@@ -1,0 +1,12 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: ultra-disk-sc
+provisioner: disk.csi.azure.com # replace with "kubernetes.io/azure-disk" if aks version is less than 1.21
+volumeBindingMode: WaitForFirstConsumer # optional, but recommended if you want to wait until the pod that will use this disk is created
+parameters:
+  skuname: UltraSSD_LRS
+  kind: managed
+  cachingMode: None
+  diskIopsReadWrite: "10000"  # Standard_NC48ads_A100_v4 max 60000
+  diskMbpsReadWrite: "2000"   # Standard_NC48ads_A100_v4 max 2000
