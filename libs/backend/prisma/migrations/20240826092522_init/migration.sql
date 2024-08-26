@@ -2,6 +2,9 @@
 CREATE TYPE "Gender" AS ENUM ('Male', 'Female', 'Other');
 
 -- CreateEnum
+CREATE TYPE "Purpose" AS ENUM ('AnalyzingMyself', 'Dating', 'FindingTravelBuddies', 'FindingRoomates', 'FindingProjectCollaborators', 'FormingAStudyGroup', 'MakingFriendsInANewCity', 'FindingGymBuddies', 'FindingALanguageTeacher');
+
+-- CreateEnum
 CREATE TYPE "DataProvider" AS ENUM ('GOOGLE', 'FACEBOOK', 'OPENAI');
 
 -- CreateTable
@@ -16,8 +19,10 @@ CREATE TABLE "User" (
     "streamChatToken" TEXT,
     "displayName" TEXT NOT NULL,
     "gender" "Gender" NOT NULL,
-    "geographyLat" DOUBLE PRECISION NOT NULL,
-    "geographyLon" DOUBLE PRECISION NOT NULL,
+    "country" TEXT NOT NULL,
+    "geographyLat" DOUBLE PRECISION,
+    "geographyLon" DOUBLE PRECISION,
+    "purposes" "Purpose"[],
     "chromePodId" TEXT,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")

@@ -84,7 +84,7 @@ function CreateProfile() {
           <div className="mt-5 flex flex-col gap-3">
             <Button
               label="Confirm"
-              onClick={() => navigate('basicProfileInfo')}
+              onClick={() => navigate('/onboarding/purposeSelection')}
             />
             <Link>I want to learn more</Link>
           </div>

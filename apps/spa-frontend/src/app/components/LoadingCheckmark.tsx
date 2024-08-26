@@ -1,29 +1,11 @@
 import { Transition } from '@headlessui/react';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
-import { UseTRPCQueryResult } from '@trpc/react-query/dist/shared';
-import { useEffect, useState } from 'react';
 
 export function LoadingCheckmark({
-  booleanQuery,
+  status,
 }: {
-  booleanQuery: UseTRPCQueryResult<boolean, any>;
+  status: 'loading' | 'available' | 'unavailable';
 }) {
-  const isLoading = booleanQuery.isLoading;
-
-  const [status, setStatus] = useState<'loading' | 'success' | 'failure'>(
-    'loading',
-  );
-
-  useEffect(() => {
-    if (booleanQuery.isSuccess) {
-      if (booleanQuery.data) {
-        setStatus('success');
-      } else {
-        setStatus('failure');
-      }
-    }
-  }, [booleanQuery]);
-
   return (
     <div className="relative flex items-center justify-center h-12 w-12 rounded-lg">
       <Transition
@@ -36,7 +18,7 @@ export function LoadingCheckmark({
         leaveTo="opacity-0"
       >
         <div
-          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${status === 'loading' ? 'opacity-100' : 'opacity-0'}`}
         >
           <svg
             className="animate-spin h-8 w-8 text-gray-500"
@@ -71,7 +53,7 @@ export function LoadingCheckmark({
         leaveTo="opacity-0"
       >
         <div
-          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${status === 'success' ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${status === 'available' ? 'opacity-100' : 'opacity-0'}`}
         >
           <CheckCircleIcon className="h-8 w-8 text-green-500" />
         </div>
@@ -87,7 +69,7 @@ export function LoadingCheckmark({
         leaveTo="opacity-0"
       >
         <div
-          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${status === 'failure' ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${status === 'unavailable' ? 'opacity-100' : 'opacity-0'}`}
         >
           <XCircleIcon className="h-8 w-8 text-red-500" />
         </div>

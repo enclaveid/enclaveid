@@ -1,11 +1,12 @@
 import React, { ReactElement, useCallback, useEffect } from 'react';
 import { trpc } from '../../utils/trpc';
 import { asymmetricEncrypt } from '../../utils/crypto/asymmetricBrowser';
-import { AuthenticationFormProps } from '../AuthenticationForm';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAwsNitroAttestation } from '../../hooks/attestation/useAwsNitroAttestation';
 import { getSessionKey } from '../../utils/crypto/symmetricBrowser';
 import { Buffer } from 'buffer';
+import { LoginFormProps } from '../auth/LoginForm';
+import { SignupFormProps } from '../auth/SignupForm';
 
 export type AuthenticationType = 'login' | 'signup';
 
@@ -13,7 +14,7 @@ export function AuthenticationContainer({
   children,
   authenticationType,
 }: {
-  children: ReactElement<AuthenticationFormProps>;
+  children: ReactElement<LoginFormProps | SignupFormProps>;
   authenticationType: AuthenticationType;
 }) {
   const authCheck = trpc.private.authCheck.useQuery();
@@ -33,11 +34,10 @@ export function AuthenticationContainer({
   };
 
   const handleSubmit = useCallback(
-    async (email: string, password: string) => {
+    async (formData: Record<string, string>) => {
       const encryptedCredentials = await asymmetricEncrypt(
         {
-          email,
-          password,
+          ...formData,
           b64SessionKey: Buffer.from(getSessionKey()).toString('base64'),
         },
         publicKey,
@@ -58,7 +58,7 @@ export function AuthenticationContainer({
       authCheck.refetch().then(() => {
         const navigateTo =
           authenticationType === 'login'
-            ? from.pathname ?? '/dashboard'
+            ? (from.pathname ?? '/dashboard')
             : '/fileUpload';
 
         navigate(navigateTo);
@@ -73,5 +73,5 @@ export function AuthenticationContainer({
     authMutation.data,
   ]);
 
-  return React.cloneElement(children, { handleSubmit, authenticationType });
+  return React.cloneElement(children, { handleSubmit });
 }

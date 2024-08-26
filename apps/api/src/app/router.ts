@@ -11,14 +11,12 @@ import { politics } from './routers/dashboard/politics';
 import { personality } from './routers/dashboard/personality';
 import { fakeOauth } from './routers/fakeOauth';
 import { fileUpload } from './routers/onboarding/fileUpload';
-import { basicProfileInfo } from './routers/onboarding/basicProfileInfo';
 import { authUtils } from './routers/authUtils';
 import { matches } from './routers/dashboard/matches';
 import { streamChat } from './routers/dashboard/streamChat';
 import { settings } from './routers/dashboard/settings';
 import { interests } from './routers/dashboard/interests';
 import { onboardingStatus } from './routers/onboarding/onboardingStatus';
-
 export const appRouter = router({
   [TRPC_PRIVATE_NAMESPACE]: mergeRouters(
     personality,
@@ -32,7 +30,6 @@ export const appRouter = router({
     streamChat,
     settings,
     onboardingStatus,
-    basicProfileInfo,
   ),
   [TRPC_PUBLIC_NAMESPACE]: mergeRouters(attestation, authentication),
 });

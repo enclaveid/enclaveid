@@ -5,7 +5,7 @@ import { TRPCError } from '@trpc/server';
 import { asymmetricDecrypt } from '../services/crypto/asymmetricNode';
 import { prisma } from '@enclaveid/backend';
 import { hashPassword, verifyPassword } from '../services/crypto/passwords';
-import { Gender } from '@prisma/client';
+import { checkProfanity, checkEmail } from '../services/userInputValidation';
 
 export const authentication = router({
   login: publicProcedure
@@ -63,39 +63,63 @@ export const authentication = router({
     .mutation(async (opts) => {
       const { encryptedCredentials } = opts.input;
 
-      const { email, password } = JSON.parse(
+      const { email, password, displayName, country, gender } = JSON.parse(
         await asymmetricDecrypt(encryptedCredentials),
       );
-
-      const existingUser = await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
-
-      if (existingUser) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Email already in use',
-        });
-      }
 
       const user = await prisma.user.create({
         data: {
           email,
           password: await hashPassword(password),
           confirmedAt: new Date(), // TODO remove this and send confirmation email
-          userTraits: {
-            create: {},
-          },
-          // TODO
-          displayName: 'test',
-          gender: Gender.Other,
-          geographyLat: 0.0,
-          geographyLon: 0.0,
+          displayName,
+          gender,
+          country,
         },
       });
 
       return user.id;
+    }),
+  isDisplayNameAvailable: publicProcedure
+    .input(
+      z.object({
+        displayName: z.string(),
+      }),
+    )
+    .query(async (opts) => {
+      const { displayName } = opts.input;
+
+      if (
+        displayName.length < 4 ||
+        displayName.length > 16 ||
+        checkProfanity(displayName)
+      ) {
+        return false;
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { displayName },
+      });
+
+      return !user;
+    }),
+  isEmailAvailable: publicProcedure
+    .input(
+      z.object({
+        email: z.string(),
+      }),
+    )
+    .query(async (opts) => {
+      const { email } = opts.input;
+
+      if (!checkEmail(email)) {
+        return false;
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      return !user;
     }),
 });

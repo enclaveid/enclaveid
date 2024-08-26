@@ -52,7 +52,7 @@ function formatOptionLabel({ label, value }) {
   );
 }
 
-export function LocationPicker() {
+export function LocationPicker({ onChange }) {
   const [value, setValue] = useState<{ label: string; value: string }>();
   const options = useMemo(() => countryList().getData(), []);
 
@@ -61,9 +61,12 @@ export function LocationPicker() {
       options={options}
       styles={customStyles}
       value={value}
-      onChange={(value) => setValue(value)}
+      onChange={(value) => {
+        setValue(value);
+        onChange(value);
+      }}
       formatOptionLabel={formatOptionLabel}
-      className="w-64"
+      className="w-full"
       placeholder="Select your location..."
     />
   );

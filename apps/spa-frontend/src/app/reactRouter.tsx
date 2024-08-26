@@ -25,7 +25,6 @@ import { StreamChatPage } from './pages/StreamChatPage';
 import { CommonLayout } from './components/CommonLayout';
 import { OwnInterests } from './components/OwnInterests';
 import { IntroPage } from './pages/onboarding/IntroPage';
-import { BasicProfileInfoPage } from './pages/onboarding/BasicProfileInfoPage';
 import { PurposeSelectionPage } from './pages/onboarding/PurposeSelectionPage';
 import { RequireAuth } from './providers/AuthProvider';
 import { OnboardingGuard } from './components/onboarding/OnboardingGuard';
@@ -50,14 +49,6 @@ export const reactRouter = createBrowserRouter([
       {
         index: true,
         element: <IntroPage />,
-      },
-      {
-        path: 'basicProfileInfo',
-        element: (
-          <OnboardingGuard>
-            <BasicProfileInfoPage />
-          </OnboardingGuard>
-        ),
       },
       {
         path: 'purposeSelection',

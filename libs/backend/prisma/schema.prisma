@@ -40,11 +40,12 @@ model User {
   session          Session?
   streamChatToken  String?
 
-  displayName    String @unique
-  gender         Gender
-  geographyLat   Float
-  geographyLon   Float
-  profilePicture Bytes?
+  displayName String @unique
+  gender      Gender
+  country     String
+
+  geographyLat Float?
+  geographyLon Float?
 
   purposes Purpose[]
 

@@ -163,6 +163,8 @@
     "buffer": "^6.0.3",
     "chart.js": "^4.4.3",
     "classnames": "^2.5.1",
+    "disposable-email-domains-js": "^1.0.3",
+    "email-validator": "^2.0.4",
     "eventemitter3": "^5.0.1",
     "fastify": "~4.26.2",
     "fastify-healthcheck": "^4.4.0",

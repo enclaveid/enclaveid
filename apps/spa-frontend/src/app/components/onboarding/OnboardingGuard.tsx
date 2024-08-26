@@ -23,7 +23,6 @@ export function OnboardingGuard(props: OnboardingGuardProps) {
   }
 
   const {
-    isBasicProfileComplete,
     isPurposesComplete,
     isBigFiveComplete,
     isMoralFoundationsComplete,
@@ -34,10 +33,6 @@ export function OnboardingGuard(props: OnboardingGuardProps) {
 
   // Define the order of onboarding steps
   const onboardingSteps = [
-    {
-      path: '/onboarding/basicProfileInfo',
-      isComplete: isBasicProfileComplete,
-    },
     { path: '/onboarding/purposeSelection', isComplete: isPurposesComplete },
     { path: '/onboarding/fileUpload', isComplete: isUserDataUploaded?.google },
     {

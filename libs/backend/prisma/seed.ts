@@ -22,8 +22,9 @@ async function main() {
 
       displayName: 'Jane Doe',
       gender: Gender.Female,
-      geographyLat: 50.0,
-      geographyLon: 0.0,
+      country: 'US',
+      // geographyLat: 50.0,
+      // geographyLon: 0.0,
 
       userTraits: {
         create: {
@@ -78,8 +79,9 @@ async function main() {
 
       displayName: 'John Doe',
       gender: Gender.Male,
-      geographyLat: 0.0,
-      geographyLon: 50.0,
+      country: 'US',
+      // geographyLat: 0.0,
+      // geographyLon: 50.0,
 
       userTraits: {
         create: {

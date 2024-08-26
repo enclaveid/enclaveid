@@ -1,4 +1,5 @@
-import { AuthenticationForm } from '../components/AuthenticationForm';
+import { LoginForm } from '../components/auth/LoginForm';
+import { SignupForm } from '../components/auth/SignupForm';
 import {
   AuthenticationContainer,
   AuthenticationType,
@@ -10,10 +11,8 @@ export function AuthenticationPage({
   authenticationType: AuthenticationType;
 }) {
   return (
-    <div className="min-h-screen bg-white p-[10%]">
-      <AuthenticationContainer authenticationType={authenticationType}>
-        <AuthenticationForm />
-      </AuthenticationContainer>
-    </div>
+    <AuthenticationContainer authenticationType={authenticationType}>
+      {authenticationType === 'login' ? <LoginForm /> : <SignupForm />}
+    </AuthenticationContainer>
   );
 }
