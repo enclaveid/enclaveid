@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button } from '../Button';
-import { GoogleIcon, OpenAiIcon } from '../Icons';
+import { Button } from '../atoms/Button';
+import { GoogleIcon, OpenAiIcon } from '../atoms/Icons';
 import { FileUploadSection } from './FileUploadSection';
 import { FormCardLayout } from '../FormCardLayout';
 

@@ -1,5 +1,5 @@
 import { GradientLine } from './GradientLine';
-import { Button } from './Button';
+import { Button } from './atoms/Button';
 import { DashboardCardLayout } from './DashboardCardLayout';
 import { useNavigate } from 'react-router-dom';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';

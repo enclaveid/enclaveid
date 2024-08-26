@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { LocationPinIcon } from './Icons';
+import { LocationPinIcon } from './atoms/Icons';
 import { getIdenticon } from '../utils/ui/identicons';
 import { UserMatchOverview } from '@enclaveid/shared';
 import { LoadingCard } from './LoadingCard';
-import { PercentageCircle } from './PercentageCircle';
-import { Button } from './Button';
+import { PercentageCircle } from './atoms/PercentageCircle';
+import { Button } from './atoms/Button';
 
 interface SocialCardProps {
   userMatchOverview?: UserMatchOverview;

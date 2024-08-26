@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Logo } from '../Logo';
-import { Input } from '../Input';
-import { Button } from '../Button';
+import { Logo } from '../atoms/Logo';
+import { Input } from '../atoms/Input';
+import { Button } from '../atoms/Button';
 import { FormCardLayout } from '../FormCardLayout';
 import { useNavigate } from 'react-router-dom';
 

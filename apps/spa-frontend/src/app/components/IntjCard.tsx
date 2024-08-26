@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from './Button';
+import { Button } from './atoms/Button';
 import { DashboardCardLayout } from './DashboardCardLayout';
 
 import { useNavigate } from 'react-router-dom';

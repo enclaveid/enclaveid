@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Button } from '../Button';
-import { Logo } from '../Logo';
-import { CheckmarkIcon } from '../Icons';
+import { Button } from '../atoms/Button';
+import { Logo } from '../atoms/Logo';
+import { CheckmarkIcon } from '../atoms/Icons';
 import { Questionnaire } from '@enclaveid/shared';
 
 type Steps = 'onboarding' | 'steps' | 'final';

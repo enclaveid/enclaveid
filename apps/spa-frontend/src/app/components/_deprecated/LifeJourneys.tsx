@@ -1,7 +1,7 @@
 import { Dialog, Tab, Transition } from '@headlessui/react';
 import { NonLatentCard } from './NonLatentCard';
 import { Stepper } from './Stepper';
-import { Button } from './Button';
+import { Button } from '../atoms/Button';
 import { Fragment } from 'react/jsx-runtime';
 import { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';

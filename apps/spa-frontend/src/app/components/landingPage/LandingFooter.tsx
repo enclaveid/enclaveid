@@ -1,5 +1,5 @@
-import { DiscordIcon, GithubIcon } from '../Icons';
-import { Logo } from '../Logo';
+import { DiscordIcon, GithubIcon } from '../atoms/Icons';
+import { Logo } from '../atoms/Logo';
 
 function LandingFooter() {
   return (

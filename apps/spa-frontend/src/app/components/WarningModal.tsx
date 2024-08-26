@@ -1,8 +1,8 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Fragment } from 'react/jsx-runtime';
-import { Button } from './Button';
-import { MarkIcon } from './Icons';
+import { Button } from './atoms/Button';
+import { MarkIcon } from './atoms/Icons';
 
 interface WarningModalProps {
   isOpen: boolean;

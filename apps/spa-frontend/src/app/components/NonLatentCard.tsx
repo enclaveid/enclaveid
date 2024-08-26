@@ -1,11 +1,11 @@
 import classNames from 'classnames';
-import { Button } from './Button';
-import { PercentageCircle } from './PercentageCircle';
+import { Button } from './atoms/Button';
+import { PercentageCircle } from './atoms/PercentageCircle';
 import { useState } from 'react';
 import { TinyBarChart } from './TinyBarChart';
 import { CardDetailsModal } from './CardDetailsModal';
 import { DisplayableInterest } from '@enclaveid/shared';
-import { SmallBadge } from './SmallBadge';
+import { SmallBadge } from './atoms/SmallBadge';
 
 interface NonLatentCardProps {
   interest: DisplayableInterest;

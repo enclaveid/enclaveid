@@ -1,4 +1,4 @@
-import { Pin } from './Pin';
+import { Pin } from './atoms/Pin';
 
 enum Label {
   VeryLow = 'Very Low',

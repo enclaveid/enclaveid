@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { useElementWidth } from '../hooks/useElementWidth';
 import { UnavailabilityType, UnavailableChart } from './UnavailableChart';
-import { Button } from './Button';
+import { Button } from './atoms/Button';
 
 const MAX_COMPASS_VALUE = 5;
 

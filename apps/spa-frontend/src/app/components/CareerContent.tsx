@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Button } from './Button';
+import { Button } from './atoms/Button';
 
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useState } from 'react';

@@ -1,4 +1,4 @@
-import { Logo } from '../Logo';
+import { Logo } from '../atoms/Logo';
 
 function LandingConnections() {
   return (

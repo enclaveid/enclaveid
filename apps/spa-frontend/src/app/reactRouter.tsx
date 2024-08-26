@@ -14,13 +14,11 @@ import { CareerContent } from './components/CareerContent';
 import { RadarChartDetails } from './components/RadarChartDetails';
 import { PersonalityContainer } from './components/containers/PersonalityContainer';
 
-import { SocialLayout } from './components/SocialLayout';
 import { SocialPage } from './pages/SocialPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { FileUploadPage } from './pages/onboarding/FileUploadPage';
 import { QuestionnairePage } from './pages/onboarding/QuestionnairePage';
 import { AccountSettings } from './pages/AccountSettingsPage';
-import { AccountSettingsLayout } from './components/AccountSettingsLayout';
 import { StreamChatPage } from './pages/StreamChatPage';
 import { CommonLayout } from './components/CommonLayout';
 import { OwnInterests } from './components/OwnInterests';
@@ -122,7 +120,11 @@ export const reactRouter = createBrowserRouter([
   },
   {
     path: '/socials',
-    element: <SocialLayout />,
+    element: (
+      <CommonLayout>
+        <Outlet />
+      </CommonLayout>
+    ),
     children: [
       {
         index: true,
@@ -148,7 +150,11 @@ export const reactRouter = createBrowserRouter([
   },
   {
     path: '/account-settings',
-    element: <AccountSettingsLayout />,
+    element: (
+      <CommonLayout>
+        <Outlet />
+      </CommonLayout>
+    ),
     children: [
       {
         index: true,

@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { UnavailabilityType, UnavailableChart } from './UnavailableChart';
-import { Button } from './Button';
+import { Button } from './atoms/Button';
 
 interface CirclePositions {
   harm: { cx: number; cy: number };

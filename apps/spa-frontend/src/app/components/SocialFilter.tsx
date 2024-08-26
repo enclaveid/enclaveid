@@ -1,6 +1,6 @@
 import { Menu, Transition } from '@headlessui/react';
 import { Dispatch, Fragment } from 'react';
-import { RemoveIcon, SearchIcon } from './Icons';
+import { RemoveIcon, SearchIcon } from './atoms/Icons';
 import { userData } from './mock-data';
 import classNames from 'classnames';
 

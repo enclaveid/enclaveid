@@ -1,13 +1,13 @@
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../Button';
+import { Button } from '../atoms/Button';
 import {
   BrainIcon,
   FacebookIconU,
   GoogleIconU,
   OpenAiIconU,
   UserIcon,
-} from '../Icons';
-import { Link } from '../Link';
+} from '../atoms/Icons';
+import { Link } from '../atoms/Link';
 import { backgroundPattern } from '../../utils/backgroundPattern';
 
 const data = [

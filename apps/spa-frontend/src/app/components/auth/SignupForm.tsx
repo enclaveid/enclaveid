@@ -1,14 +1,14 @@
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../Button';
-import { Input } from '../Input';
+import { Button } from '../atoms/Button';
+import { Input } from '../atoms/Input';
 import { backgroundPattern } from '../../utils/backgroundPattern';
-import { LocationPicker } from '../LocationPicker';
-import { OptionPicker } from '../OptionPicker';
+import { LocationPicker } from '../atoms/LocationPicker';
+import { OptionPicker } from '../atoms/OptionPicker';
 import { Gender } from '@prisma/client';
 import { getIdenticon } from '../../utils/ui/identicons';
 import { useEffect, useState } from 'react';
-import { LoadingCheckmark } from '../LoadingCheckmark';
-import { Logo } from '../Logo';
+import { LoadingCheckmark } from '../atoms/LoadingCheckmark';
+import { Logo } from '../atoms/Logo';
 import { useDisplayNameAvailable } from '../../hooks/useDisplayNameAvailable';
 import { useEmailAvailable } from '../../hooks/useEmailAvailable';
 

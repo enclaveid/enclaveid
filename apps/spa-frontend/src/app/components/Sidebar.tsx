@@ -7,7 +7,7 @@ import { CogIcon } from '@heroicons/react/24/outline';
 import { SimilarProfileBadge } from './SimilarProfileBadge';
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { Logo } from './Logo';
+import { Logo } from './atoms/Logo';
 import { sidebarItems } from '../utils/ui/sidebarItems';
 import { trpc } from '../utils/trpc';
 

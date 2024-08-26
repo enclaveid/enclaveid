@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button } from '../Button';
+import { Button } from '../atoms/Button';
 
 import RiOpenaiFill from '~icons/ri/openai-fill';
 import LogosGoogleMaps from '~icons/logos/google-maps';

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Logo } from '../Logo';
-import { DiscordIcon, GithubIcon } from '../Icons';
+import { Logo } from '../atoms/Logo';
+import { DiscordIcon, GithubIcon } from '../atoms/Icons';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
 function LandingNavbar() {
