@@ -1,8 +1,6 @@
 import { prisma } from '@enclaveid/backend';
 import { AppContext } from '../../context';
 import { authenticatedProcedure, router } from '../../trpc';
-import { z } from 'zod';
-import { getTipiScores } from '../../services/traits/bigFive';
 
 export const personality = router({
   getPersonalityTraits: authenticatedProcedure.query(async (opts) => {
@@ -44,35 +42,4 @@ export const personality = router({
       mbti: user?.userTraits?.mbti[0],
     };
   }),
-  createbigFive: authenticatedProcedure
-    .input(
-      z.object({
-        answers: z.record(z.string(), z.string()),
-      }),
-    )
-    .mutation(async (opts) => {
-      const {
-        user: { id: userId },
-      } = opts.ctx as AppContext;
-
-      const { answers } = opts.input;
-
-      const normalizedScores = getTipiScores(answers);
-
-      return await prisma.bigFive.create({
-        data: {
-          ...normalizedScores,
-          userTraits: {
-            connectOrCreate: {
-              where: {
-                userId,
-              },
-              create: {
-                userId,
-              },
-            },
-          },
-        },
-      });
-    }),
 });

@@ -14,7 +14,6 @@ import LogosSpotifyIcon from '~icons/logos/spotify-icon';
 import LogosGoogleCalendar from '~icons/logos/google-calendar';
 import SkillIconsLinkedin from '~icons/skill-icons/linkedin';
 import { backgroundPattern } from '../../utils/backgroundPattern';
-import { useNavigate } from 'react-router-dom';
 import { WarningModal } from '../WarningModal';
 
 import { fromCamelCase } from '../../utils/ui/fromCamelCase';
@@ -67,7 +66,11 @@ const options = {
   [Purpose.FindingALanguageTeacher]: [...iconsMap['search']],
 };
 
-export function PurposeSelection() {
+export interface PurposeSelectionProps {
+  handleSubmit?: (selectedOptions: Purpose[]) => void;
+}
+
+export function PurposeSelection({ handleSubmit }: PurposeSelectionProps) {
   const [selectedOptions, setSelectedOptions] = useState<Purpose[]>([
     Purpose.AnalyzingMyself,
     Purpose.Dating,
@@ -75,7 +78,6 @@ export function PurposeSelection() {
 
   const [noSocial, setNoSocial] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if "Analyzing myself" is the only selected option
@@ -164,8 +166,7 @@ export function PurposeSelection() {
             title="Are you sure?"
             description="The best part of EnclaveID is discovering new people. You can also familiarize yourself with the solo features and revise this decision in your account settings at any other time."
             onConfirm={() => {
-              // TODO: mutation
-              navigate('/onboarding/questionnaire');
+              handleSubmit(selectedOptions);
             }}
           />
 
@@ -185,7 +186,7 @@ export function PurposeSelection() {
                 fullWidth
                 className="mt-10 mb-10"
                 onClick={() => {
-                  navigate('/onboarding/questionnaire');
+                  handleSubmit(selectedOptions);
                 }}
               />
             ))}

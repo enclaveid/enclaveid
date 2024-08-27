@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback, useEffect } from 'react';
+import React, { ReactElement, useCallback } from 'react';
 import { trpc } from '../../utils/trpc';
 import { asymmetricEncrypt } from '../../utils/crypto/asymmetricBrowser';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -17,8 +17,7 @@ export function AuthenticationContainer({
   children: ReactElement<LoginFormProps | SignupFormProps>;
   authenticationType: AuthenticationType;
 }) {
-  const authCheck = trpc.private.authCheck.useQuery();
-  const authMutation =
+  const { mutate: mutateAuth, data: userId } =
     authenticationType === 'login'
       ? trpc.public.login.useMutation()
       : trpc.public.signup.useMutation();
@@ -33,6 +32,8 @@ export function AuthenticationContainer({
     from: { pathname: '/dashboard/personality' },
   };
 
+  const trpcUtils = trpc.useUtils();
+
   const handleSubmit = useCallback(
     async (formData: Record<string, string>) => {
       const encryptedCredentials = await asymmetricEncrypt(
@@ -43,30 +44,23 @@ export function AuthenticationContainer({
         publicKey,
       );
 
-      authMutation.mutate({
-        encryptedCredentials,
-      });
+      mutateAuth(
+        {
+          encryptedCredentials,
+        },
+        {
+          onSuccess: () => {
+            localStorage.setItem('userId', userId);
+
+            trpcUtils.private.authCheck.invalidate().then(() => {
+              navigate('/onboarding');
+            });
+          },
+        },
+      );
     },
-    [publicKey, authMutation],
+    [publicKey, mutateAuth, navigate, trpcUtils, userId],
   );
-
-  useEffect(() => {
-    if (authMutation.isSuccess) {
-      // Save the user's id in local storage
-      localStorage.setItem('userId', authMutation.data);
-
-      authCheck.refetch().then(() => {
-        navigate('/onboarding');
-      });
-    }
-  }, [
-    authMutation.isSuccess,
-    navigate,
-    from,
-    authenticationType,
-    authCheck,
-    authMutation.data,
-  ]);
 
   return React.cloneElement(children, { handleSubmit });
 }

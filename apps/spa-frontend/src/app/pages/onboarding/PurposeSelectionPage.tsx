@@ -1,5 +1,10 @@
+import { PurposeSelectionContainer } from '../../components/containers/PurposeSelectionContainer';
 import { PurposeSelection } from '../../components/onboarding/PurposeSelection';
 
 export function PurposeSelectionPage() {
-  return <PurposeSelection />;
+  return (
+    <PurposeSelectionContainer>
+      <PurposeSelection />
+    </PurposeSelectionContainer>
+  );
 }

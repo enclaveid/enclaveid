@@ -1,5 +1,5 @@
 import { LoadingPage } from '../LoadingPage';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { trpc } from '../../utils/trpc';
 import { useEffect } from 'react';
 
@@ -7,20 +7,24 @@ export function EmailConfirmationPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
-  console.log('token', token);
-
-  const { mutate: mutateConfirmEmail, isSuccess } =
+  const { mutate: mutateConfirmEmail } =
     trpc.private.confirmEmail.useMutation();
 
+  const navigate = useNavigate();
+
+  // If the token is present, confirm the email
   useEffect(() => {
     if (token) {
-      mutateConfirmEmail({ token });
+      mutateConfirmEmail(
+        { token },
+        {
+          onSuccess: () => {
+            navigate('/onboarding');
+          },
+        },
+      );
     }
-  }, [token, mutateConfirmEmail]);
+  }, [token, mutateConfirmEmail, navigate]);
 
-  return isSuccess ? (
-    <Navigate to="/onboarding" replace />
-  ) : (
-    <LoadingPage customMessage="Waiting for email confirmation..." />
-  );
+  return <LoadingPage customMessage="Waiting for email confirmation..." />;
 }
