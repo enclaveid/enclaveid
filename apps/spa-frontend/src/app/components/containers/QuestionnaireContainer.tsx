@@ -1,90 +1,97 @@
-import { ReactElement, useCallback, useEffect } from 'react';
+import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { StepFormProps } from '../onboarding/StepForm';
 import React from 'react';
 import { trpc } from '../../utils/trpc';
-import { QuestionnaireId, questionnaires } from '@enclaveid/shared';
+import { Questionnaire, questionnaires } from '@enclaveid/shared';
+import { useOnboardingSkips } from '../../providers/OnboardingSkipsProvider';
+import { useNavigate } from 'react-router-dom';
 
 export function QuestionnaireContainer({
-  onSkipAll,
   children,
 }: {
-  onSkipAll: () => void;
   children: ReactElement<StepFormProps>;
 }) {
-  const personalityQuery = trpc.private.getPersonalityTraits.useQuery();
-  const politicsQuery = trpc.private.getPoliticsTraits.useQuery();
+  const { skips } = useOnboardingSkips();
+  const navigate = useNavigate();
 
-  const createbigFiveMutation = trpc.private.createbigFive.useMutation();
-  const createMoralFoundationsMutation =
+  const onSkipAll = useCallback(() => {
+    skips['/onboarding/questionnaire'].onSkip();
+    navigate('/dashboard/personality', { replace: true });
+  }, [skips, navigate]);
+
+  const { data: onboardingStatus } =
+    trpc.private.getOnboardingStatus.useQuery();
+
+  const { mutate: createbigFiveMutation } =
+    trpc.private.createbigFive.useMutation();
+  const { mutate: createMoralFoundationsMutation } =
     trpc.private.createMoralFoundations.useMutation();
 
-  const [todoQuestionnaires, setTodoQuestionnaires] = React.useState<
-    QuestionnaireId[]
-  >(questionnaires.map((questionnaire) => questionnaire.id));
+  const [todoQuestionnaire, setTodoQuestionnaire] =
+    React.useState<Questionnaire>(questionnaires[0]);
+
+  const [skippedBigFive, setSkippedBigFive] = useState(false);
+  const [skippedMoralFoundations, setSkippedMoralFoundations] = useState(false);
+  const [onSkip, setOnSkip] = useState<() => void>(() => void 0);
 
   useEffect(() => {
-    if (personalityQuery.error || politicsQuery.error) return;
+    if (!onboardingStatus) {
+      return;
+    }
 
-    if (personalityQuery.isLoading || politicsQuery.isLoading) return;
-
-    setTodoQuestionnaires(
-      [
-        !personalityQuery.data.bigfive ? 'TIPI' : undefined,
-        !politicsQuery.data.moralFoundations ? 'MFQ20' : undefined,
-      ].filter((id) => id) as QuestionnaireId[],
-    );
-  }, [
-    personalityQuery.data,
-    personalityQuery.error,
-    personalityQuery.isLoading,
-    politicsQuery.data,
-    politicsQuery.error,
-    politicsQuery.isLoading,
-  ]);
-
-  useEffect(() => {
-    if (todoQuestionnaires.length === 0) {
+    if (!onboardingStatus.isBigFiveComplete && !skippedBigFive) {
+      setTodoQuestionnaire(questionnaires.find((q) => q.id === 'TIPI'));
+      setOnSkip(() => {
+        return () => setSkippedBigFive(true);
+      });
+    } else if (
+      !onboardingStatus.isMoralFoundationsComplete &&
+      !skippedMoralFoundations
+    ) {
+      setTodoQuestionnaire(questionnaires.find((q) => q.id === 'MFQ20'));
+      setOnSkip(() => {
+        return () => setSkippedMoralFoundations(true);
+      });
+    } else {
       onSkipAll();
     }
-  }, [todoQuestionnaires, onSkipAll]);
+  }, [onboardingStatus, skippedBigFive, skippedMoralFoundations, onSkipAll]);
+
+  const trpcUtils = trpc.useUtils();
 
   const onFinished = useCallback(
     (answers) => {
-      if (todoQuestionnaires[0] === 'TIPI') {
-        createbigFiveMutation.mutateAsync(
+      if (todoQuestionnaire?.id === 'TIPI') {
+        createbigFiveMutation(
           { answers },
           {
             onSuccess: () => {
-              personalityQuery.refetch();
+              trpcUtils.private.getOnboardingStatus.invalidate();
             },
           },
         );
-      } else if (todoQuestionnaires[0] === 'MFQ20') {
-        createMoralFoundationsMutation.mutateAsync(
+      } else if (todoQuestionnaire?.id === 'MFQ20') {
+        createMoralFoundationsMutation(
           { answers },
           {
             onSuccess: () => {
-              politicsQuery.refetch();
+              trpcUtils.private.getOnboardingStatus.invalidate();
             },
           },
         );
       }
     },
     [
-      todoQuestionnaires,
+      trpcUtils,
+      todoQuestionnaire,
       createbigFiveMutation,
-      personalityQuery,
       createMoralFoundationsMutation,
-      politicsQuery,
     ],
   );
 
   return React.cloneElement(children, {
-    questionnaire:
-      questionnaires.find(
-        (questionnaire) => questionnaire.id === todoQuestionnaires[0],
-      ) || questionnaires[0],
+    questionnaire: todoQuestionnaire,
     onFinished,
-    onSkip: onSkipAll,
+    onSkip,
   });
 }

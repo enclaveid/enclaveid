@@ -61,7 +61,7 @@ export function StepForm(props: StepFormProps) {
     return (
       <div className="flex flex-col gap-9 max-w-[478px]">
         <h2 className="text-passiveLinkColor font-medium text-4xl leading-[42px] -tracking-[0.02em] text-center">
-          Take the TIPI test
+          {title}
         </h2>
         <div className="bg-white border border-[#E5E8EE] px-[29px] pt-[42px] pb-5 rounded-xl">
           <p className="text-passiveLinkColor leading-[22px]">
@@ -84,7 +84,10 @@ export function StepForm(props: StepFormProps) {
             <Button
               variant="secondary"
               label="I'll do it later"
-              onClick={onSkip}
+              onClick={() => {
+                console.log('skipping');
+                onSkip();
+              }}
               fullWidth
             />
           </div>

@@ -9,11 +9,15 @@ import {
   azureStorageCredentials,
 } from './client';
 
+export function getBlobName(dataProvider: DataProvider, userId: string) {
+  return `${userId}/${dataProvider.toLowerCase()}/latest.zip`;
+}
+
 export async function generateSasUrl(
   dataProvider: DataProvider,
   userId: string,
 ): Promise<string> {
-  const blobName = `${userId}/${dataProvider.toLowerCase()}/latest.zip`;
+  const blobName = getBlobName(dataProvider, userId);
 
   const sasOptions = {
     containerName: azureDefaultContainerName,

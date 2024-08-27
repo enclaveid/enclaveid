@@ -1,13 +1,23 @@
-import {
-  Questionnaire,
-  UserTraitsShared,
-  questionnaires,
-} from '@enclaveid/shared';
-import { MoralFoundations } from '@prisma/client';
+import { questionnaires } from '@enclaveid/shared';
 
+interface Mfq20PartScores {
+  careHarm: number;
+  fairnessCheating: number;
+  loyaltyBetrayal: number;
+  authoritySubversion: number;
+  sanctityDegradation: number;
+  goodCheck: number;
+  mathCheck: number;
+}
+/**
+ * See https://moralfoundations.org/questionnaires/ item key file.
+ * @param mfq20Answers
+ * @param part
+ * @returns
+ */
 function getMfq20PartScores(
   mfq20Answers: Record<string, string>,
-  part: Questionnaire['parts'][0],
+  part: (typeof questionnaires)[0]['parts'][0],
 ) {
   const { options, questions } = part;
 
@@ -16,7 +26,7 @@ function getMfq20PartScores(
       const questionIndex = questions.indexOf(question);
       const score = options.indexOf(answer);
 
-      let key;
+      let key: keyof typeof scores;
       switch (questionIndex) {
         case 0:
         case 6:
@@ -45,13 +55,17 @@ function getMfq20PartScores(
             key = 'goodCheck';
           }
           break;
+        default:
+          throw new Error(
+            `Invalid question index: ${questionIndex}: ${question}`,
+          );
       }
 
       acc[key] = acc[key] ? acc[key] + score : score;
 
       return acc;
     },
-    {} as Omit<MoralFoundations, keyof UserTraitsShared>,
+    {} as Mfq20PartScores,
   );
 
   return scores;
@@ -60,18 +74,23 @@ function getMfq20PartScores(
 export function getMfq20Scores(mfq20Answers: Record<string, string>) {
   const normalizedScores = questionnaires
     .find((questionnaire) => questionnaire.id === 'MFQ20')
-    .parts.map((part) => getMfq20PartScores(mfq20Answers, part))
-    .reduce(
-      (acc, partScores) => {
-        Object.entries(partScores).forEach(([key, value]) => {
-          const normalizedScore = value / 10;
-          acc[key] = acc[key] ? acc[key] + normalizedScore : normalizedScore;
-        });
+    .parts.map((part, i) =>
+      getMfq20PartScores(
+        // TODO: do this upstream
+        Object.fromEntries(
+          Object.entries(mfq20Answers).slice(i * 11, (i + 1) * 11),
+        ),
+        part,
+      ),
+    )
+    .reduce((acc, partScores) => {
+      Object.entries(partScores).forEach(([key, value]) => {
+        const normalizedScore = value / 20;
+        acc[key] = acc[key] ? acc[key] + normalizedScore : normalizedScore;
+      });
 
-        return acc;
-      },
-      {} as Omit<MoralFoundations, keyof UserTraitsShared>,
-    );
+      return acc;
+    }, {} as Mfq20PartScores);
 
   return normalizedScores;
 }

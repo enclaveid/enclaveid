@@ -25,13 +25,14 @@ export async function getUserOnboardingStatus(userId: string) {
   const isPurposesComplete = user?.purposes.length > 0;
 
   // Check if big five is complete
-  const isBigFiveComplete = !!user?.userTraits?.bigFive;
+  const isBigFiveComplete = user?.userTraits?.bigFive?.length > 0;
 
   // Check if moral foundations is complete
-  const isMoralFoundationsComplete = !!user?.userTraits?.moralFoundations;
+  const isMoralFoundationsComplete =
+    user?.userTraits?.moralFoundations?.length > 0;
 
   // Check if data is uploaded
-  const isUserDataUploaded = getIsUserDataUploaded(userId);
+  const isUserDataUploaded = await getIsUserDataUploaded(userId);
 
   return {
     isBasicProfileComplete,

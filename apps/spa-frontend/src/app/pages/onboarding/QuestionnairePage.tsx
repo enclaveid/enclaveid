@@ -1,17 +1,14 @@
-import { useNavigate } from 'react-router-dom';
 import { StepForm } from '../../components/onboarding/StepForm';
 import { QuestionnaireContainer } from '../../components/containers/QuestionnaireContainer';
+import { backgroundPattern } from '../../utils/backgroundPattern';
 
 export function QuestionnairePage() {
-  const navigate = useNavigate();
-
   return (
-    <div className="h-screen flex items-center justify-center bg-[#F3F5F7]">
-      <QuestionnaireContainer
-        onSkipAll={() => {
-          navigate('/dashboard/personality');
-        }}
-      >
+    <div
+      className="h-screen flex items-center justify-center"
+      style={backgroundPattern}
+    >
+      <QuestionnaireContainer>
         <StepForm />
       </QuestionnaireContainer>
     </div>
