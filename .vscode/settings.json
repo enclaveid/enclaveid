@@ -23,5 +23,6 @@
     "source.removeUnusedImports": "explicit",
     "source.fixAll.ruff": "explicit",
     "source.fixAll.pylance": "explicit"
-  }
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

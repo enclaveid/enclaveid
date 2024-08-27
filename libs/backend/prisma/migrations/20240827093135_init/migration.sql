@@ -246,6 +246,9 @@ CREATE TABLE "UsersOverallSimilarity" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_confirmationCode_key" ON "User"("confirmationCode");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_displayName_key" ON "User"("displayName");
 
 -- CreateIndex

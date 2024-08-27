@@ -56,12 +56,7 @@ export function AuthenticationContainer({
       localStorage.setItem('userId', authMutation.data);
 
       authCheck.refetch().then(() => {
-        const navigateTo =
-          authenticationType === 'login'
-            ? (from.pathname ?? '/dashboard')
-            : '/fileUpload';
-
-        navigate(navigateTo);
+        navigate('/onboarding');
       });
     }
   }, [

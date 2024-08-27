@@ -35,7 +35,7 @@ model User {
   email    String @unique
   password String
 
-  confirmationCode String    @default(cuid())
+  confirmationCode String    @unique @default(cuid())
   confirmedAt      DateTime?
   session          Session?
   streamChatToken  String?

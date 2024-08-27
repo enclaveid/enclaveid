@@ -25,7 +25,10 @@ import { OwnInterests } from './components/OwnInterests';
 import { IntroPage } from './pages/onboarding/IntroPage';
 import { PurposeSelectionPage } from './pages/onboarding/PurposeSelectionPage';
 import { RequireAuth } from './providers/AuthProvider';
-import { OnboardingGuard } from './components/onboarding/OnboardingGuard';
+import { OnboardingGuard } from './components/guards/OnboardingGuard';
+import { EmailConfirmationGuard } from './components/guards/EmailConfirmationGuard';
+import { EmailConfirmationPage } from './pages/onboarding/EmailConfirmationPage';
+import { StreamChatProvider } from './providers/StreamChatProvider';
 
 export const reactRouter = createBrowserRouter([
   {
@@ -41,8 +44,20 @@ export const reactRouter = createBrowserRouter([
     element: <AuthenticationPage authenticationType="signup" />,
   },
   {
+    path: '/confirm-email',
+    element: (
+      <RequireAuth>
+        <EmailConfirmationPage />
+      </RequireAuth>
+    ),
+  },
+  {
     path: '/onboarding',
-    element: <RequireAuth />,
+    element: (
+      <RequireAuth>
+        <EmailConfirmationGuard />
+      </RequireAuth>
+    ),
     children: [
       {
         index: true,
@@ -146,7 +161,11 @@ export const reactRouter = createBrowserRouter([
   },
   {
     path: '/chat',
-    element: <StreamChatPage />,
+    element: (
+      <StreamChatProvider>
+        <StreamChatPage />
+      </StreamChatProvider>
+    ),
   },
   {
     path: '/account-settings',

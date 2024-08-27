@@ -17,6 +17,7 @@ import { streamChat } from './routers/dashboard/streamChat';
 import { settings } from './routers/dashboard/settings';
 import { interests } from './routers/dashboard/interests';
 import { onboardingStatus } from './routers/onboarding/onboardingStatus';
+import { emailConfirmation } from './routers/onboarding/emailConfirmation';
 export const appRouter = router({
   [TRPC_PRIVATE_NAMESPACE]: mergeRouters(
     personality,
@@ -30,6 +31,7 @@ export const appRouter = router({
     streamChat,
     settings,
     onboardingStatus,
+    emailConfirmation,
   ),
   [TRPC_PUBLIC_NAMESPACE]: mergeRouters(attestation, authentication),
 });

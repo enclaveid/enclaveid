@@ -17,7 +17,6 @@ async function main() {
       email: 'jane.doe@example.com',
       password: await hash('password'),
 
-      confirmationCode: '',
       confirmedAt: new Date(),
 
       displayName: 'Jane Doe',
@@ -74,7 +73,6 @@ async function main() {
       email: 'john.doe@example.com',
       password: await hash('password'),
 
-      confirmationCode: '',
       confirmedAt: new Date(),
 
       displayName: 'John Doe',

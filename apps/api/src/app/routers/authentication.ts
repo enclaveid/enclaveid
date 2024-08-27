@@ -6,6 +6,7 @@ import { asymmetricDecrypt } from '../services/crypto/asymmetricNode';
 import { prisma } from '@enclaveid/backend';
 import { hashPassword, verifyPassword } from '../services/crypto/passwords';
 import { checkProfanity, checkEmail } from '../services/userInputValidation';
+import { sendEmail } from '../services/azure/mailer';
 
 export const authentication = router({
   login: publicProcedure
@@ -61,6 +62,8 @@ export const authentication = router({
       }),
     )
     .mutation(async (opts) => {
+      const { setJwtCookie } = opts.ctx as AppContext;
+
       const { encryptedCredentials } = opts.input;
 
       const { email, password, displayName, country, gender } = JSON.parse(
@@ -71,12 +74,31 @@ export const authentication = router({
         data: {
           email,
           password: await hashPassword(password),
-          confirmedAt: new Date(), // TODO remove this and send confirmation email
           displayName,
           gender,
           country,
         },
       });
+
+      sendEmail(
+        email,
+        'Confirm your email address',
+        `
+        <html>
+          <body>
+            <p>Welcome to EnclaveID. Please confirm your email address by clicking the link below:</p>
+            <p>
+              <a href="${process.env.FRONTEND_URL}/confirm-email?token=${user.confirmationCode}" target="_blank" style="color: #007bff; text-decoration: underline;">
+                ${process.env.FRONTEND_URL}/confirm-email?token=${user.confirmationCode}
+              </a>
+            </p>
+            <p>If you did not sign up for EnclaveID, you can ignore this email.</p>
+          </body>
+        </html>
+        `,
+      );
+
+      await setJwtCookie({ id: user.id });
 
       return user.id;
     }),

@@ -4,6 +4,7 @@ import { Input } from '../atoms/Input';
 import { Button } from '../atoms/Button';
 import { FormCardLayout } from '../FormCardLayout';
 import { useNavigate } from 'react-router-dom';
+import { backgroundPattern } from '../../utils/backgroundPattern';
 
 export interface LoginFormProps {
   handleSubmit?: (formData: { email: string; password: string }) => void;
@@ -15,7 +16,10 @@ export function LoginForm({ handleSubmit }: LoginFormProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white p-[10%]">
+    <div
+      className="min-h-screen bg-white p-[10%]"
+      style={{ ...backgroundPattern }}
+    >
       <div className="flex flex-col gap-10 max-w-[478px] w-full mx-auto">
         <Logo />
         <FormCardLayout>
