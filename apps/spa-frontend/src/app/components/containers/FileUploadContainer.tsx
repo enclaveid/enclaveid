@@ -1,8 +1,9 @@
 import { ReactElement, cloneElement } from 'react';
-import { FileUploadFormProps } from '../FileUploadForm';
+import { FileUploadFormProps } from '../onboarding/FileUploadForm';
 import { trpc } from '../../utils/trpc';
 import { DataProvider } from '@enclaveid/shared';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useOnboardingSkips } from '../../providers/OnboardingSkipsProvider';
 
 export function FileUploadContainer({
   children,
@@ -13,15 +14,23 @@ export function FileUploadContainer({
     dataProvider: DataProvider.GOOGLE,
   });
 
+  const { skips } = useOnboardingSkips();
+
   const navigate = useNavigate();
   const location = useLocation();
-  const goToQuestionnaire = () => {
-    navigate('/questionnaire', { state: { from: location } });
-  };
+
+  const trpcUtils = trpc.useUtils();
 
   return cloneElement(children, {
     uploadUrl: uploadUrlQuery.data?.url,
-    onNext: goToQuestionnaire,
-    onSkip: goToQuestionnaire,
+    onNext: () => {
+      trpcUtils.private.getOnboardingStatus.invalidate().then(() => {
+        navigate('/onboarding/questionnaire', { state: { from: location } });
+      });
+    },
+    onSkip: () => {
+      skips['/onboarding/fileUpload'].onSkip();
+      navigate('/onboarding/questionnaire', { state: { from: location } });
+    },
   });
 }

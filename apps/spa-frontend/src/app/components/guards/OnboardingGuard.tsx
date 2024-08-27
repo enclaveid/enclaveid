@@ -1,4 +1,5 @@
 import { LoadingPage } from '../../pages/LoadingPage';
+import { useOnboardingSkips } from '../../providers/OnboardingSkipsProvider';
 import { trpc } from '../../utils/trpc';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
@@ -9,6 +10,11 @@ interface OnboardingGuardProps {
 export function OnboardingGuard(props: OnboardingGuardProps) {
   const location = useLocation();
   const onboardingStatusQuery = trpc.private.getOnboardingStatus.useQuery();
+  const { skips, reset: resetSkips } = useOnboardingSkips();
+
+  if (location.pathname === '/onboarding') {
+    return props.children ?? <Outlet />;
+  }
 
   if (onboardingStatusQuery.isLoading) {
     return <LoadingPage />;
@@ -31,13 +37,20 @@ export function OnboardingGuard(props: OnboardingGuardProps) {
 
   const currentPath = location.pathname;
 
-  // Define the order of onboarding steps
+  // Define the order of onboarding steps, skipping steps if the user has skipped them
   const onboardingSteps = [
     { path: '/onboarding/purposeSelection', isComplete: isPurposesComplete },
-    { path: '/onboarding/fileUpload', isComplete: isUserDataUploaded?.google },
+    {
+      path: '/onboarding/fileUpload',
+      isComplete:
+        isUserDataUploaded?.google || skips['/onboarding/fileUpload'].skipped,
+    },
     {
       path: '/onboarding/questionnaire',
-      isComplete: isBigFiveComplete && isMoralFoundationsComplete,
+      isComplete:
+        isBigFiveComplete &&
+        isMoralFoundationsComplete &&
+        !skips['/onboarding/questionnaire'].skipped,
     },
   ];
 
@@ -50,7 +63,9 @@ export function OnboardingGuard(props: OnboardingGuardProps) {
     return (
       <Navigate
         to={nextIncompleteStep.path}
-        state={{ from: location }}
+        state={{
+          from: location,
+        }}
         replace
       />
     );
@@ -62,6 +77,10 @@ export function OnboardingGuard(props: OnboardingGuardProps) {
     onboardingSteps.some((step) => currentPath.startsWith(step.path))
   ) {
     console.log('All onboarding complete, redirecting to dashboard');
+
+    // Reset the skip flags
+    resetSkips();
+
     return <Navigate to="/dashboard" state={{ from: location }} replace />;
   }
 

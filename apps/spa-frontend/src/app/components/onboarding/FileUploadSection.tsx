@@ -1,83 +1,86 @@
-// TODO: this library kinda sucks
-import { Dropzone, ExtFile, FileMosaic } from '@files-ui/react';
-import * as React from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { validateGoogleTakoutZip } from '../../utils/archiveValidation';
+import { PercentageCircle } from '../atoms/PercentageCircle';
 
-interface FileUploadSectionProps {
-  uploadUrl: string;
-  onSuccess: () => void;
-}
+export function FileUploadSection({ uploadUrl, onSuccess }) {
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState(null);
 
-export function FileUploadSection(props: FileUploadSectionProps) {
-  const { uploadUrl, onSuccess } = props;
+  const onDrop = useCallback(
+    async (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      setError(null);
+      setUploadProgress(0);
 
-  const [extFiles, setExtFiles] = React.useState([]);
+      const isValid = await validateGoogleTakoutZip(file);
 
-  const onDelete = (id) => {
-    setExtFiles(extFiles.filter((x) => x.id !== id));
-  };
-  const handleAbort = (id) => {
-    setExtFiles(
-      extFiles.map((ef) => {
-        if (ef.id === id) {
-          return { ...ef, uploadStatus: 'aborted' };
-        } else return { ...ef };
-      }),
-    );
-  };
-
-  React.useEffect(() => {
-    if (extFiles.length > 0) {
-      const file = extFiles[0];
-      if (file.xhr && file.xhr.status === 201) {
-        onSuccess();
+      if (!isValid) {
+        setError('This ZIP file does not contain MyActivity.json');
+        return;
       }
+
+      try {
+        await axios.put(uploadUrl, file, {
+          headers: {
+            'Content-Type': 'application/zip',
+            'x-ms-blob-type': 'BlockBlob',
+          },
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
+            setUploadProgress(percentCompleted);
+
+            if (percentCompleted === 100) {
+              onSuccess();
+            }
+          },
+        });
+      } catch (error) {
+        setError(
+          'Upload failed: ' + (error.response?.data?.message || error.message),
+        );
+      }
+    },
+    [uploadUrl, onSuccess],
+  );
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'application/zip': ['.zip'] },
+    multiple: false,
+  });
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
+
+  useEffect(() => {
+    if (uploadProgress === 100) {
+      toast.success('Uploaded!');
     }
-  }, [extFiles, onSuccess]);
+  }, [uploadProgress]);
 
   return (
-    <Dropzone
-      onChange={setExtFiles}
-      minHeight="80px"
-      value={extFiles}
-      accept="application/zip"
-      maxFiles={1}
-      maxFileSize={200 * 1024 * 1024}
-      label="Upload file"
-      uploadConfig={{
-        asBlob: true,
-        autoUpload: true,
-        cleanOnUpload: true,
-        headers: {
-          'Content-Type': 'application/zip',
-          'x-ms-blob-type': 'BlockBlob',
-        },
-        method: 'PUT',
-        url: uploadUrl,
-      }}
-      onError={(error) => console.error(error)}
-    >
-      {extFiles.map((file: ExtFile) => {
-        return file.xhr ? (
-          file.xhr.status === 201 ? (
-            <FileMosaic
-              {...file}
-              uploadStatus="success"
-              key={file.id}
-              resultOnTooltip={false}
-            />
-          ) : (
-            <FileMosaic
-              {...file}
-              key={file.id}
-              onDelete={() => onDelete(file.id)}
-              onAbort={() => handleAbort(file.id)}
-              resultOnTooltip={false}
-            />
-          )
+    <div className="p-4 border rounded-lg">
+      <div
+        {...getRootProps()}
+        className={`p-8 border-2 border-dashed rounded-lg text-center cursor-pointer ${
+          isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+        }`}
+      >
+        <input {...getInputProps()} />
+        {uploadProgress > 0 ? (
+          <div className="flex flex-col items-center">
+            <PercentageCircle percentage={uploadProgress / 100.0} size="lg" />
+          </div>
         ) : (
-          <FileMosaic {...file} key={file.id} resultOnTooltip={false} />
-        );
-      })}
-    </Dropzone>
+          <p className="text-gray-400">Upload here</p>
+        )}
+      </div>
+    </div>
   );
 }

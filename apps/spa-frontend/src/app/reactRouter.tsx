@@ -29,6 +29,7 @@ import { OnboardingGuard } from './components/guards/OnboardingGuard';
 import { EmailConfirmationGuard } from './components/guards/EmailConfirmationGuard';
 import { EmailConfirmationPage } from './pages/onboarding/EmailConfirmationPage';
 import { StreamChatProvider } from './providers/StreamChatProvider';
+import { OnboardingSkipsProvider } from './providers/OnboardingSkipsProvider';
 
 export const reactRouter = createBrowserRouter([
   {
@@ -55,7 +56,11 @@ export const reactRouter = createBrowserRouter([
     path: '/onboarding',
     element: (
       <RequireAuth>
-        <EmailConfirmationGuard />
+        <EmailConfirmationGuard>
+          <OnboardingSkipsProvider>
+            <OnboardingGuard />
+          </OnboardingSkipsProvider>
+        </EmailConfirmationGuard>
       </RequireAuth>
     ),
     children: [
@@ -65,27 +70,15 @@ export const reactRouter = createBrowserRouter([
       },
       {
         path: 'purposeSelection',
-        element: (
-          <OnboardingGuard>
-            <PurposeSelectionPage />
-          </OnboardingGuard>
-        ),
+        element: <PurposeSelectionPage />,
       },
       {
         path: 'fileUpload',
-        element: (
-          <OnboardingGuard>
-            <FileUploadPage />
-          </OnboardingGuard>
-        ),
+        element: <FileUploadPage />,
       },
       {
         path: 'questionnaire',
-        element: (
-          <OnboardingGuard>
-            <QuestionnairePage />
-          </OnboardingGuard>
-        ),
+        element: <QuestionnairePage />,
       },
       // {
       //   path: '/fakeOauth',

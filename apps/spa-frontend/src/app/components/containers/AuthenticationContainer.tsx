@@ -23,13 +23,13 @@ export function AuthenticationContainer({
       : trpc.public.signup.useMutation();
 
   // TODO change to Azure
-  const { publicKey, error } = useAwsNitroAttestation();
+  const { publicKey } = useAwsNitroAttestation();
   const navigate = useNavigate();
   const location = useLocation();
 
   // In the login case, we might want to redirect the user to the page they were trying to access
   const { from } = location.state || {
-    from: { pathname: '/dashboard/personality' },
+    from: { pathname: '/onboarding' },
   };
 
   const trpcUtils = trpc.useUtils();
@@ -53,13 +53,13 @@ export function AuthenticationContainer({
             localStorage.setItem('userId', userId);
 
             trpcUtils.private.authCheck.invalidate().then(() => {
-              navigate('/onboarding');
+              navigate(from, { replace: true });
             });
           },
         },
       );
     },
-    [publicKey, mutateAuth, navigate, trpcUtils, userId],
+    [publicKey, mutateAuth, navigate, trpcUtils, userId, from],
   );
 
   return React.cloneElement(children, { handleSubmit });
