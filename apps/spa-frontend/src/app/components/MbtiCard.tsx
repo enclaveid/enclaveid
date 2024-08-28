@@ -19,7 +19,7 @@ export interface MbtiCardProps {
     title: string;
     content: string;
   };
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
 function MbtiCard({
@@ -55,7 +55,7 @@ function MbtiCard({
               <h1 className="text-[64px] leading-[75px] text-[#30A78A] text-center">
                 {label}
               </h1>
-              <p className="text-[#6C7A8A] leading-[22px] sm:px-3 ">
+              <p className="text-[#6C7A8A] leading-[22px] sm:px-3 whitespace-pre-line">
                 {description}
               </p>
               <div className="sm:mt-0 mt-4">

@@ -6,20 +6,20 @@ import { useNavigate } from 'react-router-dom';
 import { CustomDrawer } from './CustomDrawer';
 import { UnavailableChartOverlay } from './UnavailableChartOverlay';
 import { DynamicAreaLoading } from './DynamicAreaLoading';
+import Markdown from 'react-markdown';
 
 const mockData = MFTChartData;
 
-export function MFTSection({
-  data = mockData,
-  isLoading,
-}: {
+export interface MFTSectionProps {
   data?: typeof MFTChartData;
   isLoading?: boolean;
-}) {
+}
+
+export function MFTSection({ data = mockData, isLoading }: MFTSectionProps) {
   const navigate = useNavigate();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { setLink } = useBreadcrumb();
-  const { description, ...circles } = MFTChartData;
+  const { description, ...circles } = data;
 
   const handleClick = () => {
     const screenWidth = window.innerWidth;
@@ -41,7 +41,7 @@ export function MFTSection({
           <h2 className="chart-title">Moral Foundations Theory</h2>
 
           <UnavailableChartOverlay reason="no_data" enabled={data === mockData}>
-            <MFTChart {...MFTChartData} handleClick={handleClick} />
+            <MFTChart {...data} handleClick={handleClick} />
           </UnavailableChartOverlay>
         </div>
       )}
@@ -55,15 +55,13 @@ export function MFTSection({
             Your Results
           </h2> */}
           <div className="-mt-1 flex flex-col gap-[5px]">
-            <p className="text-passiveLinkColor leading-[22px] max-w-[369px]">
-              {MFTChartData.description}
-            </p>
-            <div className="md:max-w-[369px] max-w-full w-full py-[13px] bg-[#F3F5F7] rounded-xl text-passiveLinkColor text-[32px] leading-[38px] text-center flex items-center justify-center">
+            <Markdown>{data.description}</Markdown>
+            {/* <div className="md:max-w-[369px] max-w-full w-full py-[13px] bg-[#F3F5F7] rounded-xl text-passiveLinkColor text-[32px] leading-[38px] text-center flex items-center justify-center">
               Moderate
-            </div>
+            </div> */}
           </div>
           <div className="gap-9 flex flex-col overflow-y-auto items-center relative">
-            <MFTChart {...MFTChartData} handleClick={handleClick} />
+            <MFTChart {...data} handleClick={handleClick} />
             <div className="mt-3 mb-8 w-full">
               {/* <SimilarProfileBadge peopleCount={253} /> */}
             </div>

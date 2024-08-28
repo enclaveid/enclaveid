@@ -30,6 +30,7 @@ import { EmailConfirmationGuard } from './components/guards/EmailConfirmationGua
 import { EmailConfirmationPage } from './pages/onboarding/EmailConfirmationPage';
 import { StreamChatProvider } from './providers/StreamChatProvider';
 import { OnboardingSkipsProvider } from './providers/OnboardingSkipsProvider';
+import { PoliticsContainer } from './components/containers/PoliticsContainer';
 
 export const reactRouter = createBrowserRouter([
   {
@@ -105,7 +106,14 @@ export const reactRouter = createBrowserRouter([
       { path: 'personality/trait/:title', element: <TraitCardDetails /> },
       { path: 'personality/mbti/:title', element: <MbtiCardDetails /> },
       { path: 'personality/trait2/:title', element: <SixteenPFCardDetails /> },
-      { path: 'politics', element: <PoliticsContent /> },
+      {
+        path: 'politics',
+        element: (
+          <PoliticsContainer>
+            <PoliticsContent />
+          </PoliticsContainer>
+        ),
+      },
       { path: 'politics/compass', element: <CompassDetails /> },
       { path: 'politics/mft', element: <MFTDetails /> },
       { path: 'career', element: <CareerContent /> },

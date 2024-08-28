@@ -2,6 +2,15 @@ import { ReactElement } from 'react';
 import { trpc } from '../../utils/trpc';
 import { PersonalityContentProps } from '../PersonalityContent';
 import React from 'react';
+import {
+  getBigFiveProps,
+  getMbtiProps,
+} from '../../utils/apiResultsToCardProps';
+import {
+  BigFivePartial,
+  MbtiPartial,
+  SixteenPersonalityFactorPartial,
+} from '@enclaveid/shared';
 
 export function PersonalityContainer({
   children,
@@ -10,14 +19,15 @@ export function PersonalityContainer({
 }) {
   const personalityQuery = trpc.private.getPersonalityTraits.useQuery();
 
-  const { isLoading, error } = personalityQuery;
-  const { bigfive, sixteenPersonalityFactor, mbti } =
-    personalityQuery.data || {};
+  const bigfive = personalityQuery.data?.bigfive as BigFivePartial;
+  const sixteenPersonalityFactor = personalityQuery.data
+    ?.sixteenPersonalityFactor as SixteenPersonalityFactorPartial;
+  const mbti = personalityQuery.data?.mbti as MbtiPartial;
 
-  // TODO: Fix types
   return React.cloneElement(children, {
-    // bigFive: bigfive,
-    // sixteenPersonalityFactor: sixteenPersonalityFactor,
-    // mbti: mbti,
+    bigFive: bigfive ? getBigFiveProps(bigfive) : undefined,
+    sixteenPersonalityFactor: null,
+    mbti: mbti ? getMbtiProps(mbti) : undefined,
+    isLoading: personalityQuery.isLoading,
   });
 }

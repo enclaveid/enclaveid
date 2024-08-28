@@ -14,12 +14,24 @@ export const politics = router({
         userTraits: {
           include: {
             politicalCompass: {
+              select: {
+                economic: true,
+                social: true,
+              },
               orderBy: {
                 createdAt: 'desc',
               },
               take: 1,
             },
             moralFoundations: {
+              select: {
+                careHarm: true,
+                fairnessCheating: true,
+                authoritySubversion: true,
+                loyaltyBetrayal: true,
+                sanctityDegradation: true,
+              },
+
               orderBy: {
                 createdAt: 'desc',
               },

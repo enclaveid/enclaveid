@@ -20,12 +20,3 @@ export function bigFiveToMbti(bigFive: BigFivePartial): MbtiPartial {
     judging: bigFive.conscientiousness > 0.5,
   };
 }
-
-export function mbtiToString(mbti: MbtiPartial): string {
-  const e = mbti.extraversion ? 'E' : 'I';
-  const s = mbti.sensing ? 'S' : 'N';
-  const t = mbti.thinking ? 'T' : 'F';
-  const j = mbti.judging ? 'J' : 'P';
-
-  return `${e}${s}${t}${j}`;
-}

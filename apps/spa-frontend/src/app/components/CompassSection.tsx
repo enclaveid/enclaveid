@@ -9,13 +9,15 @@ import { UnavailableChartOverlay } from './UnavailableChartOverlay';
 
 const mockData = compassChartData;
 
-function CompassSection({
-  isLoading,
-  data = mockData,
-}: {
+export interface CompassSectionProps {
   isLoading?: boolean;
   data?: typeof compassChartData;
-}) {
+}
+
+export function CompassSection({
+  isLoading,
+  data = mockData,
+}: CompassSectionProps) {
   const navigate = useNavigate();
   const { setLink } = useBreadcrumb();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -25,7 +27,7 @@ function CompassSection({
     if (screenWidth > 640) {
       setLink('Compass');
       navigate(`/dashboard/politics/compass`, {
-        state: { compassChartData },
+        state: { compassChartData: data },
       });
     } else {
       setIsDrawerOpen(true);
@@ -55,7 +57,8 @@ function CompassSection({
           </h2> */}
           <div className="gap-9 flex flex-col overflow-y-auto">
             <CompassChart
-              {...data}
+              x={data.x}
+              y={data.y}
               showDescription={true}
               handleClick={handleClick}
             />
@@ -68,5 +71,3 @@ function CompassSection({
     </>
   );
 }
-
-export { CompassSection };

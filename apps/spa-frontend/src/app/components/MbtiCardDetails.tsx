@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { MbtiCardProps } from './MbtiCard';
+import Markdown from 'react-markdown';
 
 function MbtiCardDetails() {
   const location = useLocation();
@@ -14,7 +15,9 @@ function MbtiCardDetails() {
           {label}
         </div>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: data.content }} />
+      <Markdown className="text-[#6C7A8A]  whitespace-pre-line p-4">
+        {data.content}
+      </Markdown>
     </div>
   );
 }

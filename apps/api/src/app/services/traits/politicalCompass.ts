@@ -29,7 +29,7 @@ export function politicalCompassFromMoralFoundations(
   // Calculate economic axis
   // Left (-1) to Right (1)
   const economicAxis =
-    (loyaltyBetrayal + authoritySubversion + sanctityDegradation) / 3 -
+    (authoritySubversion + sanctityDegradation) / 2 -
     (careHarm + fairnessCheating) / 2;
 
   // Calculate authoritarian axis
@@ -38,7 +38,7 @@ export function politicalCompassFromMoralFoundations(
     (loyaltyBetrayal + authoritySubversion + sanctityDegradation) / 3;
 
   return {
-    economic: economicAxis * 2 - 1, // Scale to -1 to 1
+    economic: economicAxis, // Already scaled from -1 to 1
     social: authoritarianAxis * 2 - 1, // Scale to -1 to 1
   };
 }

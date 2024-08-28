@@ -12,6 +12,17 @@ const bigFive = Prisma.validator<Prisma.BigFiveDefaultArgs>()({
 
 export type BigFivePartial = Prisma.BigFiveGetPayload<typeof bigFive>;
 
+const mbti = Prisma.validator<Prisma.MbtiDefaultArgs>()({
+  select: {
+    extraversion: true,
+    judging: true,
+    thinking: true,
+    sensing: true,
+  },
+});
+
+export type MbtiPartial = Prisma.MbtiGetPayload<typeof mbti>;
+
 const moralFoundations = Prisma.validator<Prisma.MoralFoundationsDefaultArgs>()(
   {
     select: {
@@ -43,13 +54,26 @@ export type PoliticalCompassPartial = Prisma.PoliticalCompassGetPayload<
   typeof politicalCompass
 >;
 
-const mbti = Prisma.validator<Prisma.MbtiDefaultArgs>()({
-  select: {
-    extraversion: true,
-    judging: true,
-    thinking: true,
-    sensing: true,
-  },
-});
+const sixteenPersonalityFactor =
+  Prisma.validator<Prisma.SixteenPersonalityFactorDefaultArgs>()({
+    select: {
+      reasoning: true,
+      emotionalStability: true,
+      dominance: true,
+      liveliness: true,
+      ruleConsciousness: true,
+      socialBoldness: true,
+      sensitivity: true,
+      vigilance: true,
+      abstractedness: true,
+      privateness: true,
+      apprehension: true,
+      opennessToChange: true,
+      selfReliance: true,
+      perfectionism: true,
+      tension: true,
+    },
+  });
 
-export type MbtiPartial = Prisma.MbtiGetPayload<typeof mbti>;
+export type SixteenPersonalityFactorPartial =
+  Prisma.SixteenPersonalityFactorGetPayload<typeof sixteenPersonalityFactor>;
