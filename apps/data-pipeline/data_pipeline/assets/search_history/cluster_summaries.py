@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
+from data_pipeline.policies.retry_policies import spot_instance_retry_policy
 from data_pipeline.resources.llm_inference.llama70b_quantized_resource import (
     Llama70bQuantizedResource,
 )
@@ -191,6 +192,7 @@ class ClusterSummariesConfig(RowLimitConfig):
         ),
     },
     op_tags=get_k8s_vllm_config(2),
+    retry_policy=spot_instance_retry_policy,
 )
 async def cluster_summaries(
     context: AssetExecutionContext,

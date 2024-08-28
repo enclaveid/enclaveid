@@ -20,6 +20,7 @@ from data_pipeline.utils.matching.maximum_bipartite_matching import (
 from ...constants.custom_config import RowLimitConfig
 from ...constants.k8s import get_k8s_rapids_config
 from ...partitions import user_partitions_def
+from ...policies.retry_policies import spot_instance_retry_policy
 from ...utils.capabilities import gpu_info
 
 
@@ -38,6 +39,7 @@ class SummariesUserMatchesConfig(RowLimitConfig):
     deps=[summaries_embeddings],
     io_manager_key="parquet_io_manager",
     op_tags=get_k8s_rapids_config(1),
+    retry_policy=spot_instance_retry_policy,
 )
 async def summaries_user_matches(
     context: AssetExecutionContext,

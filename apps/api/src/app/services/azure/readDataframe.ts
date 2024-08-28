@@ -1,4 +1,3 @@
-import * as polars from 'nodejs-polars';
 import { azureContainerClient } from './client';
 
 // Helper function to convert a ReadableStream to a Buffer
@@ -17,9 +16,9 @@ async function streamToBuffer(
   });
 }
 
-export async function readPolarsFromAzure(
+export async function downloadPipelineResults(
   blobName: string,
-): Promise<polars.DataFrame> {
+): Promise<Buffer> {
   // Get a reference to the blob
   const blobClient = azureContainerClient.getBlobClient(blobName);
 
@@ -27,5 +26,5 @@ export async function readPolarsFromAzure(
   const downloadResponse = await blobClient.download();
   const downloaded = await streamToBuffer(downloadResponse.readableStreamBody);
 
-  return polars.readParquet(downloaded);
+  return downloaded;
 }

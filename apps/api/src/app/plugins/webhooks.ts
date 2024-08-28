@@ -1,12 +1,13 @@
 import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
-import { readPolarsFromAzure } from '../services/azure/readDataframe';
+import { downloadPipelineResults } from '../services/azure/readDataframe';
 import { processClusterMatches } from '../services/dataPipeline/processClusterMatches';
 import { prisma } from '@enclaveid/backend';
-import { readParquet } from 'nodejs-polars';
+import * as pl from 'nodejs-polars';
+import { sendEmail } from '../services/azure/mailer';
 
 export default fp(async (fastify: FastifyInstance) => {
-  fastify.post('/pipeline_finished', async (request, reply) => {
+  fastify.post('/webhooks/pipeline-finished', async (request, reply) => {
     const { userId } = request.body as { userId: string };
 
     // Check if the user exists in the database
@@ -20,14 +21,56 @@ export default fp(async (fastify: FastifyInstance) => {
         reply.status(404).send({ error: 'User not found' });
       });
 
-    const blobName = `results_for_api/${userId}.snappy`;
+    if (!user) {
+      reply.status(404).send({ error: 'User not found' });
+      return;
+    }
 
-    const df =
-      process.env.NODE_ENV === 'development'
-        ? readParquet(`${process.cwd()}/apps/data-pipeline/data/${blobName}`)
-        : await readPolarsFromAzure(blobName);
+    const blobName = `results_for_api/${user.id}.snappy`;
 
-    await processClusterMatches(df);
+    let df: pl.DataFrame;
+    try {
+      df = pl.readParquet(
+        process.env.NODE_ENV === 'development'
+          ? `${process.cwd()}/apps/data-pipeline/data/${blobName}`
+          : await downloadPipelineResults(blobName),
+      );
+    } catch (err) {
+      console.error(err);
+      reply
+        .status(500)
+        .send({ error: 'Error reading Parquet file: ' + err.message });
+      return;
+    }
+
+    try {
+      await processClusterMatches(df);
+    } catch (err) {
+      console.error(err);
+      reply
+        .status(500)
+        .send({ error: 'Error processing cluster matches: ' + err.message });
+      return;
+    }
+
+    try {
+      await sendEmail(
+        user.email,
+        'Your EnclaveID results are ready!',
+        `<html>
+        <body>
+          <p>Hi ${user.displayName},</p>
+          <p>Your EnclaveID results are ready. Check them out here: https://enclaveid.com/dashboard/interests</p>
+          <p>Best regards,</p>
+          <p>The EnclaveID Team</p>
+        </body>
+      </html>`,
+      );
+    } catch (err) {
+      console.error(err);
+      reply.status(500).send({ error: 'Error sending email: ' + err.message });
+      return;
+    }
 
     reply.send({ success: true });
   });

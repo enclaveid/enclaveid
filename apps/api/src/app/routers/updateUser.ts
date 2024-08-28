@@ -5,6 +5,8 @@ import { getTipiScores } from '../services/traits/bigFive';
 import { z } from 'zod';
 import { getMfq20Scores } from '../services/traits/moralFoundations';
 import { Purpose } from '@prisma/client';
+import { bigFiveToMbti } from '../services/traits/mbti';
+import { politicalCompassFromMoralFoundations } from '../services/traits/politicalCompass';
 
 export const updateUser = router({
   createbigFive: authenticatedProcedure
@@ -20,11 +22,30 @@ export const updateUser = router({
 
       const { answers } = opts.input;
 
-      const normalizedScores = getTipiScores(answers);
+      const bigFiveScores = getTipiScores(answers);
 
-      return await prisma.bigFive.create({
+      await prisma.bigFive.create({
         data: {
-          ...normalizedScores,
+          ...bigFiveScores,
+          userTraits: {
+            connectOrCreate: {
+              where: {
+                userId,
+              },
+              create: {
+                userId,
+              },
+            },
+          },
+        },
+      });
+
+      // TODO: We also approximate MBTI but we should infer it properly
+      const mbtiScores = bigFiveToMbti(bigFiveScores);
+
+      await prisma.mbti.create({
+        data: {
+          ...mbtiScores,
           userTraits: {
             connectOrCreate: {
               where: {
@@ -51,11 +72,31 @@ export const updateUser = router({
 
       const { answers } = opts.input;
 
-      const normalizedScores = getMfq20Scores(answers);
+      const mftScores = getMfq20Scores(answers);
 
-      return await prisma.moralFoundations.create({
+      await prisma.moralFoundations.create({
         data: {
-          ...normalizedScores,
+          ...mftScores,
+          userTraits: {
+            connectOrCreate: {
+              where: {
+                userId,
+              },
+              create: {
+                userId,
+              },
+            },
+          },
+        },
+      });
+
+      // TODO: We also approximate political orientation but we should infer it properly
+      const politicalCompassScores =
+        politicalCompassFromMoralFoundations(mftScores);
+
+      await prisma.politicalCompass.create({
+        data: {
+          ...politicalCompassScores,
           userTraits: {
             connectOrCreate: {
               where: {

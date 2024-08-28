@@ -7,7 +7,7 @@ from dagster import (
     asset,
 )
 
-from data_pipeline.assets.search_history.sentence_transfomer_resource import (
+from data_pipeline.resources.sentence_transfomer_resource import (
     SentenceTransformerResource,
 )
 from data_pipeline.utils.capabilities import gpu_info
@@ -16,6 +16,7 @@ from data_pipeline.utils.costs import get_gpu_runtime_cost
 from ...constants.custom_config import RowLimitConfig
 from ...constants.k8s import get_k8s_vllm_config
 from ...partitions import user_partitions_def
+from ...policies.retry_policies import spot_instance_retry_policy
 
 
 @asset(
@@ -25,6 +26,7 @@ from ...partitions import user_partitions_def
         "cluster_summaries": AssetIn(key=["cluster_summaries"]),
     },
     op_tags=get_k8s_vllm_config(1),
+    retry_policy=spot_instance_retry_policy,
 )
 def summaries_embeddings(
     context: AssetExecutionContext,

@@ -8,6 +8,7 @@ from dagster import (
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
+from data_pipeline.policies.retry_policies import spot_instance_retry_policy
 from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
@@ -58,6 +59,7 @@ enrichment_prompt_sequence = [
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     op_tags=get_k8s_vllm_config(2),
+    retry_policy=spot_instance_retry_policy,
 )
 def interests(
     context: AssetExecutionContext,

@@ -1,5 +1,4 @@
-import { UserTraitsShared, questionnaires } from '@enclaveid/shared';
-import { BigFive } from '@prisma/client';
+import { BigFivePartial, questionnaires } from '@enclaveid/shared';
 
 export function getTipiScores(tipiAnswers: Record<string, string>) {
   const reverseScoredItems = [1, 3, 5, 7, 9];
@@ -16,7 +15,7 @@ export function getTipiScores(tipiAnswers: Record<string, string>) {
         ? 8 - options.indexOf(answer)
         : options.indexOf(answer) + 1;
 
-      let key;
+      let key: keyof BigFivePartial;
       switch (questionIndex) {
         case 0:
         case 5:
@@ -45,7 +44,7 @@ export function getTipiScores(tipiAnswers: Record<string, string>) {
         [key]: acc[key] ? (acc[key] + score) / 2 : score,
       };
     },
-    {} as Omit<BigFive, keyof UserTraitsShared>,
+    {} as BigFivePartial,
   );
 
   const normalizedScores = Object.entries(scores).reduce(
@@ -53,7 +52,7 @@ export function getTipiScores(tipiAnswers: Record<string, string>) {
       ...acc,
       [key]: (value - 1) / 6,
     }),
-    {} as Omit<BigFive, keyof UserTraitsShared>,
+    {} as BigFivePartial,
   );
 
   return normalizedScores;

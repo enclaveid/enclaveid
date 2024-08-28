@@ -1,9 +1,6 @@
 from dagster import EnvVar
 from dagster_polars import PolarsParquetIOManager
 
-from data_pipeline.assets.search_history.sentence_transfomer_resource import (
-    SentenceTransformerResource,
-)
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
 from data_pipeline.resources.api_db_session import ApiDbSession
 from data_pipeline.resources.llm_inference.gemma27b_resource import Gemma27bResource
@@ -15,6 +12,9 @@ from data_pipeline.resources.llm_inference.llama70b_quantized_resource import (
 from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
 from data_pipeline.resources.llm_inference.llama405b_resource import Llama405bResource
 from data_pipeline.resources.mistral_resource import MistralResource
+from data_pipeline.resources.sentence_transfomer_resource import (
+    SentenceTransformerResource,
+)
 
 resources = {
     "parquet_io_manager": PolarsParquetIOManager(

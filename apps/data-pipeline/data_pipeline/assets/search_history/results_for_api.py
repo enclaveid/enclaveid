@@ -2,6 +2,7 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Optional, asset
 
 from ...constants.custom_config import RowLimitConfig
+from ...hooks import notify_api_on_success
 from ...partitions import user_partitions_def
 
 
@@ -15,6 +16,7 @@ from ...partitions import user_partitions_def
         ),
         "cluster_summaries": AssetIn(key=["cluster_summaries"]),
     },
+    op_tags={"hook": notify_api_on_success.name},
 )
 def results_for_api(
     context: AssetExecutionContext,
@@ -69,7 +71,7 @@ def process_cluster_summaries(cluster_summaries: pl.DataFrame) -> pl.DataFrame:
 
 
 def process_user_matches(
-    summaries_user_matches_with_desc: pl.DataFrame
+    summaries_user_matches_with_desc: pl.DataFrame,
 ) -> pl.DataFrame:
     return (
         summaries_user_matches_with_desc.rename(

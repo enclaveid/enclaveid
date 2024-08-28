@@ -1,13 +1,15 @@
 export type QuestionnaireId = 'TIPI' | 'MFQ20';
 
+export interface QuestionnairePart {
+  headline: string;
+  questions: Array<string>;
+  options: Array<string>;
+}
+
 export interface Questionnaire {
   id: QuestionnaireId;
   title: string;
-  parts: Array<{
-    headline: string;
-    questions: Array<string>;
-    options: Array<string>;
-  }>;
+  parts: Array<QuestionnairePart>;
 }
 
 export const questionnaires: Array<Questionnaire> = [

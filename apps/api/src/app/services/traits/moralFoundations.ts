@@ -1,14 +1,9 @@
-import { questionnaires } from '@enclaveid/shared';
+import {
+  MoralFoundationsPartial,
+  QuestionnairePart,
+  questionnaires,
+} from '@enclaveid/shared';
 
-interface Mfq20PartScores {
-  careHarm: number;
-  fairnessCheating: number;
-  loyaltyBetrayal: number;
-  authoritySubversion: number;
-  sanctityDegradation: number;
-  goodCheck: number;
-  mathCheck: number;
-}
 /**
  * See https://moralfoundations.org/questionnaires/ item key file.
  * @param mfq20Answers
@@ -17,7 +12,7 @@ interface Mfq20PartScores {
  */
 function getMfq20PartScores(
   mfq20Answers: Record<string, string>,
-  part: (typeof questionnaires)[0]['parts'][0],
+  part: QuestionnairePart,
 ) {
   const { options, questions } = part;
 
@@ -26,7 +21,7 @@ function getMfq20PartScores(
       const questionIndex = questions.indexOf(question);
       const score = options.indexOf(answer);
 
-      let key: keyof typeof scores;
+      let key: keyof MoralFoundationsPartial;
       switch (questionIndex) {
         case 0:
         case 6:
@@ -65,7 +60,7 @@ function getMfq20PartScores(
 
       return acc;
     },
-    {} as Mfq20PartScores,
+    {} as MoralFoundationsPartial,
   );
 
   return scores;
@@ -90,7 +85,7 @@ export function getMfq20Scores(mfq20Answers: Record<string, string>) {
       });
 
       return acc;
-    }, {} as Mfq20PartScores);
+    }, {} as MoralFoundationsPartial);
 
   return normalizedScores;
 }
