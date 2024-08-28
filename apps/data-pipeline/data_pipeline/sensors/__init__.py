@@ -2,17 +2,23 @@ import ast
 
 from dagster import (
     AssetSelection,
+    RunRequest,
     SensorEvaluationContext,
     SensorResult,
     SkipReason,
     sensor,
 )
 
-from ..consts import PRODUCTION_STORAGE_BUCKET
+from ..consts import PRODUCTION_STORAGE_BUCKET, get_environment
 from ..partitions import user_partitions_def
 
+SENSOR_INTERVAL_SECONDS = 5 if get_environment() == "LOCAL" else 30
 
-@sensor(asset_selection=AssetSelection.all())
+
+@sensor(
+    asset_selection=AssetSelection.all(),
+    minimum_interval_seconds=SENSOR_INTERVAL_SECONDS,
+)
 def users_sensor(context: SensorEvaluationContext) -> SensorResult | SkipReason:
     """Polls the storage bucket for user folders.
 
@@ -26,8 +32,14 @@ def users_sensor(context: SensorEvaluationContext) -> SensorResult | SkipReason:
     dirs_to_delete = current_state - all_dirs
 
     if len(dirs_to_add) + len(dirs_to_delete) > 0:
-        # TODO: Also return run requests because eager AMPs don't do backfills.
         return SensorResult(
+            run_requests=[
+                RunRequest(
+                    run_key=f"first_upload_{k}",
+                    partition_key=k,
+                )
+                for k in dirs_to_add
+            ],
             cursor=str(all_dirs),
             dynamic_partitions_requests=[
                 user_partitions_def.build_add_request(sorted(dirs_to_add)),
