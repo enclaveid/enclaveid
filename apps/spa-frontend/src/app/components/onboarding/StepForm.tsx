@@ -4,6 +4,7 @@ import { Button } from '../atoms/Button';
 import { Logo } from '../atoms/Logo';
 import { CheckmarkIcon } from '../atoms/Icons';
 import { Questionnaire } from '@enclaveid/shared';
+import { useTypewriterEffect } from '../../hooks/useTypewriterEffect';
 
 type Steps = 'onboarding' | 'steps' | 'final';
 
@@ -56,6 +57,8 @@ export function StepForm(props: StepFormProps) {
   }, [steps, answers, onFinished]);
 
   const currentQuestion = questions[currentStep];
+
+  const typewriterText = useTypewriterEffect(currentQuestion);
 
   if (steps === 'onboarding') {
     return (
@@ -126,23 +129,29 @@ export function StepForm(props: StepFormProps) {
             <h2 className="text-passiveLinkColor font-medium text-2xl leading-7 -tracking-[0.02em] text-center">
               {title}
             </h2>
-            <p className="text-passiveLinkColor leading-[22px] text-center">
-              {headline} ({progress} out of {totalQuestions})
+            <p className="text-passiveLinkColor leading-[22px] text-center whitespace-pre-wrap">
+              {`${headline}\n(${progress} out of ${totalQuestions})`}
             </p>
           </div>
-          <motion.div
-            key={questions.indexOf(currentQuestion)}
-            initial={{ y: 300, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -300, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-          >
-            {currentQuestion && (
-              <div className="bg-white border border-[#E5E8EE] py-10 rounded-xl">
-                <div className="flex flex-col gap-10 max-w-[406px] w-full mx-auto">
-                  <h4 className="text-center text-passiveLinkColor text-lg leading-[25px]">
-                    “{currentQuestion}”
-                  </h4>
+
+          {currentQuestion && (
+            <div className="bg-white border border-[#E5E8EE] py-10 rounded-xl">
+              <div className="flex flex-col gap-10 max-w-[406px] w-full mx-auto">
+                <h4 className="text-center text-passiveLinkColor text-lg leading-[25px min-h-10">
+                  {typewriterText}
+                </h4>
+                <motion.div
+                  key={questions.indexOf(currentQuestion)}
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 100,
+                    damping: 30,
+                    duration: 3,
+                  }}
+                >
                   <div className="flex flex-col gap-3 max-w-[406px] w-full mx-auto">
                     {options.map((option, index) => (
                       <button
@@ -160,10 +169,10 @@ export function StepForm(props: StepFormProps) {
                       </button>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               </div>
-            )}
-          </motion.div>
+            </div>
+          )}
         </div>
       </AnimatePresence>
     </div>
