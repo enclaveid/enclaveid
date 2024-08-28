@@ -1,12 +1,12 @@
 import { Meta, StoryObj } from '@storybook/react';
-import { TraitCard1 } from './TraitCard1';
-import { traitCard1 } from './mock-data';
+import { BigFiveCard } from './BigFiveCard';
+import { bigFiveCard } from './mock-data';
 import { withRouter } from 'storybook-addon-remix-react-router';
 import { BreadcrumbProvider } from '../providers/BreadcrumbContext';
 
 export default {
-  title: 'Components/TraitCard1',
-  component: TraitCard1,
+  title: 'Components/BigFiveCard',
+  component: BigFiveCard,
   decorators: [withRouter],
   argTypes: {
     title: {
@@ -14,12 +14,12 @@ export default {
       defaultValue: 'Personality Traits',
     },
   },
-} as Meta<typeof TraitCard1>;
+} as Meta<typeof BigFiveCard>;
 
-export const Default: StoryObj<typeof TraitCard1> = {
+export const Default: StoryObj<typeof BigFiveCard> = {
   args: {
-    title: traitCard1.title,
-    data: traitCard1.data,
+    title: bigFiveCard.title,
+    data: bigFiveCard.data,
   },
   decorators: [
     (Story) => (

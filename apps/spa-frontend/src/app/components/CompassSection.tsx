@@ -4,8 +4,18 @@ import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useNavigate } from 'react-router-dom';
 import { compassChartData } from './mock-data';
 import { CustomDrawer } from './CustomDrawer';
+import { DynamicAreaLoading } from './DynamicAreaLoading';
+import { UnavailableChartOverlay } from './UnavailableChartOverlay';
 
-function CompassSection() {
+const mockData = compassChartData;
+
+function CompassSection({
+  isLoading,
+  data = mockData,
+}: {
+  isLoading?: boolean;
+  data?: typeof compassChartData;
+}) {
   const navigate = useNavigate();
   const { setLink } = useBreadcrumb();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -25,9 +35,14 @@ function CompassSection() {
   return (
     <>
       <div className="flex flex-col gap-2.5 items-center">
-        <h2 className="chart-title">Compass</h2>
-
-        <CompassChart {...compassChartData} handleClick={handleClick} />
+        <h2 className="chart-title">Political Compass</h2>
+        {isLoading ? (
+          <DynamicAreaLoading />
+        ) : (
+          <UnavailableChartOverlay reason="no_data" enabled={data === mockData}>
+            <CompassChart {...data} handleClick={handleClick} />
+          </UnavailableChartOverlay>
+        )}
       </div>
       <CustomDrawer
         title={'Compass'}
@@ -40,7 +55,7 @@ function CompassSection() {
           </h2> */}
           <div className="gap-9 flex flex-col overflow-y-auto">
             <CompassChart
-              {...compassChartData}
+              {...data}
               showDescription={true}
               handleClick={handleClick}
             />

@@ -1,24 +1,30 @@
-import { BigFive, Mbti } from '@prisma/client';
-import { IntjCard } from './IntjCard';
-import { TraitCard1 } from './TraitCard1';
-import { intjCard, traitCard1, traitCard2 } from './mock-data';
+import { BigFiveCard, TraitCardProps } from './BigFiveCard';
+import { MbtiCard, MbtiCardProps } from './MbtiCard';
 import { SixteenPFCard, SixteenPFCardProps } from './SixteenPFCard';
 
 export interface PersonalityContentProps {
-  bigFive?: BigFive;
+  bigFive?: TraitCardProps;
   sixteenPersonalityFactor?: SixteenPFCardProps;
-  mbti?: Mbti;
+  mbti?: MbtiCardProps;
+  isLoading?: boolean;
 }
 
 function PersonalityContent(props: PersonalityContentProps) {
+  const { isLoading } = props;
+
   return (
     <div className="pt-3.5 pb-9">
       <div className="grid grid-cols-1 lg:grid-cols-2 md:gap-10 gap-16 lg:gap-5">
         <div className="flex flex-col gap-16 sm:gap-3 lg:gap-3.5">
-          <TraitCard1 {...traitCard1} />
-          <IntjCard {...intjCard} />
+          <BigFiveCard data={props.bigFive?.data} isLoading={isLoading} />
+          <MbtiCard
+            label={props.mbti?.label}
+            description={props.mbti?.description}
+            data={props.mbti?.data}
+            isLoading={isLoading}
+          />
         </div>
-        <SixteenPFCard title={'16FP'} data={traitCard2} />
+        <SixteenPFCard data={props.sixteenPersonalityFactor?.data} />
       </div>
     </div>
   );

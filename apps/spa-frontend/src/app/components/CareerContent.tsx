@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { radarChart } from './mock-data';
 import { RadarChart, RadarChartProps } from './RadarChart';
 import { CustomDrawer } from './CustomDrawer';
+import { UnavailableChartOverlay } from './UnavailableChartOverlay';
 
 export const findHighestValues = (props: RadarChartProps): string[] => {
   const highestKeys: string[] = [];
@@ -49,15 +50,17 @@ function CareerContent() {
     <>
       <div className="flex flex-col gap-2.5 items-center mt-3.5 max-w-[538px]">
         <h2 className="chart-title">RIASEC</h2>
-        <div className="border border-[#E5E8EE] flex flex-col gap-10 items-center justify-center rounded-3xl w-full pt-[30px] pb-3.5 px-3">
-          <RadarChart values={radarChart.values} />
-          <Button
-            label="Dive Deeper"
-            variant="tertiary"
-            fullWidth
-            onClick={handleClick}
-          />
-        </div>
+        <UnavailableChartOverlay reason="not_implemented" enabled={true}>
+          <div className="border border-[#E5E8EE] flex flex-col gap-10 items-center justify-center rounded-3xl w-full pt-[30px] pb-3.5 px-3">
+            <RadarChart values={radarChart.values} />
+            <Button
+              label="Dive Deeper"
+              variant="tertiary"
+              fullWidth
+              onClick={handleClick}
+            />
+          </div>
+        </UnavailableChartOverlay>
       </div>
       <CustomDrawer
         title={'RIASEC'}

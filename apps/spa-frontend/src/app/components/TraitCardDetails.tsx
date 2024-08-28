@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { TraitCardProps } from './TraitCard1';
+import { TraitCardProps } from './BigFiveCard';
 import { TraitCard } from './TraitCard';
 
 function TraitCardDetails() {

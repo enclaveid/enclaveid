@@ -5,18 +5,30 @@ import { DashboardCardLayout } from './DashboardCardLayout';
 import { useNavigate } from 'react-router-dom';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { CustomDrawer } from './CustomDrawer';
+import { DynamicAreaLoading } from './DynamicAreaLoading';
+import { mbtiCard } from './mock-data';
+import { UnavailableChartOverlay } from './UnavailableChartOverlay';
 
-export interface IntjCardProps {
-  header: string;
-  label: string;
-  description: string;
-  data: {
+const mockData = mbtiCard.data;
+
+export interface MbtiCardProps {
+  header?: string;
+  label?: string;
+  description?: string;
+  data?: {
     title: string;
     content: string;
   };
+  isLoading: boolean;
 }
 
-function IntjCard({ header, label, description, data }: IntjCardProps) {
+function MbtiCard({
+  header = 'MBTI',
+  label = mbtiCard.label,
+  description = mbtiCard.description,
+  data = mockData,
+  isLoading,
+}: MbtiCardProps) {
   const navigate = useNavigate();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { setLink } = useBreadcrumb();
@@ -35,22 +47,28 @@ function IntjCard({ header, label, description, data }: IntjCardProps) {
   return (
     <>
       <DashboardCardLayout withTitle title={header}>
-        <div className="flex flex-col gap-4 sm:gap-[5px] px-4 sm:px-3 pt-8 sm:pt-[9px] pb-[15px] ">
-          <h1 className="text-[64px] leading-[75px] text-[#30A78A] text-center">
-            {label}
-          </h1>
-          <p className="text-[#6C7A8A] leading-[22px] sm:px-3 ">
-            {description}
-          </p>
-          <div className="sm:mt-0 mt-4">
-            <Button
-              label="Dive Deeper"
-              variant="tertiary"
-              fullWidth
-              onClick={handleClick}
-            />
-          </div>
-        </div>
+        {isLoading ? (
+          <DynamicAreaLoading />
+        ) : (
+          <UnavailableChartOverlay reason="no_data" enabled={data === mockData}>
+            <div className="flex flex-col gap-4 sm:gap-[5px] px-4 sm:px-3 pt-8 sm:pt-[9px] pb-[15px] ">
+              <h1 className="text-[64px] leading-[75px] text-[#30A78A] text-center">
+                {label}
+              </h1>
+              <p className="text-[#6C7A8A] leading-[22px] sm:px-3 ">
+                {description}
+              </p>
+              <div className="sm:mt-0 mt-4">
+                <Button
+                  label="Dive Deeper"
+                  variant="tertiary"
+                  fullWidth
+                  onClick={handleClick}
+                />
+              </div>
+            </div>
+          </UnavailableChartOverlay>
+        )}
       </DashboardCardLayout>
       <CustomDrawer
         title={'Myers-Briggs Type Indicator'}
@@ -76,4 +94,4 @@ function IntjCard({ header, label, description, data }: IntjCardProps) {
   );
 }
 
-export { IntjCard };
+export { MbtiCard };

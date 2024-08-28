@@ -4,8 +4,18 @@ import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CustomDrawer } from './CustomDrawer';
+import { UnavailableChartOverlay } from './UnavailableChartOverlay';
+import { DynamicAreaLoading } from './DynamicAreaLoading';
 
-function MFTSection() {
+const mockData = MFTChartData;
+
+export function MFTSection({
+  data = mockData,
+  isLoading,
+}: {
+  data?: typeof MFTChartData;
+  isLoading?: boolean;
+}) {
   const navigate = useNavigate();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { setLink } = useBreadcrumb();
@@ -24,11 +34,17 @@ function MFTSection() {
   };
   return (
     <>
-      <div className="flex flex-col gap-2.5 items-center">
-        <h2 className="chart-title">MFT</h2>
+      {isLoading ? (
+        <DynamicAreaLoading />
+      ) : (
+        <div className="flex flex-col gap-2.5 items-center">
+          <h2 className="chart-title">Moral Foundations Theory</h2>
 
-        <MFTChart {...MFTChartData} handleClick={handleClick} />
-      </div>
+          <UnavailableChartOverlay reason="no_data" enabled={data === mockData}>
+            <MFTChart {...MFTChartData} handleClick={handleClick} />
+          </UnavailableChartOverlay>
+        </div>
+      )}
       <CustomDrawer
         title={'Moral Foundations Theory'}
         isOpen={isDrawerOpen}
@@ -57,5 +73,3 @@ function MFTSection() {
     </>
   );
 }
-
-export { MFTSection };

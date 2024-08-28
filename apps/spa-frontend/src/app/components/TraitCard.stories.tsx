@@ -1,6 +1,6 @@
 import { Meta, StoryObj } from '@storybook/react';
 import { TraitCard } from './TraitCard';
-import { traitCard1 } from './mock-data';
+import { bigFiveCard } from './mock-data';
 
 export default {
   title: 'Components/TraitCard',
@@ -18,9 +18,9 @@ export default {
 
 export const Default: StoryObj<typeof TraitCard> = {
   args: {
-    label: traitCard1.data[0].label,
-    value: traitCard1.data[0].value,
-    description: traitCard1.data[0].description
+    label: bigFiveCard.data[0].label,
+    value: bigFiveCard.data[0].value,
+    description: bigFiveCard.data[0].description,
   },
   decorators: [
     (Story) => (

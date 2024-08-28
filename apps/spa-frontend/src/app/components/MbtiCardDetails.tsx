@@ -1,9 +1,9 @@
 import { useLocation } from 'react-router-dom';
-import { IntjCardProps } from './IntjCard';
+import { MbtiCardProps } from './MbtiCard';
 
-function IntjCardDetails() {
+function MbtiCardDetails() {
   const location = useLocation();
-  const { data, label } = location.state as IntjCardProps;
+  const { data, label } = location.state as MbtiCardProps;
   return (
     <div className="max-w-4xl sm:px-0 px-4">
       <div className="flex flex-col gap-5">
@@ -18,4 +18,4 @@ function IntjCardDetails() {
     </div>
   );
 }
-export { IntjCardDetails };
+export { MbtiCardDetails };

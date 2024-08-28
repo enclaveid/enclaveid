@@ -7,6 +7,11 @@ import { useState } from 'react';
 import { TraitCard } from './TraitCard';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { CustomDrawer } from './CustomDrawer';
+import { DynamicAreaLoading } from './DynamicAreaLoading';
+import { UnavailableChartOverlay } from './UnavailableChartOverlay';
+import { bigFiveCard } from './mock-data';
+
+const mockData = bigFiveCard.data;
 
 interface DataProps {
   label: string;
@@ -14,11 +19,16 @@ interface DataProps {
   description: string;
 }
 export interface TraitCardProps {
-  title: string;
-  data: DataProps[];
+  title?: string;
+  data?: DataProps[];
+  isLoading?: boolean;
 }
 
-function TraitCard1({ title, data }: TraitCardProps) {
+function BigFiveCard({
+  title = 'OCEAN',
+  data = mockData,
+  isLoading,
+}: TraitCardProps) {
   const navigate = useNavigate();
   const { setLink } = useBreadcrumb();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -37,26 +47,32 @@ function TraitCard1({ title, data }: TraitCardProps) {
   return (
     <>
       <DashboardCardLayout withTitle title={title}>
-        <div className="flex flex-col pt-[18px] sm:pt-[26px] pb-3.5 px-3">
-          <div className="sm:px-3 flex flex-col gap-6">
-            {data.map((result, index) => (
-              <GradientLine
-                title={result.label}
-                value={result.value}
-                key={index}
-                index={index}
-              />
-            ))}
-          </div>
-          <div className="mt-[15px]">
-            <Button
-              onClick={handleClick}
-              label="Dive Deeper"
-              variant="tertiary"
-              fullWidth
-            />
-          </div>
-        </div>
+        {isLoading ? (
+          <DynamicAreaLoading />
+        ) : (
+          <UnavailableChartOverlay reason="no_data" enabled={data === mockData}>
+            <div className="flex flex-col pt-[18px] sm:pt-[26px] pb-3.5 px-3">
+              <div className="sm:px-3 flex flex-col gap-6">
+                {data.map((result, index) => (
+                  <GradientLine
+                    title={result.label}
+                    value={result.value}
+                    key={index}
+                    index={index}
+                  />
+                ))}
+              </div>
+              <div className="mt-[15px]">
+                <Button
+                  onClick={handleClick}
+                  label="Dive Deeper"
+                  variant="tertiary"
+                  fullWidth
+                />
+              </div>
+            </div>
+          </UnavailableChartOverlay>
+        )}
       </DashboardCardLayout>
       <CustomDrawer
         title={`${title.toUpperCase()} Traits`}
@@ -76,4 +92,4 @@ function TraitCard1({ title, data }: TraitCardProps) {
   );
 }
 
-export { TraitCard1 };
+export { BigFiveCard };

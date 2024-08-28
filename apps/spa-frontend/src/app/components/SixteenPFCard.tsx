@@ -5,18 +5,24 @@ import { useNavigate } from 'react-router-dom';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useState } from 'react';
 import { CustomDrawer } from './CustomDrawer';
+import { UnavailableChartOverlay } from './UnavailableChartOverlay';
+import { traitCard2 } from './mock-data';
 
+const mockData = traitCard2;
 interface DataProps {
   label: string;
   value: number;
   description: string;
 }
 export interface SixteenPFCardProps {
-  title: string;
-  data: DataProps[];
+  title?: string;
+  data?: DataProps[];
 }
 
-function SixteenPFCard({ title, data }: SixteenPFCardProps) {
+function SixteenPFCard({
+  title = '16PF',
+  data = mockData,
+}: SixteenPFCardProps) {
   const navigate = useNavigate();
   const { setLink } = useBreadcrumb();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -36,27 +42,29 @@ function SixteenPFCard({ title, data }: SixteenPFCardProps) {
   return (
     <>
       <DashboardCardLayout withTitle title={title}>
-        <div className="flex flex-col px-3 pb-[15px] pt-[52px]">
-          <div className="pl-[15px] pr-3 flex flex-col gap-5">
-            {data.map((result, index) => (
-              <GradientLine
-                title={result.label}
-                value={result.value}
-                key={index}
-                index={index}
-                variant="secondary"
+        <UnavailableChartOverlay reason="not_implemented" enabled={true}>
+          <div className="flex flex-col px-3 pb-[15px] pt-[52px]">
+            <div className="pl-[15px] pr-3 flex flex-col gap-5">
+              {data.map((result, index) => (
+                <GradientLine
+                  title={result.label}
+                  value={result.value}
+                  key={index}
+                  index={index}
+                  variant="secondary"
+                />
+              ))}
+            </div>
+            <div className="mt-[86px]">
+              <Button
+                label="Dive Deeper"
+                variant="tertiary"
+                fullWidth
+                onClick={handleClick}
               />
-            ))}
+            </div>
           </div>
-          <div className="mt-[86px]">
-            <Button
-              label="Dive Deeper"
-              variant="tertiary"
-              fullWidth
-              onClick={handleClick}
-            />
-          </div>
-        </div>
+        </UnavailableChartOverlay>
       </DashboardCardLayout>
       <CustomDrawer
         title={title.toUpperCase()}

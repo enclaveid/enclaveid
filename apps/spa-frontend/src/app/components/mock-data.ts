@@ -1,4 +1,4 @@
-export const traitCard1 = {
+export const bigFiveCard = {
   title: 'Ocean',
   data: [
     {
@@ -133,7 +133,7 @@ export const traitCard2 = [
   },
 ];
 
-export const intjCard = {
+export const mbtiCard = {
   header: 'MBTI',
   label: 'INTJ',
   description:
@@ -188,7 +188,7 @@ export const MFTChartData = {
 
 export const compassChartData = {
   x: 3,
-  y: 2,
+  y: -3,
   description:
     'The Libertarian Right quadrant on the political compass emphasizes minimal government intervention in both economic and personal affairs. It advocates for free-market capitalism, low taxes, and less regulation, along with strong support for individual liberties and personal choice. This ideology supports a small, limited government and is non-interventionist in foreign policy.',
   compassChartAvailable: true,
@@ -216,8 +216,8 @@ export const userData = [
     location: 'Philadelphia',
     type: 'Ocean',
     image: '/s1.png',
-    intj: intjCard,
-    traitCard1: traitCard1,
+    intj: mbtiCard,
+    bigFiveCard: bigFiveCard,
     traitCard2: traitCard2,
     matchPercentage: 20,
   },

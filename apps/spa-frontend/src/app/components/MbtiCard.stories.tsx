@@ -1,23 +1,23 @@
 import { Meta, StoryObj } from '@storybook/react';
-import { IntjCard } from './IntjCard';
+import { MbtiCard } from './MbtiCard';
 import { withRouter } from 'storybook-addon-remix-react-router';
 import { BreadcrumbProvider } from '../providers/BreadcrumbContext';
-import { intjCard } from './mock-data';
+import { mbtiCard } from './mock-data';
 
 export default {
-  title: 'Components/IntjCard',
-  component: IntjCard,
+  title: 'Components/MbtiCard',
+  component: MbtiCard,
   decorators: [withRouter],
-} as Meta<typeof IntjCard>;
+} as Meta<typeof MbtiCard>;
 
-export const Default: StoryObj<typeof IntjCard> = {
+export const Default: StoryObj<typeof MbtiCard> = {
   args: {
-    header: intjCard.header,
-    label: intjCard.label,
-    description: intjCard.description,
+    header: mbtiCard.header,
+    label: mbtiCard.label,
+    description: mbtiCard.description,
     data: {
-      title: intjCard.data.title,
-      content: intjCard.data.content,
+      title: mbtiCard.data.title,
+      content: mbtiCard.data.content,
     },
   },
   decorators: [

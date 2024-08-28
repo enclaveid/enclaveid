@@ -3,7 +3,7 @@ import { Navigate, Outlet, createBrowserRouter } from 'react-router-dom';
 import { DashboardPage } from './pages/DashboardPage';
 import { PersonalityContent } from './components/PersonalityContent';
 import { TraitCardDetails } from './components/TraitCardDetails';
-import { IntjCardDetails } from './components/IntjCardDetails';
+import { MbtiCardDetails } from './components/MbtiCardDetails';
 import { SixteenPFCardDetails } from './components/SixteenPFCardDetails';
 import { PoliticsContent } from './components/PoliticsContent';
 import { CompassDetails } from './components/CompassDetails';
@@ -103,7 +103,7 @@ export const reactRouter = createBrowserRouter([
         ),
       },
       { path: 'personality/trait/:title', element: <TraitCardDetails /> },
-      { path: 'personality/mbti/:title', element: <IntjCardDetails /> },
+      { path: 'personality/mbti/:title', element: <MbtiCardDetails /> },
       { path: 'personality/trait2/:title', element: <SixteenPFCardDetails /> },
       { path: 'politics', element: <PoliticsContent /> },
       { path: 'politics/compass', element: <CompassDetails /> },

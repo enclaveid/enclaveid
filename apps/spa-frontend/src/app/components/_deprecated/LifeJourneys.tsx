@@ -1,5 +1,5 @@
 import { Dialog, Tab, Transition } from '@headlessui/react';
-import { NonLatentCard } from './NonLatentCard';
+import { NonLatentCard } from '../NonLatentCard';
 import { Stepper } from './Stepper';
 import { Button } from '../atoms/Button';
 import { Fragment } from 'react/jsx-runtime';
