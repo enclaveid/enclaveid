@@ -25,6 +25,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+          token: ${{ secrets.PAT_GITHUB_TOKEN }}
 
       - name: Login to DockerHub
         uses: docker/login-action@v2
@@ -82,7 +83,7 @@ jobs:
       - name: Run werf converge
         run: |
           source "$(werf ci-env github --as-file)"
-          werf converge
+          werf converge --secret-values=k8s/basic/secret-values/secret-values.yaml
         env:
           WERF_ENV: production
           WERF_KUBECONFIG_BASE64: ${{ secrets.KUBECONFIG_BASE64 }}
