@@ -9,6 +9,12 @@ datasource db {
   url      = env("API_DATABASE_URL")
 }
 
+enum ActivityType {
+  knowledge_progression
+  reactive_needs
+  unknown
+}
+
 enum Gender {
   Male
   Female
@@ -240,11 +246,11 @@ model InterestsCluster {
   updatedAt DateTime @updatedAt
 
   pipelineClusterId Int
-  clusterType       String // Would be cool to have an enum here but string enums are not supported
+  clusterType       ActivityType
   summary           String
   title             String
   activityDates     String[]
-  isSensitive       Boolean  @default(false)
+  isSensitive       Boolean      @default(false)
   clusterItems      String[]
   socialLikelihood  Float
 

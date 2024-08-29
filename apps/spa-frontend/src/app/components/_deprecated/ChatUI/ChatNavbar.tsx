@@ -1,6 +1,6 @@
 import { Menu, Transition } from '@headlessui/react';
-import { ChatDots } from '../Icons';
 import { Fragment } from 'react';
+import { ChatDots } from '../../atoms/Icons';
 
 function ChatNavbar() {
   return (

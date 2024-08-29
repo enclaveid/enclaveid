@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
-import { trpc } from '../utils/trpc';
-import { Button } from '../components/Button';
 import { ChromeUserEventEnum } from '@enclaveid/shared';
 
 // TODO: maybe we wanna serve it from the tunnel and load it dynamically?
 // https://guacamole.apache.org/doc/gug/writing-you-own-guacamole-app.html#updating-pom-xml
-import Guacamole from '../utils/guacamole';
+import Guacamole from '../../utils/guacamole';
+import { trpc } from '../../utils/trpc';
+import { Button } from '../../components/atoms/Button';
 
 export function FakeOauthPage() {
   const startSession = trpc.private.startSession.useMutation();

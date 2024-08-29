@@ -1,5 +1,4 @@
 import { Dialog, Tab, Transition } from '@headlessui/react';
-import { NonLatentCard } from '../NonLatentCard';
 import { Stepper } from './Stepper';
 import { Button } from '../atoms/Button';
 import { Fragment } from 'react/jsx-runtime';
@@ -50,15 +49,15 @@ function LifeJourneys() {
       </h1>
       <Tab.Group>
         <div className="flex xl:flex-row flex-col-reverse gap-[18px] w-full">
-          <Tab.List className="flex flex-col gap-4 shrink-0">
+          {/* <Tab.List className="flex flex-col gap-4 shrink-0">
             {data.map((card, index) => (
               <Tab key={index} className="w-full focus-visible:outline-none">
                 {({ selected }) => (
-                  <NonLatentCard {...card} isViewed={selected} />
+                  <NonLatentCard interest={{ ...card, isViewed: selected }} />
                 )}
               </Tab>
             ))}
-          </Tab.List>
+          </Tab.List> */}
           <Tab.Panels className="w-full">
             {data.map((_, index) => (
               <Tab.Panel key={index} className="size-full">

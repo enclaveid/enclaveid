@@ -7,6 +7,7 @@ import { DisplayableInterest, UserMatchOverview } from '@enclaveid/shared';
 import { localGeocoderLookup } from '../../services/localGeocoder';
 import { MAX_PAGINATION_LIMIT } from '../../constants';
 import { replaceUserIds } from '../../services/contentPrivacy';
+import { ActivityType } from '@prisma/client';
 
 export const matches = router({
   getPeopleCount: authenticatedProcedure.query(async () => {
@@ -77,8 +78,11 @@ export const matches = router({
           .default(MAX_PAGINATION_LIMIT),
         cursor: z.string().default(''),
         activityTypes: z
-          .array(z.string())
-          .default(['reactive_needs', 'knowledge_progression']),
+          .array(z.nativeEnum(ActivityType))
+          .default([
+            ActivityType.knowledge_progression,
+            ActivityType.reactive_needs,
+          ]),
       }),
     )
     .query(async (opts) => {

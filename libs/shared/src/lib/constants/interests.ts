@@ -1,7 +1,9 @@
+import { ActivityType } from '@prisma/client';
+
 export interface DisplayableInterest {
   title: string;
   description: string;
-  activityType: string;
+  activityType: ActivityType;
   similarityPercentage?: number;
   activityDates?: string[];
   pipelineClusterId?: number;

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { AppContext } from '../../context';
 import { MAX_PAGINATION_LIMIT } from '../../constants';
 import { DisplayableInterest } from '@enclaveid/shared';
+import { ActivityType } from '@prisma/client';
 
 export const interests = router({
   getUserInterests: authenticatedProcedure
@@ -17,13 +18,19 @@ export const interests = router({
             .default(MAX_PAGINATION_LIMIT),
           cursor: z.string().default(''),
           activityTypes: z
-            .array(z.string())
-            .default(['reactive_needs', 'knowledge_progression']),
+            .array(z.nativeEnum(ActivityType))
+            .default([
+              ActivityType.knowledge_progression,
+              ActivityType.reactive_needs,
+            ]),
         })
         .default({
           limit: MAX_PAGINATION_LIMIT,
           cursor: '',
-          activityTypes: ['reactive_needs', 'knowledge_progression'],
+          activityTypes: [
+            ActivityType.knowledge_progression,
+            ActivityType.reactive_needs,
+          ],
         }),
     )
     .query(async (opts) => {

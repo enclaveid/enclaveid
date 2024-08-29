@@ -1,4 +1,4 @@
-import { ChatSendIcon } from '../Icons';
+import { ChatSendIcon } from '../../atoms/Icons';
 
 function ChatSendMessage() {
   return (

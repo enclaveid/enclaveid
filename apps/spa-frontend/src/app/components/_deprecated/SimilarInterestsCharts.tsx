@@ -1,4 +1,3 @@
-import { Bar } from 'react-chartjs-2';
 import {
   Chart,
   BarElement,
@@ -84,10 +83,10 @@ export function SimilarInterestsCharts({
   return (
     <div>
       <h3>Proactive interests</h3>
-      <Bar data={prepareData(proactiveInterests)} options={options} />
+      {/* <Bar data={prepareData(proactiveInterests)} options={options} /> */}
 
       <h3>Reactive interests</h3>
-      <Bar data={prepareData(reactiveInterests)} options={options} />
+      {/* <Bar data={prepareData(reactiveInterests)} options={options} /> */}
     </div>
   );
 }

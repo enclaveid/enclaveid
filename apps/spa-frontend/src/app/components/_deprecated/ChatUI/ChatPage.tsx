@@ -1,6 +1,6 @@
-import { ChatIcon, SearchIcon } from '../Icons';
-import { Sidebar } from '../Sidebar';
-import { SidebarContainer } from '../containers/SidebarContainer';
+import { ChatIcon, SearchIcon } from '../../atoms/Icons';
+import { SidebarContainer } from '../../containers/SidebarContainer';
+import { Sidebar } from '../../Sidebar';
 import { ChatBubble } from './ChatBubble';
 import { ChatCard } from './ChatCard';
 import { ChatNavbar } from './ChatNavbar';

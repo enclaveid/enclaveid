@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Virtuoso } from 'react-virtuoso';
-
-import { NonLatentCard } from './NonLatentCard';
-import { SocialCard } from './SocialCard';
+import { NonLatentCard } from '../NonLatentCard';
+import { SocialCard } from '../SocialCard';
 
 export function InfiniteCardLoader({
   query,
@@ -35,9 +34,9 @@ export function InfiniteCardLoader({
 
   const ItemRenderer = ({ item, index }) => {
     if (item) {
-      return <Card data={item} />;
+      return <Card interest={item} />;
     } else {
-      return <Card isLoading={true} />;
+      // return <Card loading={true} />;
     }
   };
 

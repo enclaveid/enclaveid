@@ -36,7 +36,12 @@ export default defineConfig({
     },
     sourcemap: true,
   },
-
+  resolve: {
+    alias: {
+      '.prisma/client/index-browser':
+        './node_modules/.prisma/client/index-browser.js',
+    },
+  },
   test: {
     globals: true,
     cache: {

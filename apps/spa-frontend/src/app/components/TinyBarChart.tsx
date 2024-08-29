@@ -28,8 +28,8 @@ export function TinyBarChart({ dates, maxBars = 30 }: TinyBarChartProps) {
   const parsedDates = dates.map((date) => new Date(date));
 
   // Find the min and max dates
-  const minDate = new Date(Math.min(...parsedDates));
-  const maxDate = new Date(Math.max(...parsedDates));
+  const minDate = new Date(Math.min(...parsedDates.map((d) => d.getTime())));
+  const maxDate = new Date(Math.max(...parsedDates.map((d) => d.getTime())));
 
   // Calculate the interval size (in days) for each bar
   const totalDays =
@@ -98,7 +98,7 @@ export function TinyBarChart({ dates, maxBars = 30 }: TinyBarChartProps) {
         },
       },
       y: {
-        type: 'logarithmic', // Set the y-axis to use a logarithmic scale
+        type: 'logarithmic' as const, // Set the y-axis to use a logarithmic scale
         display: false,
         beginAtZero: true, // Optional: set to true if you want the scale to start at 1
       },

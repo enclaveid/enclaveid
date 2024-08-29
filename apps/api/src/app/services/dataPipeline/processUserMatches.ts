@@ -1,6 +1,7 @@
 import { prisma } from '@enclaveid/backend';
 import { Prisma } from '@prisma/client';
 import { calculateOverallSimilarity } from './userMatchesCalc';
+import { ActivityType } from '@prisma/client';
 
 export async function processUserMatches(userId: string) {
   return await prisma.$transaction(async (tx) => {
@@ -86,7 +87,9 @@ export async function processUserMatches(userId: string) {
       const userSimilarity = userSimilarities.get(otherUserId);
       if (
         similarity.interestsClusterMatches.some(
-          (icm) => icm.interestsCluster.clusterType === 'proactive',
+          (icm) =>
+            icm.interestsCluster.clusterType ===
+            ActivityType.knowledge_progression,
         )
       ) {
         userSimilarity.proactiveSimilarities.push(similarity.cosineSimilarity);
