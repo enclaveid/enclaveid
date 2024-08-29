@@ -10,7 +10,7 @@ WORKDIR /api
 RUN npm i -g argon2
 
 # Move the Prisma client to the correct location
-RUN mv src/assets/libquery_engine-linux-musl-openssl-3.0.x.so.node node_modules/.prisma/client/
+RUN mv src/assets/libquery_engine-* node_modules/.prisma/client/
 
 EXPOSE 3000
 
