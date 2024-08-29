@@ -111,6 +111,10 @@ export const matches = router({
                             clusterType: {
                               in: opts.input.activityTypes,
                             },
+                            // TODO: Remove this once we have a way to hide interests in the settings page
+                            isSensitive: {
+                              not: true,
+                            },
                           },
                           include: {
                             interestsClusterMatches: true,
