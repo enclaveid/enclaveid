@@ -1,2 +1,2 @@
-export * from './lib/prisma';
 export * from './lib/redis';
+export * from './lib/prisma';

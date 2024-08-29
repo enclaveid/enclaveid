@@ -1,0 +1,3 @@
+[submodule "k8s/basic/secret"]
+	path = k8s/basic/secret
+	url = https://github.com/enclaveid/secrets

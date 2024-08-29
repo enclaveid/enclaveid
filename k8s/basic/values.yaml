@@ -1,0 +1,16 @@
+replicaCount: 1
+image:
+  repository: enclaveid/api
+  tag: latest
+  pullPolicy: Always
+service:
+  type: ClusterIP
+  port: 3000
+ingress:
+  enabled: true
+  className: 'nginx'
+  hosts:
+    - host: api.enclaveid.com
+      paths:
+        - path: /
+          pathType: Prefix

@@ -12,7 +12,7 @@ build:
     {{ end }}
 
 deploy:
-  helmChartDir: ./k8s/helm
+  helmChartDir: ./k8s/basic
 ---
 image: enclaveid/api
 dockerfile: Dockerfile
@@ -25,7 +25,7 @@ args:
   ENABLE_FAKE_OAUTH: "false"
   FRONTEND_URL: {{ if eq .Env "production" }} "https://app.enclaveid.com" {{ else }} "http://localhost:4200" {{ end }}
   API_URL: {{ if eq .Env "production" }} "https://api.enclaveid.com" {{ else }} "http://localhost:3000" {{ end }}
-  # Non-deterministic
+  # TODO: secrets for deployment stage
   # API_DATABASE_URL: {{ env "API_DATABASE_URL" }}
   # AZURE_STORAGE_ACCOUNT_NAME: {{ env "AZURE_STORAGE_ACCOUNT_NAME" }}
   # AZURE_STORAGE_ACCOUNT_KEY: {{ env "AZURE_STORAGE_ACCOUNT_KEY" }}

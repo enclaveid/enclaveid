@@ -57,8 +57,8 @@ kaniko_cache
 __pycache__
 
 # K8s files
-k8s/renders/*
-!k8s/renders/.gitkeep
+k8s/*/renders/*
+!k8s/*/renders/.gitkeep
 
 # Winston logs
 logs
