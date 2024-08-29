@@ -1,6 +1,5 @@
 replicaCount: 1
 image:
-  repository: enclaveid/api
   tag: latest
   pullPolicy: Always
 service:
