@@ -7,7 +7,7 @@ COPY dist/ /api
 WORKDIR /api
 
 # Install argon2
-RUN npm i -g argon2
+RUN npm i argon2
 
 # Move the Prisma client to the correct location
 RUN mv src/assets/libquery_engine-* node_modules/.prisma/client/
