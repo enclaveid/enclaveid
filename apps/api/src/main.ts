@@ -12,8 +12,8 @@ import trpcAdapter from './app/plugins/trpcAdapter';
 import fastifyHealthcheck from 'fastify-healthcheck';
 import webhooks from './app/plugins/webhooks';
 
-const host = process.env.API_HOST ?? 'localhost';
-const port = process.env.API_PORT ? Number(process.env.API_PORT) : 3000;
+const port = 3000;
+const host = '0.0.0.0';
 
 const server = Fastify({
   logger: true,

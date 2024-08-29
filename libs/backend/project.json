@@ -10,7 +10,7 @@
       "dependsOn": ["prisma-generate"],
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/backend",
+        "outputPath": "{projectRoot}/dist",
         "tsConfig": "libs/backend/tsconfig.lib.json",
         "packageJson": "libs/backend/package.json",
         "main": "libs/backend/src/index.ts",

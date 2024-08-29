@@ -4,27 +4,37 @@
   "sourceRoot": "apps/api/src",
   "projectType": "application",
   "targets": {
+    "copy-prisma-client": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/src/assets/*.node"],
+      "options": {
+        "commands": [
+          "cp node_modules/.prisma/client/*.node apps/api/src/assets/"
+        ]
+      }
+    },
     "build": {
-      "dependsOn": ["backend:build"],
+      "dependsOn": ["backend:build", "copy-prisma-client"],
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
         "platform": "node",
-        "outputPath": "dist/apps/api",
+        "outputPath": "{projectRoot}/dist",
         "format": ["cjs"],
         "bundle": true,
         "main": "apps/api/src/main.ts",
         "tsConfig": "apps/api/tsconfig.app.json",
-        "external": ["argon2"],
-        "assets": ["apps/api/src/assets"],
+        "external": ["argon2", "nodejs-polars"],
+        "assets": ["{projectRoot}/src/assets/*"],
         "generatePackageJson": true,
         "esbuildOptions": {
           "sourcemap": true,
           "outExtension": {
             ".js": ".js"
           }
-        }
+        },
+        "thirdParty": true
       },
       "configurations": {
         "development": {},

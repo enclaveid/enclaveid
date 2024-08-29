@@ -1,18 +1,24 @@
-FROM node:20.11.1-alpine3.18
+FROM node:22.7.0-slim AS base
 
-COPY dist/apps/api/ /api
+SHELL [ "/bin/bash", "-c" ]
+
+COPY dist/ /api
 
 WORKDIR /
 
-ENV API_HOST=0.0.0.0
-ENV API_PORT=3000
+# Move the Prisma client to the correct location
+RUN mkdir -p /.prisma/client
+RUN mv /api/src/assets/libquery_engine-linux-musl-openssl-3.0.x.so.node /.prisma/client/
 
-# Necessary for Prisma to work
-COPY node_modules/prisma/libquery_engine-linux-musl-openssl-3.0.x.so.node /.prisma/client/
-
-# This module is external to the bundle
-RUN npm install argon2
+# Install argon2
+RUN npm i -g argon2
 
 EXPOSE 3000
+
+ARG ENABLE_CONFIDENTIALITY
+ARG ENABLE_FAKE_OAUTH
+ARG FRONTEND_URL
+ARG API_URL
+
 
 CMD [ "node", "api" ]
