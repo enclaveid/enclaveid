@@ -24,8 +24,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: true
-          token: ${{ secrets.PAT_GITHUB_TOKEN }}
 
       - name: Login to DockerHub
         uses: docker/login-action@v2
@@ -79,6 +77,10 @@ jobs:
 
       - name: Install werf
         uses: werf/actions/install@v2
+
+      - name: Configure Git for werf
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.PAT_GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Run werf converge
         run: |
