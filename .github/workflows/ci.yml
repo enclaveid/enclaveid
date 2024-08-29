@@ -51,7 +51,9 @@ jobs:
         run: bun install
 
       - name: Build projects
-        run: bun nx run api:build
+        run: |
+          ls -la node_modules/prisma
+          bun nx run api:build
 
       # TODO: In order to make the nx distributed CI work, we need to configure a custom runner
       # since it doesn't retain the state of the current GHA runner
