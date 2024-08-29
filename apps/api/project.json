@@ -14,7 +14,7 @@
       }
     },
     "build": {
-      "dependsOn": ["backend:build", "copy-prisma-client"],
+      "dependsOn": ["backend:build"],
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",

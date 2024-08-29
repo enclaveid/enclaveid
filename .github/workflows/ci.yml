@@ -52,7 +52,7 @@ jobs:
 
       - name: Build projects
         run: |
-          ls -la node_modules/prisma
+          bun nx run api:copy-prisma-client
           bun nx run api:build
 
       # TODO: In order to make the nx distributed CI work, we need to configure a custom runner
