@@ -33,6 +33,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y buildah
 
+      - name: Authenticate Buildah
+        env:
+          REGISTRY_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          echo $REGISTRY_PASSWORD | buildah login -u $REGISTRY_USERNAME --password-stdin docker.io
+
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
