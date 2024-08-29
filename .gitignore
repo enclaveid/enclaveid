@@ -72,3 +72,4 @@ apps/data-pipeline/notebooks/*.csv
 
 # Werf
 .werf_secret_key
+k8s/*/charts
