@@ -40,12 +40,6 @@ jobs:
         run: |
           echo $REGISTRY_PASSWORD | buildah login -u $REGISTRY_USERNAME --password-stdin docker.io
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Install Python
         uses: actions/setup-python@v4
         with:
