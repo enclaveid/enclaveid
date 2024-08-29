@@ -23,5 +23,5 @@ args:
   NODE_ENV: "{{ .Env }}"
   ENABLE_CONFIDENTIALITY: "false"
   ENABLE_FAKE_OAUTH: "false"
-  FRONTEND_URL: {{ if eq .Env "production" }} "https://app.enclaveid.com" {{ else }} "http://localhost:4200" {{ end }}
+  FRONTEND_URL: {{ if eq .Env "production" }} "https://enclaveid.com" {{ else }} "http://localhost:4200" {{ end }}
   API_URL: {{ if eq .Env "production" }} "https://api.enclaveid.com" {{ else }} "http://localhost:3000" {{ end }}
