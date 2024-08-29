@@ -78,6 +78,12 @@ jobs:
       - name: Install werf
         uses: werf/actions/install@v2
 
+      - name: Configure Git
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+
       - name: Run werf converge
         run: |
           source "$(werf ci-env github --as-file)"
