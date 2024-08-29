@@ -85,7 +85,7 @@ jobs:
       - name: Run werf converge
         run: |
           source "$(werf ci-env github --as-file)"
-          werf converge --secret-values=k8s/basic/secret-values/secret-values.yaml --loose-giterminism=true
+          werf converge --secret-values=k8s/basic/secret-values/secret-values.yaml
         env:
           WERF_ENV: production
           WERF_KUBECONFIG_BASE64: ${{ secrets.KUBECONFIG_BASE64 }}
