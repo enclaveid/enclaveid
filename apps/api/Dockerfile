@@ -4,14 +4,13 @@ SHELL [ "/bin/bash", "-c" ]
 
 COPY dist/ /api
 
-WORKDIR /
-
-# Move the Prisma client to the correct location
-RUN mkdir -p /.prisma/client
-RUN mv /api/src/assets/libquery_engine-linux-musl-openssl-3.0.x.so.node /.prisma/client/
+WORKDIR /api
 
 # Install argon2
 RUN npm i -g argon2
+
+# Move the Prisma client to the correct location
+RUN mv src/assets/libquery_engine-linux-musl-openssl-3.0.x.so.node node_modules/.prisma/client/
 
 EXPOSE 3000
 
@@ -27,4 +26,4 @@ ENV FRONTEND_URL=${FRONTEND_URL}
 ENV API_URL=${API_URL}
 
 
-CMD [ "node", "api" ]
+CMD [ "node", "." ]

@@ -20,7 +20,9 @@ const server = Fastify({
   maxParamLength: 5000,
 });
 
-server.register(confidentiality);
+server.register(confidentiality, {
+  logLevel: 'info',
+});
 server.register(cookie);
 server.register(cors);
 server.register(helmet);
