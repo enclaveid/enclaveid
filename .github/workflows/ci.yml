@@ -40,6 +40,12 @@ jobs:
         run: |
           echo $REGISTRY_PASSWORD | buildah login -u $REGISTRY_USERNAME --password-stdin docker.io
 
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Install Python
         uses: actions/setup-python@v4
         with:
@@ -74,12 +80,6 @@ jobs:
       # - uses: nrwl/nx-set-shas@v4
       #   with:
       #     main-branch-name: master
-
-      # # TODO: use werf
-      # - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} bun nx run data-pipeline:container
-      # - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} bun nx run data-pipeline:container-vllm
-      # - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} bun nx run data-pipeline:container-rapids
-      #- run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} bun nx run data-pipeline:container-jupyter
 
       # - name: Stop distributed CI run
       #   run: pnpx nx-cloud complete-ci-run
