@@ -25,11 +25,3 @@ args:
   ENABLE_FAKE_OAUTH: "false"
   FRONTEND_URL: {{ if eq .Env "production" }} "https://app.enclaveid.com" {{ else }} "http://localhost:4200" {{ end }}
   API_URL: {{ if eq .Env "production" }} "https://api.enclaveid.com" {{ else }} "http://localhost:3000" {{ end }}
-  # TODO: secrets for deployment stage
-  # API_DATABASE_URL: {{ env "API_DATABASE_URL" }}
-  # AZURE_STORAGE_ACCOUNT_NAME: {{ env "AZURE_STORAGE_ACCOUNT_NAME" }}
-  # AZURE_STORAGE_ACCOUNT_KEY: {{ env "AZURE_STORAGE_ACCOUNT_KEY" }}
-  # AZURE_STORAGE_CONTAINER_NAME: {{ env "AZURE_STORAGE_CONTAINER_NAME" }}
-  # AZURE_EMAIL_CONNECTION_STRING: {{ env "AZURE_EMAIL_CONNECTION_STRING" }}
-  # STREAM_CHAT_API_KEY: {{ env "STREAM_CHAT_API_KEY" }}
-  # STREAM_CHAT_API_SECRET: {{ env "STREAM_CHAT_API_SECRET" }}
