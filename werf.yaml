@@ -14,7 +14,7 @@ build:
 deploy:
   helmChartDir: ./k8s/basic
 ---
-image: docker.io/enclaveid/api
+image: api
 dockerfile: Dockerfile
 staged: {{ if eq .Env "production" }} true {{ else }} false {{ end }}
 context: ./apps/api

@@ -2,9 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "nodejs-api.fullname" . }}
+  name: {{ include "enclaveid.fullname" . }}
   labels:
-    {{- include "nodejs-api.labels" . | nindent 4 }}
+    {{- include "enclaveid.labels" . | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
