@@ -1,0 +1,54 @@
+# API
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "enclaveid.fullname" . }}-api
+  labels:
+    {{- include "enclaveid.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "enclaveid.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "enclaveid.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ $.Values.werf.image.api }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.service.port }}
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: api-secrets
+---
+# Frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "enclaveid.fullname" . }}-frontend
+  labels:
+    {{- include "enclaveid.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "enclaveid.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "enclaveid.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-frontend
+          image: {{ $.Values.werf.image.frontend }}
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.frontend.service.port }}
+              protocol: TCP

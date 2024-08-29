@@ -1,15 +1,24 @@
-replicaCount: 1
-image:
-  tag: latest
-  pullPolicy: Always
-service:
-  type: ClusterIP
-  port: 3000
+api:
+  replicaCount: 1
+  image:
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 3000
+
+frontend:
+  replicaCount: 1
+  image:
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 4200
+
 ingress:
   enabled: true
-  className: 'nginx'
+  className: "nginx"
   hosts:
-    - host: api.enclaveid.com
-      paths:
-        - path: /
-          pathType: Prefix
+    api: "api.enclaveid.com"
+    frontend: "app.enclaveid.com"

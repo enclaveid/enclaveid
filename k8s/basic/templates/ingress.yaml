@@ -2,24 +2,30 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "enclaveid.fullname" . }}
+  name: {{ include "enclaveid.fullname" . }}-ingress
   labels:
     {{- include "enclaveid.labels" . | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: {{ .Values.ingress.hosts.api }}
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            pathType: {{ .pathType }}
-            backend:
-              service:
-                name: {{ include "enclaveid.fullname" $ }}
-                port:
-                  number: {{ $.Values.service.port }}
-          {{- end }}
-    {{- end }}
-{{- end }}
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ include "enclaveid.fullname" . }}-api
+              port:
+                number: {{ .Values.api.service.port }}
+    - host: {{ .Values.ingress.hosts.frontend }}
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ include "enclaveid.fullname" . }}-frontend
+              port:
+                number: {{ .Values.frontend.service.port }}
+{{- end -}}
