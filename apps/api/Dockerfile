@@ -2,15 +2,12 @@ FROM node:22.7.0-slim AS base
 
 SHELL [ "/bin/bash", "-c" ]
 
-COPY dist/ /api
+COPY dist/ /dist/api
 
-WORKDIR /api
+WORKDIR /dist
 
-# Install argon2
-RUN npm i argon2
-
-# Move the Prisma client to the correct location
-RUN mv src/assets/libquery_engine-* node_modules/.prisma/client/
+RUN npm i argon2 nodejs-polars
+RUN mkdir -p node_modules/.prisma/client && mv api/src/assets/libquery_engine-* node_modules/.prisma/client/
 
 EXPOSE 3000
 
@@ -26,4 +23,4 @@ ENV FRONTEND_URL=${FRONTEND_URL}
 ENV API_URL=${API_URL}
 
 
-CMD [ "node", "." ]
+CMD [ "node", "api" ]
