@@ -16,7 +16,7 @@ interface Props {
   ingroup: number;
   purity: number;
   mftChartAvailable: boolean;
-  handleClick: () => void;
+  handleClick?: () => void;
   error?: boolean;
   loading?: boolean;
 }
@@ -281,20 +281,22 @@ function MFTChart({
               fill="#6C7A8A"
             />
           </svg>
-          <div
-            className={classNames(
-              (!mftChartAvailable || error) &&
-                'blur-xs grayscale-[80%] pointer-events-none',
-              'w-full pt-8',
-            )}
-          >
-            <Button
-              label="Dive Deeper"
-              variant="tertiary"
-              fullWidth
-              onClick={handleClick}
-            />
-          </div>
+          {handleClick && (
+            <div
+              className={classNames(
+                (!mftChartAvailable || error) &&
+                  'blur-xs grayscale-[80%] pointer-events-none',
+                'w-full pt-8',
+              )}
+            >
+              <Button
+                label="Dive Deeper"
+                variant="tertiary"
+                fullWidth
+                onClick={handleClick}
+              />
+            </div>
+          )}
         </>
       )}
     </div>

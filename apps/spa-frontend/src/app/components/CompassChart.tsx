@@ -11,7 +11,7 @@ interface CompassChartProps {
   description?: string;
   showDescription?: boolean;
   compassChartAvailable?: boolean;
-  handleClick: () => void;
+  handleClick?: () => void;
   loading?: boolean;
   error?: boolean;
 }
@@ -125,20 +125,23 @@ function CompassChart({
           />
         </div>
       </div>
-      <div
-        className={classNames(
-          (!compassChartAvailable || error) &&
-            'blur-xs grayscale-[80%] pointer-events-none',
-          'w-full',
-        )}
-      >
-        <Button
-          label="Dive Deeper"
-          variant="tertiary"
-          fullWidth
-          onClick={handleClick}
-        />
-      </div>
+      {handleClick && (
+        <div
+          className={classNames(
+            (!compassChartAvailable || error) &&
+              'blur-xs grayscale-[80%] pointer-events-none',
+            'w-full',
+          )}
+        >
+          <Button
+            label="Dive Deeper"
+            variant="tertiary"
+            fullWidth
+            onClick={handleClick}
+          />
+        </div>
+      )}
+      <span className="pb-1" />
     </div>
   );
 }
