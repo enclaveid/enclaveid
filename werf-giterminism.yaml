@@ -3,3 +3,4 @@ config:
   dockerfile:
     allowContextAddFiles:
       - apps/api/dist
+      - apps/spa-frontend/dist

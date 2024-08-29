@@ -71,6 +71,7 @@ jobs:
           bun nx run backend:build
           bun nx run api:copy-prisma-client
           bun nx run api:build
+          bun nx run spa-frontend:build
 
       # TODO: In order to make the nx distributed CI work, we need to configure a custom runner
       # since it doesn't retain the state of the current GHA runner
