@@ -14,7 +14,7 @@
       }
     },
     "build": {
-      "dependsOn": ["backend:build"],
+      "dependsOn": [],
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",

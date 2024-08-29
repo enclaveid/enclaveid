@@ -50,8 +50,10 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+        #TODO
       - name: Build projects
         run: |
+          bun nx run backend:build
           bun nx run api:copy-prisma-client
           bun nx run api:build
 
