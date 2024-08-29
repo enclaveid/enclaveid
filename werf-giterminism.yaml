@@ -1,5 +1,5 @@
 giterminismConfigVersion: 1
-config
+config:
   dockerfile:
     allowContextAddFiles:
       - apps/api/dist
