@@ -17,9 +17,9 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: { { include "enclaveid.fullname" $ } }
+                name: {{ include "enclaveid.fullname" $ }}
                 port:
-                  number: { { $.Values.service.port } }
+                  number: {{ $.Values.service.port }}
           {{- end }}
     {{- end }}
 {{- end }}
