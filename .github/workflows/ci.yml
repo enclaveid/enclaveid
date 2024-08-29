@@ -90,7 +90,7 @@ jobs:
           source "$(werf ci-env github --as-file)"
           werf converge \
             --secret-values=k8s/basic/secret-values/secret-values.yaml \
-            --repo=docker.io/enclaveid
+            --repo=docker.io/enclaveid/cluster
 
         env:
           WERF_ENV: production
