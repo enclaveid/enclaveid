@@ -87,11 +87,11 @@ jobs:
           source "$(werf ci-env github --as-file)"
           werf converge \
             --secret-values=k8s/basic/secret-values/secret-values.yaml \
-            --repo=docker.io
+            --repo=docker.io/enclaveid \
+            --repo-docker-hub-username=${{ vars.DOCKERHUB_USERNAME }} \
+            --repo-docker-hub-password=${{ secrets.DOCKERHUB_TOKEN }}
 
         env:
           WERF_ENV: production
           WERF_KUBECONFIG_BASE64: ${{ secrets.KUBECONFIG_BASE64 }}
           WERF_SECRET_KEY: ${{ secrets.WERF_SECRET_KEY }}
-          WERF_REPO_DOCKER_HUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          WERF_REPO_DOCKER_HUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
