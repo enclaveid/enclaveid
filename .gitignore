@@ -69,3 +69,6 @@ apps/data-pipeline/data/*
 !apps/data-pipeline/data/.gitkeep
 
 apps/data-pipeline/notebooks/*.csv
+
+# Werf
+.werf_secret_key
