@@ -18,16 +18,13 @@ frontend:
 
 ingress:
   enabled: true
-  className: "nginx"
+  className: "webapprouting.kubernetes.azure.com"
   hosts:
     api: "api.enclaveid.com"
     frontend: "app.enclaveid.com"
   tls:
     enabled: true
     secretName: "enclaveid-tls"
-
-ingress-nginx:
-  enabled: true
 
 cert-manager:
   enabled: true

@@ -2,11 +2,8 @@ dependencies:
 - name: dagster-cloud-agent
   repository: https://dagster-io.github.io/helm-user-cloud
   version: 1.8.3
-- name: ingress-nginx
-  repository: https://kubernetes.github.io/ingress-nginx
-  version: 4.11.2
 - name: cert-manager
   repository: https://charts.jetstack.io
   version: v1.15.3
-digest: sha256:a59d0ff33c184c0771a8fd610d2a6b3b69da9101c38f2d1d2b835f8b8b1ddf6e
-generated: "2024-08-29T20:40:41.970998+01:00"
+digest: sha256:83b93ca3442805b60614db7cb55cbf6f7dc82efdd27267632e49e7c3be566fa2
+generated: "2024-08-29T21:02:46.728354+01:00"
