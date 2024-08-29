@@ -27,6 +27,14 @@ enum Purpose {
   FindingALanguageTeacher
 }
 
+model WhitelistedEmail {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email String @unique
+}
+
 model User {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())

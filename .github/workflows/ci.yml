@@ -25,11 +25,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Login to DockerHub
-      #   uses: docker/login-action@v2
-      #   with:
-      #     username: ${{ vars.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Install Python
         uses: actions/setup-python@v4
@@ -87,7 +87,7 @@ jobs:
           source "$(werf ci-env github --as-file)"
           werf converge \
             --secret-values=k8s/basic/secret-values/secret-values.yaml \
-            --repo=docker.io/enclaveid \
+            --repo=docker.io/enclaveid/cluster \
             --repo-docker-hub-username=${{ vars.DOCKERHUB_USERNAME }} \
             --repo-docker-hub-password=${{ secrets.DOCKERHUB_TOKEN }}
 

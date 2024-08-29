@@ -70,6 +70,17 @@ export const authentication = router({
         await asymmetricDecrypt(encryptedCredentials),
       );
 
+      const whitelistedEmail = await prisma.whitelistedEmail.findUnique({
+        where: { email },
+      });
+
+      if (!whitelistedEmail) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Email not whitelisted',
+        });
+      }
+
       const user = await prisma.user.create({
         data: {
           email,
