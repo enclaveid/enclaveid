@@ -22,10 +22,3 @@ ingress:
   hosts:
     api: "api.enclaveid.com"
     frontend: "app.enclaveid.com"
-  tls:
-    enabled: true
-    secretName: "enclaveid-tls"
-
-cert-manager:
-  enabled: true
-  installCRDs: true

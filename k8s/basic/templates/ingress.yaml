@@ -6,14 +6,13 @@ metadata:
   labels:
     {{- include "enclaveid.labels" . | nindent 4 }}
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    kubernetes.azure.com/tls-cert-keyvault-uri: https://enclaveid-cluster.vault.azure.net/certificates/enclaveid-cluster-ingress
 spec:
   tls:
   - hosts:
     - {{ .Values.ingress.hosts.api }}
     - {{ .Values.ingress.hosts.frontend }}
-    secretName: {{ .Values.ingress.tls.secretName }}
-  {{- end }}
+    secretName: keyvault-{{ include "enclaveid.fullname" . }}-ingress
   ingressClassName: {{ .Values.ingress.className }}
   rules:
     - host: {{ .Values.ingress.hosts.api }}
