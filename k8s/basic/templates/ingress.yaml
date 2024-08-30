@@ -35,3 +35,4 @@ spec:
               name: {{ include "enclaveid.fullname" . }}-frontend
               port:
                 number: {{ .Values.frontend.service.port }}
+{{- end -}}
