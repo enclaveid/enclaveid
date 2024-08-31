@@ -70,15 +70,17 @@ export const authentication = router({
         await asymmetricDecrypt(encryptedCredentials),
       );
 
-      const whitelistedEmail = await prisma.whitelistedEmail.findUnique({
-        where: { email },
-      });
-
-      if (!whitelistedEmail) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Email not whitelisted',
+      if (process.env.NODE_ENV !== 'development') {
+        const whitelistedEmail = await prisma.whitelistedEmail.findUnique({
+          where: { email },
         });
+
+        if (!whitelistedEmail) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Email not whitelisted',
+          });
+        }
       }
 
       const user = await prisma.user.create({
@@ -91,10 +93,11 @@ export const authentication = router({
         },
       });
 
-      sendEmail(
-        email,
-        'Confirm your email address',
-        `
+      try {
+        sendEmail(
+          email,
+          'Confirm your email address',
+          `
         <html>
           <body>
             <p>Welcome to EnclaveID. Please confirm your email address by clicking the link below:</p>
@@ -107,7 +110,14 @@ export const authentication = router({
           </body>
         </html>
         `,
-      );
+        );
+      } catch (err) {
+        console.error(err);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Error sending email',
+        });
+      }
 
       await setJwtCookie({ id: user.id });
 

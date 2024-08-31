@@ -10,6 +10,19 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  // Create empty user
+  await prisma.user.create({
+    data: {
+      id: 'empty_user',
+      email: 'empty@enclaveid.com',
+      password: await hash('empty'),
+      confirmedAt: new Date(),
+      displayName: 'Empty User',
+      gender: Gender.Other,
+      country: 'Empty',
+    },
+  });
+
   await prisma.user.create({
     data: {
       id: 'do_not_use',
