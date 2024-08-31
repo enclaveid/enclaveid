@@ -20,7 +20,7 @@ jobs:
           # This might remove tools that are actually needed, if set to "true" but frees about 6 GB
           tool-cache: true
           # This one is too slow for the amount of space it frees
-          large-packages: false
+          large-packages: true
 
       - uses: actions/checkout@v4
         with:
