@@ -154,6 +154,7 @@
     "@kubernetes/client-node": "^0.20.0",
     "@nx-tools/nx-prisma": "^6.0.0",
     "@prisma/client": "^5.14.0",
+    "@sentry/react": "^8.27.0",
     "@swc/helpers": "~0.5.11",
     "@tanstack/react-query": "^5.37.1",
     "@tanstack/react-query-devtools": "^5.37.1",
