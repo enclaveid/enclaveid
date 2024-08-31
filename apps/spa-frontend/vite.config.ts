@@ -4,6 +4,28 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import Icons from 'unplugin-icons/vite';
 
+const buildInfoPlugin = () => {
+  return {
+    name: 'build-info',
+    buildStart() {
+      console.log('Build started at:', new Date().toISOString());
+      console.log('Node version:', process.version);
+      console.log('Project version:', process.env.npm_package_version);
+      console.log('Build time variables:');
+      console.log(
+        Object.entries(process.env).forEach(([key, value]) => {
+          if (key.startsWith('VITE_')) {
+            console.log(`  ${key}: ${value}`);
+          }
+        }),
+      );
+    },
+    closeBundle() {
+      console.log('Build finished at:', new Date().toISOString());
+    },
+  };
+};
+
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/spa-frontend',
@@ -26,6 +48,7 @@ export default defineConfig({
       jsx: 'react',
       autoInstall: true, // experimental
     }),
+    buildInfoPlugin(),
   ],
 
   build: {
