@@ -1,4 +1,5 @@
 /// <reference types='vitest' />
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -49,6 +50,10 @@ export default defineConfig({
       autoInstall: true, // experimental
     }),
     buildInfoPlugin(),
+    sentryVitePlugin({
+      org: 'enclaveid',
+      project: 'javascript-react',
+    }),
   ],
 
   build: {

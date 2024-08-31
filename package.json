@@ -210,7 +210,8 @@
     "vaul": "^0.9.1",
     "winston": "^3.13.0",
     "ws": "^8.17.0",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@sentry/vite-plugin": "^2.22.3"
   },
   "overrides": {
     "clone-deep": "4.0.1"
