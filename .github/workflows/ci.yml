@@ -106,3 +106,5 @@ jobs:
           WERF_BUILDAH_MODE: auto
           WERF_REPO_DOCKER_HUB_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
           WERF_REPO_DOCKER_HUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+
+    

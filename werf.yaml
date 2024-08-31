@@ -32,3 +32,42 @@ dockerfile: Dockerfile
 staged: {{ if eq .Env "production" }} true {{ else }} false {{ end }}
 context: ./apps/spa-frontend
 contextAddFiles: ./dist
+---
+image: data-pipeline-vllm
+dockerfile: Dockerfile.vllm
+staged: {{ if eq .Env "production" }} true {{ else }} false {{ end }}
+context: ./apps/data-pipeline
+contextAddFiles: ./dist
+---
+image: data-pipeline-rapids
+dockerfile: Dockerfile.rapids
+staged: {{ if eq .Env "production" }} true {{ else }} false {{ end }}
+context: ./apps/data-pipeline
+contextAddFiles: ./dist
+---
+image: data-pipeline-base
+dockerfile: Dockerfile.base
+staged: {{ if eq .Env "production" }} true {{ else }} false {{ end }}
+context: ./apps/data-pipeline
+contextAddFiles: ./dist
+dependencies:
+  - image: data-pipeline-vllm
+    imports:
+      - type: ImageName
+        targetBuildArg: VLLM_IMAGE_NAME
+      - type: ImageTag
+        targetBuildArg: VLLM_IMAGE_TAG
+      - type: ImageDigest
+        targetBuildArg: VLLM_IMAGE_DIGEST
+      - type: ImageRepo
+        targetBuildArg: VLLM_IMAGE_REPO
+  - image: data-pipeline-rapids
+    imports:
+      - type: ImageName
+        targetBuildArg: RAPIDS_IMAGE_NAME
+      - type: ImageTag
+        targetBuildArg: RAPIDS_IMAGE_TAG
+      - type: ImageDigest
+        targetBuildArg: RAPIDS_IMAGE_DIGEST
+      - type: ImageRepo
+        targetBuildArg: RAPIDS_IMAGE_REPO

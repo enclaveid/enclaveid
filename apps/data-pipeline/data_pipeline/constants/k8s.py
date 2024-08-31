@@ -1,3 +1,5 @@
+import os
+
 from data_pipeline.utils.data_structures import deep_merge
 
 
@@ -62,22 +64,8 @@ def get_k8s_vllm_config(gpu_count):
         {
             "dagster-k8s/config": {
                 "container_config": {
-                    "image": "enclaveid/data-pipeline-vllm:master",
-                    # "volumeMounts": [
-                    #     {"name": "model-cache", "mountPath": "/model-cache"}
-                    # ],
-                },
-                # TODO: Explore using striped disks since anything else is too slow
-                # "pod_spec_config": {
-                #     "volumes": [
-                #         {
-                #             "name": "model-cache",
-                #             "persistentVolumeClaim": {
-                #                 "claimName": "enclaveid-model-cache-pvc"
-                #             },
-                #         }
-                #     ],
-                # },
+                    "image": os.environ.get("VLLM_IMAGE", ""),
+                }
             }
         },
     )
@@ -89,7 +77,7 @@ def get_k8s_rapids_config(gpu_count):
         {
             "dagster-k8s/config": {
                 "container_config": {
-                    "image": "enclaveid/data-pipeline-rapids:master",
+                    "image": os.environ.get("RAPIDS_IMAGE", ""),
                 }
             }
         },

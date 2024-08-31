@@ -8,10 +8,23 @@ SHELL ["/bin/bash", "--login","-c"]
 WORKDIR /app
 
 # Install prod dependencies
-COPY apps/data-pipeline/requirements.prod.txt /app/
+COPY requirements.prod.txt /app/
 RUN pip install --no-cache-dir -r requirements.prod.txt
 
 # Install the root only
-COPY dist/apps/data-pipeline/ /app/
+COPY dist/ /app/
 RUN pip install --no-deps  *.whl
 
+ARG VLLM_IMAGE_NAME
+ARG VLLM_IMAGE_TAG
+ARG VLLM_IMAGE_DIGEST
+ARG VLLM_IMAGE_REPO
+
+ENV VLLM_IMAGE=${VLLM_IMAGE_REPO}/${VLLM_IMAGE_NAME}:${VLLM_IMAGE_TAG}@${VLLM_IMAGE_DIGEST}
+
+ARG RAPIDS_IMAGE_NAME
+ARG RAPIDS_IMAGE_TAG
+ARG RAPIDS_IMAGE_DIGEST
+ARG RAPIDS_IMAGE_REPO
+
+ENV RAPIDS_IMAGE=${RAPIDS_IMAGE_REPO}/${RAPIDS_IMAGE_NAME}:${RAPIDS_IMAGE_TAG}@${RAPIDS_IMAGE_DIGEST}

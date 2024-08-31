@@ -51,9 +51,9 @@
     "build": {
       "executor": "@nxlv/python:build",
       "dependsOn": ["export"],
-      "outputs": ["{workspaceRoot}/dist/apps/data-pipeline/*.whl"],
+      "outputs": ["{projectRoot}/dist/*.whl"],
       "options": {
-        "outputPath": "{workspaceRoot}/dist/apps/data-pipeline",
+        "outputPath": "{projectRoot}/dist",
         "publish": false,
         "lockedVersions": false,
         "bundleLocalDependencies": true
