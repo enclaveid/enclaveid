@@ -1,6 +1,6 @@
+import './instrument';
 import Fastify from 'fastify';
 import { initializePodsBuffer } from './app/services/fakeOauth/kubernetes';
-
 // Plugins
 import confidentiality from './app/plugins/confidentiality';
 import cookie from './app/plugins/cookie';
@@ -11,7 +11,7 @@ import prismaLifecycle from './app/plugins/prismaLifecycle';
 import trpcAdapter from './app/plugins/trpcAdapter';
 import fastifyHealthcheck from 'fastify-healthcheck';
 import webhooks from './app/plugins/webhooks';
-
+import * as Sentry from '@sentry/node';
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const host = '0.0.0.0';
 
@@ -19,6 +19,8 @@ const server = Fastify({
   logger: true,
   maxParamLength: 5000,
 });
+
+Sentry.setupFastifyErrorHandler(server);
 
 server.register(confidentiality, {
   logLevel: 'info',
