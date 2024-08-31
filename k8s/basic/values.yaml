@@ -5,7 +5,7 @@ api:
     pullPolicy: Always
   service:
     type: ClusterIP
-    port: 3000
+    port: 80
 
 frontend:
   replicaCount: 1
