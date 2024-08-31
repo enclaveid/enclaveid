@@ -90,7 +90,7 @@ psutil==6.0.0 ; python_version >= "3.10" and python_version < "3.12" and platfor
 psycopg-binary==3.2.1 ; python_version >= "3.10" and python_version < "3.12"
 psycopg==3.2.1 ; python_version >= "3.10" and python_version < "3.12"
 pyairports==2.1.1 ; python_version >= "3.10" and python_version < "3.12"
-pyarrow==16.1.0 ; python_version >= "3.10" and python_version < "3.12"
+pyarrow==14.0.2 ; python_version >= "3.10" and python_version < "3.12"
 pyasn1-modules==0.4.0 ; python_version >= "3.10" and python_version < "3.12"
 pyasn1==0.6.0 ; python_version >= "3.10" and python_version < "3.12"
 pycountry==24.6.1 ; python_version >= "3.10" and python_version < "3.12"
