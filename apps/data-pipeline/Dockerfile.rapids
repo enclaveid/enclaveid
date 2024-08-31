@@ -2,14 +2,16 @@
 # with all the stuff preinstalled, but they use some weird versioning for the packages
 # which results in the included packages being reinstalled
 
-#FROM rapidsai/base:24.06-cuda12.2-py3.11
-FROM nvidia/cuda:12.2.2-runtime-ubuntu22.04
+FROM rapidsai/base:24.06-cuda12.2-py3.11
+#FROM nvidia/cuda:12.2.2-runtime-ubuntu22.04
 
-SHELL ["/bin/bash", "--login","-c"]
+#SHELL ["/bin/bash", "--login","-c"]
+
+USER 1000
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3.11 python3-pip
+RUN apt-get update && apt-get install -y python3.11 python3-pip
 
 # Install RAPIDS dependencies
 COPY requirements.rapids.txt /app/
