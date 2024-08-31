@@ -8,4 +8,8 @@ dependencies:
   - name: dagster-cloud-agent
     version: 1.8.3
     repository: https://dagster-io.github.io/helm-user-cloud
+  - name: cert-manager
+    version: 1.15.3
+    repository: https://charts.jetstack.io
+    condition: cert-manager.enabled
 
