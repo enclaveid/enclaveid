@@ -19,6 +19,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
+        "esbuildConfig": "{projectRoot}/esbuild.config.js",
         "platform": "node",
         "outputPath": "{projectRoot}/dist",
         "format": ["cjs"],
@@ -28,12 +29,6 @@
         "external": ["argon2", "nodejs-polars"],
         "assets": ["{projectRoot}/src/assets/*"],
         "generatePackageJson": true,
-        "esbuildOptions": {
-          "sourcemap": true,
-          "outExtension": {
-            ".js": ".js"
-          }
-        },
         "thirdParty": true
       },
       "configurations": {

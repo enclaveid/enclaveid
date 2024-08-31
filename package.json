@@ -154,6 +154,7 @@
     "@kubernetes/client-node": "^0.20.0",
     "@nx-tools/nx-prisma": "^6.0.0",
     "@prisma/client": "^5.14.0",
+    "@sentry/esbuild-plugin": "^2.22.3",
     "@sentry/node": "^8.27.0",
     "@sentry/profiling-node": "^8.27.0",
     "@sentry/react": "^8.27.0",

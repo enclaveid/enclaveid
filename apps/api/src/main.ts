@@ -12,6 +12,7 @@ import trpcAdapter from './app/plugins/trpcAdapter';
 import fastifyHealthcheck from 'fastify-healthcheck';
 import webhooks from './app/plugins/webhooks';
 import * as Sentry from '@sentry/node';
+
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const host = '0.0.0.0';
 
