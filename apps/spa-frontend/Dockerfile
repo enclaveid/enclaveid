@@ -18,4 +18,4 @@ RUN echo 'server { \
   }' > /etc/nginx/conf.d/default.conf
 
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["-g", "daemon off;"]
