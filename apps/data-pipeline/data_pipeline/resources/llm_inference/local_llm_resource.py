@@ -130,8 +130,13 @@ class LocalLlmResource(ConfigurableResource):
                 else:
                     conversations[i].append({"role": "user", "content": prompt})
 
+            time_start = time.time()
+            self._logger.info(f"Generating completions for step {step}...")
             completions = self._get_completions_batch(
                 conversations,  # pydantic_models[step]
+            )
+            self._logger.info(
+                f"Done generating completions for step {step} in {(time.time() - time_start):.2f}s"
             )
 
             for idx, completion in enumerate(completions):

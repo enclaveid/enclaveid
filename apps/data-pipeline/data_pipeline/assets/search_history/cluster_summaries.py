@@ -172,6 +172,8 @@ class ClusterSummariesConfig(RowLimitConfig):
     )
 
 
+# TODO: break this asset down into one asset per llm invocation
+# otherwise when the vm gets evicted we have to redo everything
 @multi_asset(
     partitions_def=user_partitions_def,
     outs={
