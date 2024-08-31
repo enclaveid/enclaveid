@@ -78,6 +78,22 @@ async def summaries_user_matches_with_desc(
         )
     )
 
+    # Sort by similarity and social likelihood
+    filtered_summaries_user_matches = filtered_summaries_user_matches.with_columns(
+        similarity_rank=pl.col("cosine_similarity").rank(method="min").cast(pl.Int32),
+        social_likelihood_rank=(
+            pl.col("social_likelihoods")
+            .apply(lambda x: sum(x) / 2)
+            .rank(method="min")
+            .cast(pl.Int32)
+        ),
+    ).sort(
+        by=["similarity_rank", "social_likelihood_rank"],
+    )
+
+    # Cap at 100 max
+    filtered_summaries_user_matches = filtered_summaries_user_matches.head(100)
+
     total_matches = len(summaries_user_matches)
     context.log.info(
         f"Summarizing {total_matches - filtered_summaries_user_matches.sum()['mask'].item()} matches out of {total_matches}."

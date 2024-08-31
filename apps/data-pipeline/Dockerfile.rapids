@@ -8,6 +8,10 @@ SHELL ["/bin/bash", "--login","-c"]
 
 WORKDIR /app
 
+# install pip
+RUN apt-get update && apt-get install -y python3-pip
+RUN pip3 install --upgrade pip
+
 # Install RAPIDS dependencies
 COPY requirements.rapids.txt /app/
 RUN pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com -r requirements.rapids.txt
