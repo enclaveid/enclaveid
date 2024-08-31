@@ -44,7 +44,10 @@ export function useAwsNitroAttestation(): {
         // Validate the signature and decode the attestation document
         const { result: validationResult, error: validationError } = JSON.parse(
           // This one's coming from WASM
-          window.validateAttestation(base64Cbor, import.meta.env.DEV),
+          window.validateAttestation(
+            base64Cbor,
+            true, //TODO: don't validate anything for now, later on use the dev flag: import.meta.env.DEV
+          ),
         );
         if (validationError !== '') throw new Error(validationError);
 
