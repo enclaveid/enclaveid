@@ -32,7 +32,10 @@ export function useAwsNitroAttestation(): {
   const { base64Cbor, publicKey } = attestationQuery.data ?? {};
 
   useEffect(() => {
-    if (wasmError) setError(wasmError);
+    if (wasmError) {
+      console.error('WASM error', wasmError);
+      setError(wasmError);
+    }
   }, [wasmError]);
 
   useEffect(() => {
