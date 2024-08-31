@@ -46,12 +46,12 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Install Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+      # - name: Install Python
+      #   uses: actions/setup-python@v4
+      #   with:
+      #     python-version: '3.11'
       - name: Install poetry
-        uses: abatilo/actions-poetry@v2
+        uses: abatilo/actions-poetry@v3
 
       # - uses: actions/cache@v3
       #   name: Define a cache for the data-pipeline virtual environment based on the dependencies lock file
