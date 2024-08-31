@@ -9,8 +9,7 @@ SHELL ["/bin/bash", "--login","-c"]
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3.11
-RUN python3.11 -m ensurepip --upgrade
+RUN apt-get update && apt-get install -y --no-install-recommends python3.11 python3-pip
 
 # Install RAPIDS dependencies
 COPY requirements.rapids.txt /app/
