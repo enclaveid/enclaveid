@@ -31,7 +31,3 @@ dockerfile: Dockerfile
 staged: {{ if eq .Env "production" }} true {{ else }} false {{ end }}
 context: ./apps/spa-frontend
 contextAddFiles: ./dist
-args:
-  VITE_API_URL: {{ if eq .Env "production" }} "api.enclaveid.com" {{ else }} "localhost:3000" {{ end }}
-  VITE_ENABLE_CONFIDENTIALITY: "false"
-  VITE_STREAM_CHAT_API_KEY: "bgcanytch4s7"

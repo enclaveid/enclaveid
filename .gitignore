@@ -43,7 +43,8 @@ Thumbs.db
 .cache
 
 # .env files
-.env*
+.env
+.env.local
 !*.env.example
 
 # Chrome
