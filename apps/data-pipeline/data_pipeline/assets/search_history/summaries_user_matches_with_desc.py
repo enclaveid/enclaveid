@@ -53,6 +53,10 @@ class UserMatchesSummariesConfig(RowLimitConfig):
         default="items",
         description="The means of comparison between the two users. Can be either 'items' or 'summaries'.",
     )
+    max_summaries_per_user: int = Field(
+        default=50,
+        description="The maximum number of summaries to generate per user.",
+    )
 
 
 @asset(
@@ -77,22 +81,6 @@ async def summaries_user_matches_with_desc(
             )
         )
     )
-
-    # Sort by similarity and social likelihood
-    filtered_summaries_user_matches = filtered_summaries_user_matches.with_columns(
-        similarity_rank=pl.col("cosine_similarity").rank(method="min").cast(pl.Int32),
-        social_likelihood_rank=(
-            pl.col("social_likelihoods")
-            .apply(lambda x: sum(x) / 2)
-            .rank(method="min")
-            .cast(pl.Int32)
-        ),
-    ).sort(
-        by=["similarity_rank", "social_likelihood_rank"],
-    )
-
-    # Cap at 100 max
-    filtered_summaries_user_matches = filtered_summaries_user_matches.head(100)
 
     total_matches = len(summaries_user_matches)
     context.log.info(

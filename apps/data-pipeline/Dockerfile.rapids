@@ -8,9 +8,7 @@ SHELL ["/bin/bash", "--login","-c"]
 
 WORKDIR /app
 
-# install pip
-RUN apt-get update && apt-get install -y python3-pip
-RUN pip3 install --upgrade pip
+RUN python -m ensurepip --upgrade
 
 # Install RAPIDS dependencies
 COPY requirements.rapids.txt /app/
