@@ -5,15 +5,18 @@ metadata:
   name: {{ include "enclaveid.fullname" . }}-api
   labels:
     {{- include "enclaveid.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       {{- include "enclaveid.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
   template:
     metadata:
       labels:
         {{- include "enclaveid.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
     spec:
       containers:
         - name: {{ .Chart.Name }}
@@ -34,15 +37,18 @@ metadata:
   name: {{ include "enclaveid.fullname" . }}-frontend
   labels:
     {{- include "enclaveid.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       {{- include "enclaveid.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
   template:
     metadata:
       labels:
         {{- include "enclaveid.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
     spec:
       containers:
         - name: {{ .Chart.Name }}-frontend

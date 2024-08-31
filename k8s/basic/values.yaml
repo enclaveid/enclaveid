@@ -2,7 +2,7 @@ api:
   replicaCount: 1
   image:
     tag: latest
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   service:
     type: ClusterIP
     port: 80
@@ -11,7 +11,7 @@ frontend:
   replicaCount: 1
   image:
     tag: latest
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   service:
     type: ClusterIP
     port: 80
