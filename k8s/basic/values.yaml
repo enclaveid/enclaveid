@@ -14,7 +14,7 @@ frontend:
     pullPolicy: Always
   service:
     type: ClusterIP
-    port: 4200
+    port: 80
 
 ingress:
   enabled: true
