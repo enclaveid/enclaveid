@@ -7,7 +7,7 @@ FROM rapidsai/base:24.06-cuda12.2-py3.11
 
 #SHELL ["/bin/bash", "--login","-c"]
 
-USER 1000
+USER 0
 
 WORKDIR /app
 
