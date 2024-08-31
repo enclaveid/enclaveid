@@ -8,19 +8,19 @@ SHELL ["/bin/bash", "--login","-c"]
 
 WORKDIR /app
 
-RUN python -m ensurepip --upgrade
+RUN python3 -m ensurepip --upgrade
 
 # Install RAPIDS dependencies
 COPY requirements.rapids.txt /app/
-RUN pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com -r requirements.rapids.txt
+RUN pip3 install --no-cache-dir --extra-index-url https://pypi.nvidia.com -r requirements.rapids.txt
 
 # Install prod dependencies
 COPY requirements.prod.txt /app/
-RUN pip install --no-cache-dir -r requirements.prod.txt
+RUN pip3 install --no-cache-dir -r requirements.prod.txt
 
 # Install the root only
 COPY dist/ /app/
-RUN pip install --no-deps  *.whl
+RUN pip3 install --no-deps  *.whl
 
 ENV HF_HOME=/model-cache/huggingface
 ENV SENTENCE_TRANSFORMERS_HOME=/model-cache/sentence-transformers
