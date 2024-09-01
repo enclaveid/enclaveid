@@ -115,4 +115,4 @@ jobs:
         run: |
           DAGSTER_CLOUD_API_TOKEN=$(./dasel -r yaml -f $WERF_SECRET_VALUES_ENV ".dagsterSecretValues.DAGSTER_CLOUD_AGENT_TOKEN" | werf helm secret decrypt)
           pip install dagster-cloud
-          dagster-cloud deployment sync-locations -w apps/data-pipeline/dagster_cloud.yaml
+          dagster-cloud deployment sync-locations -w apps/data-pipeline/dagster_cloud.yaml --api-token $DAGSTER_CLOUD_API_TOKEN
