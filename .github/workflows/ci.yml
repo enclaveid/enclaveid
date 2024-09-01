@@ -55,7 +55,6 @@ jobs:
       - name: Create .werf cache directory
         run: |
           mkdir -p ~/.werf/local_cache
-          touch ~/.werf/local_cache/empty
 
       - uses: actions/cache@v4
         name: Cache for werf manifests
@@ -63,6 +62,10 @@ jobs:
           key: werf-manifests
           path: ~/.werf/local_cache
           save-always: true
+
+      - name: Test add file to cache
+        run: |
+          echo "test" > ~/.werf/local_cache/test.txt
 
       - name: Install bun
         uses: oven-sh/setup-bun@v2
