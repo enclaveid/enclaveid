@@ -100,7 +100,7 @@ jobs:
           source "$(werf ci-env github --as-file)"
           werf converge
           echo "List cache contents"
-          ls -la ~/.werf/local_cache
+          du -sh ~/.werf/local_cache
 
       - name: Set data-pipeline-base image value in dagster_cloud.yaml
         run: |
