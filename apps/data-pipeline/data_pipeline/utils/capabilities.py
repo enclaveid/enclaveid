@@ -29,7 +29,6 @@ def gpu_info():
             text=True,
             capture_output=True,
         ).stdout.strip()
-
         return nvsmi_csv_to_json(csv_string)
     except Exception:
         return "No GPU information available."
@@ -48,7 +47,6 @@ def get_cuda_version():
             text=True,
             capture_output=True,
         ).stdout.strip()
-
         return cuda_version
     except Exception:
         return None
@@ -62,7 +60,6 @@ def is_cuda_available():
             text=True,
             capture_output=True,
         ).stdout.strip()
-
         return float(compute_capability) >= MIN_CUDA_COMPUTE_CAPABILITY
     except Exception:
         return False

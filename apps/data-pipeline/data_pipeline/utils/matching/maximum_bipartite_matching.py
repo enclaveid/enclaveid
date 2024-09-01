@@ -10,6 +10,11 @@ if is_rapids_image() or TYPE_CHECKING:
     import cugraph
     import cupy as cp
     from cuml.metrics import pairwise_distances
+else:
+    cudf = None
+    cugraph = None
+    cp = None
+    pairwise_distances = None
 
 PAD_VALUE = -1
 

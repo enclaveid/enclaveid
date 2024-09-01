@@ -22,6 +22,10 @@ if is_rapids_image() or TYPE_CHECKING:
     import cuml
     import cupy as cp
     from cuml.cluster.hdbscan import HDBSCAN
+else:
+    cuml = None
+    cp = None
+    HDBSCAN = None
 
 
 class InterestsClustersConfig(RowLimitConfig):
