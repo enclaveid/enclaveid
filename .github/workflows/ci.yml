@@ -62,7 +62,9 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: |
+          bun install --frozen-lockfile
+          bun pm untrusted
 
         #TODO use nx affected to only build the projects that have changed
       - name: Build projects
@@ -76,9 +78,9 @@ jobs:
       - name: Install werf
         uses: werf/actions/install@v2
 
-      # - name: Configure Git for werf
-      #   run: |
-      #     git config --global url."https://x-access-token:${{ secrets.PAT_GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: Configure Git for werf
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.PAT_GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Set env variables
         run: |
