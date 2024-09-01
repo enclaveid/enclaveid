@@ -21,7 +21,7 @@ PRODUCTION_STORAGE_BUCKET: UPath = {
     "PROD": UPath("az://enclaveid-production-bucket/"),
 }[DEPLOYMENT_TYPE]
 
-DAGSTER_STORAGE_BUCKET = {
+DAGSTER_STORAGE_BUCKET: UPath = {
     "LOCAL": UPath(__file__).parent.parent / "data",
     "BRANCH": UPath("az://enclaveid-dagster-staging-bucket/"),
     "PROD": UPath("az://enclaveid-dagster-prod-bucket/"),

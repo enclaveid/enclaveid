@@ -9,7 +9,7 @@ from dagster import (
     sensor,
 )
 
-from ..consts import PRODUCTION_STORAGE_BUCKET, get_environment
+from ..consts import DAGSTER_STORAGE_BUCKET, PRODUCTION_STORAGE_BUCKET, get_environment
 from ..partitions import user_partitions_def
 
 SENSOR_INTERVAL_SECONDS = 5 if get_environment() == "LOCAL" else 30
@@ -26,26 +26,36 @@ def users_sensor(context: SensorEvaluationContext) -> SensorResult | SkipReason:
     that this will also remove partitions if a user's folder has been deleted."""
 
     current_state: set = ast.literal_eval(context.cursor) if context.cursor else set()  # type: ignore
-    all_dirs = {d.name for d in PRODUCTION_STORAGE_BUCKET.iterdir() if d.is_dir()}
+    all_partitions = {d.name for d in PRODUCTION_STORAGE_BUCKET.iterdir() if d.is_dir()}
 
-    dirs_to_add = all_dirs - current_state
-    dirs_to_delete = current_state - all_dirs
+    partitions_to_add = all_partitions - current_state
+    partitions_to_delete = current_state - all_partitions
 
-    if len(dirs_to_add) + len(dirs_to_delete) > 0:
+    # Delete materializations for partitions that are no longer present
+    if partitions_to_delete:
+        glob_pattern = f"**/*({' | '.join(partitions_to_delete)}).snappy"
+
+        for file_path in DAGSTER_STORAGE_BUCKET.rglob(glob_pattern):
+            if file_path.is_file():
+                file_path.unlink()
+                context.log.info(
+                    f"Deleted: {file_path.relative_to(DAGSTER_STORAGE_BUCKET)}"
+                )
+
+    if len(partitions_to_add) + len(partitions_to_delete) > 0:
         return SensorResult(
             run_requests=[
                 RunRequest(
                     run_key=f"first_upload_{k}",
                     partition_key=k,
                 )
-                for k in dirs_to_add
+                for k in partitions_to_add
             ],
-            cursor=str(all_dirs),
+            cursor=str(all_partitions),
             dynamic_partitions_requests=[
-                user_partitions_def.build_add_request(sorted(dirs_to_add)),
-                user_partitions_def.build_delete_request(sorted(dirs_to_delete)),
+                user_partitions_def.build_add_request(sorted(partitions_to_add)),
+                user_partitions_def.build_delete_request(sorted(partitions_to_delete)),
             ],
         )
-
     else:
         return SkipReason("No changes detected at the end.")
