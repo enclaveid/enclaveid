@@ -1,5 +1,6 @@
+kind:
 locations:
   - location_name: data_pipeline
-    image: docker.io/enclaveid/data-pipeline-base:master
+    image: $DAGSTER_BASE_IMAGE
     code_source:
       module_name: data_pipeline
