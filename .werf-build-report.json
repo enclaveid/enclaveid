@@ -1,0 +1,50 @@
+{
+	"Images": {
+		"api": {
+			"WerfImageName": "api",
+			"DockerRepo": "index.docker.io/enclaveid/cluster",
+			"DockerTag": "506406035bf4004abd50e70fb0a7b36528042fa42a33a9c57bf03428-1725194481992",
+			"DockerImageID": "sha256:322b380c1120b9028390f3029de21f834503ccad9f29f06fe7475e14410ab753",
+			"DockerImageDigest": "sha256:c9a50f8ead614309c870ace37146d9f6891030ab92e61d05cad8449f273a0b16",
+			"DockerImageName": "index.docker.io/enclaveid/cluster:506406035bf4004abd50e70fb0a7b36528042fa42a33a9c57bf03428-1725194481992",
+			"Rebuilt": false
+		},
+		"data-pipeline-base": {
+			"WerfImageName": "data-pipeline-base",
+			"DockerRepo": "index.docker.io/enclaveid/cluster",
+			"DockerTag": "2efda3f7c13d817772c2fd3b53675534ab811a98b872057801dbd1a2-1725197567100",
+			"DockerImageID": "sha256:ddbd6e501b76a9339f1c63e87fd9d63ac2d69123e38de5a737fba20364f36be5",
+			"DockerImageDigest": "sha256:0a6bd0cf948d2c77f1cdb0da89e4cc2509628b5d646c1d6064fbb9c19388059a",
+			"DockerImageName": "index.docker.io/enclaveid/cluster:2efda3f7c13d817772c2fd3b53675534ab811a98b872057801dbd1a2-1725197567100",
+			"Rebuilt": false
+		},
+		"data-pipeline-rapids": {
+			"WerfImageName": "data-pipeline-rapids",
+			"DockerRepo": "index.docker.io/enclaveid/cluster",
+			"DockerTag": "f6e74ae2a5ff6258bf09fbdc098361ee2ee3f75996a9462ec15d7841-1725196431998",
+			"DockerImageID": "sha256:a4e7ad2986a239f331687fe42c0df37daaaa200b135c12718f00a05f393513c6",
+			"DockerImageDigest": "sha256:782275098312d5bde732027b3bcaa4ea91354b1365104cdfe7a43742517044e4",
+			"DockerImageName": "index.docker.io/enclaveid/cluster:f6e74ae2a5ff6258bf09fbdc098361ee2ee3f75996a9462ec15d7841-1725196431998",
+			"Rebuilt": false
+		},
+		"data-pipeline-vllm": {
+			"WerfImageName": "data-pipeline-vllm",
+			"DockerRepo": "index.docker.io/enclaveid/cluster",
+			"DockerTag": "b152adf79e21ee9e5a6a29a7274a020817e64d3ccb67da8b1d5a84e7-1725191676356",
+			"DockerImageID": "sha256:1246b153312d262b61763d32f6e0900df85bbfb180aeb7274675699ed930b2f6",
+			"DockerImageDigest": "sha256:6475f1cd1792d98bbdb4e757d733b1136b509e03d2ed5002542dfecce1c357a0",
+			"DockerImageName": "index.docker.io/enclaveid/cluster:b152adf79e21ee9e5a6a29a7274a020817e64d3ccb67da8b1d5a84e7-1725191676356",
+			"Rebuilt": false
+		},
+		"frontend": {
+			"WerfImageName": "frontend",
+			"DockerRepo": "index.docker.io/enclaveid/cluster",
+			"DockerTag": "cdf2b06c6c3522bf3c57a379843ac3a2fafe77f30d3c4fcb36d1742d-1725194441003",
+			"DockerImageID": "sha256:8191fb9d2bf1e96e4efb81e97cc3d10136a9ddab35bdba5db25b4729ed482bc9",
+			"DockerImageDigest": "sha256:6fb255edb5554aee491c427e61500f6cdce841751965fa0df00ad2c47ba7e752",
+			"DockerImageName": "index.docker.io/enclaveid/cluster:cdf2b06c6c3522bf3c57a379843ac3a2fafe77f30d3c4fcb36d1742d-1725194441003",
+			"Rebuilt": false
+		}
+	},
+	"ImagesByPlatform": {}
+}
