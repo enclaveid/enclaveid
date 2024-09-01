@@ -26,9 +26,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Set up Docker Buildx
-      #   uses: docker/setup-buildx-action@v2
-
       - name: Install Buildah
         run: |
           sudo apt-get update
@@ -47,10 +44,6 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # - name: Install Python
-      #   uses: actions/setup-python@v4
-      #   with:
-      #     python-version: '3.11'
       - name: Install poetry
         uses: abatilo/actions-poetry@v3
 
