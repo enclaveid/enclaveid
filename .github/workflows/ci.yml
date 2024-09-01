@@ -57,7 +57,7 @@ jobs:
         name: Cache for werf manifests
         with:
           key: werf-manifests
-          path: .werf/local_cache
+          path: ~/.werf/local_cache
           save-always: true
 
       - name: Install bun
@@ -99,6 +99,8 @@ jobs:
         run: |
           source "$(werf ci-env github --as-file)"
           werf converge
+          echo "List cache contents"
+          ls -la ~/.werf/local_cache
 
       - name: Set data-pipeline-base image value in dagster_cloud.yaml
         run: |
