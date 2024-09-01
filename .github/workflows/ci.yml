@@ -104,8 +104,8 @@ jobs:
       - name: Set data-pipeline-base image value in dagster_cloud.yaml
         run: |
           DATA_PIPELINE_IMAGE_VALUE=$(./dasel -r json -f .werf-build-report.json -w plain '.Images.data-pipeline-base.DockerImageName')
-          echo $DATA_PIPELINE_IMAGE_VALUE
           ./dasel put -r yaml -t string -v $DATA_PIPELINE_IMAGE_VALUE  -f apps/data-pipeline/dagster_cloud.yaml ".locations.first().image"
+          cat apps/data-pipeline/dagster_cloud.yaml
 
       - name: Decrypt DAGSTER_CLOUD_AGENT_TOKEN and sync Dagster Cloud locations
         run: |
