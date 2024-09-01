@@ -9,8 +9,6 @@ SHELL ["/bin/bash", "--login","-c"]
 
 WORKDIR /app
 
-USER rapids
-
 # Install RAPIDS dependencies
 COPY requirements.rapids.txt /app/
 RUN /opt/conda/bin/pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com -r requirements.rapids.txt
