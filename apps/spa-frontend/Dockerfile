@@ -15,6 +15,9 @@ RUN echo 'server { \
   location / { \
   try_files $uri $uri/ /index.html; \
   } \
+  location ~* \.js$ { \
+  add_header Document-Policy "js-profiling"; \
+  } \
   }' > /etc/nginx/conf.d/default.conf
 
 
