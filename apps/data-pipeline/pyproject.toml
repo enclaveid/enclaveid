@@ -60,10 +60,10 @@ sentence-transformers = "3.0.1"
 
 [tool.poetry.group.rapids.dependencies]
 hdbscan = "^0.8.37"
-dask-cudf-cu12 = { version = "24.4.0", source = "nvidia" }
-cuml-cu12 = { version = "24.4.0", source = "nvidia" }
-cudf-cu12 = { version = "24.4.0", source = "nvidia" }
-cugraph-cu12 = { version = "24.4.0", source = "nvidia" }
+# dask-cudf-cu12 = { version = "24.4.0", source = "nvidia" }
+# cuml-cu12 = { version = "24.4.0", source = "nvidia" }
+# cudf-cu12 = { version = "24.4.0", source = "nvidia" }
+# cugraph-cu12 = { version = "24.4.0", source = "nvidia" }
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "2.0.2"
