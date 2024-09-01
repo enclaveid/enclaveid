@@ -62,7 +62,7 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
         #TODO use nx affected to only build the projects that have changed
       - name: Build projects
@@ -76,9 +76,9 @@ jobs:
       - name: Install werf
         uses: werf/actions/install@v2
 
-      - name: Configure Git for werf
-        run: |
-          git config --global url."https://x-access-token:${{ secrets.PAT_GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      # - name: Configure Git for werf
+      #   run: |
+      #     git config --global url."https://x-access-token:${{ secrets.PAT_GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Set env variables
         run: |
@@ -101,8 +101,8 @@ jobs:
 
       - name: Set data-pipeline-base image value in dagster_cloud.yaml
         run: |
-          cat .werf-build-report.json
           DATA_PIPELINE_IMAGE_VALUE=$(./dasel -r json -f .werf-build-report.json '.Images.data-pipeline-base.DockerImageName')
+          echo $DATA_PIPELINE_IMAGE_VALUE
           ./dasel put -r yaml -t string -v $DATA_PIPELINE_IMAGE_VALUE  -f apps/data-pipeline/dagster_cloud.yaml ".locations.first().image"
 
       - name: Decrypt DAGSTER_CLOUD_AGENT_TOKEN and sync Dagster Cloud locations
