@@ -6,7 +6,7 @@ COPY dist/ /dist/api
 
 WORKDIR /dist
 
-RUN npm i argon2 nodejs-polars
+RUN npm i argon2 nodejs-polars @sentry/profiling-node
 RUN mkdir -p node_modules/.prisma/client && mv api/src/assets/libquery_engine-* node_modules/.prisma/client/
 
 # Install openssl

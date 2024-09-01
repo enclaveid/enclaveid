@@ -26,9 +26,9 @@
         "bundle": true,
         "main": "apps/api/src/main.ts",
         "tsConfig": "apps/api/tsconfig.app.json",
-        "external": ["argon2", "nodejs-polars"],
         "assets": ["{projectRoot}/src/assets/*"],
         "generatePackageJson": true,
+        "external": ["argon2", "nodejs-polars", "@sentry/profiling-node"],
         "thirdParty": true
       },
       "configurations": {
