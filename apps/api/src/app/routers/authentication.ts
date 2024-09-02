@@ -70,7 +70,7 @@ export const authentication = router({
         await asymmetricDecrypt(encryptedCredentials),
       );
 
-      if (process.env.NODE_ENV !== 'development') {
+      if (process.env.WHITELIST_ENABLED === 'true') {
         const whitelistedEmail = await prisma.whitelistedEmail.findUnique({
           where: { email },
         });
