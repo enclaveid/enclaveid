@@ -1,12 +1,10 @@
 from dagster import AssetExecutionContext
 
 
-def get_materialized_partitions(
-    context: AssetExecutionContext, partitions_def_name: str
-):
+def get_materialized_partitions(context: AssetExecutionContext, asset_name: str):
     # Fetch all materialized partitions
     materialized_partitions = context.instance.get_materialized_partitions(
-        context.asset_key_for_input(partitions_def_name)
+        context.asset_key_for_input(asset_name)
     )
 
     # Fetch current dynamic partitions
