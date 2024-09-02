@@ -60,8 +60,7 @@ export default fp(async (fastify: FastifyInstance) => {
         `<html>
         <body>
           <p>Hi ${user.displayName},</p>
-          <p>Your EnclaveID results are ready. Check them out here: https://enclaveid.com/dashboard/interests</p>
-          <p>Best regards,</p>
+          <p>Your EnclaveID results are ready: https://app.enclaveid.com/dashboard/interests</p>
           <p>The EnclaveID Team</p>
         </body>
       </html>`,
