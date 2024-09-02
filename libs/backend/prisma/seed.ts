@@ -13,7 +13,7 @@ async function main() {
   // Create empty user
   await prisma.user.create({
     data: {
-      id: 'empty_user',
+      id: 'clxenc3fw0007gzz3pdz6enfu',
       email: 'empty@enclaveid.com',
       password: await hash('empty'),
       confirmedAt: new Date(),
@@ -25,7 +25,7 @@ async function main() {
 
   await prisma.user.create({
     data: {
-      id: 'do_not_use',
+      id: 'cm0i27jdj0000aqpa73ghpcxf',
 
       email: 'jane.doe@example.com',
       password: await hash('password'),

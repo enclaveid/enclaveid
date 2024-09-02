@@ -36,7 +36,11 @@ def parse_cluster_summarization_json(text) -> tuple[str | None, str | None]:
 def parse_social_likelihood_json(text) -> float | None:
     try:
         j = repair_json(text, return_objects=True)
-        res = j["likelihood"]
+        res = float(j["likelihood"])
+        # Sometimes the llm return the percentage as integer
+        if res > 1:
+            res = res / 100
+        return res
     except Exception:
         res = None
 
