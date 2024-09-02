@@ -5,7 +5,7 @@ export interface DisplayableInterest {
   description: string;
   activityType: ActivityType;
   similarityPercentage?: number;
-  activityDates?: string[];
+  activityDates?: Date[];
   pipelineClusterId?: number;
   isViewed?: boolean;
   isSensitive: boolean;
