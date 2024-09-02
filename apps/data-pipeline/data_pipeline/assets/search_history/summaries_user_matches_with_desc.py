@@ -71,7 +71,10 @@ async def summaries_user_matches_with_desc(
     config: UserMatchesSummariesConfig,
     llama405b: Llama405bResource,
     summaries_user_matches: pl.DataFrame,
-) -> pl.DataFrame:
+) -> pl.DataFrame | None:
+    if summaries_user_matches.is_empty():
+        return None
+
     filtered_summaries_user_matches = summaries_user_matches.with_columns(
         mask=(
             (pl.col("cosine_similarity") < config.similarity_threshold)
