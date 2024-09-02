@@ -2,7 +2,6 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Optional, asset
 
 from ...constants.custom_config import RowLimitConfig
-from ...hooks import notify_api_on_success
 from ...partitions import user_partitions_def
 
 
@@ -16,7 +15,7 @@ from ...partitions import user_partitions_def
         ),
         "cluster_summaries": AssetIn(key=["cluster_summaries"]),
     },
-    op_tags={"hook": notify_api_on_success.name},
+    op_tags={"hook": "notify_api_on_success"},
 )
 def results_for_api(
     context: AssetExecutionContext,
