@@ -13,6 +13,7 @@ from data_pipeline.assets.search_history.summaries_embeddings import (
 )
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
 from data_pipeline.utils.costs import get_gpu_runtime_cost
+from data_pipeline.utils.get_materialized_partitions import get_materialized_partitions
 from data_pipeline.utils.matching.maximum_bipartite_matching import (
     maximum_bipartite_matching,
 )
@@ -68,9 +69,7 @@ async def summaries_user_matches(
     )
 
     # Get a list of ready partitions in the parent asset
-    other_user_ids = context.instance.get_materialized_partitions(
-        context.asset_key_for_input("summaries_embeddings")
-    )
+    other_user_ids = get_materialized_partitions(context, "summaries_embeddings")
 
     context.log.info(f"Matching with {len(other_user_ids)-1} users")
 

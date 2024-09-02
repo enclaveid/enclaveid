@@ -219,6 +219,9 @@ async def cluster_summaries(
                 pl.col("date").sort().alias("cluster_dates"),
                 pl.col("category_cluster_label")
                 .unique()
+                .map_elements(
+                    lambda x: [i for i in x if i != -1], return_dtype=pl.List(pl.Int64)
+                )
                 .alias("category_cluster_labels"),
             ]
         )
