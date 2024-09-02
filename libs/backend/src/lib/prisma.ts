@@ -8,4 +8,8 @@ export const prisma = new PrismaClient({
         'postgres://enclaveid:enclaveid@enclaveid-postgresql.default.svc.cluster.local:5432/enclaveid_api',
     },
   },
+  transactionOptions: {
+    maxWait: 60 * 1000, // 1 minute
+    timeout: 60 * 1000, // 1 minute
+  },
 });
