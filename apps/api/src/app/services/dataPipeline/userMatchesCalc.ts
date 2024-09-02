@@ -1,5 +1,4 @@
 import { BigFive, MoralFoundations } from '@prisma/client';
-import { mean, exp, log } from 'mathjs';
 
 const weights = {
   big5: 0.2,
@@ -31,7 +30,12 @@ function euclideanSimilarity(vec1: number[], vec2: number[]): number {
 }
 
 function exponentialMean(scores: number[]): number {
-  return log(mean(scores.map(exp))) as number;
+  if (scores.length === 0) {
+    return 0;
+  }
+  return Math.log(
+    scores.map(Math.exp).reduce((sum, val) => sum + val, 0) / scores.length,
+  );
 }
 
 function calculateInterestsSimilarity(scores: number[]): number {
