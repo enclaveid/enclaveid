@@ -6,10 +6,11 @@ from dagster import (
 from dagster_k8s import k8s_job_executor
 
 from data_pipeline.consts import get_environment
+from data_pipeline.sensors.inputs_sensor import inputs_sensor
+from data_pipeline.sensors.outputs_sensor import outputs_sensor
 
 from .assets import search_history, takeout
 from .resources import resources
-from .sensors import users_sensor
 
 all_assets = load_assets_from_modules(
     [
@@ -21,7 +22,7 @@ all_assets = load_assets_from_modules(
 
 defs = Definitions(
     assets=all_assets,
-    sensors=[users_sensor],
+    sensors=[inputs_sensor, outputs_sensor],
     resources=resources,
     executor=(
         k8s_job_executor
