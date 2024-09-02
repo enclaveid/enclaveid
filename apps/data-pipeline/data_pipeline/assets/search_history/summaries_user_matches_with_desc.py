@@ -75,19 +75,18 @@ async def summaries_user_matches_with_desc(
     if summaries_user_matches.is_empty():
         return None
 
-    filtered_summaries_user_matches = summaries_user_matches.with_columns(
-        mask=(
-            (pl.col("cosine_similarity") < config.similarity_threshold)
-            | (
-                (pl.col("social_likelihoods").apply(lambda x: sum(x) / 2))
-                < config.social_likelihood_threshold
-            )
-        )
-    )
-
     total_matches = len(summaries_user_matches)
+    sample_n = min(config.max_summaries_per_user, total_matches)
+    filtered_summaries_user_matches = summaries_user_matches.filter(
+        (pl.col("cosine_similarity") >= config.similarity_threshold)
+        & (
+            (pl.col("social_likelihoods").apply(lambda x: sum(x) / 2))
+            >= config.social_likelihood_threshold
+        )
+    ).sample(n=sample_n)
+
     context.log.info(
-        f"Summarizing {total_matches - filtered_summaries_user_matches.sum()['mask'].item()} matches out of {total_matches}."
+        f"Summarizing {filtered_summaries_user_matches.height} matches out of {total_matches}."
     )
 
     means_of_comparison = f"common_summary_prompt_{config.means_of_comparison}"
