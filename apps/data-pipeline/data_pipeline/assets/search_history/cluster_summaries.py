@@ -170,7 +170,7 @@ class ClusterSummariesConfig(RowLimitConfig):
         description="Set to True to materialize the cluster_summaries_debug asset, which includes the full assistant replies.",
     )
     max_samples: int = Field(
-        default=125,
+        default=100,
         description="The maximum number of samples for each cluster to use for summarization.",
     )
 
