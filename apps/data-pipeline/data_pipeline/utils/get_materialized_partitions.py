@@ -10,9 +10,7 @@ def get_materialized_partitions(
     )
 
     # Fetch current dynamic partitions
-    current_dynamic_partitions = context.instance.get_dynamic_partitions(
-        partitions_def_name
-    )
+    current_dynamic_partitions = context.instance.get_dynamic_partitions("users")
 
     # Filter out deleted partitions
     filtered_partitions = [
