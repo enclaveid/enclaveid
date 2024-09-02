@@ -63,25 +63,6 @@
       "options": {
         "jestConfig": "apps/api/jest.config.ts"
       }
-    },
-    "container": {
-      "executor": "@nx-tools/nx-container:build",
-      "dependsOn": ["build"],
-      "options": {
-        "engine": "docker",
-        "platforms": ["linux/amd64"],
-        "push": true,
-        "metadata": {
-          "images": ["docker.io/enclaveid/api"],
-          "tags": [
-            "type=schedule",
-            "type=ref,event=branch",
-            "type=ref,event=tag",
-            "type=ref,event=pr",
-            "type=sha,prefix=sha-"
-          ]
-        }
-      }
     }
   },
   "tags": []

@@ -3,25 +3,5 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/guacamole-tunnel/src",
   "tags": [],
-  "targets": {
-    "container": {
-      "executor": "@nx-tools/nx-container:build",
-      "dependsOn": ["build"],
-      "options": {
-        "engine": "docker",
-        "platforms": ["linux/amd64"],
-        "push": true,
-        "metadata": {
-          "images": ["docker.io/enclaveid/guacamole-tunnel"],
-          "tags": [
-            "type=schedule",
-            "type=ref,event=branch",
-            "type=ref,event=tag",
-            "type=ref,event=pr",
-            "type=sha,prefix=sha-"
-          ]
-        }
-      }
-    }
-  }
+  "targets": {}
 }

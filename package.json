@@ -52,8 +52,6 @@
     "@iconify-json/openmoji": "^1.1.53",
     "@iconify-json/ri": "^1.1.22",
     "@iconify-json/skill-icons": "^1.1.10",
-    "@nx-tools/container-metadata": "^6.0.0",
-    "@nx-tools/nx-container": "^6.0.0",
     "@nx/cypress": "19.1.1",
     "@nx/devkit": "19.1.1",
     "@nx/esbuild": "19.1.1",
