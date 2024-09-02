@@ -7,3 +7,4 @@ class Llama8bResource(LocalLlmResource):
     _top_p = 0.95
     _max_tokens = 1024
     _max_model_len = None
+    _enforce_eager = False

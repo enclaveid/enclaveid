@@ -7,7 +7,6 @@ from dagster import ConfigurableResource, DagsterLogManager, InitResourceContext
 from pydantic import BaseModel, PrivateAttr
 
 from data_pipeline.utils.capabilities import gpu_info, is_vllm_image
-from data_pipeline.utils.get_hf_cache_info import get_hf_cache_info
 from data_pipeline.utils.get_logger import get_logger
 
 if is_vllm_image() or TYPE_CHECKING:
@@ -35,6 +34,7 @@ class LocalLlmResource(ConfigurableResource):
     _top_p: float = PrivateAttr()
     _max_tokens: int = PrivateAttr()
     _max_model_len: int | None = PrivateAttr()
+    _enforce_eager: bool = PrivateAttr()
 
     _llm: LLM = PrivateAttr()
     _tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = PrivateAttr()
@@ -44,7 +44,7 @@ class LocalLlmResource(ConfigurableResource):
     def setup_for_execution(self, context: InitResourceContext) -> None:
         self._logger = get_logger(context)
 
-        self._logger.info(get_hf_cache_info())
+        # self._logger.info(get_hf_cache_info())
 
         load_time_start = time.time()
         self._llm = LLM(
@@ -57,6 +57,7 @@ class LocalLlmResource(ConfigurableResource):
                 if self._max_model_len is not None
                 else {}
             ),
+            enforce_eager=self._enforce_eager,
         )
         load_time_end = time.time()
 

@@ -25,6 +25,11 @@ name = "nvidia"
 url = "https://pypi.nvidia.com"
 priority = "supplemental"
 
+[[tool.poetry.source]]
+name = "flashinfer"
+url = "https://flashinfer.ai/whl/cu121/torch2.4/"
+priority = "supplemental"
+
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
 dagster = "^1.8.4"
@@ -54,9 +59,10 @@ jsonpickle = "^3.2.2"
 # The following are very large packages, they are cached as docker layers and shouldn't be changed often.
 # We split ML deps in two grups to avoid conflicts.
 [tool.poetry.group.vllm.dependencies]
-vllm = "0.5.4"
+vllm = "0.5.5"
 transformers = "4.43.3"
 sentence-transformers = "3.0.1"
+flashinfer = { version = "0.1.6", source = "flashinfer" }
 
 [tool.poetry.group.rapids.dependencies]
 hdbscan = "^0.8.37"

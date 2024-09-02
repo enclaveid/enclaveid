@@ -8,3 +8,4 @@ class Llama70bQuantizedResource(LocalLlmResource):
     _max_tokens = 1024
     # We use 80k instead of the default 128k to avoid OOM errors
     _max_model_len = 1024 * 80
+    _enforce_eager = False
