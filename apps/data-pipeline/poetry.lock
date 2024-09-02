@@ -1211,25 +1211,6 @@ testing = ["covdefaults (>=2.3)", "coverage (>=7.3.2)", "diff-cover (>=8.0.1)", 
 typing = ["typing-extensions (>=4.8)"]
 
 [[package]]
-name = "flashinfer"
-version = "0.1.6+cu121torch2.4"
-description = "FlashInfer: Kernel Library for LLM Serving"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "flashinfer-0.1.6+cu121torch2.4-cp310-cp310-linux_x86_64.whl", hash = "sha256:d7605fbe3f14ef7f36e702f627c1f06e5a32495b5ebfe34313c3fb15f3e4eb06"},
-    {file = "flashinfer-0.1.6+cu121torch2.4-cp311-cp311-linux_x86_64.whl", hash = "sha256:39abef303b999cf082790f03d785ba5cb35883b0852351031fa36204f355b838"},
-    {file = "flashinfer-0.1.6+cu121torch2.4-cp312-cp312-linux_x86_64.whl", hash = "sha256:80bb2d6f06e72496223d57d31ff9e6f86f6ba31f51664eda8205a0f16a53529c"},
-    {file = "flashinfer-0.1.6+cu121torch2.4-cp38-cp38-linux_x86_64.whl", hash = "sha256:bf3f3b05b9d7045b39d472e47b209b7f59d908aa7b740e4e01b79360aadff38d"},
-    {file = "flashinfer-0.1.6+cu121torch2.4-cp39-cp39-linux_x86_64.whl", hash = "sha256:4a3f826ee1ac2ae0e52a82480660fb112ddfab646f0b75a54332727e5d505d59"},
-]
-
-[package.source]
-type = "legacy"
-url = "https://flashinfer.ai/whl/cu121/torch2.4"
-reference = "flashinfer"
-
-[[package]]
 name = "frozenlist"
 version = "1.4.1"
 description = "A list-like structure which implements collections.abc.MutableSequence"
@@ -6175,4 +6156,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "78590acfdb6845a3ede7aa450665ceb39da910a00f244d68354e926ffee17d80"
+content-hash = "2958e5f74d761b3d0b930c51de5de2ec30f65e1ac4c5ed6e3fbc60fc91514cbf"

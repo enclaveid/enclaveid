@@ -14,7 +14,10 @@ RUN pip3 install --upgrade pip
 
 # Install VLLM dependencies
 COPY requirements.vllm.txt /app/
-RUN pip install --no-cache-dir --extra-index-url https://flashinfer.ai/whl/cu121/torch2.4/ -r requirements.vllm.txt
+RUN pip install --no-cache-dir -r requirements.vllm.txt
+
+# TODO: install flashinfer like this for now but we should add it to poetry
+RUN pip install flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
 
 # Install prod dependencies
 COPY requirements.prod.txt /app/

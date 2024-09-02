@@ -17,8 +17,8 @@ from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.policies.retry_policies import spot_instance_retry_policy
-from data_pipeline.resources.llm_inference.llama70b_quantized_resource import (
-    Llama70bQuantizedResource,
+from data_pipeline.resources.llm_inference.gemma27b_resource import (
+    Gemma27bResource,
 )
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.get_logger import get_logger
@@ -199,7 +199,7 @@ class ClusterSummariesConfig(RowLimitConfig):
 async def cluster_summaries(
     context: AssetExecutionContext,
     config: ClusterSummariesConfig,
-    llama70b_quantized: Llama70bQuantizedResource,
+    gemma27b: Gemma27bResource,
     interests_clusters: pl.DataFrame,
 ):
     start_time = time.time()
@@ -240,7 +240,7 @@ async def cluster_summaries(
     (
         summaries_completions,
         conversations,
-    ) = llama70b_quantized.get_prompt_sequences_completions_batch(
+    ) = gemma27b.get_prompt_sequences_completions_batch(
         prompt_sequences,
         # [
         #     InitialClassificationResult,
