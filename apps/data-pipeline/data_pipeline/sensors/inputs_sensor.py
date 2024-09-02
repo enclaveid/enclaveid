@@ -2,6 +2,7 @@ import ast
 
 from dagster import (
     AssetSelection,
+    DefaultSensorStatus,
     RunRequest,
     SensorEvaluationContext,
     SensorResult,
@@ -16,6 +17,7 @@ from ..partitions import user_partitions_def
 @sensor(
     asset_selection=AssetSelection.all(),
     minimum_interval_seconds=30,
+    default_status=DefaultSensorStatus.RUNNING,
 )
 def inputs_sensor(context: SensorEvaluationContext) -> SensorResult | SkipReason:
     """Polls the storage bucket for user folders.

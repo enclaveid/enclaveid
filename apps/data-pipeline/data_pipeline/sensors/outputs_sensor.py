@@ -2,6 +2,7 @@ import ast
 
 import requests
 from dagster import (
+    DefaultSensorStatus,
     SensorEvaluationContext,
     SensorResult,
     SkipReason,
@@ -12,9 +13,7 @@ from upath import UPath
 from ..consts import DAGSTER_STORAGE_BUCKET
 
 
-@sensor(
-    minimum_interval_seconds=30,
-)
+@sensor(minimum_interval_seconds=30, default_status=DefaultSensorStatus.RUNNING)
 def outputs_sensor(context: SensorEvaluationContext) -> SensorResult | SkipReason:
     """Notifies the API that a pipeline has finished."""
 
