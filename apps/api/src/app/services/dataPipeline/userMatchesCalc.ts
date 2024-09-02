@@ -92,14 +92,14 @@ export function calculateOverallSimilarity(
   },
 ): number {
   const big5Similarity =
-    currentUserTraits && otherUserTraits
+    currentUserTraits?.bigFive && otherUserTraits?.bigFive
       ? calculateBigFiveSimilarity(
           currentUserTraits.bigFive,
           otherUserTraits.bigFive,
         )
       : 0;
   const mftSimilarity =
-    currentUserTraits && otherUserTraits
+    currentUserTraits?.moralFoundations && otherUserTraits?.moralFoundations
       ? calculateMftSimilarity(
           currentUserTraits.moralFoundations,
           otherUserTraits.moralFoundations,
