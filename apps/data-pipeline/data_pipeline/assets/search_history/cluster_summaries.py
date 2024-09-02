@@ -169,6 +169,10 @@ class ClusterSummariesConfig(RowLimitConfig):
         default=True,
         description="Set to True to materialize the cluster_summaries_debug asset, which includes the full assistant replies.",
     )
+    max_samples: int = Field(
+        default=125,
+        description="The maximum number of samples for each cluster to use for summarization.",
+    )
 
 
 # TODO: break this asset down into one asset per llm invocation
@@ -204,8 +208,14 @@ async def cluster_summaries(
     start_time = time.time()
     logger = get_logger(context)
 
+    # Sample max_samples from each cluster
+    sampled_df = interests_clusters.filter(pl.col("cluster_label") != -1).filter(
+        pl.int_range(pl.len()).shuffle().over("cluster_label") < config.max_samples
+    )
+
+    # Sort by date and concat date and interests
     df = (
-        interests_clusters.sort(by=pl.col("date"))
+        sampled_df.sort(by=pl.col("date"))
         .with_columns(
             pl.concat_str([pl.col("date"), pl.col("interests")], separator=":").alias(
                 "date_interests"
@@ -224,8 +234,6 @@ async def cluster_summaries(
                 .alias("category_cluster_labels"),
             ]
         )
-        .filter(pl.col("cluster_label") != -1)
-        .slice(0, config.row_limit)
     )
 
     prompt_sequences = [
