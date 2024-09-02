@@ -249,7 +249,7 @@ model InterestsCluster {
   clusterType       ActivityType
   summary           String
   title             String
-  activityDates     DateTime[]
+  activityDates     String[]
   isSensitive       Boolean      @default(false)
   clusterItems      String[]
   socialLikelihood  Float

@@ -19,14 +19,17 @@ ChartJS.register(
 );
 
 interface TinyBarChartProps {
-  dates: Date[];
+  dates: string[];
   maxBars?: number;
 }
 
 export function TinyBarChart({ dates, maxBars = 30 }: TinyBarChartProps) {
+  // Parse dates into Date objects
+  const parsedDates = dates.map((date) => new Date(date));
+
   // Find the min and max dates
-  const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
-  const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+  const minDate = new Date(Math.min(...parsedDates.map((d) => d.getTime())));
+  const maxDate = new Date(Math.max(...parsedDates.map((d) => d.getTime())));
 
   // Calculate the interval size (in days) for each bar
   const totalDays =
@@ -47,7 +50,7 @@ export function TinyBarChart({ dates, maxBars = 30 }: TinyBarChartProps) {
   }
 
   // Aggregate the data into intervals
-  dates.forEach((date) => {
+  parsedDates.forEach((date) => {
     for (const interval of intervals) {
       if (date >= interval.start && date < interval.end) {
         interval.count++;

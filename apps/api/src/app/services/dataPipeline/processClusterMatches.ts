@@ -36,7 +36,9 @@ export async function processClusterMatches(dataFrame: DataFrame) {
           summary: r.summary,
           title: r.title,
           isSensitive: r.isSensitive,
-          activityDates: r.activityDates,
+          activityDates: r.activityDates.map(
+            (date) => date.toISOString().split('T')[0],
+          ),
           clusterItems: r.clusterItems,
           socialLikelihood: r.socialLikelihood,
         },
