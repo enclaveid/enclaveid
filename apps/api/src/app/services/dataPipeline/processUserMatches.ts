@@ -111,23 +111,19 @@ export async function processUserMatches(userId: string) {
       },
     });
 
-    if (!currentUserTraits) {
-      throw new Error(`UserTraits not found for user ${userId}`);
-    }
-
     // Calculate overall similarity and upsert UsersOverallSimilarity
     for (const [otherUserId, similarity] of userSimilarities) {
       const overallSimilarityScore = calculateOverallSimilarity(
-        {
-          moralFoundations: currentUserTraits.moralFoundations[0],
-          bigFive: currentUserTraits.bigFive[0],
-        },
-        {
-          moralFoundations: similarity.otherUserTraits.moralFoundations[0],
-          bigFive: similarity.otherUserTraits.bigFive[0],
-        },
         similarity.proactiveSimilarities,
         similarity.reactiveSimilarities,
+        {
+          moralFoundations: currentUserTraits?.moralFoundations[0],
+          bigFive: currentUserTraits?.bigFive[0],
+        },
+        {
+          moralFoundations: similarity.otherUserTraits?.moralFoundations[0],
+          bigFive: similarity.otherUserTraits?.bigFive[0],
+        },
       );
 
       // Find existing UsersOverallSimilarity

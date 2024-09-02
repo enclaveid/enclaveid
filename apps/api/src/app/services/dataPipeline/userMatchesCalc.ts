@@ -80,25 +80,31 @@ function calculateBigFiveSimilarity(big5_1: BigFive, big5_2: BigFive): number {
 }
 
 export function calculateOverallSimilarity(
-  currentUserTraits: {
-    bigFive: BigFive;
-    moralFoundations: MoralFoundations;
-  },
-  otherUserTraits: {
-    bigFive: BigFive;
-    moralFoundations: MoralFoundations;
-  },
   proactiveSimilarities: number[],
   reactiveSimilarities: number[],
+  currentUserTraits?: {
+    bigFive: BigFive;
+    moralFoundations: MoralFoundations;
+  },
+  otherUserTraits?: {
+    bigFive: BigFive;
+    moralFoundations: MoralFoundations;
+  },
 ): number {
-  const big5Similarity = calculateBigFiveSimilarity(
-    currentUserTraits.bigFive,
-    otherUserTraits.bigFive,
-  );
-  const mftSimilarity = calculateMftSimilarity(
-    currentUserTraits.moralFoundations,
-    otherUserTraits.moralFoundations,
-  );
+  const big5Similarity =
+    currentUserTraits && otherUserTraits
+      ? calculateBigFiveSimilarity(
+          currentUserTraits.bigFive,
+          otherUserTraits.bigFive,
+        )
+      : 0;
+  const mftSimilarity =
+    currentUserTraits && otherUserTraits
+      ? calculateMftSimilarity(
+          currentUserTraits.moralFoundations,
+          otherUserTraits.moralFoundations,
+        )
+      : 0;
   const proactiveInterestsSimilarity = calculateInterestsSimilarity(
     proactiveSimilarities,
   );
