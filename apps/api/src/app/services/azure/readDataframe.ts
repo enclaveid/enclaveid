@@ -20,7 +20,7 @@ export async function downloadPipelineResults(
   blobName: string,
 ): Promise<Buffer> {
   // Get a reference to the blob
-  const blobClient = azureContainerClient.getBlobClient(blobName);
+  const blobClient = azureContainerClient.output.getBlobClient(blobName);
 
   // Download the blob content
   const downloadResponse = await blobClient.download();

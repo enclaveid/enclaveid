@@ -5,7 +5,7 @@ from dagster import (
 )
 
 
-@success_hook(name="notify_api_on_success")
+@success_hook
 def notify_api_on_success(context: HookContext):
     context.log.info(context.op.tags)
     context.log.info(context.op)

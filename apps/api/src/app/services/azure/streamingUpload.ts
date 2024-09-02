@@ -5,7 +5,7 @@ import {
 import { DataProvider } from '@enclaveid/shared';
 import {
   azureContainerClient,
-  azureDefaultContainerName,
+  azureInputContainerName,
   azureStorageCredentials,
 } from './client';
 
@@ -20,7 +20,7 @@ export async function generateSasUrl(
   const blobName = getBlobName(dataProvider, userId);
 
   const sasOptions = {
-    containerName: azureDefaultContainerName,
+    containerName: azureInputContainerName,
     blobName,
     permissions: BlobSASPermissions.parse('w'),
     startsOn: new Date(),
@@ -32,10 +32,11 @@ export async function generateSasUrl(
     azureStorageCredentials,
   ).toString();
 
-  return `${azureContainerClient.url}/${blobName}?${sasToken}`;
+  return `${azureContainerClient.input.url}/${blobName}?${sasToken}`;
 }
 
 export async function streamingUpload(filename, file) {
-  const blockBlobClient = azureContainerClient.getBlockBlobClient(filename);
+  const blockBlobClient =
+    azureContainerClient.input.getBlockBlobClient(filename);
   return await blockBlobClient.uploadStream(file);
 }

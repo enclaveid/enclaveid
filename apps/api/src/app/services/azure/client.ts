@@ -14,9 +14,10 @@ const azureBlobServiceClient = new BlobServiceClient(
   azureStorageCredentials,
 );
 
-export const azureDefaultContainerName =
-  process.env.AZURE_STORAGE_CONTAINER_NAME;
+export const azureInputContainerName = 'enclaveid-production-bucket';
+export const azureOutputContainerName = 'enclaveid-dagster-prod-bucket';
 
-export const azureContainerClient = azureBlobServiceClient.getContainerClient(
-  azureDefaultContainerName,
-);
+export const azureContainerClient = {
+  input: azureBlobServiceClient.getContainerClient(azureInputContainerName),
+  output: azureBlobServiceClient.getContainerClient(azureOutputContainerName),
+};
