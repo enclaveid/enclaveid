@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { AppContext } from '../../context';
 import { MAX_PAGINATION_LIMIT } from '../../constants';
 import { DisplayableInterest } from '@enclaveid/shared';
-import { ActivityType } from '@prisma/client';
 
 export const interests = router({
   getUserInterests: authenticatedProcedure
@@ -17,24 +16,28 @@ export const interests = router({
             .max(MAX_PAGINATION_LIMIT)
             .default(MAX_PAGINATION_LIMIT),
           cursor: z.string().default(''),
-          activityTypes: z
-            .array(z.nativeEnum(ActivityType))
-            .default([
-              ActivityType.knowledge_progression,
-              ActivityType.reactive_needs,
-            ]),
+          // activityTypes: z
+          //   .array(z.nativeEnum(ActivityType))
+          //   .default([
+          //     ActivityType.knowledge_progression,
+          //     ActivityType.reactive_needs,
+          //   ]),
         })
         .default({
           limit: MAX_PAGINATION_LIMIT,
           cursor: '',
-          activityTypes: [
-            ActivityType.knowledge_progression,
-            ActivityType.reactive_needs,
-          ],
+          // activityTypes: [
+          //   ActivityType.knowledge_progression,
+          //   ActivityType.reactive_needs,
+          // ],
         }),
     )
     .query(async (opts) => {
-      const { limit, cursor, activityTypes } = opts.input;
+      const {
+        limit,
+        cursor,
+        // activityTypes
+      } = opts.input;
 
       const {
         user: { id: userId },
@@ -52,7 +55,7 @@ export const interests = router({
             ) as row_num
           FROM "InterestsCluster" i
           JOIN "UserInterests" ui ON i."userInterestsId" = ui.id
-          WHERE ui."userId" = ${userId} AND i."clusterType" = ANY(${activityTypes})
+          WHERE ui."userId" = ${userId} -- AND i."clusterType" = ANY(activityTypes)
         )
         SELECT *
         FROM ranked_interests
