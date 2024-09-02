@@ -16,7 +16,6 @@ from data_pipeline.utils.costs import get_gpu_runtime_cost
 from ...constants.custom_config import RowLimitConfig
 from ...constants.k8s import get_k8s_vllm_config
 from ...partitions import user_partitions_def
-from ...policies.retry_policies import spot_instance_retry_policy
 
 
 @asset(
@@ -26,7 +25,7 @@ from ...policies.retry_policies import spot_instance_retry_policy
         "cluster_summaries": AssetIn(key=["cluster_summaries"]),
     },
     op_tags=get_k8s_vllm_config(1),
-    retry_policy=spot_instance_retry_policy,
+    # retry_policy=spot_instance_retry_policy,
 )
 def summaries_embeddings(
     context: AssetExecutionContext,

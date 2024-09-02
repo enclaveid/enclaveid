@@ -13,7 +13,6 @@ from pydantic import Field
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.policies.retry_policies import spot_instance_retry_policy
 from data_pipeline.resources.llm_inference.gemma27b_resource import (
     Gemma27bResource,
 )
@@ -109,7 +108,7 @@ class ClusterSummariesConfig(RowLimitConfig):
         ),
     },
     op_tags=get_k8s_vllm_config(2),
-    retry_policy=spot_instance_retry_policy,
+    # retry_policy=spot_instance_retry_policy,
 )
 async def cluster_categories(
     context: AssetExecutionContext,

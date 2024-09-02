@@ -13,7 +13,6 @@ from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.k8s import get_k8s_vllm_config
 from ...partitions import user_partitions_def
-from ...policies.retry_policies import spot_instance_retry_policy
 from ...resources.sentence_transfomer_resource import SentenceTransformerResource
 from ...utils.capabilities import gpu_info
 
@@ -41,7 +40,7 @@ class InterestsEmbeddingsConfig(RowLimitConfig):
     io_manager_key="parquet_io_manager",
     ins={"interests": AssetIn(key=["interests"])},
     op_tags=get_k8s_vllm_config(1),
-    retry_policy=spot_instance_retry_policy,
+    # retry_policy=spot_instance_retry_policy,
 )
 def interests_embeddings(
     context: AssetExecutionContext,
