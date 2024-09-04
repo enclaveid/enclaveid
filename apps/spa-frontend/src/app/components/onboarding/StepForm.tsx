@@ -17,11 +17,9 @@ export interface StepFormProps {
 type StepFormAnswers = Record<string, string>;
 
 export function StepForm(props: StepFormProps) {
-  const {
-    onSkip,
-    onFinished,
-    questionnaire: { title, parts },
-  } = props;
+  const { onSkip, onFinished, questionnaire } = props;
+
+  const { title, parts } = questionnaire;
 
   const [currentPart, setCurrentPart] = useState(0);
   const { questions, options, headline } = parts[currentPart];
@@ -59,6 +57,15 @@ export function StepForm(props: StepFormProps) {
   const currentQuestion = questions[currentStep];
 
   const typewriterText = useTypewriterEffect(currentQuestion);
+
+  useEffect(() => {
+    // Reset the state when the questionnaire changes
+    setCurrentPart(0);
+    setCurrentStep(0);
+    setProgress(1);
+    setAnswers({});
+    setSteps('onboarding');
+  }, [questionnaire]);
 
   if (steps === 'onboarding') {
     return (
