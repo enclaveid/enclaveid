@@ -4,7 +4,6 @@ import { router, authenticatedProcedure } from '../../trpc';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { DisplayableInterest, UserMatchOverview } from '@enclaveid/shared';
-import { localGeocoderLookup } from '../../services/localGeocoder';
 import { MAX_PAGINATION_LIMIT } from '../../constants';
 import { replaceUserIds } from '../../services/contentPrivacy';
 import { ActivityType } from '@prisma/client';
@@ -50,10 +49,7 @@ export const matches = router({
           return {
             displayName: otherUser.displayName,
             gender: otherUser.gender,
-            humanReadableGeography: await localGeocoderLookup(
-              otherUser.geographyLat,
-              otherUser.geographyLon,
-            ),
+            humanReadableGeography: otherUser.country,
             usersOverallSimilarityId: userMatch.usersOverallSimilarity.id,
             overallSimilarity:
               userMatch.usersOverallSimilarity.overallSimilarity,

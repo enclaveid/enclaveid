@@ -1,22 +1,13 @@
-import { CommonLayout } from '../components/CommonLayout';
-
 import { Tabs } from '../components/Tabs';
-import { RequireAuth } from '../providers/AuthProvider';
 
 const tabs = [
-  { title: 'Personality', path: '/dashboard/personality' },
-  { title: 'Politics', path: '/dashboard/politics' },
-  { title: 'Career', path: '/dashboard/career' },
+  { title: 'Personality', path: '/dashboard/traits/personality' },
+  { title: 'Politics', path: '/dashboard/traits/politics' },
+  { title: 'Career', path: '/dashboard/traits/career' },
 ];
 
 function DashboardPage() {
-  return (
-    <RequireAuth>
-      <CommonLayout>
-        <Tabs tabs={tabs} />
-      </CommonLayout>
-    </RequireAuth>
-  );
+  return <Tabs tabs={tabs} />;
 }
 
 export { DashboardPage };

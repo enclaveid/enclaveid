@@ -37,7 +37,7 @@ function BigFiveCard({
     const screenWidth = window.innerWidth;
     if (screenWidth > 640) {
       setLink(title);
-      navigate(`/dashboard/personality/trait/${title.toLocaleLowerCase()}`, {
+      navigate(`trait/${title.toLocaleLowerCase()}`, {
         state: { title, data },
       });
     } else {
@@ -50,7 +50,10 @@ function BigFiveCard({
         {isLoading ? (
           <DynamicAreaLoading />
         ) : (
-          <UnavailableChartOverlay reason="no_data" enabled={data === mockData}>
+          <UnavailableChartOverlay
+            enabled={data === mockData}
+            questionnaireStatusKey="isBigFiveComplete"
+          >
             <div className="flex flex-col pt-[18px] sm:pt-[26px] pb-3.5 px-3">
               <div className="sm:px-3 flex flex-col gap-6">
                 {data.map((result, index) => (

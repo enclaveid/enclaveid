@@ -294,3 +294,137 @@ export const userData = [
     matchPercentage: 100,
   },
 ];
+
+export const ownInterests = [
+  {
+    id: 'cm0l43lo100jrwt7suktf1yo9',
+    title: 'Comparative Economic Analysis and Global Development Indicators',
+    activityDates: [
+      '2018-12-19',
+      '2019-01-10',
+      '2023-04-02',
+      '2023-06-11',
+      '2023-08-17',
+    ],
+    description:
+      "The user's journey began with broad economic comparisons, progressed to specific indicators like GDP and Gini coefficient, and culminated in analyzing specific countries and regions.",
+    clusterType: 'knowledge_progression',
+    pipelineClusterId: 451,
+    activityType: 'knowledge_progression',
+    isSensitive: false,
+  },
+  {
+    id: 'cm0l43lo200krxt8tvlug2zp0',
+    title: 'Machine Learning Algorithms and Applications',
+    activityDates: ['2022-03-15', '2022-05-20', '2022-09-01', '2023-01-10'],
+    description:
+      'User explored various machine learning algorithms, starting with basics and progressing to advanced techniques like neural networks and deep learning.',
+    clusterType: 'knowledge_progression',
+    pipelineClusterId: 452,
+    activityType: 'knowledge_progression',
+    isSensitive: false,
+  },
+  {
+    id: 'cm0l43lo300lsyu9uwmvh3aq1',
+    title: 'Classical Literature and Literary Analysis',
+    activityDates: ['2021-09-10', '2022-02-28', '2022-11-15'],
+    description:
+      'Journey through classical literature, beginning with Greek mythology and progressing to Shakespeare and modern literary criticism techniques.',
+    clusterType: 'knowledge_progression',
+    pipelineClusterId: 453,
+    activityType: 'knowledge_progression',
+    isSensitive: false,
+  },
+  {
+    id: 'cm0l43lo400mtzv0vxnwi4br2',
+    title: 'Astrophysics and Cosmology Concepts',
+    activityDates: ['2020-07-22', '2021-01-05', '2021-08-30', '2022-04-17'],
+    description:
+      'Exploration of astrophysics, starting with basic solar system concepts and advancing to complex theories like dark matter and string theory.',
+    clusterType: 'knowledge_progression',
+    pipelineClusterId: 454,
+    activityType: 'knowledge_progression',
+    isSensitive: false,
+  },
+  {
+    id: 'cm0l43lo500nu0w1wyoxj5cs3',
+    title: 'Ancient Civilizations and Archaeology',
+    activityDates: ['2019-11-03', '2020-06-18', '2021-03-25'],
+    description:
+      'Study of ancient civilizations, progressing from Egyptian and Greek history to modern archaeological techniques and recent discoveries.',
+    clusterType: 'knowledge_progression',
+    pipelineClusterId: 455,
+    activityType: 'knowledge_progression',
+    isSensitive: false,
+  },
+  {
+    id: 'cm0l43lo600ov1x2xzpyk6dt4',
+    title: 'Environmental Science and Climate Change',
+    activityDates: ['2022-01-07', '2022-07-19', '2023-02-28', '2023-09-10'],
+    description:
+      'Journey through environmental science topics, from basic ecology to complex climate models and sustainable development strategies.',
+    clusterType: 'knowledge_progression',
+    pipelineClusterId: 456,
+    activityType: 'knowledge_progression',
+    isSensitive: false,
+  },
+];
+
+export const userMatches = [
+  {
+    displayName: 'sminem',
+    gender: 'Male',
+    humanReadableGeography: 'Russia',
+    usersOverallSimilarityId: 'cm0le5qvi015aoz6brqvst5k5',
+    overallSimilarity: 0.66,
+  },
+  {
+    displayName: 'emmaS22',
+    gender: 'Female',
+    humanReadableGeography: 'France',
+    usersOverallSimilarityId: 'fn2mp7rwj128bpz9csxwuv6l7',
+    overallSimilarity: 0.78,
+  },
+  {
+    displayName: 'alex_j',
+    gender: 'Non-binary',
+    humanReadableGeography: 'Canada',
+    usersOverallSimilarityId: 'ht3nq8sxk239cqa0dtyxvw7m8',
+    overallSimilarity: 0.59,
+  },
+  {
+    displayName: 'sarah85',
+    gender: 'Female',
+    humanReadableGeography: 'Australia',
+    usersOverallSimilarityId: 'jp4or9tym340drb1euzywx8n9',
+    overallSimilarity: 0.72,
+  },
+  {
+    displayName: 'mike_smith',
+    gender: 'Male',
+    humanReadableGeography: 'United Kingdom',
+    usersOverallSimilarityId: 'kq5ps0uzn451esc2fvaxwy9o0',
+    overallSimilarity: 0.81,
+  },
+  {
+    displayName: 'lisa_wong',
+    gender: 'Female',
+    humanReadableGeography: 'Singapore',
+    usersOverallSimilarityId: 'lr6qt1vao562ftd3gwbyxz0p1',
+    overallSimilarity: 0.68,
+  },
+  {
+    displayName: 'carlos123',
+    gender: 'Male',
+    humanReadableGeography: 'Brazil',
+    usersOverallSimilarityId: 'ms7ru2wbp673gue4hxczya1q2',
+    overallSimilarity: 0.75,
+  },
+  {
+    displayName: 'anna_k',
+    gender: 'Female',
+    humanReadableGeography: 'Germany',
+    usersOverallSimilarityId: 'nt8sv3xcq784hvf5iydazb2r3',
+    overallSimilarity: 0.63,
+  },
+];

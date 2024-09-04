@@ -31,7 +31,7 @@ function SixteenPFCard({
     const screenWidth = window.innerWidth;
     if (screenWidth > 640) {
       setLink(title);
-      navigate(`/dashboard/personality/trait2/${title.toLocaleLowerCase()}`, {
+      navigate(`trait2/${title.toLocaleLowerCase()}`, {
         state: { title, data },
       });
     } else {
@@ -42,7 +42,10 @@ function SixteenPFCard({
   return (
     <>
       <DashboardCardLayout withTitle title={title}>
-        <UnavailableChartOverlay reason="not_implemented" enabled={true}>
+        <UnavailableChartOverlay
+          reasonOverride="not_implemented"
+          enabled={true}
+        >
           <div className="flex flex-col px-3 pb-[15px] pt-[52px]">
             <div className="pl-[15px] pr-3 flex flex-col gap-5">
               {data.map((result, index) => (

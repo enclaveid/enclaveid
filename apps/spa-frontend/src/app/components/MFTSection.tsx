@@ -25,7 +25,7 @@ export function MFTSection({ data = mockData, isLoading }: MFTSectionProps) {
     const screenWidth = window.innerWidth;
     if (screenWidth > 640) {
       setLink('MFT');
-      navigate(`/dashboard/politics/mft`, {
+      navigate(`mft`, {
         state: { circles, description },
       });
     } else {
@@ -40,7 +40,10 @@ export function MFTSection({ data = mockData, isLoading }: MFTSectionProps) {
         <div className="flex flex-col gap-2.5 items-center">
           <h2 className="chart-title">Moral Foundations Theory</h2>
 
-          <UnavailableChartOverlay reason="no_data" enabled={data === mockData}>
+          <UnavailableChartOverlay
+            enabled={data === mockData}
+            questionnaireStatusKey="isMoralFoundationsComplete"
+          >
             <MFTChart {...data} handleClick={handleClick} />
           </UnavailableChartOverlay>
         </div>

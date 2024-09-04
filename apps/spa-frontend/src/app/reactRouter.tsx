@@ -1,6 +1,5 @@
 import { AuthenticationPage } from './pages/AuthenticationPage';
 import { Navigate, Outlet, createBrowserRouter } from 'react-router-dom';
-import { DashboardPage } from './pages/DashboardPage';
 import { PersonalityContent } from './components/PersonalityContent';
 import { TraitCardDetails } from './components/TraitCardDetails';
 import { MbtiCardDetails } from './components/MbtiCardDetails';
@@ -31,6 +30,8 @@ import { EmailConfirmationPage } from './pages/onboarding/EmailConfirmationPage'
 import { StreamChatProvider } from './providers/StreamChatProvider';
 import { OnboardingSkipsProvider } from './providers/OnboardingSkipsProvider';
 import { PoliticsContainer } from './components/containers/PoliticsContainer';
+import { Tabs } from './components/Tabs';
+import { OnboardingStatusProvider } from './providers/OnboardingStatusProvider';
 
 export const reactRouter = createBrowserRouter([
   {
@@ -89,84 +90,106 @@ export const reactRouter = createBrowserRouter([
   },
   {
     path: '/dashboard',
-    element: <DashboardPage />,
-    children: [
-      {
-        index: true,
-        element: <Navigate to="/dashboard/personality" replace />,
-      },
-      {
-        path: 'personality',
-        element: (
-          <PersonalityContainer>
-            <PersonalityContent />
-          </PersonalityContainer>
-        ),
-      },
-      { path: 'personality/trait/:title', element: <TraitCardDetails /> },
-      { path: 'personality/mbti/:title', element: <MbtiCardDetails /> },
-      { path: 'personality/trait2/:title', element: <SixteenPFCardDetails /> },
-      {
-        path: 'politics',
-        element: (
-          <PoliticsContainer>
-            <PoliticsContent />
-          </PoliticsContainer>
-        ),
-      },
-      { path: 'politics/compass', element: <CompassDetails /> },
-      { path: 'politics/mft', element: <MFTDetails /> },
-      { path: 'career', element: <CareerContent /> },
-      { path: 'career/radar', element: <RadarChartDetails /> },
-    ],
-  },
-  {
-    path: '/interests',
     element: (
-      <CommonLayout>
-        <Outlet />
-      </CommonLayout>
+      <RequireAuth>
+        <OnboardingStatusProvider>
+          <CommonLayout>
+            <Outlet />
+          </CommonLayout>
+        </OnboardingStatusProvider>
+      </RequireAuth>
     ),
     children: [
       {
         index: true,
-        element: <OwnInterests />,
-      },
-    ],
-  },
-  {
-    path: '/socials',
-    element: (
-      <CommonLayout>
-        <Outlet />
-      </CommonLayout>
-    ),
-    children: [
-      {
-        index: true,
-        element: <SocialPage />,
+        element: <Navigate to="traits" />,
       },
       {
-        path: ':profile',
-        element: <ProfilePage />,
+        path: 'traits',
+        element: (
+          <Tabs
+            tabs={[
+              { title: 'Personality', path: '/dashboard/traits/personality' },
+              { title: 'Politics', path: '/dashboard/traits/politics' },
+              { title: 'Career', path: '/dashboard/traits/career' },
+            ]}
+          />
+        ),
         children: [
           {
-            path: '/socials/:profile/personality',
-            element: <PersonalityContent />,
+            index: true,
+            element: <Navigate to="personality" />,
           },
-          { path: '/socials/:profile/politics', element: <PoliticsContent /> },
-          { path: '/socials/:profile/career', element: <CareerContent /> },
+          {
+            path: 'personality',
+            element: (
+              <PersonalityContainer>
+                <PersonalityContent />
+              </PersonalityContainer>
+            ),
+          },
+          { path: 'personality/trait/:title', element: <TraitCardDetails /> },
+          { path: 'personality/mbti/:title', element: <MbtiCardDetails /> },
+          {
+            path: 'personality/trait2/:title',
+            element: <SixteenPFCardDetails />,
+          },
+          {
+            path: 'politics',
+            element: (
+              <PoliticsContainer>
+                <PoliticsContent />
+              </PoliticsContainer>
+            ),
+          },
+          { path: 'politics/compass', element: <CompassDetails /> },
+          { path: 'politics/mft', element: <MFTDetails /> },
+          { path: 'career', element: <CareerContent /> },
+          { path: 'career/radar', element: <RadarChartDetails /> },
         ],
       },
+      {
+        path: 'interests',
+        children: [
+          {
+            index: true,
+            element: <OwnInterests />,
+          },
+        ],
+      },
+      {
+        path: 'socials',
+        children: [
+          {
+            index: true,
+            element: <SocialPage />,
+          },
+          {
+            path: ':profile',
+            element: <ProfilePage />,
+            children: [
+              {
+                path: 'personality',
+                element: <PersonalityContent />,
+              },
+              {
+                path: 'politics',
+                element: <PoliticsContent />,
+              },
+              { path: 'career', element: <CareerContent /> },
+            ],
+          },
+        ],
+      },
+      {
+        path: 'chat',
+        element: (
+          <StreamChatProvider>
+            <StreamChatPage />
+          </StreamChatProvider>
+        ),
+      },
     ],
-  },
-  {
-    path: '/chat',
-    element: (
-      <StreamChatProvider>
-        <StreamChatPage />
-      </StreamChatProvider>
-    ),
   },
   {
     path: '/account-settings',

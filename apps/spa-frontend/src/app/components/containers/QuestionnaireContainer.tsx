@@ -16,7 +16,7 @@ export function QuestionnaireContainer({
 
   const onSkipAll = useCallback(() => {
     skips['/onboarding/questionnaire'].onSkip();
-    navigate('/dashboard/personality', { replace: true });
+    navigate('/dashboard', { replace: true });
   }, [skips, navigate]);
 
   const { data: onboardingStatus } =

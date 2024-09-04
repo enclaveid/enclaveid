@@ -10,24 +10,24 @@ export const sidebarItems = {
     {
       icon: UsersIcon,
       text: 'Find similar users',
-      href: '/socials',
+      href: '/dashboard/socials',
     },
     {
       icon: ChatBubbleLeftRightIcon,
       text: 'Messages',
-      href: '/chat',
+      href: '/dashboard/chat',
     },
   ],
   'Your profile': [
     {
       icon: UserCircleIcon,
       text: 'Traits Dashboard',
-      href: '/dashboard',
+      href: '/dashboard/traits',
     },
     {
       icon: PuzzlePieceIcon,
       text: 'Interests',
-      href: '/interests',
+      href: '/dashboard/interests',
     },
   ],
 };

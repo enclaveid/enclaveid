@@ -9,7 +9,9 @@ export const onboardingStatus = router({
       user: { id: userId },
     } = ctx as AppContext;
 
-    return await getUserOnboardingStatus(userId);
+    const result = await getUserOnboardingStatus(userId);
+
+    return result;
   }),
   getEmailConfirmationStatus: authenticatedProcedure.query(async ({ ctx }) => {
     const {

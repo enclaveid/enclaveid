@@ -26,7 +26,7 @@ export function CompassSection({
     const screenWidth = window.innerWidth;
     if (screenWidth > 640) {
       setLink('Compass');
-      navigate(`/dashboard/politics/compass`, {
+      navigate(`compass`, {
         state: { compassChartData: data },
       });
     } else {
@@ -41,7 +41,10 @@ export function CompassSection({
         {isLoading ? (
           <DynamicAreaLoading />
         ) : (
-          <UnavailableChartOverlay reason="no_data" enabled={data === mockData}>
+          <UnavailableChartOverlay
+            enabled={data === mockData}
+            questionnaireStatusKey="isMoralFoundationsComplete"
+          >
             <CompassChart {...data} handleClick={handleClick} />
           </UnavailableChartOverlay>
         )}

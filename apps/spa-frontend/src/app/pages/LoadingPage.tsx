@@ -1,10 +1,15 @@
+import { backgroundPattern } from '../utils/backgroundPattern';
+
 interface LoadingPageProps {
   customMessage?: string;
 }
 
 export function LoadingPage(props: LoadingPageProps) {
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
+    <div
+      className="flex items-center justify-center h-screen"
+      style={backgroundPattern}
+    >
       <div className="flex items-center space-x-4">
         <svg
           className="w-8 h-8 animate-spin"

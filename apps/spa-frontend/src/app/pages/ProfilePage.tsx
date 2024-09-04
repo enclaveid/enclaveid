@@ -12,10 +12,10 @@ import { NonLatentCard } from '../components/NonLatentCard';
 import { Tabs } from '../components/Tabs';
 
 const tabs = [
-  { title: 'Interests', path: '/socials/:title/interests' },
-  { title: 'Personality', path: '/socials/:title/personality' },
-  { title: 'Politics', path: '/socials/:title/politics' },
-  { title: 'Career', path: '/socials/:title/career' },
+  { title: 'Interests', path: '/dashboard/socials/:title/interests' },
+  { title: 'Personality', path: '/dashboard/socials/:title/personality' },
+  { title: 'Politics', path: '/dashboard/socials/:title/politics' },
+  { title: 'Career', path: '/dashboard/socials/:title/career' },
 ];
 
 function ProfilePage() {
@@ -33,7 +33,7 @@ function ProfilePage() {
 
   const userTabs = tabs.map((tab) => ({
     title: tab.title,
-    path: `/socials/${usernamePath}/${tab.title.toLowerCase()}`,
+    path: `/dashboard/socials/${usernamePath}/${tab.title.toLowerCase()}`,
   }));
 
   function formatUsernameFromPath(pathname: string): string {

@@ -5,3 +5,4 @@ type RouterInput = inferRouterInputs<AppRouter>;
 type RouterOutput = inferRouterOutputs<AppRouter>;
 
 export type OnboardingStatus = RouterOutput['private']['getOnboardingStatus'];
+export type OnboardingStatusKey = keyof OnboardingStatus;

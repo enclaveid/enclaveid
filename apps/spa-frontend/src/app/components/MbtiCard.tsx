@@ -37,7 +37,7 @@ function MbtiCard({
     const screenWidth = window.innerWidth;
     if (screenWidth > 640) {
       setLink(label);
-      navigate(`/dashboard/personality/mbti/${label.toLocaleLowerCase()}`, {
+      navigate(`mbti/${label.toLocaleLowerCase()}`, {
         state: { data, label },
       });
     } else {
@@ -50,7 +50,10 @@ function MbtiCard({
         {isLoading ? (
           <DynamicAreaLoading />
         ) : (
-          <UnavailableChartOverlay reason="no_data" enabled={data === mockData}>
+          <UnavailableChartOverlay
+            enabled={data === mockData}
+            questionnaireStatusKey="isBigFiveComplete"
+          >
             <div className="flex flex-col gap-4 sm:gap-[5px] px-4 sm:px-3 pt-8 sm:pt-[9px] pb-[15px] ">
               <h1 className="text-[64px] leading-[75px] text-[#30A78A] text-center">
                 {label}

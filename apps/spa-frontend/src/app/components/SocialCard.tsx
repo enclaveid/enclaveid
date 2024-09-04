@@ -26,7 +26,7 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
 
   return (
     <Link
-      to={`/socials/${formattedLink(displayName)}`}
+      to={`/dashboard/socials/${formattedLink(displayName)}`}
       state={{ userMatchOverview }}
       className="p-6 flex items-center gap-4 border border-[#E5E8EE] rounded-3xl"
     >

@@ -12,7 +12,7 @@ type TabsProps = {
 function Tabs({ tabs }: TabsProps) {
   const location = useLocation();
   const pathSegments = location.pathname.split('/').filter(Boolean);
-  const showTabs = pathSegments.length <= 2;
+  const showTabs = pathSegments.length <= 3;
 
   return (
     <div className="sm:px-6 px-0">
