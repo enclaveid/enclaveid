@@ -1,6 +1,6 @@
 import { Meta, StoryObj } from '@storybook/react';
 import { BigFiveCard } from './BigFiveCard';
-import { bigFiveCard } from './mock-data';
+import { bigFiveCard } from '../utils/mock-data';
 import { withRouter } from 'storybook-addon-remix-react-router';
 import { BreadcrumbProvider } from '../providers/BreadcrumbContext';
 

@@ -6,7 +6,7 @@ import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useState } from 'react';
 import { CustomDrawer } from './CustomDrawer';
 import { UnavailableChartOverlay } from './UnavailableChartOverlay';
-import { traitCard2 } from './mock-data';
+import { traitCard2 } from '../utils/mock-data';
 
 const mockData = traitCard2;
 interface DataProps {

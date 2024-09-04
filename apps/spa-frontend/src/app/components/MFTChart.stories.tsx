@@ -1,6 +1,6 @@
 import { Meta, StoryObj } from '@storybook/react';
 import { MFTChart } from './MFTChart';
-import { MFTChartData } from './mock-data';
+import { MFTChartData } from '../utils/mock-data';
 
 export default {
   title: 'Components/MFTChart',

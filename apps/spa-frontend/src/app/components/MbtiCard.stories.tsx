@@ -2,7 +2,7 @@ import { Meta, StoryObj } from '@storybook/react';
 import { MbtiCard } from './MbtiCard';
 import { withRouter } from 'storybook-addon-remix-react-router';
 import { BreadcrumbProvider } from '../providers/BreadcrumbContext';
-import { mbtiCard } from './mock-data';
+import { mbtiCard } from '../utils/mock-data';
 
 export default {
   title: 'Components/MbtiCard',

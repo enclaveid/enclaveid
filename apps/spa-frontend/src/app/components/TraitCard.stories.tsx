@@ -1,6 +1,6 @@
 import { Meta, StoryObj } from '@storybook/react';
 import { TraitCard } from './TraitCard';
-import { bigFiveCard } from './mock-data';
+import { bigFiveCard } from '../utils/mock-data';
 
 export default {
   title: 'Components/TraitCard',

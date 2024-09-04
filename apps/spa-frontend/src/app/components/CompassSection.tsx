@@ -2,7 +2,7 @@ import { useState } from 'react';
 import CompassChart from './CompassChart';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useNavigate } from 'react-router-dom';
-import { compassChartData } from './mock-data';
+import { compassChartData } from '../utils/mock-data';
 import { CustomDrawer } from './CustomDrawer';
 import { DynamicAreaLoading } from './DynamicAreaLoading';
 import { UnavailableChartOverlay } from './UnavailableChartOverlay';

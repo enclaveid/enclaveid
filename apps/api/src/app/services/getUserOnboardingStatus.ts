@@ -34,11 +34,15 @@ export async function getUserOnboardingStatus(userId: string) {
   // Check if data is uploaded
   const isUserDataUploaded = await getIsUserDataUploaded(userId);
 
+  // Check if data has finished processing
+  const isDataProcessed = !!user?.userInterests;
+
   return {
     isBasicProfileComplete,
     isPurposesComplete,
     isBigFiveComplete,
     isMoralFoundationsComplete,
     isUserDataUploaded,
+    isDataProcessed,
   };
 }

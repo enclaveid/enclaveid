@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from '@storybook/react';
-import { traitCard2 } from './mock-data';
+import { traitCard2 } from '../utils/mock-data';
 import { withRouter } from 'storybook-addon-remix-react-router';
 import { BreadcrumbProvider } from '../providers/BreadcrumbContext';
 import { SixteenPFCard } from './SixteenPFCard';

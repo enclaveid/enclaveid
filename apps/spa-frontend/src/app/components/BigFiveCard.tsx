@@ -9,7 +9,7 @@ import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { CustomDrawer } from './CustomDrawer';
 import { DynamicAreaLoading } from './DynamicAreaLoading';
 import { UnavailableChartOverlay } from './UnavailableChartOverlay';
-import { bigFiveCard } from './mock-data';
+import { bigFiveCard } from '../utils/mock-data';
 
 const mockData = bigFiveCard.data;
 

@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { CustomDrawer } from './CustomDrawer';
 import { DynamicAreaLoading } from './DynamicAreaLoading';
-import { mbtiCard } from './mock-data';
+import { mbtiCard } from '../utils/mock-data';
 import { UnavailableChartOverlay } from './UnavailableChartOverlay';
 
 const mockData = mbtiCard.data;

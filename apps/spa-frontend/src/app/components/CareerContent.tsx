@@ -3,7 +3,7 @@ import { Button } from './atoms/Button';
 
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useState } from 'react';
-import { radarChart } from './mock-data';
+import { radarChart } from '../utils/mock-data';
 import { RadarChart, RadarChartProps } from './RadarChart';
 import { CustomDrawer } from './CustomDrawer';
 import { UnavailableChartOverlay } from './UnavailableChartOverlay';

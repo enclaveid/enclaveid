@@ -1,5 +1,5 @@
 import { MFTChart } from './MFTChart';
-import { MFTChartData } from './mock-data';
+import { MFTChartData } from '../utils/mock-data';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
