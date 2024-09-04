@@ -3,6 +3,7 @@ import { trpc } from '../utils/trpc';
 import { NonLatentCard } from './NonLatentCard';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { DisplayableInterest } from '@enclaveid/shared';
+import { DynamicAreaLoading } from './DynamicAreaLoading';
 
 export function OwnInterests() {
   const interestsQuery = trpc.private.getUserInterests.useInfiniteQuery(
@@ -23,7 +24,7 @@ export function OwnInterests() {
 
   return (
     <VirtuosoGrid
-      style={{ height: '100vh', width: '100%' }}
+      style={{ height: '120vh', width: '100%' }}
       totalCount={allInterests.length}
       overscan={200}
       endReached={fetchMore}
@@ -42,6 +43,11 @@ export function OwnInterests() {
             className="flex flex-row flex-wrap gap-6 px-6"
           />
         )),
+        Footer: () => (
+          <div className="flex gap-6 p-6 w-full">
+            <DynamicAreaLoading />
+          </div>
+        ),
       }}
       listClassName="flex flex-row flex-wrap gap-6 px-6"
     />

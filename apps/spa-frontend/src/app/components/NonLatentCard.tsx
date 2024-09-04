@@ -37,7 +37,7 @@ function NonLatentCard({
   return (
     <article
       className={classNames(
-        'pt-5 pb-[18px] pl-[13px] pr-[11px] rounded-xl  border  flex flex-col justify-between xl:max-w-[366px] gap-2.5',
+        'pt-5 pb-[18px] pl-[13px] pr-[11px] rounded-xl  border  flex flex-col justify-between min-h-[280px] max-h-[280px] max-w-[366px] gap-2.5',
         isViewed
           ? 'border-[#97CDC0] bg-[#F8FCFB]'
           : 'border-[#E5E8EE] bg-white',

@@ -30,11 +30,7 @@ export default fp(async (fastify: FastifyInstance) => {
 
     let df: pl.DataFrame;
     try {
-      df = pl.readParquet(
-        process.env.NODE_ENV === 'development'
-          ? `${process.cwd()}/apps/data-pipeline/data/${blobName}`
-          : await downloadPipelineResults(blobName),
-      );
+      df = pl.readParquet(await downloadPipelineResults(blobName));
     } catch (err) {
       console.error(err);
       reply
@@ -53,6 +49,7 @@ export default fp(async (fastify: FastifyInstance) => {
       return;
     }
 
+    let emailError;
     try {
       await sendEmail(
         user.email,
@@ -66,11 +63,12 @@ export default fp(async (fastify: FastifyInstance) => {
       </html>`,
       );
     } catch (err) {
+      emailError = err;
       console.error(err);
-      reply.status(500).send({ error: 'Error sending email: ' + err.message });
-      return;
     }
 
-    reply.send({ success: true });
+    reply.send(
+      emailError ? { success: true, error: emailError } : { success: true },
+    );
   });
 });
