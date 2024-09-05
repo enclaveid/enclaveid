@@ -19,6 +19,8 @@ def outputs_sensor(context: SensorEvaluationContext) -> SensorResult | SkipReaso
 
     current_state: set = ast.literal_eval(context.cursor) if context.cursor else set()  # type: ignore
     asset_folder: UPath = DAGSTER_STORAGE_BUCKET / "results_for_api"
+
+    asset_folder.fs.invalidate_cache()
     all_partitions = {d.stem for d in asset_folder.iterdir() if d.is_file()}
 
     partitions_to_add = all_partitions - current_state

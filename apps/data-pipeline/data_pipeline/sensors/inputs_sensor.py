@@ -26,6 +26,8 @@ def inputs_sensor(context: SensorEvaluationContext) -> SensorResult | SkipReason
     that this will also remove partitions if a user's folder has been deleted."""
 
     current_state: set = ast.literal_eval(context.cursor) if context.cursor else set()  # type: ignore
+
+    PRODUCTION_STORAGE_BUCKET.fs.invalidate_cache()
     all_partitions = {d.name for d in PRODUCTION_STORAGE_BUCKET.iterdir() if d.is_dir()}
 
     partitions_to_add = all_partitions - current_state
