@@ -5,11 +5,11 @@ import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { RequireAuth } from '../providers/AuthProvider';
 import { DisplayableInterest, UserMatchOverview } from '@enclaveid/shared';
 import { trpc } from '../utils/trpc';
-import { LoadingCard } from '../components/LoadingCard';
 import React from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { NonLatentCard } from '../components/NonLatentCard';
 import { Tabs } from '../components/Tabs';
+import { LoadingPage } from './LoadingPage';
 
 const tabs = [
   { title: 'Interests', path: '/dashboard/socials/:title/interests' },
@@ -81,11 +81,7 @@ function ProfilePage() {
         <SocialCard userMatchOverview={userMatchOverview} />
       </div>
       {matchDetailsQuery.isLoading ? (
-        <>
-          <LoadingCard />
-          <LoadingCard />
-          <LoadingCard />
-        </>
+        <LoadingPage />
       ) : (
         <>
           <Tabs tabs={userTabs} />
@@ -95,7 +91,9 @@ function ProfilePage() {
             style={{ height: '100vh', width: '100%' }}
             totalCount={allInterests.length}
             overscan={200}
-            endReached={fetchMore}
+            endReached={() => {
+              fetchMore();
+            }}
             itemContent={(index) => {
               return (
                 <NonLatentCard

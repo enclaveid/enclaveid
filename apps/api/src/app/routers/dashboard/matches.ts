@@ -147,49 +147,47 @@ export const matches = router({
       );
 
       const interestsClustersSimilarities =
-        await prisma.interestsClustersSimilarity
-          .findMany({
-            take: limit + 1, // get an extra item at the end which we'll use as next cursor
-            where: {
-              // Matches without summaries or titles are below the similarity and relevance thresholds
-              commonSummary: {
-                not: null,
-              },
-              commonTitle: {
-                not: null,
-              },
+        await prisma.interestsClustersSimilarity.findMany({
+          take: limit + 1, // get an extra item at the end which we'll use as next cursor
+          where: {
+            // Matches without summaries or titles are below the similarity and relevance thresholds
+            commonSummary: {
+              not: null,
             },
-            cursor: cursor ? { id: cursor } : undefined,
-            orderBy: [
-              { averageSocialLikelihood: 'desc' },
-              { cosineSimilarity: 'desc' },
+            commonTitle: {
+              not: null,
+            },
+            // get only the interestsClustersSimilarities that have matches for both users
+            AND: [
+              {
+                interestsClusterMatches: {
+                  some: {
+                    interestsClusterId: { in: currentInterestsIds },
+                  },
+                },
+              },
+              {
+                interestsClusterMatches: {
+                  some: {
+                    interestsClusterId: { in: otherInterestsIds },
+                  },
+                },
+              },
             ],
-            include: {
-              interestsClusterMatches: {
-                where: {
-                  OR: [
-                    {
-                      interestsClusterId: {
-                        in: currentInterestsIds,
-                      },
-                    },
-                    {
-                      interestsClusterId: {
-                        in: otherInterestsIds,
-                      },
-                    },
-                  ],
-                },
-                include: {
-                  interestsCluster: true,
-                },
+          },
+          cursor: cursor ? { id: cursor } : undefined,
+          orderBy: [
+            { averageSocialLikelihood: 'desc' },
+            { cosineSimilarity: 'desc' },
+          ],
+          include: {
+            interestsClusterMatches: {
+              include: {
+                interestsCluster: true,
               },
             },
-          })
-          .then((r) => {
-            // Filter out matches that don't have both users
-            return r.filter((r) => r.interestsClusterMatches.length == 2);
-          });
+          },
+        });
 
       const matchingCurrentUserInterests =
         interestsClustersSimilarities.flatMap((ics) => {
