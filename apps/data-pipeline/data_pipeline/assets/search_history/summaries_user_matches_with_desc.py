@@ -75,18 +75,40 @@ async def summaries_user_matches_with_desc(
     if summaries_user_matches.is_empty():
         return None
 
-    total_matches = len(summaries_user_matches)
-    sample_n = min(config.max_summaries_per_user, total_matches)
-    filtered_summaries_user_matches = summaries_user_matches.filter(
-        (pl.col("cosine_similarity") >= config.similarity_threshold)
-        & (
-            (pl.col("social_likelihoods").apply(lambda x: sum(x) / 2))
-            >= config.social_likelihood_threshold
+    # Sort by group keys
+    summaries_user_matches = summaries_user_matches.with_columns(
+        avg_social_likelihood=pl.col("social_likelihoods").apply(lambda x: sum(x) / 2),
+    ).sort(
+        by=["other_user_id", "cosine_similarity", "avg_social_likelihood"],
+        descending=True,
+    )
+
+    # Mask summaries that are too dissimilar or too low in social likelihood
+    filtered_summaries_user_matches = summaries_user_matches.with_columns(
+        mask1=(
+            (pl.col("cosine_similarity") < config.similarity_threshold)
+            | (pl.col("avg_social_likelihood") < config.social_likelihood_threshold)
+        ),
+        # Mask summaries that are over the max number of summaries per user
+    ).with_columns(
+        mask2=(
+            pl.int_range(pl.len()).over(["other_user_id", "mask1"])
+            >= config.max_summaries_per_user
         )
-    ).sample(n=sample_n)
+    )
 
     context.log.info(
-        f"Summarizing {filtered_summaries_user_matches.height} matches out of {total_matches}."
+        f"""
+        Summarizing {
+            filtered_summaries_user_matches.filter(
+                pl.col("mask1").not_() & pl.col("mask2").not_()
+            )
+            .group_by("other_user_id")
+            .agg(pl.count())
+            .to_dicts()
+        } matches out of {
+          summaries_user_matches.group_by("other_user_id").agg(pl.count()).to_dicts()
+        }."""
     )
 
     means_of_comparison = f"common_summary_prompt_{config.means_of_comparison}"
@@ -97,7 +119,7 @@ async def summaries_user_matches_with_desc(
                 lambda x: [
                     f"{config.similarities_summarization_prompt}\n{x[means_of_comparison]}"
                 ]
-                if not x["mask"]
+                if not x["mask1"] and not x["mask2"]
                 else [],
                 filtered_summaries_user_matches.to_dicts(),
             )
