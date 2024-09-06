@@ -11,7 +11,7 @@ function SocialPage() {
   return userMatches.isLoading ? (
     <LoadingPage />
   ) : (
-    <UnavailableChartOverlay enabled={data === mockData}>
+    <UnavailableChartOverlay>
       <div className="flex flex-col py-3.5 px-6 gap-3.5">
         {/* <SocialFilter
             selectedFilters={selectedFilters}

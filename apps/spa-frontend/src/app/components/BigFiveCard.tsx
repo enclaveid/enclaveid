@@ -51,7 +51,6 @@ function BigFiveCard({
           <DynamicAreaLoading />
         ) : (
           <UnavailableChartOverlay
-            enabled={data === mockData}
             questionnaireStatusKey="isBigFiveComplete"
           >
             <div className="flex flex-col pt-[18px] sm:pt-[26px] pb-3.5 px-3">

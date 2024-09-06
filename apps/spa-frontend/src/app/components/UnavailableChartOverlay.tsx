@@ -23,12 +23,12 @@ const labels: Record<UnavailableChartOverlayReason, string> = {
 };
 
 export function UnavailableChartOverlay({
-  enabled,
+  enabledOverride,
   questionnaireStatusKey,
   reasonOverride,
   children,
 }: {
-  enabled?: boolean;
+  enabledOverride?: boolean;
   questionnaireStatusKey?: OnboardingStatusKey;
   children: React.ReactNode;
   reasonOverride?: UnavailableChartOverlayReason;
@@ -39,28 +39,38 @@ export function UnavailableChartOverlay({
     useState<UnavailableChartOverlayReason>(reasonOverride);
 
   const { onboardingStatus } = useOnboardingStatus();
+  const [enabled, setEnabled] = useState<boolean>(true);
 
   useEffect(() => {
     if (reasonOverride) {
       setReason(reasonOverride);
     } else {
       if (onboardingStatus) {
-        if (!onboardingStatus.isUserDataUploaded?.google) {
-          setReason('no_data');
-        } else if (!onboardingStatus.isDataProcessed) {
-          setReason('processing');
-          // This is optional only for those reports that require a questionnaire
-        } else if (
+        if (
           questionnaireStatusKey &&
           !onboardingStatus[questionnaireStatusKey]
         ) {
           setReason('no_questionnaire');
+        } else if (!onboardingStatus.isUserDataUploaded?.google) {
+          setReason('no_data');
+        } else if (!onboardingStatus.isDataProcessed) {
+          setReason('processing');
+          // This is optional only for those reports that require a questionnaire
         } else {
-          setReason('not_implemented');
+          if (enabledOverride !== undefined) {
+            setEnabled(enabledOverride);
+          } else {
+            setEnabled(false);
+          }
         }
       }
     }
-  }, [onboardingStatus, reasonOverride, questionnaireStatusKey]);
+  }, [
+    onboardingStatus,
+    reasonOverride,
+    questionnaireStatusKey,
+    enabledOverride,
+  ]);
 
   const callToActionElement = useMemo(() => {
     switch (reason) {

@@ -38,10 +38,7 @@ export function CompassSection({
         {isLoading ? (
           <DynamicAreaLoading />
         ) : (
-          <UnavailableChartOverlay
-            enabled={data === mockData}
-            questionnaireStatusKey="isMoralFoundationsComplete"
-          >
+          <UnavailableChartOverlay questionnaireStatusKey="isMoralFoundationsComplete">
             <CompassChart {...data} handleClick={handleClick} />
           </UnavailableChartOverlay>
         )}

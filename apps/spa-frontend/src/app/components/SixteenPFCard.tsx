@@ -44,7 +44,7 @@ function SixteenPFCard({
       <DashboardCardLayout withTitle title={title}>
         <UnavailableChartOverlay
           reasonOverride="not_implemented"
-          enabled={true}
+          enabledOverride={true}
         >
           <div className="flex flex-col px-3 pb-[15px] pt-[52px]">
             <div className="pl-[15px] pr-3 flex flex-col gap-5">

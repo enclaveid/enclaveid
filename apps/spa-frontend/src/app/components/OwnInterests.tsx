@@ -34,7 +34,7 @@ export function OwnInterests() {
   return interestsQuery.isLoading ? (
     <LoadingPage />
   ) : (
-    <UnavailableChartOverlay enabled={allInterests === mockData}>
+    <UnavailableChartOverlay>
       <div className="flex justify-start mb-4 px-6">
         <SortDropdown currentSort={currentSort} onSortChange={setCurrentSort} />
       </div>

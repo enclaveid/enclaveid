@@ -37,10 +37,7 @@ export function MFTSection({ data = mockData, isLoading }: MFTSectionProps) {
         <div className="flex flex-col gap-2.5 items-center">
           <h2 className="chart-title">Moral Foundations</h2>
 
-          <UnavailableChartOverlay
-            enabled={data === mockData}
-            questionnaireStatusKey="isMoralFoundationsComplete"
-          >
+          <UnavailableChartOverlay questionnaireStatusKey="isMoralFoundationsComplete">
             <MFTChart {...data} handleClick={handleClick} />
           </UnavailableChartOverlay>
         </div>

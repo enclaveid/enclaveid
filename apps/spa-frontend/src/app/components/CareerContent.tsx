@@ -49,7 +49,7 @@ function CareerContent() {
         <h2 className="chart-title">RIASEC</h2>
         <UnavailableChartOverlay
           reasonOverride="not_implemented"
-          enabled={true}
+          enabledOverride={true}
         >
           <div className="border border-[#E5E8EE] flex flex-col gap-10 items-center justify-center rounded-3xl w-full pt-[30px] pb-3.5 px-3">
             <RadarChart values={radarChart.values} />
