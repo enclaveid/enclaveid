@@ -50,7 +50,6 @@
     },
     "build": {
       "executor": "@nxlv/python:build",
-      "dependsOn": ["export"],
       "outputs": ["{projectRoot}/dist/*.whl"],
       "options": {
         "outputPath": "{projectRoot}/dist",

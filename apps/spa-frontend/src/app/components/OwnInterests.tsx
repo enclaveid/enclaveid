@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { NonLatentCard } from './NonLatentCard';
 import { VirtuosoGrid } from 'react-virtuoso';
@@ -6,11 +6,17 @@ import { DisplayableInterest } from '@enclaveid/shared';
 import { LoadingPage } from '../pages/LoadingPage';
 import { UnavailableChartOverlay } from './UnavailableChartOverlay';
 import { ownInterests as mockData } from '../utils/mock-data';
+import { SortDropdown } from './SortDropdown';
 
 export function OwnInterests() {
+  const [currentSort, setCurrentSort] = useState<'prevalence' | 'time'>(
+    'prevalence',
+  );
+
   const interestsQuery = trpc.private.getUserInterests.useInfiniteQuery(
     {
       limit: 20,
+      sort: currentSort,
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -29,6 +35,9 @@ export function OwnInterests() {
     <LoadingPage />
   ) : (
     <UnavailableChartOverlay enabled={allInterests === mockData}>
+      <div className="flex justify-start mb-4 px-6">
+        <SortDropdown currentSort={currentSort} onSortChange={setCurrentSort} />
+      </div>
       <VirtuosoGrid
         style={{ height: '85vh', width: '100%' }}
         totalCount={allInterests.length}
