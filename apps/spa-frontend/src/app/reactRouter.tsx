@@ -170,11 +170,19 @@ export const reactRouter = createBrowserRouter([
             children: [
               {
                 path: 'personality',
-                element: <PersonalityContent />,
+                element: (
+                  <PersonalityContainer>
+                    <PersonalityContent />
+                  </PersonalityContainer>
+                ),
               },
               {
                 path: 'politics',
-                element: <PoliticsContent />,
+                element: (
+                  <PoliticsContainer>
+                    <PoliticsContent />
+                  </PoliticsContainer>
+                ),
               },
               { path: 'career', element: <CareerContent /> },
             ],

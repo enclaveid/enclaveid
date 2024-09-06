@@ -27,36 +27,33 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
     <Link
       to={`/dashboard/socials/${formattedLink(displayName)}`}
       state={{ userMatchOverview }}
-      className="p-6 flex items-center gap-4 border border-[#E5E8EE] rounded-3xl"
+      className="p-3 flex items-center gap-3 border border-[#E5E8EE] rounded-xl"
     >
       <img
         src={getIdenticon(displayName)}
         alt=""
-        className="w-[101px] h-[101px] rounded-full"
+        className="w-10 h-10 rounded-full"
       />
-      <div className="flex justify-between w-full flex-wrap gap-3">
-        <div className="flex flex-col">
-          <h4 className="text-passiveLinkColor font-medium text-2xl leading-7">
+      <div className="flex-grow flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <h4 className="text-passiveLinkColor font-medium text-lg">
             {displayName}
           </h4>
-
-          <h5 className="text-passiveLinkColor font-medium leading-[18px] mt-[9px]">
-            {gender}
-          </h5>
-          <div className="flex items-center gap-2 mt-3">
+          <span className="text-passiveLinkColor text-sm">•</span>
+          <span className="text-passiveLinkColor text-sm">{gender}</span>
+          <span className="text-passiveLinkColor text-sm">•</span>
+          <div className="flex items-center gap-1">
             <LocationPinIcon />
-            <h6 className="text-passiveLinkColor font-medium leading-[18px]">
-              {country}
-            </h6>
+            <span className="text-passiveLinkColor text-sm">{country}</span>
           </div>
         </div>
-        <div className="flex flex-col">
+        <div className="flex items-center gap-3">
           <PercentageCircle
             percentage={overallSimilarity}
-            size="lg"
-            label="Overall match"
+            size="md"
+            label="Match"
           />
-          <Button label="Open chat" size="small" className="mt-5" />
+          <Button label="Open chat" size="small" />
         </div>
       </div>
     </Link>

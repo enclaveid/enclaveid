@@ -1,15 +1,15 @@
 import { useLocation } from 'react-router-dom';
 import { SocialCard } from '../components/SocialCard';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { RequireAuth } from '../providers/AuthProvider';
 import { DisplayableInterest, UserMatchOverview } from '@enclaveid/shared';
 import { trpc } from '../utils/trpc';
-import React from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { NonLatentCard } from '../components/NonLatentCard';
 import { Tabs } from '../components/Tabs';
 import { LoadingPage } from './LoadingPage';
+import React from 'react';
 
 const tabs = [
   { title: 'Interests', path: '/dashboard/socials/:title/interests' },
@@ -23,22 +23,8 @@ function ProfilePage() {
   const { setLink } = useBreadcrumb();
   const [usernamePath, setUsernamePath] = useState('');
 
-  useEffect(() => {
-    const pathSegments = location.pathname.split('/').filter(Boolean);
-    const usernameSlug = pathSegments[pathSegments.length - 1];
-    const formattedName = formatUsernameFromPath(usernameSlug);
-    setLink(formattedName);
-    setUsernamePath(usernameSlug);
-  }, [location.pathname, setLink]);
-
-  const userTabs = tabs.map((tab) => ({
-    title: tab.title,
-    path: `/dashboard/socials/${usernamePath}/${tab.title.toLowerCase()}`,
-  }));
-
-  function formatUsernameFromPath(pathname: string): string {
+  const formatUsernameFromPath = useCallback((pathname: string): string => {
     const usernameSlug = pathname.split('/').pop();
-
     if (!usernameSlug) return '';
 
     const formattedName = usernameSlug
@@ -47,11 +33,20 @@ function ProfilePage() {
       .join(' ');
 
     return `${formattedName}'s Profile`;
-  }
+  }, []);
 
   useEffect(() => {
-    setLink(formatUsernameFromPath(location.pathname));
-  }, [location.pathname, setLink]);
+    const pathSegments = location.pathname.split('/').filter(Boolean);
+    const usernameSlug = pathSegments[pathSegments.length - 1];
+    const formattedName = formatUsernameFromPath(usernameSlug);
+    setLink(formattedName);
+    setUsernamePath(usernameSlug);
+  }, [location.pathname, setLink, formatUsernameFromPath]);
+
+  const userTabs = tabs.map((tab) => ({
+    title: tab.title,
+    path: `/dashboard/socials/${usernamePath}/${tab.title.toLowerCase()}`,
+  }));
 
   const userMatchOverview = location.state
     .userMatchOverview as UserMatchOverview;
@@ -59,7 +54,6 @@ function ProfilePage() {
   const matchDetailsQuery = trpc.private.getUserMatchDetails.useInfiniteQuery(
     {
       usersOverallSimilarityId: userMatchOverview.usersOverallSimilarityId,
-      // activityTypes: ['knowledge_progression'],
     },
     {
       getNextPageParam: (lastPage) => lastPage.interests.nextCursor,
@@ -71,13 +65,13 @@ function ProfilePage() {
       (page) => page.interests.userInterests,
     ) || [];
 
-  const fetchMore = () => {
+  const fetchMore = useCallback(() => {
     matchDetailsQuery.hasNextPage && matchDetailsQuery.fetchNextPage();
-  };
+  }, [matchDetailsQuery]);
 
   return (
     <RequireAuth>
-      <div className="px-4 mt-5 pb-2">
+      <div className="px-4 pb-2">
         <SocialCard userMatchOverview={userMatchOverview} />
       </div>
       {matchDetailsQuery.isLoading ? (
@@ -85,36 +79,43 @@ function ProfilePage() {
       ) : (
         <>
           <Tabs tabs={userTabs} />
-
-          <VirtuosoGrid
-            className="mt-3"
-            style={{ height: '100vh', width: '100%' }}
-            totalCount={allInterests.length}
-            overscan={200}
-            endReached={() => {
-              fetchMore();
-            }}
-            itemContent={(index) => {
-              return (
-                <NonLatentCard
-                  interest={allInterests[index] as DisplayableInterest}
-                />
-              );
-            }}
-            components={{
-              List: React.forwardRef((props, ref) => (
-                <div
-                  {...props}
-                  ref={ref}
-                  className="flex flex-row flex-wrap gap-6 px-6"
-                />
-              )),
-            }}
-            listClassName="flex flex-row flex-wrap gap-6 px-6"
+          <InterestGrid
+            interests={allInterests as DisplayableInterest[]}
+            fetchMore={fetchMore}
           />
         </>
       )}
     </RequireAuth>
+  );
+}
+
+interface InterestGridProps {
+  interests: DisplayableInterest[];
+  fetchMore: () => void;
+}
+
+function InterestGrid({ interests, fetchMore }: InterestGridProps) {
+  return (
+    <VirtuosoGrid
+      className="mt-3"
+      style={{ height: '100vh', width: '100%' }}
+      totalCount={interests.length}
+      overscan={200}
+      endReached={fetchMore}
+      itemContent={(index) => (
+        <NonLatentCard interest={interests[index] as DisplayableInterest} />
+      )}
+      components={{
+        List: React.forwardRef((props, ref) => (
+          <div
+            {...props}
+            ref={ref}
+            className="flex flex-row flex-wrap gap-6 px-6"
+          />
+        )),
+      }}
+      listClassName="flex flex-row flex-wrap gap-6 px-6"
+    />
   );
 }
 
