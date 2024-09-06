@@ -54,7 +54,7 @@ jsonpickle = "^3.2.2"
 # The following are very large packages, they are cached as docker layers and shouldn't be changed often.
 # We split ML deps in two grups to avoid conflicts.
 [tool.poetry.group.vllm.dependencies]
-vllm = "0.5.5"
+vllm = "0.6.0"
 transformers = "4.43.3"
 sentence-transformers = "3.0.1"
 
