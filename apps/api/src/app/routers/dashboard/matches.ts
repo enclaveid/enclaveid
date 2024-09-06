@@ -3,7 +3,7 @@ import { AppContext } from '../../context';
 import { router, authenticatedProcedure } from '../../trpc';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { DisplayableInterest, UserMatchOverview } from '@enclaveid/shared';
+import { DisplayableInterest } from '@enclaveid/shared';
 import { MAX_PAGINATION_LIMIT } from '../../constants';
 import { replaceUserIds } from '../../services/contentPrivacy';
 import { ActivityType } from '@prisma/client';
@@ -17,16 +17,37 @@ export const matches = router({
       user: { id: userId },
     } = opts.ctx as AppContext;
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      include: {
-        userMatches: {
-          include: {
-            usersOverallSimilarity: {
-              include: {
-                userMatches: {
-                  include: {
-                    user: true,
+      select: {
+        matchingEnabled: true,
+      },
+    });
+
+    if (!user.matchingEnabled) {
+      return [];
+    }
+
+    const userMatches = await prisma.userMatch.findMany({
+      where: { userId },
+      select: {
+        usersOverallSimilarity: {
+          select: {
+            id: true,
+            overallSimilarity: true,
+            userMatches: {
+              where: {
+                user: {
+                  id: { not: userId },
+                  matchingEnabled: true,
+                },
+              },
+              select: {
+                user: {
+                  select: {
+                    displayName: true,
+                    gender: true,
+                    country: true,
                   },
                 },
               },
@@ -34,34 +55,20 @@ export const matches = router({
           },
         },
       },
+      orderBy: {
+        usersOverallSimilarity: {
+          overallSimilarity: 'desc',
+        },
+      },
     });
 
-    return await Promise.all(
-      user.userMatches
-        .map(async (userMatch) => {
-          const { user: otherUser } =
-            userMatch.usersOverallSimilarity.userMatches.find(
-              (r) => r.user.id != userId,
-            );
-
-          if (!otherUser) return null;
-
-          return {
-            displayName: otherUser.displayName,
-            gender: otherUser.gender,
-            humanReadableGeography: otherUser.country,
-            usersOverallSimilarityId: userMatch.usersOverallSimilarity.id,
-            overallSimilarity:
-              userMatch.usersOverallSimilarity.overallSimilarity,
-          };
-        })
-        .filter((r) => r != null),
-    ).then(
-      (r) =>
-        r.sort(
-          (a, b) => b.overallSimilarity - a.overallSimilarity,
-        ) as UserMatchOverview[],
-    );
+    return userMatches.map((match) => ({
+      displayName: match.usersOverallSimilarity.userMatches[0].user.displayName,
+      gender: match.usersOverallSimilarity.userMatches[0].user.gender,
+      country: match.usersOverallSimilarity.userMatches[0].user.country,
+      usersOverallSimilarityId: match.usersOverallSimilarity.id,
+      overallSimilarity: match.usersOverallSimilarity.overallSimilarity,
+    }));
   }),
   getUserMatchDetails: authenticatedProcedure
     .input(
@@ -111,10 +118,6 @@ export const matches = router({
                             clusterType: {
                               in: opts.input.activityTypes,
                             },
-                            // TODO: Remove this once we have a way to hide interests in the settings page
-                            isSensitive: {
-                              not: true,
-                            },
                           },
                           include: {
                             interestsClusterMatches: true,
@@ -146,6 +149,10 @@ export const matches = router({
         (r) => r.id,
       );
 
+      const showSensitiveInterests =
+        currentUser.sensitiveMatchingEnabled &&
+        otherUser.sensitiveMatchingEnabled;
+
       const interestsClustersSimilarities =
         await prisma.interestsClustersSimilarity.findMany({
           take: limit + 1, // get an extra item at the end which we'll use as next cursor
@@ -163,6 +170,9 @@ export const matches = router({
                 interestsClusterMatches: {
                   some: {
                     interestsClusterId: { in: currentInterestsIds },
+                    interestsCluster: showSensitiveInterests
+                      ? {} // Include all interests regardless of sensitivity
+                      : { isSensitive: false }, // Only include non-sensitive interests
                   },
                 },
               },
@@ -170,6 +180,9 @@ export const matches = router({
                 interestsClusterMatches: {
                   some: {
                     interestsClusterId: { in: otherInterestsIds },
+                    interestsCluster: showSensitiveInterests
+                      ? {} // Include all interests regardless of sensitivity
+                      : { isSensitive: false }, // Only include non-sensitive interests
                   },
                 },
               },
@@ -222,10 +235,7 @@ export const matches = router({
         userInfo: {
           displayName: otherUser.displayName,
           gender: otherUser.displayName,
-          geography: {
-            latitude: otherUser.geographyLat,
-            longitude: otherUser.geographyLon,
-          },
+          country: otherUser.country,
         },
         personality: {
           bigFive: otherUser.userTraits.bigFive,

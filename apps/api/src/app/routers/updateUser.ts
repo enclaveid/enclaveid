@@ -110,13 +110,6 @@ export const updateUser = router({
         },
       });
     }),
-  deleteEverything: authenticatedProcedure.mutation(async (opts) => {
-    const { user } = opts.ctx as AppContext;
-
-    await prisma.user.delete({
-      where: { id: user.id },
-    });
-  }),
   updatePurposes: authenticatedProcedure
     .input(
       z.object({

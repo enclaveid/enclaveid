@@ -18,6 +18,8 @@ import { interests } from './routers/dashboard/interests';
 import { onboardingStatus } from './routers/onboarding/onboardingStatus';
 import { emailConfirmation } from './routers/onboarding/emailConfirmation';
 import { updateUser } from './routers/updateUser';
+import { settings } from './routers/settings';
+
 export const appRouter = router({
   [TRPC_PRIVATE_NAMESPACE]: mergeRouters(
     personality,
@@ -32,6 +34,7 @@ export const appRouter = router({
     updateUser,
     onboardingStatus,
     emailConfirmation,
+    settings,
   ),
   [TRPC_PUBLIC_NAMESPACE]: mergeRouters(attestation, authentication),
 });

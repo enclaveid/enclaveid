@@ -21,7 +21,7 @@ export const Default: StoryObj<typeof SocialCard> = {
     userMatchOverview: {
       displayName: 'John Doe',
       gender: Gender.Male,
-      humanReadableGeography: 'Jakarta, Indonesia',
+      country: 'Indonesia',
       overallSimilarity: 0.8,
       usersOverallSimilarityId: '1',
     },

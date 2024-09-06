@@ -14,8 +14,7 @@ interface SocialCardProps {
 function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
   if (loading) return <LoadingCard />;
 
-  const { displayName, gender, humanReadableGeography, overallSimilarity } =
-    userMatchOverview;
+  const { displayName, gender, country, overallSimilarity } = userMatchOverview;
 
   const formattedLink = (displayName: string) => {
     return displayName
@@ -47,7 +46,7 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
           <div className="flex items-center gap-2 mt-3">
             <LocationPinIcon />
             <h6 className="text-passiveLinkColor font-medium leading-[18px]">
-              {humanReadableGeography}
+              {country}
             </h6>
           </div>
         </div>

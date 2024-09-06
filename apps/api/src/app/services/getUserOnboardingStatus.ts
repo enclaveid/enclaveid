@@ -17,10 +17,7 @@ export async function getUserOnboardingStatus(userId: string) {
 
   // Check if basic profile is complete
   const isBasicProfileComplete =
-    !!user?.displayName &&
-    !!user?.gender &&
-    !!user?.geographyLat &&
-    !!user?.geographyLon;
+    !!user?.displayName && !!user?.gender && !!user?.country;
 
   const isPurposesComplete = user?.purposes.length > 0;
 

@@ -7,7 +7,7 @@ export const TRPC_PREFIX = '/trpc';
 export interface UserMatchOverview {
   displayName: string;
   gender: Gender;
-  humanReadableGeography: string;
+  country: string;
   usersOverallSimilarityId: string;
   overallSimilarity: number;
 }

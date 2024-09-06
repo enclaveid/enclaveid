@@ -14,6 +14,6 @@ export const fileUpload = router({
 
       const { dataProvider } = input;
 
-      return { url: await generateSasUrl(dataProvider, userId) };
+      return { url: await generateSasUrl(userId, dataProvider) };
     }),
 });
