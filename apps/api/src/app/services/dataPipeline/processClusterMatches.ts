@@ -54,80 +54,136 @@ export async function processClusterMatches(dataFrame: DataFrame) {
         other_user_cluster_label: r.other_user_cluster_label,
       })) as ClusterData[];
 
-    for (const cluster of clusterData) {
-      // Update or create InterestsCluster
-      const interestsCluster = await tx.interestsCluster.upsert({
+    // Batch upsert InterestsCluster
+    await tx.interestsCluster.createMany({
+      data: clusterData.map((cluster) => ({
+        ...cluster.interestsCluster,
+        userInterestsId: userInterests.id,
+      })),
+      skipDuplicates: true,
+    });
+
+    // Fetch created clusters
+    const createdClusters = await tx.interestsCluster.findMany({
+      where: { userInterestsId: userInterests.id },
+      select: { id: true, pipelineClusterId: true },
+    });
+
+    // Batch process matches
+    const matchData = clusterData.filter(
+      (cluster) => cluster.other_user_id && cluster.other_user_cluster_label,
+    );
+
+    if (matchData.length > 0) {
+      const otherUserIds = matchData.map((cluster) => cluster.other_user_id);
+      const otherUserInterests = await tx.userInterests.findMany({
+        where: { userId: { in: otherUserIds } },
+      });
+
+      const otherUserInterestsMap = new Map(
+        otherUserInterests.map((ui) => [ui.userId, ui]),
+      );
+
+      const otherClusterLabels = matchData.map(
+        (cluster) => cluster.other_user_cluster_label,
+      );
+      const otherInterestsClusters = await tx.interestsCluster.findMany({
         where: {
-          userInterestsId_pipelineClusterId_clusterType: {
-            userInterestsId: userInterests.id,
-            pipelineClusterId: cluster.interestsCluster.pipelineClusterId,
-            clusterType: cluster.interestsCluster.clusterType,
-          },
+          userInterestsId: { in: otherUserInterests.map((ui) => ui.id) },
+          pipelineClusterId: { in: otherClusterLabels },
         },
-        update: {
-          ...cluster.interestsCluster,
-        },
-        create: {
-          ...cluster.interestsCluster,
-          userInterests: {
-            connect: { id: userInterests.id },
+      });
+
+      const otherInterestsClustersMap = new Map(
+        otherInterestsClusters.map((ic) => [
+          `${ic.userInterestsId}-${ic.pipelineClusterId}`,
+          ic,
+        ]),
+      );
+
+      // Batch create InterestsClustersSimilarity and InterestsClusterMatch
+      const similarityData = matchData
+        .map((cluster) => {
+          const otherUserInterest = otherUserInterestsMap.get(
+            cluster.other_user_id,
+          );
+          const otherInterestsCluster =
+            otherUserInterest &&
+            otherInterestsClustersMap.get(
+              `${otherUserInterest.id}-${cluster.other_user_cluster_label}`,
+            );
+
+          if (otherInterestsCluster) {
+            return {
+              ...cluster.interestsClustersSimilarity,
+              currentClusterId: createdClusters.find(
+                (ic) =>
+                  ic.pipelineClusterId ===
+                  cluster.interestsCluster.pipelineClusterId,
+              ).id,
+              otherClusterId: otherInterestsCluster.id,
+            };
+          }
+        })
+        .filter(Boolean);
+
+      // Delete existing InterestsClustersSimilarity records
+      await tx.interestsClustersSimilarity.deleteMany({
+        where: {
+          interestsClusterMatches: {
+            some: {
+              interestsClusterId: {
+                in: similarityData.map((s) => s.currentClusterId),
+              },
+            },
           },
         },
       });
 
-      // Process match if it exists
-      if (cluster.other_user_id && cluster.other_user_cluster_label) {
-        const otherUserInterests = await tx.userInterests.findUnique({
-          where: { userId: cluster.other_user_id },
-        });
+      // Create InterestsClustersSimilarity records
+      await tx.interestsClustersSimilarity.createMany({
+        data: similarityData.map(
+          ({ currentClusterId, otherClusterId, ...rest }) => rest,
+        ),
+        skipDuplicates: true,
+      });
 
-        if (otherUserInterests) {
-          const otherInterestsCluster = await tx.interestsCluster.findFirst({
-            where: {
-              userInterestsId: otherUserInterests.id,
-              pipelineClusterId: cluster.other_user_cluster_label,
+      // Fetch created similarities
+      const fetchedSimilarities = await tx.interestsClustersSimilarity.findMany(
+        {
+          where: {
+            cosineSimilarity: {
+              in: similarityData.map((s) => s.cosineSimilarity),
             },
-          });
+          },
+        },
+      );
 
-          if (otherInterestsCluster) {
-            // Find existing InterestsClustersSimilarity
-            const existingSimilarity =
-              await tx.interestsClustersSimilarity.findFirst({
-                where: {
-                  interestsClusterMatches: {
-                    every: {
-                      interestsClusterId: {
-                        in: [interestsCluster.id, otherInterestsCluster.id],
-                      },
-                    },
-                  },
-                },
-              });
-
-            if (existingSimilarity) {
-              // Update existing InterestsClustersSimilarity
-              await tx.interestsClustersSimilarity.update({
-                where: { id: existingSimilarity.id },
-                data: {
-                  ...cluster.interestsClustersSimilarity,
-                },
-              });
-            } else {
-              // Create new InterestsClustersSimilarity and InterestsClusterMatch
-              await tx.interestsClustersSimilarity.create({
-                data: {
-                  ...cluster.interestsClustersSimilarity,
-                  interestsClusterMatches: {
-                    create: [
-                      { interestsClusterId: interestsCluster.id },
-                      { interestsClusterId: otherInterestsCluster.id },
-                    ],
-                  },
-                },
-              });
-            }
-          }
+      // Create InterestsClusterMatch records
+      const matchRecords = similarityData.flatMap((similarity) => {
+        const fetchedSimilarity = fetchedSimilarities.find(
+          (fs) => fs.cosineSimilarity === similarity.cosineSimilarity,
+        );
+        if (fetchedSimilarity) {
+          return [
+            {
+              interestsClustersSimilarityId: fetchedSimilarity.id,
+              interestsClusterId: similarity.currentClusterId,
+            },
+            {
+              interestsClustersSimilarityId: fetchedSimilarity.id,
+              interestsClusterId: similarity.otherClusterId,
+            },
+          ];
         }
+        return [];
+      });
+
+      if (matchRecords.length > 0) {
+        await tx.interestsClusterMatch.createMany({
+          data: matchRecords,
+          skipDuplicates: true,
+        });
       }
     }
   });
