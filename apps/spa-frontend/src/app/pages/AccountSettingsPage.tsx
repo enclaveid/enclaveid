@@ -4,31 +4,7 @@ import { trpc } from '../utils/trpc';
 import { Button } from '../components/atoms/Button';
 import { LoadingPage } from './LoadingPage';
 import { WarningModal } from '../components/WarningModal';
-
-type Setting = {
-  label: string;
-  key: string;
-  type: 'toggle' | 'action';
-};
-
-const SETTINGS: Setting[] = [
-  {
-    label: 'Enable matching with other users',
-    key: 'matchingEnabled',
-    type: 'toggle',
-  },
-  {
-    label: 'Match with others over sensitive topics',
-    key: 'sensitiveMatchingEnabled',
-    type: 'toggle',
-  },
-  //{ label: 'Download my data', key: 'downloadData', type: 'action' },
-  {
-    label: 'Delete my account and all of my data',
-    key: 'deleteAccount',
-    type: 'action',
-  },
-];
+import LineMdLoadingLoop from '~icons/line-md/loading-loop';
 
 const ToggleButton: React.FC<{
   value: boolean;
@@ -96,6 +72,18 @@ export function AccountSettings() {
     });
   };
 
+  // Automatically download the data
+  useEffect(() => {
+    if (downloadDataMutation.data) {
+      const link = document.createElement('a');
+      link.href = downloadDataMutation.data;
+      link.download = 'enclaveid_data.zip';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }, [downloadDataMutation.data]);
+
   if (isLoading) return <LoadingPage />;
 
   return (
@@ -104,28 +92,50 @@ export function AccountSettings() {
         Account and Settings
       </h1>
       <div className="flex flex-col gap-3">
-        {SETTINGS.map((setting) => (
-          <div
-            key={setting.key}
-            className="max-w-[538px] w-full flex items-center justify-between border border-[#E5E8EE] rounded-xl pl-5 pr-3.5 py-3.5"
-          >
-            <label className="leading-[18px] text-passiveLinkColor">
-              {setting.label}
-            </label>
-            {setting.type === 'toggle' ? (
-              <ToggleButton
-                value={localSettings[setting.key]}
-                onChange={(value) => handleSettingChange(setting.key, value)}
-              />
-            ) : (
-              <Button
-                variant="secondary"
-                label={setting.key === 'deleteAccount' ? 'Delete' : 'Download'}
-                onClick={() => handleAction(setting.key)}
-              />
-            )}
-          </div>
-        ))}
+        <div className="max-w-[538px] w-full flex items-center justify-between border border-[#E5E8EE] rounded-xl pl-5 pr-3.5 py-3.5">
+          <label className="leading-[18px] text-passiveLinkColor">
+            Enable matching with other users
+          </label>
+          <ToggleButton
+            value={localSettings.matchingEnabled}
+            onChange={(value) => handleSettingChange('matchingEnabled', value)}
+          />
+        </div>
+        <div className="max-w-[538px] w-full flex items-center justify-between border border-[#E5E8EE] rounded-xl pl-5 pr-3.5 py-3.5">
+          <label className="leading-[18px] text-passiveLinkColor">
+            Match with others over sensitive topics
+          </label>
+          <ToggleButton
+            value={localSettings.sensitiveMatchingEnabled}
+            onChange={(value) =>
+              handleSettingChange('sensitiveMatchingEnabled', value)
+            }
+          />
+        </div>
+        <div className="max-w-[538px] w-full flex items-center justify-between border border-[#E5E8EE] rounded-xl pl-5 pr-3.5 py-3.5">
+          <label className="leading-[18px] text-passiveLinkColor">
+            Download my data (takes a while)
+          </label>
+          {downloadDataMutation.isPending ? (
+            <LineMdLoadingLoop className="w-6 h-6 text-greenBg" />
+          ) : (
+            <Button
+              variant="secondary"
+              label="Download"
+              onClick={() => handleAction('downloadData')}
+            />
+          )}
+        </div>
+        <div className="max-w-[538px] w-full flex items-center justify-between border border-[#E5E8EE] rounded-xl pl-5 pr-3.5 py-3.5">
+          <label className="leading-[18px] text-passiveLinkColor">
+            Delete my account and all of my data
+          </label>
+          <Button
+            variant="secondary"
+            label="Delete"
+            onClick={() => handleAction('deleteAccount')}
+          />
+        </div>
       </div>
       <WarningModal
         isOpen={isDeleteModalOpen}

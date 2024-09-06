@@ -27,9 +27,10 @@ export async function generateSasUrl(
   userId: string,
   dataProvider?: DataProvider,
 ): Promise<string> {
-  const containerName = dataProvider
-    ? azureInputContainerName
-    : azureOutputContainerName;
+  const direction = dataProvider ? 'input' : 'output';
+
+  const containerName =
+    direction === 'input' ? azureInputContainerName : azureOutputContainerName;
 
   const blobName = dataProvider
     ? getBlobName(dataProvider, userId)
@@ -48,7 +49,7 @@ export async function generateSasUrl(
     azureStorageCredentials,
   ).toString();
 
-  return `${azureContainerClient.input.url}/${blobName}?${sasToken}`;
+  return `${azureContainerClient[direction].url}/${blobName}?${sasToken}`;
 }
 
 export async function streamingUpload(filename, file) {

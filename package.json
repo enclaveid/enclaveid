@@ -48,6 +48,7 @@
     "@babel/preset-react": "^7.24.1",
     "@chromatic-com/storybook": "^1",
     "@iconify-json/fa6-brands": "^1.1.22",
+    "@iconify-json/line-md": "^1.2.1",
     "@iconify-json/logos": "^1.1.44",
     "@iconify-json/openmoji": "^1.1.53",
     "@iconify-json/ri": "^1.1.22",
