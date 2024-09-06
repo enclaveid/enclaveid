@@ -6,16 +6,18 @@ import { z } from 'zod';
 export const career = router({
   getCareerTraits: authenticatedProcedure
     .input(
-      z.object({
-        userId: z.string().optional(),
-      }),
+      z
+        .object({
+          userId: z.string(),
+        })
+        .optional(),
     )
     .query(async (opts) => {
       const {
         user: { id: currentUserId },
       } = opts.ctx as AppContext;
 
-      const userId = opts.input.userId || currentUserId;
+      const userId = opts.input?.userId || currentUserId;
 
       const user = await prisma.user.findUnique({
         where: { id: userId },
