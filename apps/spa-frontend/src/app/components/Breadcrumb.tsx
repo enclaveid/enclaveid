@@ -1,12 +1,11 @@
-import classNames from 'classnames';
-
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useEffect } from 'react';
 import { sidebarItems } from '../utils/ui/sidebarItems';
+import classNames from 'classnames';
 
 const pathToLabelMap = Object.entries(sidebarItems).reduce(
-  (acc, [title, items]) => {
+  (acc, [, items]) => {
     items.forEach((item) => {
       acc[item.href] = item.text;
     });
@@ -18,8 +17,12 @@ const pathToLabelMap = Object.entries(sidebarItems).reduce(
 function Breadcrumb() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const { link, setLink } = useBreadcrumb();
+
+  useEffect(() => {
+    // Reset link when location changes
+    setLink('');
+  }, [location, setLink]);
 
   const handleDashboardClick = () => {
     if (link) {
@@ -27,17 +30,6 @@ function Breadcrumb() {
       setLink('');
     }
   };
-
-  useEffect(() => {
-    const pathSegments = location.pathname
-      .split('/')
-      .filter((path) => path.length > 0);
-
-    if (pathSegments.length === 2 && pathSegments[0] === 'dashboard') {
-      setLink('');
-    } else if (pathSegments.length > 2) {
-    }
-  }, [location, setLink]);
 
   const getBreadcrumbLabel = () => {
     for (const [path, label] of Object.entries(pathToLabelMap)) {
@@ -47,6 +39,7 @@ function Breadcrumb() {
     }
     return '';
   };
+
   return (
     <div className="flex gap-1.5 items-center text-[23px] leading-[27px] font-medium">
       <button
@@ -61,8 +54,8 @@ function Breadcrumb() {
       </button>
       {link && (
         <>
-          <span className="text-passiveLinkColor">{'>'}</span>{' '}
-          <span className="text-passiveLinkColor">{link}</span>{' '}
+          <span className="text-passiveLinkColor">{'>'}</span>
+          <span className="text-passiveLinkColor">{link}</span>
         </>
       )}
     </div>

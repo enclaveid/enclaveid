@@ -1,6 +1,5 @@
 import { MFTChart } from './MFTChart';
 import { MFTChartData } from '../utils/mock-data';
-import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CustomDrawer } from './CustomDrawer';
@@ -18,13 +17,11 @@ export interface MFTSectionProps {
 export function MFTSection({ data = mockData, isLoading }: MFTSectionProps) {
   const navigate = useNavigate();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { setLink } = useBreadcrumb();
   const { description, ...circles } = data;
 
   const handleClick = () => {
     const screenWidth = window.innerWidth;
     if (screenWidth > 640) {
-      setLink('MFT');
       navigate(`mft`, {
         state: { circles, description },
       });
@@ -38,7 +35,7 @@ export function MFTSection({ data = mockData, isLoading }: MFTSectionProps) {
         <DynamicAreaLoading />
       ) : (
         <div className="flex flex-col gap-2.5 items-center">
-          <h2 className="chart-title">Moral Foundations Theory</h2>
+          <h2 className="chart-title">Moral Foundations</h2>
 
           <UnavailableChartOverlay
             enabled={data === mockData}
@@ -49,7 +46,7 @@ export function MFTSection({ data = mockData, isLoading }: MFTSectionProps) {
         </div>
       )}
       <CustomDrawer
-        title={'Moral Foundations Theory'}
+        title={'Moral Foundations'}
         isOpen={isDrawerOpen}
         setIsDrawerOpen={setIsDrawerOpen}
       >

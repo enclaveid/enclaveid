@@ -3,7 +3,6 @@ import { Button } from './atoms/Button';
 import { DashboardCardLayout } from './DashboardCardLayout';
 
 import { useNavigate } from 'react-router-dom';
-import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { CustomDrawer } from './CustomDrawer';
 import { DynamicAreaLoading } from './DynamicAreaLoading';
 import { mbtiCard } from '../utils/mock-data';
@@ -31,12 +30,10 @@ function MbtiCard({
 }: MbtiCardProps) {
   const navigate = useNavigate();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { setLink } = useBreadcrumb();
 
   const handleClick = () => {
     const screenWidth = window.innerWidth;
     if (screenWidth > 640) {
-      setLink(label);
       navigate(`mbti/${label.toLocaleLowerCase()}`, {
         state: { data, label },
       });

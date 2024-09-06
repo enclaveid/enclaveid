@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from './atoms/Button';
 
-import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useState } from 'react';
 import { radarChart } from '../utils/mock-data';
 import { RadarChart, RadarChartProps } from './RadarChart';
@@ -31,13 +30,11 @@ export const findHighestValues = (props: RadarChartProps): string[] => {
 
 function CareerContent() {
   const navigate = useNavigate();
-  const { setLink } = useBreadcrumb();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const handleClick = () => {
     const screenWidth = window.innerWidth;
     if (screenWidth > 640) {
-      setLink('Radar');
       navigate(`radar`, {
         state: { radarChart },
       });

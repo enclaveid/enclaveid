@@ -1,9 +1,17 @@
 import { useLocation } from 'react-router-dom';
 import CompassChart from './CompassChart';
+import { useEffect } from 'react';
+import { useBreadcrumb } from '../providers/BreadcrumbContext';
 
 function CompassDetails() {
   const location = useLocation();
   const { compassChartData } = location.state;
+  const { setLink } = useBreadcrumb();
+
+  useEffect(() => {
+    setLink('Political Compass');
+  }, [setLink]);
+
   return (
     <div className="flex flex-col gap-7 max-w-4xl">
       {/* <h2 className="text-passiveLinkColor text-lg leadig-[22px] font-medium">

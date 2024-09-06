@@ -1,6 +1,8 @@
 import { useLocation } from 'react-router-dom';
 import { MFTChart } from './MFTChart';
 import Markdown from 'react-markdown';
+import { useBreadcrumb } from '../providers/BreadcrumbContext';
+import { useEffect } from 'react';
 
 interface Props {
   circles: {
@@ -16,6 +18,11 @@ interface Props {
 function MFTDetails() {
   const location = useLocation();
   const { description, circles } = location.state as Props;
+  const { setLink } = useBreadcrumb();
+
+  useEffect(() => {
+    setLink('Moral Foundations');
+  }, [setLink]);
 
   return (
     <div className="flex rounded-3xl px-6 xl:flex-row flex-col">

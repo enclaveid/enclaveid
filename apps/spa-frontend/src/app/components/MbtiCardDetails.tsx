@@ -1,10 +1,18 @@
 import { useLocation } from 'react-router-dom';
 import { MbtiCardProps } from './MbtiCard';
 import Markdown from 'react-markdown';
+import { useBreadcrumb } from '../providers/BreadcrumbContext';
+import { useEffect } from 'react';
 
 function MbtiCardDetails() {
   const location = useLocation();
   const { data, label } = location.state as MbtiCardProps;
+  const { setLink } = useBreadcrumb();
+
+  useEffect(() => {
+    setLink('MBTI');
+  }, [setLink]);
+
   return (
     <div className="max-w-4xl sm:px-0 px-4">
       <div className="flex flex-col gap-5">

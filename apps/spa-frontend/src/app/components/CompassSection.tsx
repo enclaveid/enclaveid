@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import CompassChart from './CompassChart';
-import { useBreadcrumb } from '../providers/BreadcrumbContext';
 import { useNavigate } from 'react-router-dom';
 import { compassChartData } from '../utils/mock-data';
 import { CustomDrawer } from './CustomDrawer';
@@ -19,13 +18,11 @@ export function CompassSection({
   data = mockData,
 }: CompassSectionProps) {
   const navigate = useNavigate();
-  const { setLink } = useBreadcrumb();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const handleClick = () => {
     const screenWidth = window.innerWidth;
     if (screenWidth > 640) {
-      setLink('Compass');
       navigate(`compass`, {
         state: { compassChartData: data },
       });
