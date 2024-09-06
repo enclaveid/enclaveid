@@ -38,7 +38,7 @@ export async function generateSasUrl(
   const sasOptions = {
     containerName,
     blobName,
-    permissions: BlobSASPermissions.parse('rw'),
+    permissions: BlobSASPermissions.parse(dataProvider ? 'w' : 'r'),
     startsOn: new Date(),
     expiresOn: new Date(3600 * 1000 * 24 + new Date().valueOf()), // URL valid for 1 day
   };

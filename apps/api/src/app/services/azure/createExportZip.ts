@@ -30,7 +30,8 @@ export async function createExportZip(userId: string): Promise<string> {
   for await (const blob of containerClient.listBlobsFlat()) {
     if (
       blob.name.endsWith('.snappy') &&
-      !blob.name.startsWith('data_exports/')
+      !blob.name.startsWith('data_exports/') &&
+      !blob.name.includes('embeddings')
     ) {
       // Download the blob content
       const blobClient = containerClient.getBlobClient(blob.name);
