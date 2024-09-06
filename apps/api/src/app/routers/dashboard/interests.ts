@@ -46,13 +46,9 @@ export const interests = router({
         user: { id: userId },
       } = opts.ctx as AppContext;
 
-      const inrerestsCount = await prisma.interestsCluster.count({
-        where: {
-          userInterests: {
-            userId,
-          },
-        },
-      });
+      // Assume the max number of interests a user can have is 10,000
+      // We need to pad the activity count to ensure the sort is correct (can't sort on different data types)
+      const maxDigits = '10_000'.toString().length;
 
       // There is no way to paginate with the last item of an array in Prisma
       // https://github.com/prisma/prisma/issues/5560
@@ -70,7 +66,7 @@ export const interests = router({
                 END DESC,
                 CASE
                   WHEN ${sort} = 'prevalence' THEN i."activityDates"[array_length(i."activityDates", 1)]
-                  ELSE LPAD(array_length(i."activityDates", 1)::text, ${inrerestsCount.toString().length + 1}::int, '0') -- We need to pad the activity count to ensure the sort is correct (can't sort on different data types)
+                  ELSE LPAD(array_length(i."activityDates", 1)::text, ${maxDigits}::int, '0')
                 END DESC
             ) as row_num
           FROM "InterestsCluster" i
