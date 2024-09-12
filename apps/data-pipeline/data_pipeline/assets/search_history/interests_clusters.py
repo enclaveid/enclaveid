@@ -115,4 +115,5 @@ def interests_clusters(
 
     context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
+    # Columns: date, interests, interests_uniqueness, cluster_label, category_cluster_label
     return result

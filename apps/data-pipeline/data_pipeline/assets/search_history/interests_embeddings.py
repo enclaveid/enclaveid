@@ -20,7 +20,7 @@ from ...utils.capabilities import gpu_info
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={"interests": AssetIn(key=["interests"])},
-    op_tags=get_k8s_vllm_config(1),
+    op_tags=get_k8s_vllm_config(2),
     # retry_policy=spot_instance_retry_policy,
 )
 def interests_embeddings(
@@ -48,4 +48,5 @@ def interests_embeddings(
 
     context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
+    # Columns: date, interests, interests_uniqueness, embeddings
     return result

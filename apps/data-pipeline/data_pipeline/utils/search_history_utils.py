@@ -136,7 +136,9 @@ def get_full_history_sessions(
     )
 
     return FullHistorySessionsOutput(
-        output_df=grouped_df,
+        output_df=grouped_df.select(
+            "date", "interests", "interests_uniqueness", "raw_interests"
+        ),
         count_invalid_interests=int(grouped_df["count_invalid_interests"].sum()),
         count_invalid_uniqueness=int(grouped_df["count_invalid_uniqueness"].sum()),
     )

@@ -179,6 +179,11 @@ class ClusterSummariesConfig(RowLimitConfig):
 # otherwise when the vm gets evicted we have to redo everything
 @multi_asset(
     partitions_def=user_partitions_def,
+    ins={
+        "interests_clusters": AssetIn(
+            key=["interests_clusters"],
+        ),
+    },
     outs={
         "cluster_summaries": AssetOut(
             key=["cluster_summaries"],
@@ -189,11 +194,6 @@ class ClusterSummariesConfig(RowLimitConfig):
             key=["cluster_summaries_debug"],
             io_manager_key="parquet_io_manager",
             is_required=False,
-        ),
-    },
-    ins={
-        "interests_clusters": AssetIn(
-            key=["interests_clusters"],
         ),
     },
     op_tags=get_k8s_vllm_config(2),
