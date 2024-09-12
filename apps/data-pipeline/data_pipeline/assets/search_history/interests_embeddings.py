@@ -18,11 +18,6 @@ from ...utils.capabilities import gpu_info
 
 
 class InterestsEmbeddingsConfig(RowLimitConfig):
-    ml_model_name: str = Field(
-        default="Salesforce/SFR-Embedding-2_R",
-        description=("The Hugging Face model to use with SentenceTransformers."),
-    )
-
     chunk_size: int = Field(
         default=15,
         description=(

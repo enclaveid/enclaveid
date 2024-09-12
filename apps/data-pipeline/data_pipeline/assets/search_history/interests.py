@@ -9,7 +9,7 @@ from dagster import (
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.resources.llm_inference.gemma9b_resource import Gemma9bResource
+from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.k8s import get_k8s_vllm_config
@@ -21,17 +21,8 @@ from ...utils.search_history_utils import (
 
 
 class InterestsConfig(RowLimitConfig):
-    ml_model_name: str = Field(
-        default="meta-llama/Meta-Llama-3-8B-Instruct",
-        description=(
-            "The Hugging Face model to use as the LLM. See the vLLMs docs for a "
-            "list of the support models:\n"
-            "https://docs.vllm.ai/en/latest/models/supported_models.html"
-        ),
-    )
-
     chunk_size: int = Field(
-        default=15,
+        default=10,
         description=(
             "Search history records are split into chunks of this size."
             " Chunking too many items can cause the LLM to give sub-par responses."
@@ -74,7 +65,7 @@ enrichment_prompt_sequence = [
 def interests(
     context: AssetExecutionContext,
     config: InterestsConfig,
-    gemma9b: Gemma9bResource,
+    llama8b: Llama8bResource,
     full_takeout: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -86,7 +77,7 @@ def interests(
         full_takeout=full_takeout,
         chunk_size=config.chunk_size,
         prompt_sequence=enrichment_prompt_sequence,
-        local_llm=gemma9b,
+        local_llm=llama8b,
     )
 
     context.add_output_metadata(
