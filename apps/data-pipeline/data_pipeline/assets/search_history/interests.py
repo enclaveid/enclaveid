@@ -83,7 +83,7 @@ def interests(
     context.add_output_metadata(
         {
             "count_invalid_interests": sessions_output.count_invalid_interests,
-            "count_invalid_likelihoods": sessions_output.count_invalid_likelihoods,
+            "count_invalid_uniqueness": sessions_output.count_invalid_uniqueness,
         }
     )
 

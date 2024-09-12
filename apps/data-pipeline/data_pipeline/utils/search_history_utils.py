@@ -14,7 +14,7 @@ from data_pipeline.resources.llm_inference.local_llm_resource import LocalLlmRes
 class FullHistorySessionsOutput:
     output_df: pl.DataFrame
     count_invalid_interests: int
-    count_invalid_likelihoods: int
+    count_invalid_uniqueness: int
 
 
 def generate_chunks(daily_dfs: Dict[datetime.date, pl.DataFrame], chunk_size: int = 15):
@@ -38,7 +38,7 @@ def extract_interests_list(text: str) -> List[str]:
         return []
 
 
-def extract_social_likelihoods_list(text: str) -> List[bool]:
+def extract_interests_uniqueness_list(text: str) -> List[bool]:
     try:
         res = repair_json(text, return_objects=True)
         # Check if j is an array of booleans
@@ -68,11 +68,11 @@ def generate_chunked_interests(
 
     results, _ = local_llm.get_prompt_sequences_completions_batch(prompt_sequences)
 
-    chunked_interests, chunked_social_likelihoods = zip(
+    chunked_interests, chunked_interests_uniqueness = zip(
         *[
             (
                 extract_interests_list(res[-2]),
-                extract_social_likelihoods_list(res[-1]),
+                extract_interests_uniqueness_list(res[-1]),
             )
             if res
             else ([], [])
@@ -80,24 +80,26 @@ def generate_chunked_interests(
         ]
     )
 
-    # If the likelihoods are shorter than the interests, pad them with False so
+    # If the uniqueness are shorter than the interests, pad them with False so
     # that the final zip still goes through all the interests
-    chunked_social_likelihoods = [
-        likelihoods + [False] * (len(interests) - len(likelihoods))
-        if len(likelihoods) < len(interests)
-        else likelihoods
-        for likelihoods, interests in zip(chunked_social_likelihoods, chunked_interests)
+    chunked_interests_uniqueness = [
+        uniqueness + [False] * (len(interests) - len(uniqueness))
+        if len(uniqueness) < len(interests)
+        else uniqueness
+        for uniqueness, interests in zip(
+            chunked_interests_uniqueness, chunked_interests
+        )
     ]
 
-    for date, interests, raw_interest, likelihoods in zip(
-        dates, chunked_interests, raw_interests, chunked_social_likelihoods
+    for date, interests, raw_interest, uniqueness in zip(
+        dates, chunked_interests, raw_interests, chunked_interests_uniqueness
     ):
         yield {
             "date": date,
             "interests": interests,
-            "social_likelihoods": likelihoods,
+            "interests_uniqueness": uniqueness,
             "count_invalid_interests": int(not interests),
-            "count_invalid_likelihoods": int(not likelihoods),
+            "count_invalid_uniqueness": int(not uniqueness),
             "raw_interests": raw_interest,
         }
 
@@ -124,10 +126,10 @@ def get_full_history_sessions(
         .agg(
             [
                 pl.col("interests").flatten(),
-                pl.col("social_likelihoods").flatten(),
+                pl.col("interests_uniqueness").flatten(),
                 pl.col("raw_interests").flatten().unique(),
                 pl.col("count_invalid_interests").sum(),
-                pl.col("count_invalid_likelihoods").sum(),
+                pl.col("count_invalid_uniqueness").sum(),
             ]
         )
     )
@@ -135,5 +137,5 @@ def get_full_history_sessions(
     return FullHistorySessionsOutput(
         output_df=grouped_df,
         count_invalid_interests=int(grouped_df["count_invalid_interests"].sum()),
-        count_invalid_likelihoods=int(grouped_df["count_invalid_likelihoods"].sum()),
+        count_invalid_uniqueness=int(grouped_df["count_invalid_uniqueness"].sum()),
     )
