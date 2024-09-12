@@ -35,15 +35,15 @@ def interests_embeddings(
     df = (
         # Enforce row_limit (if any)
         interests.slice(0, config.row_limit)
-        .select("date", "interests")
+        .select("date", "interests", "interests_uniqueness")
         # Explode the interests so we get the embeddings for each individual interest
-        .explode("interests")
+        .explode("interests", "interests_uniqueness")
         .drop_nulls()
     )
 
     context.log.info("Computing embeddings")
     result = df.with_columns(
-        embeddings=pl.col("interests").map_batches(embedding_model.get_embeddings)
+        embeddings=pl.col("interests").map_batches(embedding_model.get_embeddings),
     )
 
     context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
