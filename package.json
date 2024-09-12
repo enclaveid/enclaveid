@@ -188,6 +188,7 @@
     "nodejs-polars": "^0.14.0",
     "nodemailer": "^6.9.14",
     "obscenity": "^0.4.0",
+    "pg": "^8.12.0",
     "proxy-chain": "^2.4.0",
     "puppeteer": "^22.9.0",
     "puppeteer-extra": "^3.3.6",

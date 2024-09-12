@@ -4,6 +4,13 @@ generator client {
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
+generator kysely {
+  provider     = "prisma-kysely"
+  output       = "../src/lib/kysely"
+  fileName     = "kyselyTypes.ts"
+  enumFileName = "kyselyEnums.ts"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("API_DATABASE_URL")
