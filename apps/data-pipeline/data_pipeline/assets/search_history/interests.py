@@ -52,11 +52,10 @@ enrichment_prompt_sequence = [
     ),
     dedent(
         """
-        For each element in this list, determine if it's interesting for connecting with others.
-        Consider:
-        - Is it a very quirky or uncommon type of activity?
-        - Is the general topic engaging (like hobbies, arts, or games)?
-        - Assume the user is okay sharing this, even if it seems personal.
+        For each element in this list, determine if it's unique or quirky compared to what most people do online.
+        Consider an activity unique or quirky if:
+        - It's a specific or niche topic
+        - Most people wouldn't typically engage in it online
 
         If an activity meets any of these criteria, consider it interesting.
         After your analysis, return a list of boolean flags (true/false) corresponding to each activity in the original list.
