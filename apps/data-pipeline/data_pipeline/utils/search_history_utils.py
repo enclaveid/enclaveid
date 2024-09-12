@@ -5,14 +5,16 @@ from typing import Dict, List
 
 import polars as pl
 from dagster import get_dagster_logger
+from json_repair import repair_json
 
-from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
+from data_pipeline.resources.llm_inference.local_llm_resource import LocalLlmResource
 
 
 @dataclass
 class FullHistorySessionsOutput:
     output_df: pl.DataFrame
-    count_invalid_responses: int
+    count_invalid_interests: int
+    count_invalid_likelihoods: int
 
 
 def generate_chunks(daily_dfs: Dict[datetime.date, pl.DataFrame], chunk_size: int = 15):
@@ -36,54 +38,76 @@ def extract_interests_list(text: str) -> List[str]:
         return []
 
 
+def extract_social_likelihoods_list(text: str) -> List[bool]:
+    try:
+        res = repair_json(text, return_objects=True)
+        # Check if j is an array of booleans
+        if isinstance(res, list) and all(isinstance(item, bool) for item in res):
+            return res
+    except Exception:
+        pass
+    return []
+
+
 def generate_chunked_interests(
-    llama8b: Llama8bResource,
+    local_llm: LocalLlmResource,
     chunks: Dict[datetime.date, List[pl.DataFrame]],
-    first_instruction: str,
-    second_instruction: str,
+    prompt_sequence_base: List[str],
 ):
-    dates = []
-    prompt_sequences = []
-    raw_interests = []
-
-    for date, day_dfs in chunks.items():
-        for frame in day_dfs:
-            dates.append(date)
-            prompt_sequences.append(
-                [f"{first_instruction}\n{frame}", second_instruction]
+    dates, prompt_sequences, raw_interests = zip(
+        *[
+            (
+                date,
+                [f"{prompt_sequence_base[0]}\n{frame}", *prompt_sequence_base],
+                frame["title"].to_list(),
             )
-            raw_interests.append(frame["title"].to_list())
-
-    results, conversations = llama8b.get_prompt_sequences_completions_batch(
-        prompt_sequences,  # [None, None]
+            for date, day_dfs in chunks.items()
+            for frame in day_dfs
+        ]
     )
 
-    chunked_interests = [
-        extract_interests_list(res[-1]) if res else [] for res in results
+    results, _ = local_llm.get_prompt_sequences_completions_batch(prompt_sequences)
+
+    chunked_interests, chunked_social_likelihoods = zip(
+        *[
+            (
+                extract_interests_list(res[-2]),
+                extract_social_likelihoods_list(res[-1]),
+            )
+            if res
+            else ([], [])
+            for res in results
+        ]
+    )
+
+    # If the likelihoods are shorter than the interests, pad them with False so
+    # that the final zip still goes through all the interests
+    chunked_social_likelihoods = [
+        likelihoods + [False] * (len(interests) - len(likelihoods))
+        if len(likelihoods) < len(interests)
+        else likelihoods
+        for likelihoods, interests in zip(chunked_social_likelihoods, chunked_interests)
     ]
 
-    for date, chunked_interest, raw_interest in zip(
-        dates, chunked_interests, raw_interests
+    for date, interests, raw_interest, likelihoods in zip(
+        dates, chunked_interests, raw_interests, chunked_social_likelihoods
     ):
-        interests = [interest for interest in chunked_interest if interest]
-
         yield {
             "date": date,
             "interests": interests,
+            "social_likelihoods": likelihoods,
+            "count_invalid_interests": int(not interests),
+            "count_invalid_likelihoods": int(not likelihoods),
             "raw_interests": raw_interest,
-            "count_invalid_responses": 1 if len(interests) == 0 else 0,
         }
 
 
 def get_full_history_sessions(
     full_takeout: pl.DataFrame,
     chunk_size: int,
-    first_instruction: str,
-    second_instruction: str,
-    llama8b: Llama8bResource,
-):
-    # Split into multiple data frames (one per day). This is necessary to correctly
-    # identify the data associated with each time entry.
+    prompt_sequence: List[str],
+    local_llm: LocalLlmResource,
+) -> FullHistorySessionsOutput:
     daily_dfs = full_takeout.with_columns(
         date=pl.col("timestamp").dt.date()
     ).partition_by("date", as_dict=True, include_key=False)
@@ -92,25 +116,24 @@ def get_full_history_sessions(
     logger.info(f"Processing {len(daily_dfs)} records")
 
     chunks = generate_chunks(daily_dfs, chunk_size)
+    daily_records = generate_chunked_interests(local_llm, chunks, prompt_sequence)
 
-    daily_records = generate_chunked_interests(
-        llama8b, chunks, first_instruction, second_instruction
-    )
-
-    output_df = (
+    grouped_df = (
         pl.DataFrame(daily_records)
-        .filter(pl.col("interests").is_not_null())
         .group_by("date")
         .agg(
             [
-                pl.col("interests").flatten().unique(),
+                pl.col("interests").flatten(),
+                pl.col("social_likelihoods").flatten(),
                 pl.col("raw_interests").flatten().unique(),
-                pl.col("count_invalid_responses").sum(),
+                pl.col("count_invalid_interests").sum(),
+                pl.col("count_invalid_likelihoods").sum(),
             ]
         )
     )
 
     return FullHistorySessionsOutput(
-        output_df=output_df,
-        count_invalid_responses=int(output_df["count_invalid_responses"].sum()),
+        output_df=grouped_df,
+        count_invalid_interests=int(grouped_df["count_invalid_interests"].sum()),
+        count_invalid_likelihoods=int(grouped_df["count_invalid_likelihoods"].sum()),
     )
