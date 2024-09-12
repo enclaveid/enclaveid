@@ -53,7 +53,14 @@ function SocialCard({ userMatchOverview, loading }: SocialCardProps) {
             size="md"
             label="Match"
           />
-          <Button label="Open chat" size="small" />
+          <Button
+            label="Open chat"
+            size="small"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          />
         </div>
       </div>
     </Link>
