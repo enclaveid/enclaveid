@@ -58,7 +58,7 @@ def generate_chunked_interests(
         *[
             (
                 date,
-                [f"{prompt_sequence_base[0]}\n{frame}", *prompt_sequence_base],
+                [f"{prompt_sequence_base[0]}\n{frame}", *prompt_sequence_base[1:]],
                 frame["title"].to_list(),
             )
             for date, day_dfs in chunks.items()
