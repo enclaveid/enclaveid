@@ -6,7 +6,6 @@ from dagster import (
     AssetIn,
     asset,
 )
-from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.utils.costs import get_gpu_runtime_cost
@@ -15,19 +14,6 @@ from ...constants.k8s import get_k8s_vllm_config
 from ...partitions import user_partitions_def
 from ...resources.sentence_transfomer_resource import SentenceTransformerResource
 from ...utils.capabilities import gpu_info
-
-
-class InterestsEmbeddingsConfig(RowLimitConfig):
-    chunk_size: int = Field(
-        default=15,
-        description=(
-            "Split the raw history into chunks of this size. We allow vLLM to "
-            "determine the ideal batch size by itsef, so this has no impact on "
-            "runtime but it still determines how many records are shown to the "
-            "LLM at one time. Having too many records can cause the LLM to give "
-            "sub-par responses."
-        ),
-    )
 
 
 @asset(
@@ -39,7 +25,7 @@ class InterestsEmbeddingsConfig(RowLimitConfig):
 )
 def interests_embeddings(
     context: AssetExecutionContext,
-    config: InterestsEmbeddingsConfig,
+    config: RowLimitConfig,
     embedding_model: SentenceTransformerResource,
     interests: pl.DataFrame,
 ) -> pl.DataFrame:

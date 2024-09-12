@@ -81,11 +81,12 @@ def generate_chunked_interests(
     )
 
     # If the uniqueness are shorter than the interests, pad them with False so
-    # that the final zip still goes through all the interests
+    # that the final zip still goes through all the interests. If they are
+    # longer, they will be truncated.
     chunked_interests_uniqueness = [
         uniqueness + [False] * (len(interests) - len(uniqueness))
         if len(uniqueness) < len(interests)
-        else uniqueness
+        else uniqueness[: len(interests)]
         for uniqueness, interests in zip(
             chunked_interests_uniqueness, chunked_interests
         )
