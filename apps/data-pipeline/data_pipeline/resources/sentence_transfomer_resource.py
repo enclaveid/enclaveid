@@ -1,3 +1,4 @@
+import time
 from typing import TYPE_CHECKING, Any, Dict, Literal
 
 import polars as pl
@@ -20,8 +21,10 @@ class SentenceTransformerResource(ConfigurableResource):
     def setup_for_execution(self, context: InitResourceContext) -> None:
         logger = get_dagster_logger()
         logger.info(f"Loading SentenceTransformer model: {self._model_name}")
+        time_start = time.time()
         self._model = SentenceTransformer(self._model_name)
         self._pool = self._model.start_multi_process_pool()
+        logger.info(f"Model loaded in {(time.time() - time_start):.2f} seconds")
 
     def get_embeddings(self, series: pl.Series):
         embeddings = self._model.encode_multi_process(series.to_list(), self._pool)

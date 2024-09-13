@@ -111,9 +111,9 @@ def interests_clusters(
     result = df.with_columns(
         cluster_label=pl.Series(fine_cluster_labels),
         category_cluster_label=pl.Series(coarse_cluster_labels),
-    ).drop("embeddings")
+    ).rename({"embeddings": "interests_embeddings"})
 
     context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    # Columns: date, interests, interests_uniqueness, cluster_label, category_cluster_label
+    # Columns: date, interests, interests_uniqueness, interests_embeddings, cluster_label, category_cluster_label
     return result

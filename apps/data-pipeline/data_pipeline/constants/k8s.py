@@ -65,7 +65,19 @@ def get_k8s_vllm_config(gpu_count):
             "dagster-k8s/config": {
                 "container_config": {
                     "image": os.environ.get("VLLM_IMAGE", ""),
-                }
+                    "volumeMounts": [{"name": "dshm", "mountPath": "/dev/shm"}],
+                },
+                "pod_spec_config": {
+                    "volumes": [
+                        {
+                            "name": "dshm",
+                            "empty_dir": {
+                                "medium": "Memory",
+                                "size_limit": "8Gi",
+                            },
+                        }
+                    ],
+                },
             }
         },
     )
