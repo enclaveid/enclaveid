@@ -70,6 +70,11 @@ def match_users(
         other_user_activity_df[comparison_column].to_numpy(),
         current_user_activity_df["cluster_label"].to_numpy(),
         other_user_activity_df["cluster_label"].to_numpy(),
+    ).rename(
+        {
+            "user_item_label": "user_cluster_label",
+            "other_user_item_label": "other_user_cluster_label",
+        }
     )
 
     return match_df.with_columns(

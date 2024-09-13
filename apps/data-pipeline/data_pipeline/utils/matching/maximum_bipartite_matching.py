@@ -31,8 +31,8 @@ def _pad_array(arr, target_len):
 def maximum_bipartite_matching(
     user1_embeddings: np.ndarray,
     user2_embeddings: np.ndarray,
-    user1_cluster_labels: np.ndarray,
-    user2_cluster_labels: np.ndarray,
+    user1_item_labels: np.ndarray,
+    user2_item_labels: np.ndarray,
 ) -> pl.DataFrame:
     """
     Compute the maximum bipartite matching between two sets of embeddings
@@ -45,13 +45,13 @@ def maximum_bipartite_matching(
     padded_user1_embeddings = _pad_array(user1_embeddings, max_len)
     padded_user2_embeddings = _pad_array(user2_embeddings, max_len)
     padded_user1_labels = np.pad(
-        user1_cluster_labels,
+        user1_item_labels,
         (0, max_len - len1),
         mode="constant",
         constant_values=PAD_VALUE,
     )
     padded_user2_labels = np.pad(
-        user2_cluster_labels,
+        user2_item_labels,
         (0, max_len - len2),
         mode="constant",
         constant_values=PAD_VALUE,
@@ -77,16 +77,14 @@ def maximum_bipartite_matching(
 
     result_df = pl.DataFrame(
         {
-            "user_cluster_label": padded_user1_labels[user1_indices.get().tolist()],
-            "other_user_cluster_label": padded_user2_labels[
-                user2_indices.get().tolist()
-            ],
+            "user_item_label": padded_user1_labels[user1_indices.get().tolist()],
+            "other_user_item_label": padded_user2_labels[user2_indices.get().tolist()],
             "cosine_similarity": similarities.tolist(),
         }
     )
 
     # Remove padded values and return results in original order
     return result_df.filter(
-        (pl.col("user_cluster_label") != PAD_VALUE)
-        & (pl.col("other_user_cluster_label") != PAD_VALUE)
+        (pl.col("user_item_label") != PAD_VALUE)
+        & (pl.col("other_user_item_label") != PAD_VALUE)
     )
