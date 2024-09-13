@@ -6,7 +6,6 @@ import polars as pl
 from dagster import AssetExecutionContext, asset
 from pydantic import Field
 
-from data_pipeline.assets.search_history.interests_clusters import interests_clusters
 from data_pipeline.assets.search_history.summaries_embeddings import (
     summaries_embeddings,
 )
@@ -127,7 +126,7 @@ def match_users(
 
 @asset(
     partitions_def=user_partitions_def,
-    deps=[summaries_embeddings, interests_clusters],
+    deps=[summaries_embeddings],
     io_manager_key="parquet_io_manager",
     op_tags=get_k8s_rapids_config(1),
 )
@@ -156,6 +155,7 @@ async def summaries_user_matches(
             DAGSTER_STORAGE_BUCKET / "summaries_embeddings" / f"{other_user_id}.snappy"
         ).sort(by="cluster_label")
 
+        # TODO: allow matching across activity types
         for activity_type in ACTIVITY_TYPES:
             match_df = match_users(
                 current_user_df,
@@ -172,5 +172,5 @@ async def summaries_user_matches(
 
     context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    # Columns: user_id, other_user_id, activity_type, common_summary_prompt_items, common_summary_prompt_summaries, social_likelihoods
+    # Columns: user_id, other_user_id, user_cluster_label, other_user_cluster_label, activity_type, common_summary_prompt_items, common_summary_prompt_summaries, social_likelihoods
     return result_df.sort(by="cosine_similarity", descending=True)

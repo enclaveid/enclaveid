@@ -210,8 +210,12 @@ async def cluster_summaries(
     logger = get_logger(context)
 
     # Sample max_samples from each cluster
-    sampled_df = interests_clusters.filter(pl.col("cluster_label") != -1).filter(
-        pl.int_range(pl.len()).shuffle().over("cluster_label") < config.max_samples
+    sampled_df = (
+        interests_clusters.drop("interest_id")
+        .filter(pl.col("cluster_label") != -1)
+        .filter(
+            pl.int_range(pl.len()).shuffle().over("cluster_label") < config.max_samples
+        )
     )
 
     # Sort by date and concat date and interests

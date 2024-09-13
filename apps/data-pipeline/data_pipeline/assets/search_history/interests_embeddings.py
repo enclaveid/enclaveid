@@ -39,6 +39,7 @@ def interests_embeddings(
         # Explode the interests so we get the embeddings for each individual interest
         .explode("interests", "interests_uniqueness")
         .drop_nulls()
+        .with_row_index("interest_id")
     )
 
     context.log.info("Computing embeddings")
@@ -48,5 +49,5 @@ def interests_embeddings(
 
     context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    # Columns: date, interests, interests_uniqueness, embeddings
+    # Columns: interest_id, date, interests, interests_uniqueness, embeddings
     return result

@@ -64,6 +64,9 @@ class UserMatchesSummariesConfig(RowLimitConfig):
     io_manager_key="parquet_io_manager",
     ins={
         "summaries_user_matches": AssetIn(key=["summaries_user_matches"]),
+        "summaries_user_interests_matches": AssetIn(
+            key=["summaries_user_interests_matches"]
+        ),
     },
 )
 async def summaries_user_matches_with_desc(
