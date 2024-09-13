@@ -51,17 +51,18 @@ export default fp(async (fastify: FastifyInstance) => {
 
     let emailError;
     try {
-      await sendEmail(
-        user.email,
-        'Your EnclaveID results are ready!',
-        `<html>
+      if (process.env.SEND_RESULTS_EMAIL === 'true')
+        await sendEmail(
+          user.email,
+          'Your EnclaveID results are ready!',
+          `<html>
         <body>
           <p>Hi ${user.displayName},</p>
           <p>Your EnclaveID results are ready: https://app.enclaveid.com/dashboard</p>
           <p>The EnclaveID Team</p>
         </body>
       </html>`,
-      );
+        );
     } catch (err) {
       emailError = err;
       console.error(err);
