@@ -88,32 +88,12 @@ def interests_clusters(
         }
     )
 
-    # Clustering for interest categories
-    coarse_cluster_labels = HDBSCAN(
-        min_cluster_size=config.coarse_min_cluster_size,
-        gen_min_span_tree=True,
-        metric="euclidean",
-        cluster_selection_epsilon=config.coarse_cluster_selection_epsilon,
-    ).fit_predict(reduced_data_gpu.astype(np.float64).get())
-
-    coarse_cluster_stats = np.unique(coarse_cluster_labels, return_counts=True)
-
-    context.add_output_metadata(
-        {
-            "coarse_clusters_count": len(coarse_cluster_stats[0]),
-            "coarse_noise_count": int(coarse_cluster_stats[1][0])
-            if -1 in coarse_cluster_stats[0]
-            else 0,
-        }
-    )
-
-    # Remove the embeddings to save space
     result = df.with_columns(
         cluster_label=pl.Series(fine_cluster_labels),
-        category_cluster_label=pl.Series(coarse_cluster_labels),
+        # category_cluster_label=pl.Series(coarse_cluster_labels),
     ).rename({"embeddings": "interests_embeddings"})
 
     context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    # Columns: date, interests, interests_uniqueness, interests_embeddings, cluster_label, category_cluster_label
+    #Columns: date, interests, interests_uniqueness, interests_embeddings, cluster_label
     return result

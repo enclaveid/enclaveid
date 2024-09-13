@@ -78,6 +78,8 @@ class SummarizationResult(BaseModel):
 def get_summarization_prompt(initial_classification_result: str) -> str:
     CLUSTER_SUMMARIZATION_FORMAT = dedent(
         """
+        Pay particular attention to the elements tagged as "UNIQUE" in the cluster, and make sure to mention them in the summary.
+
         Finally, provide the most detailed possible category that captures all the topics of the activity.
 
         Conclude your analysis with a JSON as follows:
@@ -113,7 +115,6 @@ def get_summarization_prompt(initial_classification_result: str) -> str:
               - The specific types of occasions or needs
               - Frequency pattern of these needs
               - User's apparent level of experience in addressing these needs
-              - Any unique elements in the user's approach
 
               {CLUSTER_SUMMARIZATION_FORMAT}
               """
@@ -217,9 +218,16 @@ async def cluster_summaries(
     df = (
         sampled_df.sort(by=pl.col("date"))
         .with_columns(
-            pl.concat_str([pl.col("date"), pl.col("interests")], separator=":").alias(
-                "date_interests"
-            )
+            pl.concat_str(
+                [
+                    pl.when(pl.col("interests_uniqueness").eq(True))
+                    .then(pl.lit("UNIQUE:"))
+                    .otherwise(pl.lit("")),
+                    pl.col("date"),
+                    pl.lit(":"),
+                    pl.col("interests"),
+                ],
+            ).alias("date_interests")
         )
         .group_by("cluster_label")
         .agg(
@@ -286,6 +294,7 @@ async def cluster_summaries(
         ["conversations"]
     )
 
+    # Columns: date, interests, interests_uniqueness, cluster_label, cluster_title, cluster_summary, is_sensitive, social_likelihood
     if config.debug:
         return result, debug_dataframe
     else:

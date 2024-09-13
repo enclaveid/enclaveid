@@ -73,7 +73,7 @@ def get_k8s_vllm_config(gpu_count):
                             "name": "dshm",
                             "empty_dir": {
                                 "medium": "Memory",
-                                "size_limit": "8Gi",
+                                "size_limit": "32Gi",
                             },
                         }
                     ],
