@@ -39,15 +39,15 @@ class TakeoutConfig(RowLimitConfig):
         "full_takeout": AssetOut(
             key_prefix=["parsed"], io_manager_key="parquet_io_manager"
         ),
-        "recent_takeout": AssetOut(
-            key_prefix=["parsed"], io_manager_key="parquet_io_manager"
-        ),
+        # "recent_takeout": AssetOut(
+        #     key_prefix=["parsed"], io_manager_key="parquet_io_manager"
+        # ),
     },
     partitions_def=user_partitions_def,
 )
 def parsed_takeout(
     context: AssetExecutionContext, config: TakeoutConfig
-) -> tuple[pl.DataFrame, pl.DataFrame]:
+) -> pl.DataFrame:
     """Parses the raw Takeout data and splits it into two sets based on recency.
     The exact threshold is controlled by the TakeoutConfig.threshold parameter
     (-3mo by default).
@@ -81,10 +81,9 @@ def parsed_takeout(
         month=pl.col("time").dt.strftime("%Y-%m-%d"),
     )
 
-    recent_df = full_df.filter(
-        pl.col("timestamp") > pl.col("timestamp").max().dt.offset_by(config.threshold)
-    )
+    # recent_df = full_df.filter(
+    #     pl.col("timestamp") > pl.col("timestamp").max().dt.offset_by(config.threshold)
+    # )
+    # recent_df.slice(0, config.row_limit)
 
-    # The row_limit is enforced on the output instead of the input because prematurely
-    # filtering the rows might leave no "recent" rows in the output, making recent_df empty.
-    return full_df.slice(0, config.row_limit), recent_df.slice(0, config.row_limit)
+    return full_df.slice(0, config.row_limit)

@@ -191,11 +191,11 @@ class ClusterSummariesConfig(RowLimitConfig):
             io_manager_key="parquet_io_manager",
             is_required=True,
         ),
-        "cluster_summaries_debug": AssetOut(
-            key=["cluster_summaries_debug"],
-            io_manager_key="parquet_io_manager",
-            is_required=False,
-        ),
+        # "cluster_summaries_debug": AssetOut(
+        #     key=["cluster_summaries_debug"],
+        #     io_manager_key="parquet_io_manager",
+        #     is_required=False,
+        # ),
     },
     op_tags=get_k8s_vllm_config(2),
     # retry_policy=spot_instance_retry_policy,
@@ -281,7 +281,7 @@ async def cluster_summaries(
         ["date_interests", "date", "interests"]
     )
 
-    debug_dataframe = result.clone()
+    # debug_dataframe = result.clone()
 
     invalid_results = result.filter(
         pl.col("activity_type").eq(ActivityType.unknown)
@@ -298,8 +298,10 @@ async def cluster_summaries(
         ["conversations"]
     )
 
+    # if config.debug:
+    #     return result, debug_dataframe
+    # else:
+    #   return result
+
     # Columns: date, interests, interests_uniqueness, cluster_label, cluster_title, cluster_summary, is_sensitive, social_likelihood
-    if config.debug:
-        return result, debug_dataframe
-    else:
-        return result
+    return result
