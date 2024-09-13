@@ -64,9 +64,7 @@ class UserMatchesSummariesConfig(RowLimitConfig):
     io_manager_key="parquet_io_manager",
     ins={
         "summaries_user_matches": AssetIn(key=["summaries_user_matches"]),
-        "summaries_user_interests_matches": AssetIn(
-            key=["summaries_user_interests_matches"]
-        ),
+        "summaries_interests_matches": AssetIn(key=["summaries_interests_matches"]),
     },
 )
 async def summaries_user_matches_with_desc(
@@ -74,6 +72,7 @@ async def summaries_user_matches_with_desc(
     config: UserMatchesSummariesConfig,
     llama405b: Llama405bResource,
     summaries_user_matches: pl.DataFrame,
+    summaries_interests_matches: pl.DataFrame,
 ) -> pl.DataFrame | None:
     if summaries_user_matches.is_empty():
         return None
