@@ -1,10 +1,10 @@
 import datetime
+import re
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
 import polars as pl
 from dagster import get_dagster_logger
-from json_repair import repair_json
 
 from data_pipeline.resources.llm_inference.local_llm_resource import LocalLlmResource
 
@@ -27,22 +27,30 @@ def generate_chunks(daily_dfs: Dict[datetime.date, pl.DataFrame], chunk_size: in
     return chunks
 
 
-# Skip the first list and extract the second one
+# Extract two lists from the text
 def extract_interests_lists(text: str) -> Tuple[List[str], List[str]]:
-    try:
-        res = repair_json(text, return_objects=True)
-        # Check if res is a list of two lists of strings
-        if (
-            isinstance(res, list)
-            and len(res) == 2
-            and all(isinstance(item, list) for item in res)
-            and all(isinstance(item, str) for item in res[0])
-            and all(isinstance(item, bool) for item in res[1])
-        ):
-            return res[0], res[1]
-    except Exception:
-        pass
-    return ([], [])
+    matches = re.findall(r"\[(.*?)\]", text)
+    if len(matches) >= 2:
+        # Extract and process both lists
+        interests = [
+            interest.strip()
+            for interest in matches[0].replace('"', "").replace("'", "").split(";")
+        ]
+        quirky_interests = [
+            interest.strip()
+            for interest in matches[1].replace('"', "").replace("'", "").split(";")
+        ]
+        return interests, quirky_interests
+    elif len(matches) == 1:
+        # If only one list is found, return it and an empty list
+        interests = [
+            interest.strip()
+            for interest in matches[0].replace('"', "").replace("'", "").split(";")
+        ]
+        return interests, []
+    else:
+        # If no lists are found, return two empty lists
+        return [], []
 
 
 def generate_chunked_interests(
@@ -64,8 +72,11 @@ def generate_chunked_interests(
 
     results, _ = local_llm.get_prompt_sequences_completions_batch(prompt_sequences)
 
-    chunked_interests, chunked_interests_quirky = zip(
-        *[extract_interests_lists(res[-1]) if res else ([], []) for res in results]
+    chunked_interests, chunked_interests_quirky, raw_results = zip(
+        *[
+            (*extract_interests_lists(res[-1]), res) if res else ([], [], [])
+            for res in results
+        ]
     )
 
     chunked_interests_quirkiness = [False] * len(chunked_interests)
@@ -75,8 +86,12 @@ def generate_chunked_interests(
 
     chunked_interests = chunked_interests + chunked_interests_quirky
 
-    for date, interests, raw_interest, quirkyness in zip(
-        dates, chunked_interests, raw_interests, chunked_interests_quirkiness
+    for date, interests, raw_interest, quirkyness, raw_result in zip(
+        dates,
+        chunked_interests,
+        raw_interests,
+        chunked_interests_quirkiness,
+        raw_results,
     ):
         yield {
             "date": date,
@@ -85,6 +100,7 @@ def generate_chunked_interests(
             "count_invalid_interests": int(not interests),
             "count_invalid_quirkiness": int(not quirkyness),
             "raw_interests": raw_interest,
+            "raw_results": raw_result,
         }
 
 
@@ -111,7 +127,8 @@ def get_full_history_sessions(
             [
                 pl.col("interests").flatten(),
                 pl.col("interests_quirkiness").flatten(),
-                pl.col("raw_interests").flatten().unique(),
+                pl.col("raw_interests").flatten(),
+                pl.col("raw_results").flatten(),
                 pl.col("count_invalid_interests").sum(),
                 pl.col("count_invalid_quirkiness").sum(),
             ]
@@ -120,7 +137,7 @@ def get_full_history_sessions(
 
     return FullHistorySessionsOutput(
         output_df=grouped_df.select(
-            "date", "interests", "interests_quirkiness", "raw_interests"
+            "date", "interests", "interests_quirkiness", "raw_interests", "raw_results"
         ),
         count_invalid_interests=int(grouped_df["count_invalid_interests"].sum()),
         count_invalid_quirkiness=int(grouped_df["count_invalid_quirkiness"].sum()),

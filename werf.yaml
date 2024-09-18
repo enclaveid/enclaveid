@@ -40,7 +40,7 @@ git:
         - requirements.vllm.txt
         - requirements.prod.txt
       setup:
-        - dist/**/*
+        - dist/data_pipeline-1.0.0-py3-none-any.whl
 shell:
   beforeInstall:
     - apt-get update && apt-get install -y python3-pip
@@ -50,7 +50,7 @@ shell:
     - pip install flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
     - pip install --no-cache-dir -r /app/requirements.prod.txt
   setup:
-    - pip install --no-deps /app/dist/*.whl
+    - pip install --no-deps /app/dist/data_pipeline-1.0.0-py3-none-any.whl
 docker:
   WORKDIR: /app
   ENV:

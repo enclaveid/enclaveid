@@ -88,6 +88,6 @@ def interests(
 
     context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    # Columns: date, interests, interests_quirkiness, raw_interests
+    # Columns: date, interests, interests_quirkiness, raw_interests, raw_results
     # NB: aggregate by date while the other assets are at date granularity
     return sessions_output.output_df
