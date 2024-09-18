@@ -20,6 +20,8 @@ all_assets = load_assets_from_modules(
     ]
 )
 
+# cache test
+
 defs = Definitions(
     assets=all_assets,
     sensors=[inputs_sensor, outputs_sensor],
