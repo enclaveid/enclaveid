@@ -46,14 +46,6 @@ jobs:
           username: enclaveid
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Authenticate Docker to GHCR
-        run: |
-          echo ${{ secrets.GHCR_TOKEN }} | docker login -u enclaveid --password-stdin ghcr.io
-
-      - name: Authenticate Buildah to GHCR
-        run: |
-          echo ${{ secrets.GHCR_TOKEN }} | buildah login -u enclaveid --password-stdin ghcr.io
-
       - name: Install poetry
         uses: abatilo/actions-poetry@v3
 
@@ -110,7 +102,6 @@ jobs:
           echo "WERF_ALLOWED_LOCAL_CACHE_VOLUME_USAGE=100" >> $GITHUB_ENV
           echo "WERF_REPO=docker.io/enclaveid/cluster" >> $GITHUB_ENV
           echo "WERF_SECRET_VALUES_ENV=k8s/basic/secret-values/secret-values.yaml" >> $GITHUB_ENV
-          echo "WERF_CACHE_REPO_1=ghcr.io/enclaveid/cluster" >> $GITHUB_ENV
 
       - name: werf converge
         run: |
