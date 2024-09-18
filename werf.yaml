@@ -73,12 +73,12 @@ git:
       setup:
         - '**/*.py'
 shell:
-  beforeInstall:
-    - /bin/bash --login -c
   install:
+    - /bin/bash --login
     - /opt/conda/bin/pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com -r /app/requirements.rapids.txt
     - /opt/conda/bin/pip install --no-cache-dir -r /app/requirements.prod.txt
   setup:
+    - /bin/bash --login
     - /opt/conda/bin/pip install --no-deps /app/dist/*.whl
 docker:
   WORKDIR: /app
