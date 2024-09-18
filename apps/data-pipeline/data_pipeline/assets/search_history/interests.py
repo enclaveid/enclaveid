@@ -91,3 +91,6 @@ def interests(
     # Columns: date, interests, interests_quirkiness, raw_interests, raw_results
     # NB: aggregate by date while the other assets are at date granularity
     return sessions_output.output_df
+
+
+# test rebuild
