@@ -33,18 +33,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y buildah
 
-      - name: Authenticate Buildah
+      - name: Authenticate Buildah to DockerHub
         env:
-          REGISTRY_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          REGISTRY_USERNAME: enclaveid
           REGISTRY_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           echo $REGISTRY_PASSWORD | buildah login -u $REGISTRY_USERNAME --password-stdin docker.io
 
-      - name: Login to DockerHub
+      - name: Authenticate Docker to DockerHub
         uses: docker/login-action@v2
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
+          username: enclaveid
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Authenticate Docker to GHCR
+        run: |
+          echo ${{ secrets.GHCR_TOKEN }} | docker login -u enclaveid --password-stdin ghcr.io
+
+      - name: Authenticate Buildah to GHCR
+        run: |
+          echo ${{ secrets.GHCR_TOKEN }} | buildah login -u enclaveid --password-stdin ghcr.io
 
       - name: Install poetry
         uses: abatilo/actions-poetry@v3
@@ -97,11 +105,12 @@ jobs:
           echo "WERF_SECRET_KEY=${{ secrets.WERF_SECRET_KEY }}" >> $GITHUB_ENV
           echo "WERF_BUILDAH_MODE=auto" >> $GITHUB_ENV
           echo "WERF_REPO_DOCKER_HUB_PASSWORD=${{ secrets.DOCKERHUB_TOKEN }}" >> $GITHUB_ENV
-          echo "WERF_REPO_DOCKER_HUB_USERNAME=${{ vars.DOCKERHUB_USERNAME }}" >> $GITHUB_ENV
+          echo "WERF_REPO_DOCKER_HUB_USERNAME=enclaveid" >> $GITHUB_ENV
           echo "WERF_LOG_VERBOSE=true" >> $GITHUB_ENV
           echo "WERF_ALLOWED_LOCAL_CACHE_VOLUME_USAGE=100" >> $GITHUB_ENV
           echo "WERF_REPO=docker.io/enclaveid/cluster" >> $GITHUB_ENV
           echo "WERF_SECRET_VALUES_ENV=k8s/basic/secret-values/secret-values.yaml" >> $GITHUB_ENV
+          echo "WERF_CACHE_REPO_1=ghcr.io/enclaveid/cluster" >> $GITHUB_ENV
 
       - name: werf converge
         run: |
