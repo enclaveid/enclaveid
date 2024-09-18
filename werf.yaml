@@ -119,3 +119,6 @@ dependencies:
     imports:
       - type: ImageName
         targetEnv: RAPIDS_IMAGE
+mount:
+  - fromPath: ./apps/data-pipeline/dist
+    to: /app/dist

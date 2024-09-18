@@ -72,19 +72,29 @@ def generate_chunked_interests(
 
     results, _ = local_llm.get_prompt_sequences_completions_batch(prompt_sequences)
 
-    chunked_interests, chunked_interests_quirky, raw_results = zip(
+    chunked_interests_normal, chunked_interests_quirky, raw_results = zip(
         *[
             (*extract_interests_lists(res[-1]), res) if res else ([], [], [])
             for res in results
         ]
     )
 
-    chunked_interests_quirkiness = [False] * len(chunked_interests)
-    chunked_interests_quirkiness = chunked_interests_quirkiness + [True] * len(
-        chunked_interests_quirky
-    )
+    # Merge two lists into one
+    chunked_interests = [
+        [
+            *chunked_interests_normal[i],
+            *chunked_interests_quirky[i],
+        ]
+        for i in range(len(chunked_interests_normal))
+    ]
 
-    chunked_interests = chunked_interests + chunked_interests_quirky
+    # Add a boolean list to indicate if the interest is quirky
+    chunked_interests_quirkiness = []
+    for i in range(len(chunked_interests)):
+        chunked_interests_quirkiness.append(
+            [False] * len(chunked_interests_normal[i])
+            + [True] * len(chunked_interests_quirky[i])
+        )
 
     for date, interests, raw_interest, quirkyness, raw_result in zip(
         dates,
