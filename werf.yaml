@@ -1,4 +1,5 @@
 # Werf configuration for the EnclaveID Kubernetes cluster deployment
+# See https://werf.io/docs/latest/reference/werf_yaml.html for reference
 ---
 project: enclaveid
 configVersion: 1
