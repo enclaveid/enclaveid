@@ -5,3 +5,7 @@ config:
       - apps/api/dist
       - apps/spa-frontend/dist
       - apps/data-pipeline/dist
+  stapel:
+    mount:
+      allowFromPaths:
+        - **/dist
