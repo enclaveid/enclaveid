@@ -58,7 +58,7 @@ docker:
     SENTENCE_TRANSFORMERS_HOME: /model-cache/sentence-transformers
     MKL_THREADING_LAYER: GNU
 mount:
-  - fromPath: /apps/data-pipeline/dist
+  - fromPath: ./apps/data-pipeline/dist
     to: /app/dist
 ---
 image: data-pipeline-rapids
