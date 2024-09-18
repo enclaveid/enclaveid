@@ -8,4 +8,4 @@ config:
   stapel:
     mount:
       allowFromPaths:
-        - **/dist
+        - '**/dist'
