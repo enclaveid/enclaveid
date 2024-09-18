@@ -90,16 +90,32 @@ mount:
     to: /app/dist
 ---
 image: data-pipeline-base
-dockerfile: Dockerfile.base
-staged: {{ if eq .Env "production" }} true {{ else }} false {{ end }}
-context: ./apps/data-pipeline
-contextAddFiles: ./dist
+from: python:3.11
+git:
+  - add: /apps/data-pipeline
+    to: /app
+    stageDependencies:
+      install:
+        - requirements.prod.txt
+      setup:
+        - '**/*.py'
+shell:
+  beforeInstall:
+    - pip install --upgrade pip
+  install:
+    - pip install --no-cache-dir -r /app/requirements.prod.txt
+  setup:
+    - pip install --no-deps /app/dist/*.whl
+docker:
+  WORKDIR: /app
 dependencies:
   - image: data-pipeline-vllm
+    after: setup
     imports:
       - type: ImageName
-        targetBuildArg: VLLM_IMAGE_NAME
+        targetEnv: VLLM_IMAGE
   - image: data-pipeline-rapids
+    after: setup
     imports:
       - type: ImageName
-        targetBuildArg: RAPIDS_IMAGE_NAME
+        targetEnv: RAPIDS_IMAGE

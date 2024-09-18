@@ -20,7 +20,6 @@ all_assets = load_assets_from_modules(
     ]
 )
 
-# cache test
 
 defs = Definitions(
     assets=all_assets,
