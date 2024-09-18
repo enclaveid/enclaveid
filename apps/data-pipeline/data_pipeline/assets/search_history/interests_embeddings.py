@@ -35,9 +35,9 @@ def interests_embeddings(
     df = (
         # Enforce row_limit (if any)
         interests.slice(0, config.row_limit)
-        .select("date", "interests", "interests_uniqueness")
+        .select("date", "interests", "interests_quirkiness")
         # Explode the interests so we get the embeddings for each individual interest
-        .explode("interests", "interests_uniqueness")
+        .explode("interests", "interests_quirkiness")
         .drop_nulls()
         .with_row_index("interest_id")
     )
@@ -49,5 +49,5 @@ def interests_embeddings(
 
     context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    # Columns: interest_id, date, interests, interests_uniqueness, embeddings
+    # Columns: interest_id, date, interests, interests_quirkiness, embeddings
     return result

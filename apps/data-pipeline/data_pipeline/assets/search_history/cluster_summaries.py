@@ -224,7 +224,7 @@ async def cluster_summaries(
         .with_columns(
             pl.concat_str(
                 [
-                    pl.when(pl.col("interests_uniqueness").eq(True))
+                    pl.when(pl.col("interests_quirkiness").eq(True))
                     .then(pl.lit("UNIQUE:"))
                     .otherwise(pl.lit("")),
                     pl.col("date"),
@@ -303,5 +303,5 @@ async def cluster_summaries(
     # else:
     #   return result
 
-    # Columns: date, interests, interests_uniqueness, cluster_label, cluster_title, cluster_summary, is_sensitive, social_likelihood
+    # Columns: date, interests, interests_quirkiness, cluster_label, cluster_title, cluster_summary, is_sensitive, social_likelihood
     return result

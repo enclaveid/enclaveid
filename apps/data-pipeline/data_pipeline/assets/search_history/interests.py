@@ -9,7 +9,7 @@ from dagster import (
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
+from data_pipeline.resources.llm_inference.gemma9b_resource import Gemma9bResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.k8s import get_k8s_vllm_config
@@ -22,7 +22,7 @@ from ...utils.search_history_utils import (
 
 class InterestsConfig(RowLimitConfig):
     chunk_size: int = Field(
-        default=10,
+        default=6,
         description=(
             "Search history records are split into chunks of this size."
             " Chunking too many items can cause the LLM to give sub-par responses."
@@ -31,27 +31,26 @@ class InterestsConfig(RowLimitConfig):
 
 
 enrichment_prompt_sequence = [
-    (
-        "Here is a list of my recent Google search activity."
-        " What have I been doing? What were my goals?"
-        " Be as specific as possible, using exact terms from the search activity."
-    ),
-    # Semicolons make is less prone to errors apparently
-    (
-        "Format the previous answer as a semicolon-separated array of strings delimited by square brackets."
-        " Focus on the goal of the search activity in relation to the specific topic."
+    dedent(
+        """
+        Here is a list of my recent Google search activity.
+        What have I been doing? What were my goals?
+        Be as specific as possible, using exact terms from the search activity.
+    """
     ),
     dedent(
         """
-        For each element in this list, determine if it's unique or quirky compared to what most people do online.
-        Consider an activity unique or quirky if:
-        - It's a specific or niche topic
-        - Most people wouldn't typically engage in it online
-
-        If an activity meets any of these criteria, consider it interesting.
-        After your analysis, return a list of boolean flags (true/false) corresponding to each activity in the original list.
-        Use 'true' for interesting activities and 'false' for others.
+        Are any of these activities particularly funny or quirky?
+        Be conservative in your judgement as there might be none.
+    """
+    ),
+    # Semicolons make is less prone to errors apparently
+    dedent(
         """
+        Format your first answer as a semicolon-separated array of strings delimited by square brackets.
+        Focus on the goal of the search activity in relation to the specific topic.
+        Then, also format your second answer in a second array, concisely mentioning what you found funny.
+    """
     ),
 ]
 
@@ -65,7 +64,7 @@ enrichment_prompt_sequence = [
 def interests(
     context: AssetExecutionContext,
     config: InterestsConfig,
-    llama8b: Llama8bResource,
+    gemma9b: Gemma9bResource,
     full_takeout: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -77,18 +76,18 @@ def interests(
         full_takeout=full_takeout,
         chunk_size=config.chunk_size,
         prompt_sequence=enrichment_prompt_sequence,
-        local_llm=llama8b,
+        local_llm=gemma9b,
     )
 
     context.add_output_metadata(
         {
             "count_invalid_interests": sessions_output.count_invalid_interests,
-            "count_invalid_uniqueness": sessions_output.count_invalid_uniqueness,
+            "count_invalid_quirkiness": sessions_output.count_invalid_quirkiness,
         }
     )
 
     context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    # Columns: date, interests, interests_uniqueness, raw_interests
+    # Columns: date, interests, interests_quirkiness, raw_interests
     # NB: aggregate by date while the other assets are at date granularity
     return sessions_output.output_df

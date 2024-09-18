@@ -1,7 +1,6 @@
 import datetime
-import re
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import polars as pl
 from dagster import get_dagster_logger
@@ -14,7 +13,7 @@ from data_pipeline.resources.llm_inference.local_llm_resource import LocalLlmRes
 class FullHistorySessionsOutput:
     output_df: pl.DataFrame
     count_invalid_interests: int
-    count_invalid_uniqueness: int
+    count_invalid_quirkiness: int
 
 
 def generate_chunks(daily_dfs: Dict[datetime.date, pl.DataFrame], chunk_size: int = 15):
@@ -28,25 +27,22 @@ def generate_chunks(daily_dfs: Dict[datetime.date, pl.DataFrame], chunk_size: in
     return chunks
 
 
-def extract_interests_list(text: str) -> List[str]:
-    match = re.search(r"\[(.*?)\]", text)
-    if match:
-        # If a match is found, split the substring by semicolon
-        interests = match.group(1).replace('"', "").replace("'", "").split(";")
-        return [interest.strip() for interest in interests]
-    else:
-        return []
-
-
-def extract_interests_uniqueness_list(text: str) -> List[bool]:
+# Skip the first list and extract the second one
+def extract_interests_lists(text: str) -> Tuple[List[str], List[str]]:
     try:
         res = repair_json(text, return_objects=True)
-        # Check if j is an array of booleans
-        if isinstance(res, list) and all(isinstance(item, bool) for item in res):
-            return res
+        # Check if res is a list of two lists of strings
+        if (
+            isinstance(res, list)
+            and len(res) == 2
+            and all(isinstance(item, list) for item in res)
+            and all(isinstance(item, str) for item in res[0])
+            and all(isinstance(item, bool) for item in res[1])
+        ):
+            return res[0], res[1]
     except Exception:
         pass
-    return []
+    return ([], [])
 
 
 def generate_chunked_interests(
@@ -68,39 +64,26 @@ def generate_chunked_interests(
 
     results, _ = local_llm.get_prompt_sequences_completions_batch(prompt_sequences)
 
-    chunked_interests, chunked_interests_uniqueness = zip(
-        *[
-            (
-                extract_interests_list(res[-2]),
-                extract_interests_uniqueness_list(res[-1]),
-            )
-            if res
-            else ([], [])
-            for res in results
-        ]
+    chunked_interests, chunked_interests_quirky = zip(
+        *[extract_interests_lists(res[-1]) if res else ([], []) for res in results]
     )
 
-    # If the uniqueness are shorter than the interests, pad them with False so
-    # that the final zip still goes through all the interests. If they are
-    # longer, they will be truncated.
-    chunked_interests_uniqueness = [
-        uniqueness + [False] * (len(interests) - len(uniqueness))
-        if len(uniqueness) < len(interests)
-        else uniqueness[: len(interests)]
-        for uniqueness, interests in zip(
-            chunked_interests_uniqueness, chunked_interests
-        )
-    ]
+    chunked_interests_quirkiness = [False] * len(chunked_interests)
+    chunked_interests_quirkiness = chunked_interests_quirkiness + [True] * len(
+        chunked_interests_quirky
+    )
 
-    for date, interests, raw_interest, uniqueness in zip(
-        dates, chunked_interests, raw_interests, chunked_interests_uniqueness
+    chunked_interests = chunked_interests + chunked_interests_quirky
+
+    for date, interests, raw_interest, quirkyness in zip(
+        dates, chunked_interests, raw_interests, chunked_interests_quirkiness
     ):
         yield {
             "date": date,
             "interests": interests,
-            "interests_uniqueness": uniqueness,
+            "interests_quirkiness": quirkyness,
             "count_invalid_interests": int(not interests),
-            "count_invalid_uniqueness": int(not uniqueness),
+            "count_invalid_quirkiness": int(not quirkyness),
             "raw_interests": raw_interest,
         }
 
@@ -127,18 +110,18 @@ def get_full_history_sessions(
         .agg(
             [
                 pl.col("interests").flatten(),
-                pl.col("interests_uniqueness").flatten(),
+                pl.col("interests_quirkiness").flatten(),
                 pl.col("raw_interests").flatten().unique(),
                 pl.col("count_invalid_interests").sum(),
-                pl.col("count_invalid_uniqueness").sum(),
+                pl.col("count_invalid_quirkiness").sum(),
             ]
         )
     )
 
     return FullHistorySessionsOutput(
         output_df=grouped_df.select(
-            "date", "interests", "interests_uniqueness", "raw_interests"
+            "date", "interests", "interests_quirkiness", "raw_interests"
         ),
         count_invalid_interests=int(grouped_df["count_invalid_interests"].sum()),
-        count_invalid_uniqueness=int(grouped_df["count_invalid_uniqueness"].sum()),
+        count_invalid_quirkiness=int(grouped_df["count_invalid_quirkiness"].sum()),
     )
