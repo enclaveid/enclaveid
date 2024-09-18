@@ -40,7 +40,7 @@ git:
         - requirements.vllm.txt
         - requirements.prod.txt
       setup:
-        - *.py # Changes in any .py file will have triggered a whl rebuild
+        - '*.py' # Changes in any .py file will have triggered a whl rebuild
 shell:
   beforeInstall:
     - apt-get update && apt-get install -y python3-pip
@@ -59,7 +59,7 @@ docker:
     MKL_THREADING_LAYER: GNU
 mount:
   - fromPath: /apps/data-pipeline/dist
-    toPath: /app/dist
+    to: /app/dist
 ---
 image: data-pipeline-rapids
 dockerfile: Dockerfile.rapids
