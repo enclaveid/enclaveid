@@ -34,7 +34,8 @@ def interests_embeddings(
 
     df = (
         # Enforce row_limit (if any)
-        interests.slice(0, config.row_limit)
+        interests
+        .slice(0, config.row_limit)
         .select("date", "interests", "interests_quirkiness")
         # Explode the interests so we get the embeddings for each individual interest
         .explode("interests", "interests_quirkiness")
