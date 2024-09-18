@@ -5,11 +5,7 @@ configVersion: 1
 
 build:
   platform:
-    {{ if eq .Env "production" }}
       - linux/amd64
-    {{ else if eq .Env "development" }}
-      - linux/arm64
-    {{ end }}
 
 deploy:
   helmChartDir: ./k8s/basic
@@ -35,10 +31,32 @@ context: ./apps/spa-frontend
 contextAddFiles: ./dist
 ---
 image: data-pipeline-vllm
-dockerfile: Dockerfile.vllm
-staged: {{ if eq .Env "production" }} true {{ else }} false {{ end }}
-context: ./apps/data-pipeline
-contextAddFiles: ./dist
+from: pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
+git:
+  - add: /apps/data-pipeline
+    to: /app
+    stageDependencies:
+      install:
+        - requirements.vllm.txt
+        - requirements.prod.txt
+      setup:
+        - dist/**/*
+shell:
+  beforeInstall:
+    - apt-get update && apt-get install -y python3-pip
+    - pip3 install --upgrade pip
+  install:
+    - pip install --no-cache-dir -r /app/requirements.vllm.txt
+    - pip install flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
+    - pip install --no-cache-dir -r /app/requirements.prod.txt
+  setup:
+    - pip install --no-deps /app/dist/*.whl
+docker:
+  WORKDIR: /app
+  ENV:
+    HF_HOME: /model-cache/huggingface
+    SENTENCE_TRANSFORMERS_HOME: /model-cache/sentence-transformers
+    MKL_THREADING_LAYER: GNU
 ---
 image: data-pipeline-rapids
 dockerfile: Dockerfile.rapids
