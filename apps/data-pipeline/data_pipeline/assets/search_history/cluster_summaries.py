@@ -191,11 +191,6 @@ class ClusterSummariesConfig(RowLimitConfig):
             io_manager_key="parquet_io_manager",
             is_required=True,
         ),
-        # "cluster_summaries_debug": AssetOut(
-        #     key=["cluster_summaries_debug"],
-        #     io_manager_key="parquet_io_manager",
-        #     is_required=False,
-        # ),
     },
     op_tags=get_k8s_vllm_config(2),
     # retry_policy=spot_instance_retry_policy,

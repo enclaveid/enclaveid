@@ -33,11 +33,13 @@ def generate_chunks(daily_dfs: Dict[datetime.date, pl.DataFrame], chunk_size: in
 def extract_interests_lists(text: str) -> Tuple[List[str], List[str]]:
     try:
         j = repair_json(text, return_objects=True)
-        res = j["interests"], j["quirky_interests"]
-    except Exception:
-        res = [], []
 
-    return res
+        if isinstance(j, dict):
+            return j.get("interests", []), j.get("quirky_interests", [])
+        else:
+            return [], []
+    except Exception:
+        return [], []
 
 
 def generate_chunked_interests(

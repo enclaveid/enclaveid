@@ -14,6 +14,9 @@ from data_pipeline.resources.llm_inference.local.llama8b_resource import Llama8b
 from data_pipeline.resources.llm_inference.local.llama70b_quantized_resource import (
     Llama70bQuantizedResource,
 )
+from data_pipeline.resources.llm_inference.local.mistral22b_resource import (
+    Mistral22bResource,
+)
 from data_pipeline.resources.llm_inference.local.mistral_nemo_resource import (
     MistralNemoResource,
 )
@@ -29,6 +32,7 @@ resources = {
     "mistral": MistralResource(api_key=EnvVar("MISTRAL_API_KEY")),
     "api_db": ApiDbSession(conn_string=EnvVar("API_DATABASE_URL")),
     "mistral_nemo": MistralNemoResource(),
+    "mistral22b": Mistral22bResource(),
     "gemma27b": Gemma27bResource(),
     "llama8b": Llama8bResource(),
     "gemma9b": Gemma9bResource(),

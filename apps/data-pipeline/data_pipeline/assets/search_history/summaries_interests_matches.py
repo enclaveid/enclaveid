@@ -26,6 +26,7 @@ from ...utils.capabilities import gpu_info
     deps=[summaries_user_matches, interests_clusters],
     io_manager_key="parquet_io_manager",
     op_tags=get_k8s_rapids_config(1),
+    
 )
 async def summaries_interests_matches(
     context: AssetExecutionContext,
