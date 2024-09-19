@@ -3,15 +3,20 @@ from dagster_polars import PolarsParquetIOManager
 
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
 from data_pipeline.resources.api_db_session import ApiDbSession
-from data_pipeline.resources.llm_inference.local.gemma9b_resource import Gemma9bResource
-from data_pipeline.resources.llm_inference.local.gemma27b_resource import Gemma27bResource
 from data_pipeline.resources.llm_inference.gpt4_resource import Gpt4Resource
+from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
+from data_pipeline.resources.llm_inference.llama405b_resource import Llama405bResource
+from data_pipeline.resources.llm_inference.local.gemma9b_resource import Gemma9bResource
+from data_pipeline.resources.llm_inference.local.gemma27b_resource import (
+    Gemma27bResource,
+)
 from data_pipeline.resources.llm_inference.local.llama8b_resource import Llama8bResource
 from data_pipeline.resources.llm_inference.local.llama70b_quantized_resource import (
     Llama70bQuantizedResource,
 )
-from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
-from data_pipeline.resources.llm_inference.llama405b_resource import Llama405bResource
+from data_pipeline.resources.llm_inference.local.mistral_nemo_resource import (
+    MistralNemoResource,
+)
 from data_pipeline.resources.mistral_resource import MistralResource
 from data_pipeline.resources.sentence_transfomer_resource import (
     SentenceTransformerResource,
@@ -23,6 +28,7 @@ resources = {
     ),
     "mistral": MistralResource(api_key=EnvVar("MISTRAL_API_KEY")),
     "api_db": ApiDbSession(conn_string=EnvVar("API_DATABASE_URL")),
+    "mistral_nemo": MistralNemoResource(),
     "gemma27b": Gemma27bResource(),
     "llama8b": Llama8bResource(),
     "gemma9b": Gemma9bResource(),

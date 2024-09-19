@@ -9,7 +9,9 @@ from dagster import (
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.resources.llm_inference.local.llama8b_resource import Llama8bResource
+from data_pipeline.resources.llm_inference.local.mistral_nemo_resource import (
+    MistralNemoResource,
+)
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.k8s import get_k8s_vllm_config
@@ -67,7 +69,7 @@ enrichment_prompt_sequence = [
 def interests(
     context: AssetExecutionContext,
     config: InterestsConfig,
-    llama8b: Llama8bResource,
+    mistral_nemo: MistralNemoResource,
     full_takeout: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -79,7 +81,7 @@ def interests(
         full_takeout=full_takeout,
         chunk_size=config.chunk_size,
         prompt_sequence=enrichment_prompt_sequence,
-        local_llm=llama8b,
+        local_llm=mistral_nemo,
     )
 
     context.add_output_metadata(
