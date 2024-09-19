@@ -50,7 +50,7 @@ shell:
     - pip3.11 install --no-cache-dir flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
     - pip3.11 install --no-cache-dir -r /app/requirements.prod.txt
   setup:
-    - pip3.11 install --no-cache-dir--no-deps /app/dist/*.whl
+    - pip3.11 install --no-cache-dir --no-deps /app/dist/*.whl
 docker:
   WORKDIR: /app
   ENV:
