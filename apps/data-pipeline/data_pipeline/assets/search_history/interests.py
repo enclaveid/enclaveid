@@ -9,9 +9,7 @@ from dagster import (
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.resources.llm_inference.local.mistral_nemo_resource import (
-    MistralNemoResource,
-)
+from data_pipeline.resources.llm_inference.local.llama8b_resource import Llama8bResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.k8s import get_k8s_vllm_config
@@ -42,7 +40,7 @@ enrichment_prompt_sequence = [
     ),
     dedent(
         """
-        Are any of these activities particularly funny or quirky?
+        Are any of these activities or patterns particularly funny or quirky?
         Be conservative in your judgement as there might be none.
     """
     ),
@@ -51,10 +49,11 @@ enrichment_prompt_sequence = [
         """
         Format your answers in json like this:
         {
-          "interests": ["interest1", "interest2", ...],
-          "quirky_interests": None or ["interest3", "interest4", ...]
+          "activities": ["activity1", "activity2", ...],
+          "quirky_activities": ["activity3", "activity4", ...]
         }
         Focus on the goal of the search activity in relation to the specific topic.
+        Include details from your knowledge in the strings.
     """
     ),
 ]
@@ -69,7 +68,7 @@ enrichment_prompt_sequence = [
 def interests(
     context: AssetExecutionContext,
     config: InterestsConfig,
-    mistral_nemo: MistralNemoResource,
+    llama8b: Llama8bResource,
     full_takeout: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -81,7 +80,7 @@ def interests(
         full_takeout=full_takeout,
         chunk_size=config.chunk_size,
         prompt_sequence=enrichment_prompt_sequence,
-        local_llm=mistral_nemo,
+        local_llm=llama8b,
     )
 
     context.add_output_metadata(
