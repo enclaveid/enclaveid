@@ -10,6 +10,4 @@ class Gemma27bResource(LocalLlmResource):
         "top_p": 1.0,
         "max_tokens": 1024,
     }
-    _vllm_args = {
-        "enforce_eager": True,
-    }
+    _vllm_args = {"enforce_eager": True, "tensor_parallel_size": 4}

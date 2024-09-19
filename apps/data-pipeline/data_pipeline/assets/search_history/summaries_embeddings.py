@@ -48,6 +48,6 @@ def summaries_embeddings(
         ),
     )
 
-    context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
+    context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time, 4):.2f}")
 
     return result
