@@ -21,7 +21,7 @@ class DissimilarFunnyInterestsConfig(RowLimitConfig):
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={"interests_embeddings": AssetIn(key=["interests_embeddings"])},
-    op_tags=get_k8s_rapids_config(1),
+    op_tags=get_k8s_rapids_config(),
 )
 def dissimilar_funny_interests(
     context: AssetExecutionContext,

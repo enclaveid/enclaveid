@@ -20,7 +20,7 @@ from ...utils.capabilities import gpu_info
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={"interests": AssetIn(key=["interests"])},
-    op_tags=get_k8s_vllm_config(2),
+    op_tags=get_k8s_vllm_config(),
     # retry_policy=spot_instance_retry_policy,
 )
 def interests_embeddings(
@@ -34,8 +34,7 @@ def interests_embeddings(
 
     df = (
         # Enforce row_limit (if any)
-        interests
-        .slice(0, config.row_limit)
+        interests.slice(0, config.row_limit)
         .select("date", "interests", "interests_quirkiness")
         # Explode the interests so we get the embeddings for each individual interest
         .explode("interests", "interests_quirkiness")

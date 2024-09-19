@@ -25,8 +25,7 @@ from ...utils.capabilities import gpu_info
     # TODO: maybe we should use ins with AllPartitionMapping ?
     deps=[summaries_user_matches, interests_clusters],
     io_manager_key="parquet_io_manager",
-    op_tags=get_k8s_rapids_config(1),
-    
+    op_tags=get_k8s_rapids_config(),
 )
 async def summaries_interests_matches(
     context: AssetExecutionContext,

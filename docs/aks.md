@@ -35,7 +35,6 @@ az provider register --namespace "Microsoft.ContainerService"
 AZURE_RESOURCE_GROUP=enclaveid-staging
 AZURE_CLUSTER_NAME=enclaveid-cluster-staging
 AZURE_NODE_VM_SIZE=Standard_D4_v5 # Confidential VMs are not available eastus2 but we have the GPU quota here
-AZURE_NODE_VM_SIZE_GPU=standard_nc48ads_a100_v4 # The GPU VM is the same
 AZURE_REGION=eastus2
 ```
 
@@ -44,7 +43,6 @@ AZURE_REGION=eastus2
 ```bash
 AZURE_RESOURCE_GROUP=enclaveid-prod
 AZURE_CLUSTER_NAME=enclaveid-cluster-prod
-AZURE_NODE_VM_SIZE_GPU=standard_nc48ads_a100_v4 # The GPU VM is the same
 AZURE_NODE_VM_SIZE=Standard_DC4as_cc_v5 # Confidential VMs
 AZURE_REGION=westeurope
 AZURE_SERVICE_ACCOUNT_NAME=enclaveid-cluster-identity-sa
@@ -66,9 +64,14 @@ az aks create --tier standard --location "${AZURE_REGION}" --resource-group "${A
 # Get cluster credentials
 az aks get-credentials --resource-group "${AZURE_RESOURCE_GROUP}" --name "${AZURE_CLUSTER_NAME}" --overwrite-existing
 
-# Add a nodepool for GPU workloads
+# Add nodepools for GPU workloads
 # We also add a taint to make sure only GPU workloads are scheduled here
-az aks nodepool add --resource-group "${AZURE_RESOURCE_GROUP}" --name gpupool --cluster-name "${AZURE_CLUSTER_NAME}" --node-count 0 --labels sku=gpu --node-taints sku=gpu:NoSchedule --node-vm-size "${AZURE_NODE_VM_SIZE_GPU}" --min-count 0 --max-count 1 --enable-cluster-autoscaler --aks-custom-headers UseGPUDedicatedVHD=true --priority Spot --eviction-policy Delete  --spot-max-price -1
+
+# standard_nc24ads_a100_v4 for single gpu workloads
+az aks nodepool add --resource-group "${AZURE_RESOURCE_GROUP}" --name gpupool1 --cluster-name "${AZURE_CLUSTER_NAME}" --node-count 0 --labels sku=gpu gpu-count=1 --node-taints sku=gpu:NoSchedule --node-vm-size standard_nc24ads_a100_v4 --min-count 0 --max-count 1 --enable-cluster-autoscaler --aks-custom-headers UseGPUDedicatedVHD=true --priority Spot --eviction-policy Delete  --spot-max-price -1
+
+# standard_nc96ads_a100_v4 for multi-gpu workloads
+az aks nodepool add --resource-group "${AZURE_RESOURCE_GROUP}" --name gpupool2 --cluster-name "${AZURE_CLUSTER_NAME}" --node-count 0 --labels sku=gpu gpu-count=4 --node-taints sku=gpu:NoSchedule --node-vm-size standard_nc96ads_a100_v4 --min-count 0 --max-count 1 --enable-cluster-autoscaler --aks-custom-headers UseGPUDedicatedVHD=true --priority Spot --eviction-policy Delete  --spot-max-price -1
 
 # Configure the autoscaler for the gpu workloads
 az aks update --resource-group "${AZURE_RESOURCE_GROUP}" --name "${AZURE_CLUSTER_NAME}" --cluster-autoscaler-profile skip-nodes-with-system-pods=false

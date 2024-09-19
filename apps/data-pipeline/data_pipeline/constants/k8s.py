@@ -47,6 +47,11 @@ def get_base_k8s_gpu_config(gpu_count):
                                             "operator": "In",
                                             "values": ["spot"],
                                         },
+                                        {
+                                            "key": "gpu-count",
+                                            "operator": "In",
+                                            "values": [str(gpu_count)],
+                                        },
                                     ]
                                 }
                             ]
@@ -58,7 +63,7 @@ def get_base_k8s_gpu_config(gpu_count):
     }
 
 
-def get_k8s_vllm_config(gpu_count):
+def get_k8s_vllm_config(gpu_count=4):
     return deep_merge(
         get_base_k8s_gpu_config(gpu_count),
         {
@@ -83,7 +88,7 @@ def get_k8s_vllm_config(gpu_count):
     )
 
 
-def get_k8s_rapids_config(gpu_count):
+def get_k8s_rapids_config(gpu_count=1):
     return deep_merge(
         get_base_k8s_gpu_config(gpu_count),
         {

@@ -192,7 +192,7 @@ class ClusterSummariesConfig(RowLimitConfig):
             is_required=True,
         ),
     },
-    op_tags=get_k8s_vllm_config(2),
+    op_tags=get_k8s_vllm_config(),
     # retry_policy=spot_instance_retry_policy,
 )
 async def cluster_summaries(

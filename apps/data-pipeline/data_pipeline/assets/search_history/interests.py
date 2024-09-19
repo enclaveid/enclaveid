@@ -22,7 +22,7 @@ from ...utils.search_history_utils import (
 
 class InterestsConfig(RowLimitConfig):
     chunk_size: int = Field(
-        default=10,
+        default=5,
         description=(
             "Search history records are split into chunks of this size."
             " Chunking too many items can cause the LLM to give sub-par responses."
@@ -62,7 +62,7 @@ enrichment_prompt_sequence = [
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
-    op_tags=get_k8s_vllm_config(2),
+    op_tags=get_k8s_vllm_config(),
     # retry_policy=spot_instance_retry_policy,
 )
 def interests(

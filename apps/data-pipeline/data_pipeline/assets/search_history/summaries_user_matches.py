@@ -128,7 +128,7 @@ def match_users(
     partitions_def=user_partitions_def,
     deps=[summaries_embeddings],
     io_manager_key="parquet_io_manager",
-    op_tags=get_k8s_rapids_config(1),
+    op_tags=get_k8s_rapids_config(),
 )
 async def summaries_user_matches(
     context: AssetExecutionContext,
