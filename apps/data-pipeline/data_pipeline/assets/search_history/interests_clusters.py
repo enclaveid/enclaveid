@@ -44,15 +44,6 @@ class InterestsClustersConfig(RowLimitConfig):
     )
 
 
-def get_cluster_centroids(embeddings_gpu: cp.ndarray, cluster_labels: np.ndarray):
-    cluster_centroids = []
-    for cluster_label in np.unique(cluster_labels):
-        cluster_data = embeddings_gpu[cluster_labels == cluster_label]
-        cluster_centroid = np.mean(cluster_data, axis=0)
-        cluster_centroids.append(cluster_centroid)
-    return np.array(cluster_centroids)
-
-
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",

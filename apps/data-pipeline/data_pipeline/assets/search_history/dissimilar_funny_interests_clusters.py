@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
-from data_pipeline.utils.capabilities import is_rapids_image
+
+import numpy as np
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 from pydantic import Field
@@ -7,11 +8,10 @@ from pydantic import Field
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_rapids_config
 from data_pipeline.partitions import user_partitions_def
+from data_pipeline.utils.capabilities import is_rapids_image
 from data_pipeline.utils.get_maximally_dissimilar_embeddings import (
     get_maximally_dissimilar_embeddings,
 )
-
-import numpy as np
 
 if is_rapids_image() or TYPE_CHECKING:
     import cupy as cp
@@ -25,8 +25,9 @@ class DissimilarFunnyInterestsConfig(RowLimitConfig):
         description="The number of maximally dissimilar funny interests to return.",
     )
 
-def get_cluster_centroids(embeddings_gpu: cp.ndarray, cluster_labels: np.ndarray):
 
+def get_cluster_centroids(embeddings_gpu, cluster_labels: np.ndarray):
+    pass
 
 
 @asset(
