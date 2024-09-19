@@ -32,7 +32,7 @@ context: ./apps/spa-frontend
 contextAddFiles: ./dist
 ---
 image: data-pipeline-vllm
-from: nvidia/cuda:12.6.1-cudnn-runtime-rockylinux9
+from: nvidia/cuda:12.6.1-cudnn-devel-rockylinux9
 git:
   - add: /apps/data-pipeline
     to: /app
