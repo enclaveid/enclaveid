@@ -47,10 +47,10 @@ shell:
     - dnf install -y python3.11 python3.11-pip
   install:
     - pip3.11 install --no-cache-dir -r /app/requirements.vllm.txt
-    - pip3.11 install flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
+    - pip3.11 install --no-cache-dir flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
     - pip3.11 install --no-cache-dir -r /app/requirements.prod.txt
   setup:
-    - pip3.11 install --no-deps /app/dist/*.whl
+    - pip3.11 install --no-cache-dir--no-deps /app/dist/*.whl
 docker:
   WORKDIR: /app
   ENV:
