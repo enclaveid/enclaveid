@@ -45,5 +45,5 @@ def dissimilar_funny_interests(
 
     result = df.with_columns(maximally_dissimilar=pl.arange(0, len(df)).is_in(indices))
 
-    # Columns: date, interests, interests_quirkiness, raw_interests, raw_results, embeddings, maximally_dissimilar
+    # Columns: interest_id, date, interests, interests_quirkiness, embeddings, maximally_dissimilar
     return result

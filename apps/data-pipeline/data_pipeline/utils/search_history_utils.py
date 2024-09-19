@@ -80,10 +80,10 @@ def generate_chunked_interests(
     # Merge two lists into one
     chunked_interests = [
         [
-            *chunked_interests_normal[i],
-            *chunked_interests_quirky[i],
+            *i,
+            *j,
         ]
-        for i in range(len(chunked_interests_normal))
+        for i, j in zip(chunked_interests_normal, chunked_interests_quirky)
     ]
 
     # Add a boolean list to indicate if the interest is quirky
@@ -129,7 +129,7 @@ def get_full_history_sessions(
     daily_records = generate_chunked_interests(local_llm, chunks, prompt_sequence)
 
     grouped_df = (
-        pl.DataFrame(daily_records)
+        pl.DataFrame(daily_records, strict=False)
         .group_by("date")
         .agg(
             [
