@@ -14,9 +14,10 @@ else:
     pairwise_distances = None
 
 
-def maximally_dissimilar_embeddings(
+# TODO: Cuml doesnt yet have multi gpu pairwise distance using dask backend
+def get_maximally_dissimilar_embeddings(
     embeddings: np.ndarray, max_count: int
-) -> list[list[float]]:
+) -> list[int]:
     """
     Given a list of embeddings, return a list of maximally dissimilar embeddings.
     """
@@ -29,12 +30,12 @@ def maximally_dissimilar_embeddings(
     top_indices = cp.argsort(sum_distances)[-max_count:][::-1]
 
     # Get the selected embeddings and convert back to CPU
-    selected_embeddings = embeddings_gpu[top_indices].get()
+    # selected_embeddings = embeddings_gpu[top_indices].get()
 
-    return selected_embeddings.tolist()
+    return top_indices.tolist()  # , selected_embeddings.tolist(), top_indices.tolist()
 
 
 # Test the function
 if __name__ == "__main__":
     embeddings = np.random.rand(100_000, 4096)
-    print(maximally_dissimilar_embeddings(embeddings, 100))
+    print(get_maximally_dissimilar_embeddings(embeddings, 100)[:5])
