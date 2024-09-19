@@ -3,5 +3,4 @@ locations:
     image: $DAGSTER_BASE_IMAGE
     code_source:
       module_name: data_pipeline
-    executable_path: /usr/bin/python3.11
 
