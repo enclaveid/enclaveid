@@ -32,7 +32,7 @@ context: ./apps/spa-frontend
 contextAddFiles: ./dist
 ---
 image: data-pipeline-vllm
-from: pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
+from: nvidia/cuda:12.6.1-cudnn-runtime-ubuntu24.04
 git:
   - add: /apps/data-pipeline
     to: /app
