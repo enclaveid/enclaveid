@@ -71,8 +71,8 @@ def generate_chunked_interests(
     # Merge two lists into one
     chunked_interests = [
         [
-            *chunked_interests_normal[i],
-            *chunked_interests_quirky[i],
+            *(chunked_interests_normal[i] or []),
+            *(chunked_interests_quirky[i] or []),
         ]
         for i in range(len(chunked_interests_normal))
     ]
