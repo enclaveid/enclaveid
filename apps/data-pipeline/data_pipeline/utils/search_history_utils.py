@@ -36,13 +36,13 @@ def extract_interests_lists(text: str) -> Tuple[List[str], List[str]]:
 
         if isinstance(j, dict):
             # if they're not arrays, return an empty array
-            interests = j.get("interests", [])
-            if not isinstance(interests, list):
-                interests = []
-            quirky_interests = j.get("quirky_interests", [])
-            if not isinstance(quirky_interests, list):
-                quirky_interests = []
-            res = interests, quirky_interests
+            activities = j.get("activities", [])
+            if not isinstance(activities, list):
+                activities = []
+            quirky_activities = j.get("quirky_activities", [])
+            if not isinstance(quirky_activities, list):
+                quirky_activities = []
+            res = activities, quirky_activities
         else:
             res = [], []
     except Exception:

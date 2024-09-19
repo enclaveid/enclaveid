@@ -10,6 +10,7 @@ from dagster import (
 )
 from pydantic import Field
 
+from data_pipeline.utils.clusters import get_cluster_stats
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.custom_config import RowLimitConfig
@@ -41,6 +42,15 @@ class InterestsClustersConfig(RowLimitConfig):
         default=0.3,
         description="Epsilon value for merging similar activities into broader categories.",
     )
+
+
+def get_cluster_centroids(embeddings_gpu: cp.ndarray, cluster_labels: np.ndarray):
+    cluster_centroids = []
+    for cluster_label in np.unique(cluster_labels):
+        cluster_data = embeddings_gpu[cluster_labels == cluster_label]
+        cluster_centroid = np.mean(cluster_data, axis=0)
+        cluster_centroids.append(cluster_centroid)
+    return np.array(cluster_centroids)
 
 
 @asset(
@@ -77,23 +87,26 @@ def interests_clusters(
         metric="euclidean",
     ).fit_predict(reduced_data_gpu.astype(np.float64).get())
 
-    fine_cluster_stats = np.unique(fine_cluster_labels, return_counts=True)
+    context.add_output_metadata(get_cluster_stats(fine_cluster_labels, prefix="fine_"))
+
+    # See: https://hdbscan.readthedocs.io/en/latest/how_to_use_epsilon.html
+    coarse_cluster_labels = HDBSCAN(
+        min_cluster_size=config.coarse_min_cluster_size,
+        gen_min_span_tree=True,
+        metric="euclidean",
+        cluster_selection_epsilon=config.coarse_cluster_selection_epsilon,
+    ).fit_predict(reduced_data_gpu)
 
     context.add_output_metadata(
-        {
-            "fine_clusters_count": len(fine_cluster_stats[0]),
-            "fine_noise_count": int(fine_cluster_stats[1][0])
-            if -1 in fine_cluster_stats[0]
-            else 0,
-        }
+        get_cluster_stats(coarse_cluster_labels, prefix="coarse_")
     )
 
     result = df.with_columns(
         cluster_label=pl.Series(fine_cluster_labels),
-        # category_cluster_label=pl.Series(coarse_cluster_labels),
+        merged_cluster_label=pl.Series(coarse_cluster_labels),
     ).rename({"embeddings": "interests_embeddings"})
 
     context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    # Columns: interest_id, date, interests, interests_quirkiness, interests_embeddings, cluster_label
+    # Columns: interest_id, date, interests, interests_quirkiness, interests_embeddings, cluster_label, merged_cluster_label
     return result
