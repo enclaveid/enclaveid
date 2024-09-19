@@ -63,7 +63,7 @@ def get_base_k8s_gpu_config(gpu_count):
     }
 
 
-def get_k8s_vllm_config(gpu_count=4):
+def get_k8s_vllm_config(gpu_count=2):
     return deep_merge(
         get_base_k8s_gpu_config(gpu_count),
         {

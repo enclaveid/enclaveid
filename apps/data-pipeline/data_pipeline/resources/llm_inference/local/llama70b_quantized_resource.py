@@ -13,5 +13,5 @@ class Llama70bQuantizedResource(LocalLlmResource):
     _vllm_args = {
         # We use 80k instead of the default 128k to avoid OOM errors
         "max_model_len": 1024 * 80,
-        "tensor_parallel_size": 4,
+        "tensor_parallel_size": 2,
     }
