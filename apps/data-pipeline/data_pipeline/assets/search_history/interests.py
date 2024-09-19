@@ -24,7 +24,7 @@ from ...utils.search_history_utils import (
 
 class InterestsConfig(RowLimitConfig):
     chunk_size: int = Field(
-        default=7,
+        default=10,
         description=(
             "Search history records are split into chunks of this size."
             " Chunking too many items can cause the LLM to give sub-par responses."
