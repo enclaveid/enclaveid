@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.llm_inference.gemma27b_resource import (
+from data_pipeline.resources.llm_inference.local.gemma27b_resource import (
     Gemma27bResource,
 )
 from data_pipeline.utils.costs import get_gpu_runtime_cost

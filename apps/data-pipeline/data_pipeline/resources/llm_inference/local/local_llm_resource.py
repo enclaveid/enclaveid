@@ -1,7 +1,7 @@
 import gc
 import logging
 import time
-from typing import TYPE_CHECKING, Callable, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Union
 
 from dagster import ConfigurableResource, DagsterLogManager, InitResourceContext
 from pydantic import BaseModel, PrivateAttr
@@ -30,11 +30,8 @@ PromptSequence = List[str] | List[Callable[[str | BaseModel], str]]
 
 class LocalLlmResource(ConfigurableResource):
     _model_name: str = PrivateAttr()
-    _temperature: float = PrivateAttr()
-    _top_p: float = PrivateAttr()
-    _max_tokens: int = PrivateAttr()
-    _max_model_len: int | None = PrivateAttr()
-    _enforce_eager: bool = PrivateAttr()
+    _sampling_params_args: Dict[str, Any] = PrivateAttr()
+    _vllm_args: Dict[str, Any] = PrivateAttr()
 
     _llm: LLM = PrivateAttr()
     _tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = PrivateAttr()
@@ -52,12 +49,7 @@ class LocalLlmResource(ConfigurableResource):
             enable_prefix_caching=True,
             tensor_parallel_size=torch.cuda.device_count(),
             # Set a context limit other than default if provided (depends on available GPU memory)
-            **(
-                {"max_model_len": self._max_model_len}
-                if self._max_model_len is not None
-                else {}
-            ),
-            enforce_eager=self._enforce_eager,
+            **self._vllm_args,
         )
         load_time_end = time.time()
 
@@ -66,11 +58,7 @@ class LocalLlmResource(ConfigurableResource):
         )
 
         self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
-        self._sampling_params = SamplingParams(
-            temperature=self._temperature,
-            top_p=self._top_p,
-            max_tokens=self._max_tokens,
-        )
+        self._sampling_params = SamplingParams(**self._sampling_params_args)
 
     def _get_completions_batch(
         self,
@@ -83,12 +71,6 @@ class LocalLlmResource(ConfigurableResource):
             add_generation_prompt=True,
         )
 
-        # If pydantic_model is provided, constrain the output
-        # if pydantic_model:
-        #     return json_generator(VLLM(self._llm), pydantic_model)(
-        #         templated_conversations  # type: ignore
-        #     )
-        # else:
         return list(
             map(
                 lambda res: res.outputs[0].text,

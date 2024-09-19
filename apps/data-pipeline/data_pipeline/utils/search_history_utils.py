@@ -1,12 +1,14 @@
 import datetime
-import re
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
 import polars as pl
 from dagster import get_dagster_logger
+from json_repair import repair_json
 
-from data_pipeline.resources.llm_inference.local_llm_resource import LocalLlmResource
+from data_pipeline.resources.llm_inference.local.local_llm_resource import (
+    LocalLlmResource,
+)
 
 
 @dataclass
@@ -29,28 +31,13 @@ def generate_chunks(daily_dfs: Dict[datetime.date, pl.DataFrame], chunk_size: in
 
 # Extract two lists from the text
 def extract_interests_lists(text: str) -> Tuple[List[str], List[str]]:
-    matches = re.findall(r"\[(.*?)\]", text)
-    if len(matches) >= 2:
-        # Extract and process both lists
-        interests = [
-            interest.strip()
-            for interest in matches[0].replace('"', "").replace("'", "").split(";")
-        ]
-        quirky_interests = [
-            interest.strip()
-            for interest in matches[1].replace('"', "").replace("'", "").split(";")
-        ]
-        return interests, quirky_interests
-    elif len(matches) == 1:
-        # If only one list is found, return it and an empty list
-        interests = [
-            interest.strip()
-            for interest in matches[0].replace('"', "").replace("'", "").split(";")
-        ]
-        return interests, []
-    else:
-        # If no lists are found, return two empty lists
-        return [], []
+    try:
+        j = repair_json(text, return_objects=True)
+        res = j["interests"], j["quirky_interests"]
+    except Exception:
+        res = [], []
+
+    return res
 
 
 def generate_chunked_interests(

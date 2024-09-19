@@ -9,7 +9,7 @@ from dagster import (
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.resources.llm_inference.llama8b_resource import Llama8bResource
+from data_pipeline.resources.llm_inference.local.llama8b_resource import Llama8bResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.k8s import get_k8s_vllm_config
@@ -22,7 +22,7 @@ from ...utils.search_history_utils import (
 
 class InterestsConfig(RowLimitConfig):
     chunk_size: int = Field(
-        default=6,
+        default=7,
         description=(
             "Search history records are split into chunks of this size."
             " Chunking too many items can cause the LLM to give sub-par responses."
@@ -47,9 +47,12 @@ enrichment_prompt_sequence = [
     # Semicolons make is less prone to errors apparently
     dedent(
         """
-        Format your first answer as a semicolon-separated array of strings delimited by square brackets.
+        Format your answers in json like this:
+        {
+          "interests": ["interest1", "interest2", ...],
+          "quirky_interests": None or ["interest3", "interest4", ...]
+        }
         Focus on the goal of the search activity in relation to the specific topic.
-        Then, also format your second answer in a second array, concisely mentioning what you found funny.
     """
     ),
 ]
