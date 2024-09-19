@@ -35,11 +35,20 @@ def extract_interests_lists(text: str) -> Tuple[List[str], List[str]]:
         j = repair_json(text, return_objects=True)
 
         if isinstance(j, dict):
-            return j.get("interests", []), j.get("quirky_interests", [])
+            # if they're not arrays, return an empty array
+            interests = j.get("interests", [])
+            if not isinstance(interests, list):
+                interests = []
+            quirky_interests = j.get("quirky_interests", [])
+            if not isinstance(quirky_interests, list):
+                quirky_interests = []
+            res = interests, quirky_interests
         else:
-            return [], []
+            res = [], []
     except Exception:
-        return [], []
+        res = [], []
+
+    return res
 
 
 def generate_chunked_interests(
@@ -71,8 +80,8 @@ def generate_chunked_interests(
     # Merge two lists into one
     chunked_interests = [
         [
-            *(chunked_interests_normal[i] or []),
-            *(chunked_interests_quirky[i] or []),
+            *chunked_interests_normal[i],
+            *chunked_interests_quirky[i],
         ]
         for i in range(len(chunked_interests_normal))
     ]
