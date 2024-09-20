@@ -33,13 +33,12 @@ class InterestsClustersConfig(RowLimitConfig):
         default=5,
         description="Minimum number of samples in an activity cluster to be considered an interest.",
     )
-    # With these default values we are expeciting ~100 clusters
     coarse_min_cluster_size: int = Field(
-        default=10,
+        default=5,
         description="Minimum number of samples in an activity cluster to be considered a category. Should be equal or larger than fine_min_cluster_size.",
     )
     coarse_cluster_selection_epsilon: float = Field(
-        default=0.3,
+        default=0.15,
         description="Epsilon value for merging similar activities into broader categories.",
     )
 
