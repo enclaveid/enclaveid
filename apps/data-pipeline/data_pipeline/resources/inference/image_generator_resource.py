@@ -61,12 +61,11 @@ class ImageGeneratorResource(ConfigurableResource):
         ]
 
         # Use Ray to run the generators in parallel
-        results = ray.get(
-            [
-                generator.generate.remote(chunk)
-                for generator, chunk in zip(self._generators, chunks)
-            ]
-        )
+        refs = [
+            generator.generate.remote(chunk)
+            for generator, chunk in zip(self._generators, chunks)
+        ]
+        results = ray.get(refs)
 
         # Flatten the results and ensure they're in the original order
         return [image for batch in zip(*results) for image in batch]
