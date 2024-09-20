@@ -30,27 +30,37 @@ def dissimilar_funny_interests_clusters(
     config: RowLimitConfig,
     interests_clusters: pl.DataFrame,
 ) -> pl.DataFrame:
-    fine_cluster_centroids = get_cluster_centroids(
-        interests_clusters.select("interests_embeddings").to_numpy(),
-        interests_clusters.select("cluster_label").to_numpy(),
+    df = interests_clusters.slice(0, config.row_limit).sort(
+        by=["cluster_label", "merged_cluster_label"], descending=False
     )
+
+    fine_cluster_centroids = get_cluster_centroids(
+        df.select("interests_embeddings").to_numpy(),
+        df.select("cluster_label").to_numpy(),
+    )[1:]  # Skip the firs one since it's for unclustered interests
 
     coarse_cluster_centroids = get_cluster_centroids(
-        interests_clusters.select("interests_embeddings").to_numpy(),
-        interests_clusters.select("merged_cluster_label").to_numpy(),
+        df.select("interests_embeddings").to_numpy(),
+        df.select("merged_cluster_label").to_numpy(),
+    )[1:]  # Skip the firs one since it's for unclustered interests
+
+    fine_dissimilarity_ranking = dict(
+        enumerate(get_maximally_dissimilar_embeddings(np.array(fine_cluster_centroids)))
     )
 
-    fine_dissimilarity_ranking = get_maximally_dissimilar_embeddings(
-        np.array(fine_cluster_centroids)
+    coarse_dissimilarity_ranking = dict(
+        enumerate(
+            get_maximally_dissimilar_embeddings(np.array(coarse_cluster_centroids))
+        )
     )
 
-    coarse_dissimilarity_ranking = get_maximally_dissimilar_embeddings(
-        np.array(coarse_cluster_centroids)
-    )
-
-    result = interests_clusters.with_columns(
-        fine_dissimilarity_rank=pl.Series(fine_dissimilarity_ranking),
-        coarse_dissimilarity_rank=pl.Series(coarse_dissimilarity_ranking),
+    result = df.with_columns(
+        fine_dissimilarity_rank=pl.col("cluster_label").map_dict(
+            fine_dissimilarity_ranking, default=-1
+        ),
+        coarse_dissimilarity_rank=pl.col("merged_cluster_label").map_dict(
+            coarse_dissimilarity_ranking, default=-1
+        ),
     )
 
     # Columns: interest_id, date, interests, interests_quirkiness,

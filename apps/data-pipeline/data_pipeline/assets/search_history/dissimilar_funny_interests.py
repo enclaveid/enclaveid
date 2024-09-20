@@ -31,9 +31,15 @@ def dissimilar_funny_interests(
     if df.is_empty():
         return pl.DataFrame()
 
-    ranking = get_maximally_dissimilar_embeddings(df.select("embeddings").to_numpy())
+    ranking = iter(
+        get_maximally_dissimilar_embeddings(df.select("embeddings").to_numpy())
+    )
 
-    result = df.with_columns(dissimilarity_rank=pl.Series(ranking))
+    result = df.with_columns(
+        dissimilarity_rank=pl.col("interests_quirkiness").apply(
+            lambda x: next(ranking) if x else -1
+        )
+    )
 
     # Columns: interest_id, date, interests, interests_quirkiness, embeddings, dissimilarity_rank
     return result
