@@ -86,7 +86,7 @@ def interests_clusters(
         gen_min_span_tree=True,
         metric="euclidean",
         cluster_selection_epsilon=config.coarse_cluster_selection_epsilon,
-    ).fit_predict(reduced_data_gpu)
+    ).fit_predict(reduced_data_gpu.astype(np.float64).get())
 
     context.add_output_metadata(
         get_cluster_stats(coarse_cluster_labels, prefix="coarse_")
