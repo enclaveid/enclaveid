@@ -47,6 +47,16 @@ def parse_social_likelihood_json(text) -> float | None:
     return res
 
 
+def parse_funny_summaries(text: str) -> tuple[str | None, str | None, str | None]:
+    try:
+        j = repair_json(text, return_objects=True)
+        res = j["title"], j["description"], j["image"]
+    except Exception:
+        res = None, None, None
+
+    return res
+
+
 def parse_summaries_completions(summaries_completions: List[List[str]]):
     activity_types, sensitivities, titles, summaries, likelihoods = zip(
         *list(

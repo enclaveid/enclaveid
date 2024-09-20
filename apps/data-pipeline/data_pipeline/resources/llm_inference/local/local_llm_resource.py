@@ -41,8 +41,6 @@ class LocalLlmResource(ConfigurableResource):
     def setup_for_execution(self, context: InitResourceContext) -> None:
         self._logger = get_logger(context)
 
-        # self._logger.info(get_hf_cache_info())
-
         load_time_start = time.time()
         self._llm = LLM(
             self._model_name,
@@ -62,7 +60,6 @@ class LocalLlmResource(ConfigurableResource):
     def _get_completions_batch(
         self,
         conversations: List[List[Dict[str, str]]],
-        # pydantic_model: BaseModel | None,
     ) -> List[str]:
         templated_conversations = self._tokenizer.apply_chat_template(
             conversations,
@@ -83,7 +80,6 @@ class LocalLlmResource(ConfigurableResource):
     def get_prompt_sequences_completions_batch(
         self,
         prompt_sequences: List[PromptSequence],
-        # pydantic_models: List[Type[BaseModel]],
     ):
         # Assume that all prompt sequences have the same length
         prompt_sequences_length = len(prompt_sequences[0])
@@ -114,9 +110,7 @@ class LocalLlmResource(ConfigurableResource):
 
             time_start = time.time()
             self._logger.info(f"Generating completions for step {step}...")
-            completions = self._get_completions_batch(
-                conversations,  # pydantic_models[step]
-            )
+            completions = self._get_completions_batch(conversations)
             self._logger.info(
                 f"Done generating completions for step {step} in {(time.time() - time_start):.2f}s"
             )

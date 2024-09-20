@@ -3,6 +3,9 @@ import importlib.util
 import json
 import subprocess
 
+import jsonpickle
+from huggingface_hub import scan_cache_dir
+
 
 def nvsmi_csv_to_json(csv_string):
     # Split the CSV string into lines
@@ -71,3 +74,15 @@ def is_vllm_image():
 
 def is_rapids_image():
     return is_package_installed("cudf") and is_cuda_available()
+
+
+def get_hf_cache_info():
+    cache_info = scan_cache_dir()
+
+    # Configure jsonpickle to produce human-readable output
+    jsonpickle.set_encoder_options("json", indent=2, sort_keys=True)
+
+    # Use jsonpickle to serialize the entire cache_info object
+    serialized_cache_info = jsonpickle.encode(cache_info)
+
+    return serialized_cache_info
