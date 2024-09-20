@@ -78,7 +78,7 @@ az aks nodepool add --resource-group "${AZURE_RESOURCE_GROUP}" --name gpupool3 -
 
 
 # Configure the autoscaler for the gpu workloads
-az aks update --resource-group "${AZURE_RESOURCE_GROUP}" --name "${AZURE_CLUSTER_NAME}" --cluster-autoscaler-profile skip-nodes-with-system-pods=false
+az aks update --resource-group "${AZURE_RESOURCE_GROUP}" --name "${AZURE_CLUSTER_NAME}" --cluster-autoscaler-profile skip-nodes-with-system-pods=false scale-down-unneeded-time=1m
 ```
 
 ## (staging) Add a non-CC nodepool
