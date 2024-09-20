@@ -50,7 +50,10 @@ def parse_social_likelihood_json(text) -> float | None:
 def parse_funny_summaries(text: str) -> tuple[str | None, str | None, str | None]:
     try:
         j = repair_json(text, return_objects=True)
-        res = j["title"], j["description"], j["image"]
+        title = j["title"] if isinstance(j["title"], str) else None
+        description = j["description"] if isinstance(j["description"], str) else None
+        image = j["image"] if isinstance(j["image"], str) else None
+        res = title, description, image
     except Exception:
         res = None, None, None
 
