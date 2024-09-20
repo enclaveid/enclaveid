@@ -32,7 +32,7 @@ def dissimilar_funny_interests(
         return pl.DataFrame()
 
     ranking = iter(
-        get_maximally_dissimilar_embeddings(df.select("embeddings").to_numpy())
+        get_maximally_dissimilar_embeddings(df.get_column("embeddings").to_numpy())
     )
 
     result = df.with_columns(
