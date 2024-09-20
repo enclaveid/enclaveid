@@ -1,4 +1,4 @@
-from data_pipeline.resources.llm_inference.local.local_llm_resource import (
+from data_pipeline.resources.inference.local_llms.local_llm_resource import (
     LocalLlmResource,
 )
 

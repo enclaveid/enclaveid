@@ -8,7 +8,7 @@ from aiolimiter import AsyncLimiter
 from dagster import DagsterLogManager
 from mistralai.async_client import MistralAsyncClient
 
-from ..resources.llm_inference.llama70b_resource import Llama70bResource
+from ..resources.inference.llama70b_resource import Llama70bResource
 
 
 @dataclass

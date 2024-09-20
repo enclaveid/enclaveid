@@ -70,8 +70,12 @@ az aks get-credentials --resource-group "${AZURE_RESOURCE_GROUP}" --name "${AZUR
 # standard_nc24ads_a100_v4 for single gpu workloads
 az aks nodepool add --resource-group "${AZURE_RESOURCE_GROUP}" --name gpupool1 --cluster-name "${AZURE_CLUSTER_NAME}" --node-count 0 --labels sku=gpu gpu-count=1 --node-taints sku=gpu:NoSchedule --node-vm-size standard_nc24ads_a100_v4 --min-count 0 --max-count 4 --enable-cluster-autoscaler --aks-custom-headers UseGPUDedicatedVHD=true --priority Spot --eviction-policy Delete  --spot-max-price -1
 
-# standard_nc96ads_a100_v4 for multi-gpu workloads
+# for big llms
 az aks nodepool add --resource-group "${AZURE_RESOURCE_GROUP}" --name gpupool2 --cluster-name "${AZURE_CLUSTER_NAME}" --node-count 0 --labels sku=gpu gpu-count=2 --node-taints sku=gpu:NoSchedule --node-vm-size standard_nc48ads_a100_v4 --min-count 0 --max-count 2 --enable-cluster-autoscaler --aks-custom-headers UseGPUDedicatedVHD=true --priority Spot --eviction-policy Delete  --spot-max-price -1
+
+# for image generation
+az aks nodepool add --resource-group "${AZURE_RESOURCE_GROUP}" --name gpupool3 --cluster-name "${AZURE_CLUSTER_NAME}" --node-count 0 --labels sku=gpu gpu-count=4 --node-taints sku=gpu:NoSchedule --node-vm-size standard_nc96ads_a100_v4 --min-count 0 --max-count 1 --enable-cluster-autoscaler --aks-custom-headers UseGPUDedicatedVHD=true --priority Spot --eviction-policy Delete  --spot-max-price -1
+
 
 # Configure the autoscaler for the gpu workloads
 az aks update --resource-group "${AZURE_RESOURCE_GROUP}" --name "${AZURE_CLUSTER_NAME}" --cluster-autoscaler-profile skip-nodes-with-system-pods=false

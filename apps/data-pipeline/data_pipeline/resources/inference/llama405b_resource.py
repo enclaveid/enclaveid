@@ -1,4 +1,4 @@
-from data_pipeline.resources.llm_inference.remote_llm_resource import RemoteLlmResource
+from data_pipeline.resources.inference.remote_llm_resource import RemoteLlmResource
 
 
 class Llama405bResource(RemoteLlmResource):

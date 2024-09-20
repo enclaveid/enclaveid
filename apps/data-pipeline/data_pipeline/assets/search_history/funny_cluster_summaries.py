@@ -11,8 +11,8 @@ from pydantic import Field
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.llm_inference.local.mistral22b_resource import (
-    Mistral22bResource,
+from data_pipeline.resources.inference.local_llms.gemma27b_resource import (
+    Gemma27bResource,
 )
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.get_logger import get_logger
@@ -50,7 +50,7 @@ class ClusterSummariesConfig(RowLimitConfig):
 async def funny_cluster_summaries(
     context: AssetExecutionContext,
     config: ClusterSummariesConfig,
-    mistral22b: Mistral22bResource,
+    gemma27b: Gemma27bResource,
     interests_clusters: pl.DataFrame,
 ):
     start_time = time.time()
@@ -58,7 +58,7 @@ async def funny_cluster_summaries(
 
     # Sample max_samples from each cluster
     sampled_df = (
-        interests_clusters.slice(0, 10)  # config.row_limit)
+        interests_clusters.slice(0, config.row_limit)
         .drop("interest_id")
         .filter(pl.col("cluster_label") != -1)
         .filter(
@@ -86,12 +86,12 @@ async def funny_cluster_summaries(
             [
                 pl.col("date_interests").str.concat("\n").alias("cluster_items"),
                 pl.col("date").sort().alias("cluster_dates"),
-                pl.col("category_cluster_label")
+                pl.col("merged_cluster_label")
                 .unique()
                 .map_elements(
                     lambda x: [i for i in x if i != -1], return_dtype=pl.List(pl.Int64)
                 )
-                .alias("category_cluster_labels"),
+                .alias("merged_cluster_labels"),
             ]
         )
     )
@@ -106,7 +106,7 @@ async def funny_cluster_summaries(
     (
         summaries_completions,
         conversations,
-    ) = mistral22b.get_prompt_sequences_completions_batch(
+    ) = gemma27b.get_prompt_sequences_completions_batch(
         prompt_sequences,
     )
 

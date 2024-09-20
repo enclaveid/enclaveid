@@ -8,7 +8,7 @@ from dagster import (
 )
 from pydantic import Field
 
-from data_pipeline.resources.llm_inference.llama405b_resource import Llama405bResource
+from data_pipeline.resources.inference.llama405b_resource import Llama405bResource
 from data_pipeline.utils.parsing.regex import parse_cluster_summarization
 
 from ...constants.custom_config import RowLimitConfig

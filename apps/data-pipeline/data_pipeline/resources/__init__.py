@@ -3,21 +3,28 @@ from dagster_polars import PolarsParquetIOManager
 
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
 from data_pipeline.resources.api_db_session import ApiDbSession
-from data_pipeline.resources.llm_inference.gpt4_resource import Gpt4Resource
-from data_pipeline.resources.llm_inference.llama70b_resource import Llama70bResource
-from data_pipeline.resources.llm_inference.llama405b_resource import Llama405bResource
-from data_pipeline.resources.llm_inference.local.gemma9b_resource import Gemma9bResource
-from data_pipeline.resources.llm_inference.local.gemma27b_resource import (
+from data_pipeline.resources.inference.gpt4_resource import Gpt4Resource
+from data_pipeline.resources.inference.image_generator_resource import (
+    ImageGeneratorResource,
+)
+from data_pipeline.resources.inference.llama70b_resource import Llama70bResource
+from data_pipeline.resources.inference.llama405b_resource import Llama405bResource
+from data_pipeline.resources.inference.local_llms.gemma9b_resource import (
+    Gemma9bResource,
+)
+from data_pipeline.resources.inference.local_llms.gemma27b_resource import (
     Gemma27bResource,
 )
-from data_pipeline.resources.llm_inference.local.llama8b_resource import Llama8bResource
-from data_pipeline.resources.llm_inference.local.llama70b_quantized_resource import (
+from data_pipeline.resources.inference.local_llms.llama8b_resource import (
+    Llama8bResource,
+)
+from data_pipeline.resources.inference.local_llms.llama70b_quantized_resource import (
     Llama70bQuantizedResource,
 )
-from data_pipeline.resources.llm_inference.local.mistral22b_resource import (
+from data_pipeline.resources.inference.local_llms.mistral22b_resource import (
     Mistral22bResource,
 )
-from data_pipeline.resources.llm_inference.local.mistral_nemo_resource import (
+from data_pipeline.resources.inference.local_llms.mistral_nemo_resource import (
     MistralNemoResource,
 )
 from data_pipeline.resources.mistral_resource import MistralResource
@@ -41,4 +48,5 @@ resources = {
     "llama405b": Llama405bResource(api_key=EnvVar("AZURE_AI_LLAMA405B_API_KEY")),
     "gpt4": Gpt4Resource(api_key=EnvVar("AZURE_AI_GPT4_API_KEY")),
     "embedding_model": SentenceTransformerResource(),
+    "image_generator": ImageGeneratorResource(),
 }

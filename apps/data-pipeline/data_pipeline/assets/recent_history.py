@@ -10,7 +10,7 @@ from pydantic import Field
 
 from ..constants.custom_config import RowLimitConfig
 from ..partitions import user_partitions_def
-from ..resources.llm_inference.llama70b_resource import Llama70bResource
+from ..resources.inference.llama70b_resource import Llama70bResource
 from ..resources.mistral_resource import MistralResource
 from ..resources.postgres_resource import PGVectorClient, PGVectorClientResource
 from ..utils.recent_history_utils import (

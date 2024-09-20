@@ -1,4 +1,6 @@
-from data_pipeline.resources.llm_inference.local.local_llm_resource import LocalLlmResource
+from data_pipeline.resources.inference.local_llms.local_llm_resource import (
+    LocalLlmResource,
+)
 
 
 class Llama8bResource(LocalLlmResource):
