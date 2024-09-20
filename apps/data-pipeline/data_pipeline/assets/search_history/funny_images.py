@@ -23,7 +23,7 @@ from data_pipeline.resources.inference.image_generator_resource import (
     io_manager_key="parquet_io_manager",
     op_tags=get_k8s_vllm_config(4),
 )
-async def funny_cluster_summaries(
+async def funny_images(
     context: AssetExecutionContext,
     config: RowLimitConfig,
     image_generator: ImageGeneratorResource,
@@ -46,4 +46,4 @@ async def funny_cluster_summaries(
         image.save(image_path)
         image_paths.append(image_path)
 
-    return df.with_columns(pl.Series(name="image_path", values=image_paths))
+    return df.with_columns(image_path=pl.Series(image_paths))
