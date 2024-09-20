@@ -1,6 +1,5 @@
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
-from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_rapids_config
@@ -8,13 +7,6 @@ from data_pipeline.partitions import user_partitions_def
 from data_pipeline.utils.get_maximally_dissimilar_embeddings import (
     get_maximally_dissimilar_embeddings,
 )
-
-
-class DissimilarFunnyInterestsConfig(RowLimitConfig):
-    max_count: int = Field(
-        default=1000,
-        description="The number of maximally dissimilar funny interests to return.",
-    )
 
 
 @asset(
@@ -25,7 +17,7 @@ class DissimilarFunnyInterestsConfig(RowLimitConfig):
 )
 def dissimilar_funny_interests(
     context: AssetExecutionContext,
-    config: DissimilarFunnyInterestsConfig,
+    config: RowLimitConfig,
     interests_embeddings: pl.DataFrame,
 ) -> pl.DataFrame:
     """
@@ -39,11 +31,9 @@ def dissimilar_funny_interests(
     if df.is_empty():
         return pl.DataFrame()
 
-    indices = get_maximally_dissimilar_embeddings(
-        df.select("embeddings").to_numpy(), config.max_count
-    )
+    ranking = get_maximally_dissimilar_embeddings(df.select("embeddings").to_numpy())
 
-    result = df.with_columns(maximally_dissimilar=pl.arange(0, len(df)).is_in(indices))
+    result = df.with_columns(dissimilarity_rank=pl.Series(ranking))
 
-    # Columns: interest_id, date, interests, interests_quirkiness, embeddings, maximally_dissimilar
+    # Columns: interest_id, date, interests, interests_quirkiness, embeddings, dissimilarity_rank
     return result
