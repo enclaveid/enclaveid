@@ -2,8 +2,8 @@ from data_pipeline.assets.search_history.cluster_summaries import cluster_summar
 from data_pipeline.assets.search_history.dissimilar_funny_interests import (
     dissimilar_funny_interests,
 )
-from data_pipeline.assets.search_history.dissimilar_funny_interests_clusters import (
-    dissimilar_funny_interests_clusters,
+from data_pipeline.assets.search_history.dissimilar_interests_clusters import (
+    dissimilar_interests_clusters,
 )
 from data_pipeline.assets.search_history.interests import interests
 from data_pipeline.assets.search_history.interests_clusters import interests_clusters
@@ -29,7 +29,7 @@ __all__ = [
     interests_embeddings,
     dissimilar_funny_interests,
     interests_clusters,
-    dissimilar_funny_interests_clusters,
+    dissimilar_interests_clusters,
     cluster_summaries,
     summaries_embeddings,
     summaries_user_matches,
