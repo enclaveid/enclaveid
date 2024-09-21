@@ -51,6 +51,7 @@ outlines = "^0.0.46"
 json-repair = "^0.28.0"
 jsonpickle = "^3.2.2"
 ray = "2.34.0"
+pillow = "10.4.0"
 # The following are very large packages, they are cached as docker layers and shouldn't be changed often.
 # We split ML deps in two grups to avoid conflicts.
 [tool.poetry.group.vllm.dependencies]
