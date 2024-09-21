@@ -38,7 +38,6 @@ class LocalLlmResource(ConfigurableResource):
         self._local_llms = [
             LocalLlm.options(num_gpus=self._vllm_args["tensor_parallel_size"]).remote(
                 self._model_name,
-                self._logger,
                 self._vllm_args,
                 self._sampling_params_args,
             )

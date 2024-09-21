@@ -1,10 +1,10 @@
 import gc
-import logging
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import ray
 import torch
+from dagster import get_dagster_logger
 from pydantic import BaseModel, PrivateAttr
 from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
 from vllm import LLM, SamplingParams
@@ -21,16 +21,15 @@ class LocalLlm:
     _llm: LLM = PrivateAttr()
     _tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = PrivateAttr()
     _sampling_params: SamplingParams = PrivateAttr()
-    _logger: logging.Logger = PrivateAttr()
+    _logger = PrivateAttr()
 
     def __init__(
         self,
         model_name: str,
-        logger: Optional[logging.Logger] = None,
         vllm_args: Optional[Dict[str, Any]] = None,
         sampling_params_args: Optional[Dict[str, Any]] = None,
     ):
-        self._logger = logger or logging.getLogger(__name__)
+        self._logger = get_dagster_logger()
         vllm_args = vllm_args or {}
         sampling_params_args = sampling_params_args or {}
 
