@@ -22,7 +22,7 @@ from data_pipeline.utils.batch_save_images import (
         ),
     },
     io_manager_key="parquet_io_manager",
-    op_tags=get_k8s_vllm_config(4),
+    op_tags=get_k8s_vllm_config(),
 )
 async def funny_images(
     context: AssetExecutionContext,
