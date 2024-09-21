@@ -77,18 +77,18 @@ jobs:
           bun nx run spa-frontend:build
           bun nx run data-pipeline:build
 
-      - uses: actions/cache@v4
-        name: Cache base images
-        with:
-          key: ${{ runner.os }}-buildah-
-          path: |
-            ~/.buildah-cache
+      # - uses: actions/cache@v4
+      #   name: Cache base images
+      #   with:
+      #     key: ${{ runner.os }}-buildah-
+      #     path: |
+      #       ~/.buildah-cache
 
-      - name: Cache fatass image
-        run: |
-          mkdir -p ~/.buildah-cache
-          mv ~/.buildah-cache/ ~/.local/share/containers/storage/ || true
-          buildah pull rapidsai/base:24.04-cuda12.2-py3.11
+      # - name: Cache fatass image
+      #   run: |
+      #     mkdir -p ~/.buildah-cache
+      #     mv ~/.buildah-cache/ ~/.local/share/containers/storage/ || true
+      #     buildah pull rapidsai/base:24.04-cuda12.2-py3.11
 
       - name: Install werf
         uses: werf/actions/install@v2
@@ -114,7 +114,6 @@ jobs:
         run: |
           source "$(werf ci-env github --as-file)"
           werf converge --save-build-report
-          find ~/.local/share/containers/storage/overlays -type f -readable -exec mv {} ~/.buildah-cache/{} \;
 
       - name: Set data-pipeline-base image value in dagster_cloud.yaml
         run: |
