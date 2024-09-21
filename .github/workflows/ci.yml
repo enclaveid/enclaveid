@@ -90,7 +90,7 @@ jobs:
           buildah pull python:3.11
           buildah pull rapidsai/base:24.04-cuda12.2-py3.11
           buildah pull nvidia/cuda:12.6.1-cudnn-devel-rockylinux9
-          du -sh ~/.local/share/containers/storage/overlay/*
+          du -sh ~/.local/share/containers/storage/overlay
 
       - name: Install werf
         uses: werf/actions/install@v2
