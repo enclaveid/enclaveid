@@ -77,11 +77,11 @@ jobs:
           bun nx run spa-frontend:build
           bun nx run data-pipeline:build
 
-      - uses: actions/cache@v4
-        name: Cache for werf manifests
-        with:
-          key: werf-cache
-          path: ~/.werf/
+      # - uses: actions/cache@v4
+      #   name: Cache for werf manifests
+      #   with:
+      #     key: werf-cache
+      #     path: ~/.werf/
 
       - name: Install werf
         uses: werf/actions/install@v2
