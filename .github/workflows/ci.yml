@@ -79,6 +79,7 @@ jobs:
 
       - uses: actions/cache@v4
         name: Cache base images
+        continue-on-error: true
         with:
           key: ${{ runner.os }}-buildah-
           path: |
