@@ -77,11 +77,17 @@ jobs:
           bun nx run spa-frontend:build
           bun nx run data-pipeline:build
 
-      # - uses: actions/cache@v4
-      #   name: Cache for werf manifests
-      #   with:
-      #     key: werf-cache
-      #     path: ~/.werf/
+      - uses: actions/cache@v4
+        name: Cache base images
+        with:
+          key: ${{ runner.os }}-buildah-
+          path: /var/lib/containers
+
+      - name: Pull and cache base images
+        run: |
+          buildah pull python:3.11
+          buildah pull rapidsai/base:24.04-cuda12.2-py3.11
+          buildah pull nvidia/cuda:12.6.1-cudnn-devel-rockylinux9
 
       - name: Install werf
         uses: werf/actions/install@v2
