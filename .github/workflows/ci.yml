@@ -82,16 +82,15 @@ jobs:
         with:
           key: ${{ runner.os }}-buildah-
           path: |
-            ~/.local/share/containers/storage/overlay
-            !~/.local/share/containers/storage/overlay/**/work/**
+            ~/.buildah-cache
 
       - name: Pull and cache base images
-        continue-on-error: true
         run: |
+          mkdir -p ~/.buildah-cache
+          mv ~/.buildah-cache/ ~/.local/share/containers/storage/ || true
           buildah pull python:3.11
           buildah pull rapidsai/base:24.04-cuda12.2-py3.11
           buildah pull nvidia/cuda:12.6.1-cudnn-devel-rockylinux9
-          du -sh ~/.local/share/containers/storage/overlay
 
       - name: Install werf
         uses: werf/actions/install@v2
@@ -117,7 +116,7 @@ jobs:
         run: |
           source "$(werf ci-env github --as-file)"
           werf converge --save-build-report
-          du -sh ~/.werf/*
+          mv ~/.local/share/containers/storage/ ~/.buildah-cache/ || true
 
       - name: Set data-pipeline-base image value in dagster_cloud.yaml
         run: |
