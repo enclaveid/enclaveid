@@ -11,7 +11,6 @@ from data_pipeline.utils.get_logger import get_logger
 
 if is_vllm_image() or TYPE_CHECKING:
     import torch
-    from outlines.models.vllm import VLLM
     from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
     from vllm import LLM, SamplingParams
     from vllm.distributed.parallel_state import (

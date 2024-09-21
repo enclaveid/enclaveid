@@ -39,8 +39,8 @@ git:
     stageDependencies:
       install:
         - requirements.vllm.txt
-        - requirements.prod.txt
       setup:
+        - requirements.prod.txt
         - '**/*.py' # Changes in any .py file will have triggered a whl rebuild
 shell:
   beforeInstall:
@@ -48,8 +48,8 @@ shell:
   install:
     - pip3.11 install --no-cache-dir -r /app/requirements.vllm.txt
     - pip3.11 install --no-cache-dir flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
-    - pip3.11 install --no-cache-dir -r /app/requirements.prod.txt
   setup:
+    - pip3.11 install --no-cache-dir -r /app/requirements.prod.txt
     - pip3.11 install --no-cache-dir --no-deps /app/dist/*.whl
 docker:
   WORKDIR: /app
@@ -69,14 +69,12 @@ git:
     to: /app
     stageDependencies:
       install:
-        - requirements.rapids.txt
         - requirements.prod.txt
       setup:
         - '**/*.py'
 shell:
   install:
     - /bin/bash --login
-    - /opt/conda/bin/pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com -r /app/requirements.rapids.txt
     - /opt/conda/bin/pip install --no-cache-dir -r /app/requirements.prod.txt
   setup:
     - /bin/bash --login

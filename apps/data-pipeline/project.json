@@ -20,8 +20,7 @@
       "options": {
         "commands": [
           "poetry export --only vllm -f requirements.txt --output requirements.vllm.txt --without-hashes",
-          "poetry export --only rapids -f requirements.txt --output requirements.rapids.txt --without-hashes",
-          "poetry export --without rapids,vllm,dev -f requirements.txt --output requirements.prod.txt --without-hashes"
+          "poetry export --without vllm,dev -f requirements.txt --output requirements.prod.txt --without-hashes"
         ],
         "cwd": "apps/data-pipeline"
       },
@@ -73,7 +72,7 @@
       "executor": "@nxlv/python:install",
       "options": {
         "silent": false,
-        "args": "--without vllm,rapids",
+        "args": "--without vllm",
         "cacheDir": ".cache/pypoetry",
         "verbose": false,
         "debug": false
