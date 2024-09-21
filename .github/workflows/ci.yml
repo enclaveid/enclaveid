@@ -79,7 +79,6 @@ jobs:
 
       - uses: actions/cache@v4
         name: Cache base images
-        continue-on-error: true
         with:
           key: ${{ runner.os }}-buildah-
           path: |
@@ -87,6 +86,7 @@ jobs:
             !~/.local/share/containers/storage/overlay/**/work/**
 
       - name: Pull and cache base images
+        continue-on-error: true
         run: |
           buildah pull python:3.11
           buildah pull rapidsai/base:24.04-cuda12.2-py3.11
