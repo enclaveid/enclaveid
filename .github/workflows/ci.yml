@@ -81,14 +81,16 @@ jobs:
         name: Cache base images
         with:
           key: ${{ runner.os }}-buildah-
-          path: ~/.local/share/containers/storage
+          path: |
+            ~/.local/share/containers/storage/overlay
+            !~/.local/share/containers/storage/overlay/**/work/**
 
       - name: Pull and cache base images
         run: |
           buildah pull python:3.11
           buildah pull rapidsai/base:24.04-cuda12.2-py3.11
           buildah pull nvidia/cuda:12.6.1-cudnn-devel-rockylinux9
-          du -sh ~/.local/share/containers/storage
+          du -sh ~/.local/share/containers/storage/overlay/*
 
       - name: Install werf
         uses: werf/actions/install@v2
