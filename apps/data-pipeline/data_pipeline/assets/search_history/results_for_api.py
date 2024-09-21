@@ -47,8 +47,6 @@ def results_for_api(
         ]
     )
 
-    
-
     return final_data
 
 

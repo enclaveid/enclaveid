@@ -1,4 +1,5 @@
 import concurrent.futures
+from typing import Dict
 
 import PIL.Image
 
@@ -13,14 +14,15 @@ def save_image(args):
         img.save(f, format="PNG")
 
 
-def batch_save_images(images, cluster_labels, partition_key, max_workers=100):
+def batch_save_images(
+    image_dict: Dict[str, PIL.Image.Image], partition_key, max_workers=100
+):
     images_folder = DAGSTER_STORAGE_BUCKET / "funny_images" / partition_key
     images_folder.mkdir(parents=True, exist_ok=True)
 
     # Prepare arguments for each image
     args_list = [
-        (img, images_folder / f"{label}.png")
-        for img, label in zip(images, cluster_labels)
+        (img, images_folder / f"{label}.png") for label, img in image_dict.items()
     ]
 
     # Use ThreadPoolExecutor for parallel execution
@@ -32,12 +34,9 @@ def batch_save_images(images, cluster_labels, partition_key, max_workers=100):
         for future in concurrent.futures.as_completed(futures):
             future.result()
 
-    return list(map(lambda x: str(x[1]), args_list))
-
 
 if __name__ == "__main__":
-    images = [PIL.Image.new("RGB", (100, 100)) for _ in range(100)]
-    cluster_labels = [f"cluster_{i}" for i in range(100)]
+    image_dict = {f"{i}": PIL.Image.new("RGB", (100, 100)) for i in range(100)}
     partition_key = "test"
-    res = batch_save_images(images, cluster_labels, partition_key)
+    res = batch_save_images(image_dict, partition_key)
     print(res)

@@ -29,12 +29,10 @@ async def funny_images(
     config: RowLimitConfig,
     image_generator: ImageGeneratorResource,
     funny_cluster_summaries: pl.DataFrame,
-) -> pl.DataFrame:
+) -> None:
     df = funny_cluster_summaries.slice(0, config.row_limit)
 
     prompts = df.get_column("image_description").to_list()
     cluster_labels = df.get_column("cluster_label").to_list()
-    images = image_generator.generate_images(prompts)
-    image_paths = batch_save_images(images, cluster_labels, context.partition_key)
-
-    return df.with_columns(image_path=pl.Series(image_paths))
+    image_dict = image_generator.generate_images(prompts, cluster_labels)
+    batch_save_images(image_dict, context.partition_key)

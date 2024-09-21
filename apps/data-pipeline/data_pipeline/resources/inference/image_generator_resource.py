@@ -4,7 +4,6 @@ import ray
 from dagster import ConfigurableResource, InitResourceContext
 
 from data_pipeline.utils.capabilities import is_vllm_image
-from data_pipeline.utils.data_structures import flatten
 
 if is_vllm_image() or TYPE_CHECKING:
     import torch
@@ -22,12 +21,12 @@ class RayImageGenerator:
         self.pipe.vae.enable_tiling()
         self.pipe.to("cuda")
 
-    def generate(self, prompts: List[str]):
+    def generate(self, prompts: List[str], cluster_labels: List[int]):
         chunk_size = 200
         results = []
 
         for i in range(0, len(prompts), chunk_size):
-            results.append(
+            results.extend(
                 self.pipe(
                     prompt=prompts[i : i + chunk_size],
                     guidance_scale=3.5,
@@ -38,7 +37,7 @@ class RayImageGenerator:
                 ).images
             )
 
-        return flatten(results)
+        return results, cluster_labels
 
 
 class ImageGeneratorResource(ConfigurableResource):
@@ -53,22 +52,31 @@ class ImageGeneratorResource(ConfigurableResource):
         ]
         context.log.info(f"Initialized {len(self._generators)} image generators")
 
-    def generate_images(self, prompts: List[str]):
-        # Distribute prompts evenly across the GPUs while preserving order
-        chunks = [
-            prompts[i : i + len(prompts) // len(self._generators)]
-            for i in range(0, len(prompts), len(prompts) // len(self._generators))
-        ]
+    def generate_images(self, prompts: List[str], cluster_labels):
+        # Distribute prompts and cluster_labels evenly across the GPUs
+        chunks = [[] for _ in self._generators]
+        label_chunks = [[] for _ in self._generators]
+        for i, (prompt, label) in enumerate(zip(prompts, cluster_labels)):
+            generator_index = i % len(self._generators)
+            chunks[generator_index].append(prompt)
+            label_chunks[generator_index].append(label)
 
         # Use Ray to run the generators in parallel
         refs = [
-            generator.generate.remote(chunk)
-            for generator, chunk in zip(self._generators, chunks)
+            generator.generate.remote(chunk, label_chunk)
+            for generator, chunk, label_chunk in zip(
+                self._generators, chunks, label_chunks
+            )
         ]
         results = ray.get(refs)
 
-        # Flatten the results and ensure they're in the original order
-        return [image for batch in zip(*results) for image in batch]
+        # Combine results and group images by cluster label
+        result_dict = {}
+        for images, labels in results:
+            for image, label in zip(images, labels):
+                result_dict.setdefault(label, []).append(image)
+
+        return result_dict
 
     def teardown_after_execution(self, context: InitResourceContext) -> None:
         context.log.info("Shutting down Ray")
