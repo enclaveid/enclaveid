@@ -1,5 +1,6 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, Dict, List
 
+import PIL.Image
 import ray
 from dagster import ConfigurableResource, InitResourceContext
 
@@ -52,7 +53,9 @@ class ImageGeneratorResource(ConfigurableResource):
         ]
         context.log.info(f"Initialized {len(self._generators)} image generators")
 
-    def generate_images(self, prompts: List[str], cluster_labels):
+    def generate_images(
+        self, prompts: List[str], cluster_labels
+    ) -> Dict[int, PIL.Image.Image]:
         # Distribute prompts and cluster_labels evenly across the GPUs
         chunks = [[] for _ in self._generators]
         label_chunks = [[] for _ in self._generators]
@@ -70,11 +73,11 @@ class ImageGeneratorResource(ConfigurableResource):
         ]
         results = ray.get(refs)
 
-        # Combine results and group images by cluster label
         result_dict = {}
         for images, labels in results:
             for image, label in zip(images, labels):
-                result_dict.setdefault(label, []).append(image)
+                if label not in result_dict:
+                    result_dict[label] = image
 
         return result_dict
 

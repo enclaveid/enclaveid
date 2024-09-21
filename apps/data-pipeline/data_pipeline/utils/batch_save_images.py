@@ -15,7 +15,7 @@ def save_image(args):
 
 
 def batch_save_images(
-    image_dict: Dict[str, PIL.Image.Image], partition_key, max_workers=100
+    image_dict: Dict[int, PIL.Image.Image], partition_key, max_workers=100
 ):
     images_folder = DAGSTER_STORAGE_BUCKET / "funny_images" / partition_key
     images_folder.mkdir(parents=True, exist_ok=True)
@@ -36,7 +36,7 @@ def batch_save_images(
 
 
 if __name__ == "__main__":
-    image_dict = {f"{i}": PIL.Image.new("RGB", (100, 100)) for i in range(100)}
+    image_dict = {i: PIL.Image.new("RGB", (100, 100)) for i in range(100)}
     partition_key = "test"
     res = batch_save_images(image_dict, partition_key)
     print(res)
