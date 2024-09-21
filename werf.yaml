@@ -37,18 +37,19 @@ git:
   - add: /apps/data-pipeline
     to: /app
     stageDependencies:
-      beforeInstall:
-        - requirements.vllm.txt
       install:
+        - requirements.vllm.txt
+      beforeSetup:
         - requirements.prod.txt
       setup:
         - '**/*.py'
 shell:
   beforeInstall:
     - dnf install -y python3.11 python3.11-pip python3.11-devel
+  install:
     - pip3.11 install --no-cache-dir -r /app/requirements.vllm.txt
     - pip3.11 install --no-cache-dir flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
-  install:
+  beforeSetup:
     - pip3.11 install --no-cache-dir -r /app/requirements.prod.txt
   setup:
     - pip3.11 install --no-cache-dir --no-deps /app/dist/*.whl
