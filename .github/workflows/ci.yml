@@ -81,7 +81,7 @@ jobs:
         name: Cache base images
         with:
           key: ${{ runner.os }}-buildah-
-          path: /var/lib/containers
+          path: ~/.local/share/containers/storage
 
       - name: Pull and cache base images
         run: |
