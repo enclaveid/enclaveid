@@ -12,4 +12,5 @@ class MistralNemoResource(LocalLlmResource):
         "tokenizer_mode": "mistral",
         "load_format": "mistral",
         "config_format": "mistral",
+        "tensor_parallel_size": 1,
     }

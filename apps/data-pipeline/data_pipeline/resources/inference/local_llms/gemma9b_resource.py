@@ -12,4 +12,5 @@ class Gemma9bResource(LocalLlmResource):
     }
     _vllm_args = {
         "enforce_eager": True,
+        "tensor_parallel_size": 1,
     }

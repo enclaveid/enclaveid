@@ -89,6 +89,7 @@ jobs:
       #     mkdir -p ~/.buildah-cache
       #     mv ~/.buildah-cache/ ~/.local/share/containers/storage/ || true
       #     buildah pull rapidsai/base:24.04-cuda12.2-py3.11
+      #     mv ~/.local/share/containers/storage/ ~/.buildah-cache/ || true
 
       - name: Install werf
         uses: werf/actions/install@v2

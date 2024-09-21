@@ -1,8 +1,9 @@
 import gc
 import logging
 import time
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import ray
 import torch
 from pydantic import BaseModel, PrivateAttr
 from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
@@ -15,7 +16,8 @@ from vllm.distributed.parallel_state import (
 PromptSequence = List[str] | List[Callable[[str | BaseModel], str]]
 
 
-class LocalLlm(BaseModel):
+@ray.remote(num_gpus=1)
+class LocalLlm:
     _llm: LLM = PrivateAttr()
     _tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = PrivateAttr()
     _sampling_params: SamplingParams = PrivateAttr()
@@ -69,7 +71,7 @@ class LocalLlm(BaseModel):
     def get_prompt_sequences_completions_batch(
         self,
         prompt_sequences: List[PromptSequence],
-    ):
+    ) -> Tuple[List[List[str]], List[List[Dict[str, str]]]]:
         # Assume that all prompt sequences have the same length
         prompt_sequences_length = len(prompt_sequences[0])
 

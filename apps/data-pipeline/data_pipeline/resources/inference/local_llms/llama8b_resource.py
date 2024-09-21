@@ -10,4 +10,6 @@ class Llama8bResource(LocalLlmResource):
         "top_p": 0.95,
         "max_tokens": 1024,
     }
-    _vllm_args = {}
+    _vllm_args = {
+        "tensor_parallel_size": 1,
+    }
