@@ -23,9 +23,11 @@ def get_cluster_stats(cluster_labels: np.ndarray, prefix="") -> Dict[str, int]:
 
 
 def get_cluster_centroids(embeddings_gpu, cluster_labels: np.ndarray):
-    cluster_centroids = []
-    for cluster_label in np.unique(cluster_labels):
-        cluster_embeddings = embeddings_gpu[cluster_labels == cluster_label]
-        cluster_centroid = cp.mean(cluster_embeddings, axis=0)
-        cluster_centroids.append(cluster_centroid)
+    unique_labels = np.unique(cluster_labels)
+    cluster_centroids = {}
+    for label in unique_labels:
+        if label != -1:  # Skip noise points
+            cluster_embeddings = embeddings_gpu[cluster_labels == label]
+            cluster_centroid = cp.mean(cluster_embeddings, axis=0)
+            cluster_centroids[label] = cluster_centroid
     return cluster_centroids

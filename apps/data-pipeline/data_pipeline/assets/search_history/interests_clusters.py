@@ -10,7 +10,7 @@ from dagster import (
 )
 from pydantic import Field
 
-from data_pipeline.utils.clusters import get_cluster_stats
+from data_pipeline.utils.clusters import get_cluster_centroids, get_cluster_stats
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.custom_config import RowLimitConfig
@@ -79,21 +79,39 @@ def interests_clusters(
 
     context.add_output_metadata(get_cluster_stats(fine_cluster_labels, prefix="fine_"))
 
-    # See: https://hdbscan.readthedocs.io/en/latest/how_to_use_epsilon.html
+    # Calculate centroids of fine clusters
+    fine_cluster_centroids = get_cluster_centroids(
+        reduced_data_gpu.get(), fine_cluster_labels
+    )
+
+    # We recluster the centroids of the HDBSCAN clusters here instead of tweaking the cluster_selection_epsilon parameter
+    # in the previous clustering step. Reclustering centroids allows us to capture higher-level groupings by focusing on
+    # the spatial relationships between clusters, effectively merging clusters with varying densities or scales.
+    # Adjusting epsilon uniformly affects all clusters and may not merge closely related clusters or may over-merge others.
+    # By reclustering, we can identify broader patterns that epsilon adjustments might miss.
     coarse_cluster_labels = HDBSCAN(
         min_cluster_size=config.coarse_min_cluster_size,
         gen_min_span_tree=True,
         metric="euclidean",
-        cluster_selection_epsilon=config.coarse_cluster_selection_epsilon,
-    ).fit_predict(reduced_data_gpu.astype(np.float64).get())
+    ).fit_predict(np.array(list(fine_cluster_centroids.values())))
+
+    coarse_cluster_mapping = {
+        old_label: new_label
+        for old_label, new_label in zip(
+            fine_cluster_centroids.keys(), coarse_cluster_labels
+        )
+    }
+    merged_cluster_labels = np.array(
+        [coarse_cluster_mapping.get(label, -1) for label in fine_cluster_labels]
+    )
 
     context.add_output_metadata(
-        get_cluster_stats(coarse_cluster_labels, prefix="coarse_")
+        get_cluster_stats(merged_cluster_labels, prefix="coarse_")
     )
 
     result = df.with_columns(
         cluster_label=pl.Series(fine_cluster_labels),
-        merged_cluster_label=pl.Series(coarse_cluster_labels),
+        merged_cluster_label=pl.Series(merged_cluster_labels),
     ).rename({"embeddings": "interests_embeddings"})
 
     context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
