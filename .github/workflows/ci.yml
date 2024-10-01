@@ -79,8 +79,6 @@ jobs:
 
       - name: Configure Buildah rootless
         run: |
-          echo "STORAGE_DRIVER=vfs" >> $GITHUB_ENV
-          echo "BUILDAH_ISOLATION=chroot" >> $GITHUB_ENV
           buildah pull python:3.11
           tree -L 2 -p -u -g -D -s -h --sort=size ~/.local/share/containers/storage/
 
@@ -117,6 +115,7 @@ jobs:
           cat apps/data-pipeline/dagster_cloud.yaml
 
       - name: Decrypt DAGSTER_CLOUD_AGENT_TOKEN and sync Dagster Cloud locations
+        if: false
         run: |
           DAGSTER_CLOUD_API_TOKEN=$(./dasel -r yaml -f $WERF_SECRET_VALUES_ENV ".dagsterSecretValues.DAGSTER_CLOUD_AGENT_TOKEN" | werf helm secret decrypt)
           pip install dagster-cloud
