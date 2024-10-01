@@ -31,7 +31,7 @@ jobs:
       - name: Install Buildah
         run: |
           sudo apt-get update
-          sudo apt-get install -y buildah tree
+          sudo apt-get install -y buildah parallel
 
       - name: Authenticate Buildah to DockerHub
         env:
@@ -75,6 +75,13 @@ jobs:
           key: ${{ runner.os }}-buildah-
           path: |
             ~/.local/share/containers/storage/overlay-layers
+
+      - name: Pull base images
+        run: |
+          parallel buildah pull ::: \
+            python:3.11 \
+            rapidsai/base:24.04-cuda12.2-py3.11 \
+            nvidia/cuda:12.6.1-cudnn-devel-rockylinux9
 
       - name: Install werf
         uses: werf/actions/install@v2
