@@ -15,7 +15,6 @@ jobs:
     environment: prod
     steps:
       - name: Free Disk Space (Ubuntu)
-        if: false
         uses: Jayllyz/free-disk-space@18c3e586e6c1b4d4e68c29fee0748064bd8ee52c
         with:
           # This might remove tools that are actually needed, if set to "true" but frees about 6 GB
@@ -77,11 +76,6 @@ jobs:
           path: |
             ~/.local/share/containers/storage/overlay-layers
 
-      - name: Configure Buildah rootless
-        run: |
-          buildah pull python:3.11
-          tree -L 2 -p -u -g -D -s -h --sort=size ~/.local/share/containers/storage/
-
       - name: Install werf
         uses: werf/actions/install@v2
 
@@ -103,7 +97,6 @@ jobs:
           echo "WERF_SECRET_VALUES_ENV=k8s/basic/secret-values/secret-values.yaml" >> $GITHUB_ENV
 
       - name: werf converge
-        if: false
         run: |
           source "$(werf ci-env github --as-file)"
           werf converge --save-build-report
@@ -115,7 +108,6 @@ jobs:
           cat apps/data-pipeline/dagster_cloud.yaml
 
       - name: Decrypt DAGSTER_CLOUD_AGENT_TOKEN and sync Dagster Cloud locations
-        if: false
         run: |
           DAGSTER_CLOUD_API_TOKEN=$(./dasel -r yaml -f $WERF_SECRET_VALUES_ENV ".dagsterSecretValues.DAGSTER_CLOUD_AGENT_TOKEN" | werf helm secret decrypt)
           pip install dagster-cloud
