@@ -75,7 +75,7 @@ jobs:
         with:
           key: ${{ runner.os }}-buildah-
           path: |
-            ~/.local/share/containers/storage/
+            ~/.local/share/containers/storage/overlay-layers
 
       - name: Configure Buildah rootless
         run: |
