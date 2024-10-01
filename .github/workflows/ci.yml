@@ -15,6 +15,7 @@ jobs:
     environment: prod
     steps:
       - name: Free Disk Space (Ubuntu)
+        if: false
         uses: Jayllyz/free-disk-space@18c3e586e6c1b4d4e68c29fee0748064bd8ee52c
         with:
           # This might remove tools that are actually needed, if set to "true" but frees about 6 GB
@@ -31,7 +32,7 @@ jobs:
       - name: Install Buildah
         run: |
           sudo apt-get update
-          sudo apt-get install -y buildah
+          sudo apt-get install -y buildah tree
 
       - name: Authenticate Buildah to DockerHub
         env:
@@ -55,14 +56,6 @@ jobs:
       - name: Install bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Cache bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
       - name: Install dependencies
         run: |
           bun install --frozen-lockfile
@@ -84,11 +77,12 @@ jobs:
           path: |
             ~/.local/share/containers/storage/
 
-      - name: Cache fatass image
+      - name: Configure Buildah rootless
         run: |
           echo "STORAGE_DRIVER=vfs" >> $GITHUB_ENV
           echo "BUILDAH_ISOLATION=chroot" >> $GITHUB_ENV
-          buildah pull rapidsai/base:24.04-cuda12.2-py3.11
+          buildah pull python:3.11
+          tree -L 2 -p -u -g -D -s -h --sort=size ~/.local/share/containers/storage/
 
       - name: Install werf
         uses: werf/actions/install@v2
@@ -111,6 +105,7 @@ jobs:
           echo "WERF_SECRET_VALUES_ENV=k8s/basic/secret-values/secret-values.yaml" >> $GITHUB_ENV
 
       - name: werf converge
+        if: false
         run: |
           source "$(werf ci-env github --as-file)"
           werf converge --save-build-report
@@ -120,12 +115,6 @@ jobs:
           DATA_PIPELINE_IMAGE_VALUE=$(./dasel -r json -f .werf-build-report.json -w plain '.Images.data-pipeline-base.DockerImageName')
           ./dasel put -r yaml -t string -v $DATA_PIPELINE_IMAGE_VALUE  -f apps/data-pipeline/dagster_cloud.yaml ".locations.first().image"
           cat apps/data-pipeline/dagster_cloud.yaml
-
-      - name: Cache pip packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip
 
       - name: Decrypt DAGSTER_CLOUD_AGENT_TOKEN and sync Dagster Cloud locations
         run: |

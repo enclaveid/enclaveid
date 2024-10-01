@@ -34,7 +34,7 @@ class InterestsClustersConfig(RowLimitConfig):
         description="Minimum number of samples in an activity cluster to be considered an interest.",
     )
     coarse_min_cluster_size: int = Field(
-        default=5,
+        default=2,
         description="Minimum number of samples in an activity cluster to be considered a category. Should be equal or larger than fine_min_cluster_size.",
     )
     coarse_cluster_selection_epsilon: float = Field(
