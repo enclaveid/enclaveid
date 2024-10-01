@@ -82,14 +82,13 @@ jobs:
         with:
           key: ${{ runner.os }}-buildah-
           path: |
-            ~/.buildah-cache
+            ~/.local/share/containers/storage/
 
       - name: Cache fatass image
         run: |
-          mkdir -p ~/.buildah-cache
-          mv ~/.buildah-cache/ ~/.local/share/containers/storage/ || true
+          echo "STORAGE_DRIVER=vfs" >> $GITHUB_ENV
+          echo "BUILDAH_ISOLATION=chroot" >> $GITHUB_ENV
           buildah pull rapidsai/base:24.04-cuda12.2-py3.11
-          mv ~/.local/share/containers/storage/ ~/.buildah-cache/ || true
 
       - name: Install werf
         uses: werf/actions/install@v2
