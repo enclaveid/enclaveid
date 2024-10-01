@@ -74,7 +74,7 @@ jobs:
         with:
           key: ${{ runner.os }}-buildah-
           path: |
-            ~/.local/share/containers/storage/overlay-layers
+            ~/.local/share/containers/storage/overlay/*/diff
 
       - name: Pull base images
         run: |
