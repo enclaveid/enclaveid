@@ -18,6 +18,9 @@ from data_pipeline.resources.inference.local_llms.gemma27b_resource import (
 from data_pipeline.resources.inference.local_llms.llama8b_resource import (
     Llama8bResource,
 )
+from data_pipeline.resources.inference.local_llms.llama70b_bf16_resource import (
+    Llama70bBf16Resource,
+)
 from data_pipeline.resources.inference.local_llms.llama70b_quantized_resource import (
     Llama70bQuantizedResource,
 )
@@ -45,6 +48,7 @@ resources = {
     "gemma9b": Gemma9bResource(),
     "llama70b": Llama70bResource(api_key=EnvVar("AZURE_AI_LLAMA70B_API_KEY")),
     "llama70b_quantized": Llama70bQuantizedResource(),
+    "llama70b_bf16": Llama70bBf16Resource(),
     "llama405b": Llama405bResource(api_key=EnvVar("AZURE_AI_LLAMA405B_API_KEY")),
     "gpt4": Gpt4Resource(api_key=EnvVar("AZURE_AI_GPT4_API_KEY")),
     "embedding_model": SentenceTransformerResource(),
