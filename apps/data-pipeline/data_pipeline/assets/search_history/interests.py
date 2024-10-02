@@ -49,7 +49,7 @@ enrichment_prompt_sequence = [
     # Semicolons make is less prone to errors apparently
     dedent(
         """
-        Format your answers in json like this:
+        Format your answers in an array of strings like this:
         {
           "activities": ["activity1", "activity2", ...],
         }
