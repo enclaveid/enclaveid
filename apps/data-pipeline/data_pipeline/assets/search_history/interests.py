@@ -54,7 +54,8 @@ enrichment_prompt_sequence = [
           "activities": ["activity1", "activity2", ...],
         }
         Focus on the goal of the search activity in relation to the specific topic.
-        Include details from your knowledge in the strings.
+        Condense similar activities in same activity where appropriate, while maintaining specificity.
+        Include details from your knowledge in the strings to clarify possible ambiguities.
     """
         #  "quirky_activities": ["activity3", "activity4", ...]
     ),
