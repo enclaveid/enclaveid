@@ -70,6 +70,7 @@ jobs:
           bun nx run data-pipeline:build
 
       - uses: actions/cache@v4
+        if: false
         name: Cache base images
         with:
           key: ${{ runner.os }}-buildah-
@@ -77,6 +78,7 @@ jobs:
             ~/.local/share/containers/storage/overlay/*/diff
 
       - name: Pull base images
+        if: false
         run: |
           parallel buildah pull ::: \
             python:3.11 \

@@ -40,23 +40,23 @@ enrichment_prompt_sequence = [
         Be as specific as possible, using exact terms from the search activity.
     """
     ),
-    dedent(
-        """
-        Are any of these activities or patterns particularly funny or quirky?
-        Be conservative in your judgement as there might be none.
-    """
-    ),
+    # dedent(
+    #     """
+    #     Are any of these activities or patterns particularly funny or quirky?
+    #     Be conservative in your judgement as there might be none.
+    # """
+    # ),
     # Semicolons make is less prone to errors apparently
     dedent(
         """
         Format your answers in json like this:
         {
           "activities": ["activity1", "activity2", ...],
-          "quirky_activities": ["activity3", "activity4", ...]
         }
         Focus on the goal of the search activity in relation to the specific topic.
         Include details from your knowledge in the strings.
     """
+        #  "quirky_activities": ["activity3", "activity4", ...]
     ),
 ]
 
