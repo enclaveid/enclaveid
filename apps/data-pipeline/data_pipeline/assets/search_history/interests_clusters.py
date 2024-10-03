@@ -9,8 +9,12 @@ from dagster import (
     asset,
 )
 from pydantic import Field
+from sklearn.cluster import AgglomerativeClustering
 
-from data_pipeline.utils.clusters import get_cluster_centroids, get_cluster_stats
+from data_pipeline.utils.clusters import (
+    get_cluster_centroids,
+    get_cluster_stats,
+)
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.custom_config import RowLimitConfig
@@ -33,13 +37,9 @@ class InterestsClustersConfig(RowLimitConfig):
         default=5,
         description="Minimum number of samples in an activity cluster to be considered an interest.",
     )
-    coarse_min_cluster_size: int = Field(
-        default=2,
-        description="Minimum number of samples in an activity cluster to be considered a category. Should be equal or larger than fine_min_cluster_size.",
-    )
-    coarse_cluster_selection_epsilon: float = Field(
-        default=0.0,
-        description="Epsilon value for merging similar activities into broader categories (try 0.15).",
+    coarse_recluster_threshold: float = Field(
+        default=0.35,
+        description="Threshold for merging similar activities into broader categories.",
     )
 
 
@@ -84,27 +84,12 @@ def interests_clusters(
         reduced_data_gpu.get(), fine_cluster_labels
     )
 
-    # We recluster the centroids of the HDBSCAN clusters here instead of tweaking the cluster_selection_epsilon parameter
-    # in the previous clustering step. Reclustering centroids allows us to capture higher-level groupings by focusing on
-    # the spatial relationships between clusters, effectively merging clusters with varying densities or scales.
-    # Adjusting epsilon uniformly affects all clusters and may not merge closely related clusters or may over-merge others.
-    # By reclustering, we can identify broader patterns that epsilon adjustments might miss.
-    coarse_cluster_labels = HDBSCAN(
-        min_cluster_size=config.coarse_min_cluster_size,
-        cluster_selection_epsilon=config.coarse_cluster_selection_epsilon,
-        gen_min_span_tree=True,
-        metric="euclidean",
-    ).fit_predict(np.array(list(fine_cluster_centroids.values())))
-
-    coarse_cluster_mapping = {
-        old_label: new_label
-        for old_label, new_label in zip(
-            fine_cluster_centroids.keys(), coarse_cluster_labels
-        )
-    }
-    merged_cluster_labels = np.array(
-        [coarse_cluster_mapping.get(label, -1) for label in fine_cluster_labels]
-    )
+    merged_cluster_labels = AgglomerativeClustering(
+        n_clusters=None,
+        distance_threshold=config.coarse_recluster_threshold,
+        metric="cosine",
+        linkage="average",
+    ).fit_predict(list(fine_cluster_centroids.values()))
 
     context.add_output_metadata(
         get_cluster_stats(merged_cluster_labels, prefix="coarse_")

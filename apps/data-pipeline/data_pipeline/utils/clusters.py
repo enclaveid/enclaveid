@@ -7,9 +7,11 @@ from data_pipeline.utils.capabilities import is_rapids_image
 if is_rapids_image() or TYPE_CHECKING:
     import cuml
     import cupy as cp
+    from cuml.metrics import pairwise_distances
 else:
     cuml = None
     cp = None
+    pairwise_distances = None
 
 
 def get_cluster_stats(cluster_labels: np.ndarray, prefix="") -> Dict[str, int]:
@@ -22,7 +24,9 @@ def get_cluster_stats(cluster_labels: np.ndarray, prefix="") -> Dict[str, int]:
     }
 
 
-def get_cluster_centroids(embeddings_gpu, cluster_labels: np.ndarray):
+def get_cluster_centroids(
+    embeddings_gpu, cluster_labels: np.ndarray
+) -> Dict[int, np.ndarray]:
     unique_labels = np.unique(cluster_labels)
     cluster_centroids = {}
     for label in unique_labels:
@@ -31,3 +35,4 @@ def get_cluster_centroids(embeddings_gpu, cluster_labels: np.ndarray):
             cluster_centroid = cp.mean(cluster_embeddings, axis=0)
             cluster_centroids[label] = cluster_centroid
     return cluster_centroids
+
