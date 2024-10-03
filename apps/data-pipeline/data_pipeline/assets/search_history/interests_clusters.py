@@ -39,7 +39,11 @@ class InterestsClustersConfig(RowLimitConfig):
     )
     coarse_recluster_threshold: float = Field(
         default=0.35,
-        description="Threshold for merging similar activities into broader categories.",
+        description="Threshold for merging similar activities into broader categories. If None, coarse_n_clusters must be provided.",
+    )
+    coarse_n_clusters: int = Field(
+        default=None,
+        description="Number of clusters to merge into. If None, coarse_recluster_threshold must be provided.",
     )
 
 
@@ -85,19 +89,26 @@ def interests_clusters(
     )
 
     merged_cluster_labels = AgglomerativeClustering(
-        n_clusters=None,
+        n_clusters=config.coarse_n_clusters,
         distance_threshold=config.coarse_recluster_threshold,
         metric="cosine",
         linkage="average",
     ).fit_predict(list(fine_cluster_centroids.values()))
 
+    remapped_merged_cluster_labels = np.array(
+        [
+            merged_cluster_labels[label] if label != -1 else label
+            for label in fine_cluster_labels
+        ]
+    )
+
     context.add_output_metadata(
-        get_cluster_stats(merged_cluster_labels, prefix="coarse_")
+        get_cluster_stats(remapped_merged_cluster_labels, prefix="coarse_")
     )
 
     result = df.with_columns(
         cluster_label=pl.Series(fine_cluster_labels),
-        merged_cluster_label=pl.Series(merged_cluster_labels),
+        merged_cluster_label=pl.Series(remapped_merged_cluster_labels),
     ).rename({"embeddings": "interests_embeddings"})
 
     context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
