@@ -38,8 +38,8 @@ class InterestsClustersConfig(RowLimitConfig):
         description="Minimum number of samples in an activity cluster to be considered a category. Should be equal or larger than fine_min_cluster_size.",
     )
     coarse_cluster_selection_epsilon: float = Field(
-        default=0.15,
-        description="Epsilon value for merging similar activities into broader categories.",
+        default=0.0,
+        description="Epsilon value for merging similar activities into broader categories (try 0.15).",
     )
 
 
@@ -91,6 +91,7 @@ def interests_clusters(
     # By reclustering, we can identify broader patterns that epsilon adjustments might miss.
     coarse_cluster_labels = HDBSCAN(
         min_cluster_size=config.coarse_min_cluster_size,
+        cluster_selection_epsilon=config.coarse_cluster_selection_epsilon,
         gen_min_span_tree=True,
         metric="euclidean",
     ).fit_predict(np.array(list(fine_cluster_centroids.values())))
