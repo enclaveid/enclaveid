@@ -33,10 +33,13 @@ def maximum_bipartite_matching(
     user2_embeddings: np.ndarray,
     user1_item_labels: np.ndarray,
     user2_item_labels: np.ndarray,
+    invert: bool = False,
 ) -> pl.DataFrame:
     """
     Compute the maximum bipartite matching between two sets of embeddings
     with their corresponding cluster labels.
+
+    Set invert to True if you want to match on dissimilarity instead of similarity.
     """
     len1, len2 = len(user1_embeddings), len(user2_embeddings)
     max_len = max(len1, len2)
@@ -62,9 +65,14 @@ def maximum_bipartite_matching(
     user2_embeddings_gpu = cp.asarray(padded_user2_embeddings)
 
     # Compute the pairwise cosine similarity matrix
+    # Values between 0 and 2
     cost_matrix = pairwise_distances(
         user1_embeddings_gpu, user2_embeddings_gpu, metric="cosine"
     )
+
+    # Invert the cost matrix for dissimilarity
+    if invert:
+        cost_matrix = 2 - cost_matrix
 
     # Convert the cost matrix to a cuDF DataFrame for CuGraph
     df = cudf.DataFrame({"weight": cost_matrix.ravel(order="C")})
@@ -73,7 +81,11 @@ def maximum_bipartite_matching(
     # Calculate similarity from cosine distances
     user1_indices = cp.arange(max_len)
     user2_indices = cp.array(assignment.values)
-    similarities = 1 - cost_matrix[user1_indices, user2_indices].get()
+
+    if invert:
+        similarities = cost_matrix[user1_indices, user2_indices].get() - 1
+    else:
+        similarities = 1 - cost_matrix[user1_indices, user2_indices].get()
 
     result_df = pl.DataFrame(
         {

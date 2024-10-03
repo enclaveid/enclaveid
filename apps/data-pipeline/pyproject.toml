@@ -57,13 +57,12 @@ hdbscan = "^0.8.38"
 [tool.poetry.group.vllm.dependencies]
 torch = "2.4.0"
 vllm = "0.6.1.post2"
-transformers = "4.43.3"
-sentence-transformers = "3.0.1"
+transformers = "4.43.4"         # Anything above this breaks nvembed
+sentence-transformers = "3.1.1"
 # Diffusers deps
 diffusers = "0.30.2"
 accelerate = "0.34.1"
 sentencepiece = "0.2.0"
-#protobuf = "5.28.1"
 
 #[tool.poetry.group.rapids.dependencies]
 # dask-cudf-cu12 = { version = "24.4.0", source = "nvidia" }
