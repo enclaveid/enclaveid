@@ -30,27 +30,29 @@ from data_pipeline.resources.inference.local_llms.mistral22b_resource import (
 from data_pipeline.resources.inference.local_llms.mistral_nemo_resource import (
     MistralNemoResource,
 )
+from data_pipeline.resources.inference.local_llms.qwen32b import Qwen32bResource
 from data_pipeline.resources.mistral_resource import MistralResource
 from data_pipeline.resources.sentence_transfomer_resource import (
     SentenceTransformerResource,
 )
 
 resources = {
+    "api_db": ApiDbSession(conn_string=EnvVar("API_DATABASE_URL")),
+    "embedding_model": SentenceTransformerResource(),
+    "gemma27b": Gemma27bResource(),
+    "gemma9b": Gemma9bResource(),
+    "gpt4": Gpt4Resource(api_key=EnvVar("AZURE_AI_GPT4_API_KEY")),
+    "image_generator": ImageGeneratorResource(),
+    "llama405b": Llama405bResource(api_key=EnvVar("AZURE_AI_LLAMA405B_API_KEY")),
+    "llama70b": Llama70bResource(api_key=EnvVar("AZURE_AI_LLAMA70B_API_KEY")),
+    "llama70b_bf16": Llama70bBf16Resource(),
+    "llama70b_quantized": Llama70bQuantizedResource(),
+    "llama8b": Llama8bResource(),
+    "mistral": MistralResource(api_key=EnvVar("MISTRAL_API_KEY")),
+    "mistral22b": Mistral22bResource(),
+    "mistral_nemo": MistralNemoResource(),
     "parquet_io_manager": PolarsParquetIOManager(
         extension=".snappy", base_dir=str(DAGSTER_STORAGE_BUCKET)
     ),
-    "mistral": MistralResource(api_key=EnvVar("MISTRAL_API_KEY")),
-    "api_db": ApiDbSession(conn_string=EnvVar("API_DATABASE_URL")),
-    "mistral_nemo": MistralNemoResource(),
-    "mistral22b": Mistral22bResource(),
-    "gemma27b": Gemma27bResource(),
-    "llama8b": Llama8bResource(),
-    "gemma9b": Gemma9bResource(),
-    "llama70b": Llama70bResource(api_key=EnvVar("AZURE_AI_LLAMA70B_API_KEY")),
-    "llama70b_quantized": Llama70bQuantizedResource(),
-    "llama70b_bf16": Llama70bBf16Resource(),
-    "llama405b": Llama405bResource(api_key=EnvVar("AZURE_AI_LLAMA405B_API_KEY")),
-    "gpt4": Gpt4Resource(api_key=EnvVar("AZURE_AI_GPT4_API_KEY")),
-    "embedding_model": SentenceTransformerResource(),
-    "image_generator": ImageGeneratorResource(),
+    "qwen32b": Qwen32bResource(),
 }
