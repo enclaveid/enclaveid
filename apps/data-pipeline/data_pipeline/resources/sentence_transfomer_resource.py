@@ -39,7 +39,7 @@ class SentenceTransformerResource(ConfigurableResource):
 
     def get_embeddings(self, series: pl.Series):
         embeddings = self._model.encode_multi_process(
-            self._add_eos(series.to_list()), self._pool
+            self._add_eos(series.to_list()), self._pool, batch_size=2
         )
         return pl.Series(
             name="embeddings",
