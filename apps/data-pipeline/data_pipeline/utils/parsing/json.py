@@ -6,7 +6,7 @@ from json_repair import repair_json
 def parse_category_json(text) -> str | None:
     try:
         j = repair_json(text, return_objects=True)
-        res = j["description"]
+        res = j["descriptive_categorization"]
     except Exception:
         res = None
 

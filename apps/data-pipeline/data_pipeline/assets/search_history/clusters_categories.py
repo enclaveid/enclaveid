@@ -20,25 +20,30 @@ from data_pipeline.utils.get_logger import get_logger
 from data_pipeline.utils.parsing.json import parse_category_json
 
 
-def get_categorization_prompt(cluster_interests: str) -> str:
-    return dedent(
-        f"""
-    Analyze this list with a few samples from a given category of activities.
+def get_categorization_prompt_sequence(cluster_interests: str) -> list[str]:
+    return [
+        dedent(
+            f"""
+          Analyze this list and identify up to 5 main categories that best describe the contents of the list.
+          For each main category, provide up to 3 sub categories that belong to it also found in the list.
 
-    After your analysis, come up with the most granluar possible category description that encompasses each record.
-    Avoid providing a description that is too generic, enrich your answer with details on the contents.
+          {cluster_interests}
+        """
+        ).strip(),
+        dedent(
+            """
+          Format your answer in JSON: { "descriptive_categorization": "the categorical summary in string format" }.
 
-    Conclude your answer in one line JSON format: {{ "description": "your answer" }}.
-    Think step by step.
-
-    {cluster_interests}
-    """
-    ).strip()
+          The descriptive_categorization string should follow this structure, for example:
+          "Main category 1 (sub categories of 1 separated by comma), Main category 2 (sub categories of 2 separated by comma), ..."
+        """
+        ).strip(),
+    ]
 
 
 class ClustersCategoriesConfig(RowLimitConfig):
     max_samples: int = Field(
-        default=100,
+        default=50,
         description="The maximum number of samples for each cluster to use for categorization.",
     )
 
@@ -51,8 +56,8 @@ class ClustersCategoriesConfig(RowLimitConfig):
         ),
     },
     io_manager_key="parquet_io_manager",
-    # Need only 2 because there's isnt much data to process
-    op_tags=get_k8s_vllm_config(2),
+    # Could do with 2 because there's isnt much data to process
+    op_tags=get_k8s_vllm_config(4),
 )
 def clusters_categories(
     context: AssetExecutionContext,
@@ -79,7 +84,7 @@ def clusters_categories(
 
     # Prepare prompts for each merged cluster
     prompt_sequences = [
-        [get_categorization_prompt("\n".join(row["cluster_interests"]))]
+        get_categorization_prompt_sequence("\n".join(row["cluster_interests"]))
         for row in grouped_interests.to_dicts()
     ]
 
@@ -107,4 +112,8 @@ def clusters_categories(
 
     logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time, 4):.2f}")
 
+    # Columns:
+    # interest_id, date, cluster_interests, interests_quirkiness,
+    # interests_embeddings, cluster_label, merged_cluster_label
+    # cluster_category
     return final_result
