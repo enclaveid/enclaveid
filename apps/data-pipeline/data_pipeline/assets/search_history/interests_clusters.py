@@ -39,7 +39,7 @@ class InterestsClustersConfig(RowLimitConfig):
     )
     coarse_recluster_threshold: float = Field(
         default=0.35,
-        description="Threshold for merging similar activities into broader categories. If None, coarse_n_clusters must be provided.",
+        description="Cosine distance threshold for merging similar activities into broader categories. If None, coarse_n_clusters must be provided.",
     )
     coarse_n_clusters: int = Field(
         default=None,
@@ -91,8 +91,17 @@ def interests_clusters(
     merged_cluster_labels = AgglomerativeClustering(
         n_clusters=config.coarse_n_clusters,
         distance_threshold=config.coarse_recluster_threshold,
-        metric="cosine",
-        linkage="average",
+        **(
+            {
+                "metric": "cosine",
+                "linkage": "average",
+            }
+            if config.coarse_recluster_threshold is not None
+            else {
+                "metric": "euclidean",
+                "linkage": "ward",
+            }
+        ),
     ).fit_predict(list(fine_cluster_centroids.values()))
 
     remapped_merged_cluster_labels = np.array(
