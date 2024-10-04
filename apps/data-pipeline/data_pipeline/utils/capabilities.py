@@ -24,7 +24,7 @@ def nvsmi_csv_to_json(csv_string):
 MIN_CUDA_COMPUTE_CAPABILITY = 7.0
 
 
-def gpu_info():
+def gpu_info(return_list=False):
     try:
         csv_string = subprocess.run(
             "nvidia-smi --query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv",
@@ -32,9 +32,13 @@ def gpu_info():
             text=True,
             capture_output=True,
         ).stdout.strip()
-        return nvsmi_csv_to_json(csv_string)
+        res = nvsmi_csv_to_json(csv_string)
+        if return_list:
+            return json.loads(res)
+        else:
+            return res
     except Exception:
-        return "No GPU information available."
+        return []
 
 
 def is_package_installed(package_name):
