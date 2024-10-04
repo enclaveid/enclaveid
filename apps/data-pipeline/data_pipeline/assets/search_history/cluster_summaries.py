@@ -118,7 +118,7 @@ async def cluster_summaries(
     results = parse_summaries_completions(summaries_completions)
     results["conversations"] = conversations
 
-    logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time, 4):.2f}")
+    logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     result = df.hstack(pl.DataFrame(results)).drop(
         ["date_interests", "date", "interests"]

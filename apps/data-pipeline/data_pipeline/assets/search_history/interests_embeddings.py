@@ -47,7 +47,7 @@ def interests_embeddings(
         embeddings=pl.col("interests").map_batches(embedding_model.get_embeddings),
     )
 
-    context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time, 4):.2f}")
+    context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     # Columns: interest_id, date, interests, interests_quirkiness, embeddings
     return result

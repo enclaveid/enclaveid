@@ -124,7 +124,7 @@ async def funny_cluster_summaries(
             }
         )
 
-    logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time, 2):.2f}")
+    logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     result = df.hstack(pl.DataFrame(results)).drop(
         ["date_interests", "date", "interests"]

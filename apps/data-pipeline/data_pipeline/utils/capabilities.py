@@ -18,7 +18,7 @@ def nvsmi_csv_to_json(csv_string):
         for row in reader
     ]
     # Convert to JSON
-    return json.dumps(data, indent=2)
+    return data
 
 
 MIN_CUDA_COMPUTE_CAPABILITY = 7.0
@@ -32,11 +32,13 @@ def gpu_info(return_list=False):
             text=True,
             capture_output=True,
         ).stdout.strip()
-        res = nvsmi_csv_to_json(csv_string)
+
+        data = nvsmi_csv_to_json(csv_string)
+
         if return_list:
-            return json.loads(res)
+            return data
         else:
-            return res
+            return json.dumps(data, indent=2)
     except Exception:
         return []
 
