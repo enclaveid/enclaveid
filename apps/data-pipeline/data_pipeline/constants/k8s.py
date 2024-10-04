@@ -88,7 +88,9 @@ def get_k8s_vllm_config(gpu_count=4):
     )
 
 
-def get_k8s_rapids_config(gpu_count=1):
+# TODO: We'll be requesting the 4 gpu instance for now even if the code only uses 1.
+# The clustering is already really quick so we'd rather not wait for the nodes to scale down and up.
+def get_k8s_rapids_config(gpu_count=4):
     return deep_merge(
         get_base_k8s_gpu_config(gpu_count),
         {
