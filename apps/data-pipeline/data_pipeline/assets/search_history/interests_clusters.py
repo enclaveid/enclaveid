@@ -1,4 +1,5 @@
 import time
+from textwrap import dedent
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -38,11 +39,17 @@ class InterestsClustersConfig(RowLimitConfig):
         description="Minimum number of samples in an activity cluster to be considered an interest.",
     )
     coarse_recluster_threshold: float = Field(
-        default=0.35,
-        description="Cosine distance threshold for merging similar activities into broader categories. If None, coarse_n_clusters must be provided.",
+        default=None,
+        description=dedent(
+            """
+            Cosine distance threshold for merging similar activities into broader categories.
+            If None, coarse_n_clusters must be provided.
+            Cosine 0.35 is a good default for broad categorization. (technology, entertainment, etc.)
+            """
+        ).strip(),
     )
     coarse_n_clusters: int = Field(
-        default=None,
+        default=100,
         description="Number of clusters to merge into. If None, coarse_recluster_threshold must be provided.",
     )
 
@@ -88,21 +95,25 @@ def interests_clusters(
         reduced_data_gpu.get(), fine_cluster_labels
     )
 
-    merged_cluster_labels = AgglomerativeClustering(
-        n_clusters=config.coarse_n_clusters,
-        distance_threshold=config.coarse_recluster_threshold,
-        **(
-            {
-                "metric": "cosine",
-                "linkage": "average",
-            }
-            if config.coarse_recluster_threshold is not None
-            else {
-                "metric": "euclidean",
-                "linkage": "ward",
-            }
-        ),
-    ).fit_predict(list(fine_cluster_centroids.values()))
+    clustering_params = (
+        {
+            "n_clusters": None,
+            "distance_threshold": config.coarse_recluster_threshold,
+            "metric": "cosine",
+            "linkage": "average",
+        }
+        if config.coarse_recluster_threshold is not None
+        else {
+            "n_clusters": config.coarse_n_clusters,
+            "distance_threshold": None,
+            "metric": "euclidean",
+            "linkage": "ward",
+        }
+    )
+
+    merged_cluster_labels = AgglomerativeClustering(**clustering_params).fit_predict(
+        list(fine_cluster_centroids.values())
+    )
 
     remapped_merged_cluster_labels = np.array(
         [
