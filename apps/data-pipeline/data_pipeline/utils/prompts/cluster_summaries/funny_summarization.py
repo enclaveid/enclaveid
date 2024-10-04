@@ -4,9 +4,9 @@ import random
 def _get_quirky_aspects_prompt(search_activity: str):
     return f"""
     Analyze the provided cluster of internet activity data for a single topic.
-    What are its most funny, unique or quirky aspects? Pay close attention to the records tagged with "NB:".
+    What are its most funny, unique or quirky aspects?
     Keep in mind that there might have been some errors during the clustering, so some completely unrelated records might appear.
-    Ignore them if they do.
+    Conclude your answer with a small summary of what you learned about the user.
 
     {search_activity}
     """
