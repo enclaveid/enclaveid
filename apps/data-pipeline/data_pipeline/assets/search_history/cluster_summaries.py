@@ -75,7 +75,6 @@ async def cluster_summaries(
     # Sort by date and concat date and interests
     df = (
         sampled_df.sort(by=pl.col("date"))
-        .drop("interests_quirkiness")
         .with_columns(
             pl.concat_str(
                 [

@@ -113,7 +113,7 @@ def clusters_categories(
     logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     # Columns:
-    # interest_id, date, cluster_interests, interests_quirkiness,
+    # interest_id, date, cluster_interests,
     # interests_embeddings, cluster_label, merged_cluster_label
     # cluster_category
     return final_result

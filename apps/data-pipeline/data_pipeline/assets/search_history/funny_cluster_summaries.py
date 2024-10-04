@@ -72,9 +72,6 @@ async def funny_cluster_summaries(
         .with_columns(
             pl.concat_str(
                 [
-                    pl.when(pl.col("interests_quirkiness").eq(True))
-                    .then(pl.lit("QUIRKY:"))
-                    .otherwise(pl.lit("")),
                     pl.col("date"),
                     pl.lit("-"),
                     pl.col("interests"),
@@ -141,5 +138,5 @@ async def funny_cluster_summaries(
 
     result = result.join(invalid_results, on="cluster_label", how="anti")
 
-    # Columns: date, interests, interests_quirkiness, cluster_label, cluster_title, cluster_summary, is_sensitive, social_likelihood
+    # Columns: date, interests, cluster_label, cluster_title, cluster_summary, is_sensitive, social_likelihood
     return result

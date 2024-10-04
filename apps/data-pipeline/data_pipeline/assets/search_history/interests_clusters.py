@@ -133,5 +133,5 @@ def interests_clusters(
 
     context.log.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    # Columns: interest_id, date, interests, interests_quirkiness, interests_embeddings, cluster_label, merged_cluster_label
+    # Columns: interest_id, date, interests, interests_embeddings, cluster_label, merged_cluster_label
     return result

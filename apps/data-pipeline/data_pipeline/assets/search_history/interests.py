@@ -40,13 +40,6 @@ enrichment_prompt_sequence = [
         Be as specific as possible, using exact terms from the search activity.
     """
     ),
-    # dedent(
-    #     """
-    #     Are any of these activities or patterns particularly funny or quirky?
-    #     Be conservative in your judgement as there might be none.
-    # """
-    # ),
-    # Semicolons make is less prone to errors apparently
     dedent(
         """
         Format your answers in an array of strings like this:
@@ -57,7 +50,6 @@ enrichment_prompt_sequence = [
         Condense similar activities in same activity where appropriate, while maintaining specificity.
         Include details from your knowledge in the strings to clarify possible ambiguities.
     """
-        #  "quirky_activities": ["activity3", "activity4", ...]
     ),
 ]
 
@@ -89,12 +81,11 @@ def interests(
     context.add_output_metadata(
         {
             "count_invalid_interests": sessions_output.count_invalid_interests,
-            "count_invalid_quirkiness": sessions_output.count_invalid_quirkiness,
         }
     )
 
     context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
-    # Columns: date, interests, interests_quirkiness, raw_interests, raw_results
+    # Columns: date, interests, raw_interests, raw_results
     # NB: aggregate by date while the other assets are at date granularity
     return sessions_output.output_df
