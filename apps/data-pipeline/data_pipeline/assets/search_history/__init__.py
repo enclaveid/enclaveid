@@ -1,4 +1,5 @@
 from data_pipeline.assets.search_history.cluster_summaries import cluster_summaries
+from data_pipeline.assets.search_history.clusters_categories import clusters_categories
 from data_pipeline.assets.search_history.funny_cluster_summaries import (
     funny_cluster_summaries,
 )
@@ -26,6 +27,7 @@ __all__ = [
     interests,
     interests_embeddings,
     interests_clusters,
+    clusters_categories,
     cluster_summaries,
     funny_cluster_summaries,
     funny_images,
