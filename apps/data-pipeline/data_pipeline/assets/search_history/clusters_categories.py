@@ -51,7 +51,8 @@ class ClustersCategoriesConfig(RowLimitConfig):
         ),
     },
     io_manager_key="parquet_io_manager",
-    op_tags=get_k8s_vllm_config(),
+    # Need only 2 because there's isnt much data to process
+    op_tags=get_k8s_vllm_config(2),
 )
 def clusters_categories(
     context: AssetExecutionContext,
