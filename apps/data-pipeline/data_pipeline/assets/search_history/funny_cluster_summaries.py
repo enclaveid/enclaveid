@@ -19,7 +19,7 @@ from data_pipeline.utils.get_logger import get_logger
 from data_pipeline.utils.parsing.json import (
     parse_funny_summaries,
 )
-from data_pipeline.utils.prompts.cluster_summaries.funny_summarization import (
+from data_pipeline.utils.prompts.funny_summarization import (
     get_funny_summarization_prompt_sequence,
 )
 

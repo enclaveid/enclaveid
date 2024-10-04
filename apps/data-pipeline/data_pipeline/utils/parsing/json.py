@@ -3,12 +3,12 @@ from typing import List
 from json_repair import repair_json
 
 
-def parse_cluster_categories_json(text) -> List[str]:
+def parse_category_json(text) -> str | None:
     try:
         j = repair_json(text, return_objects=True)
-        res = j["cluster_categories"]
+        res = j["description"]
     except Exception:
-        res = []
+        res = None
 
     return res
 

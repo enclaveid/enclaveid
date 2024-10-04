@@ -20,7 +20,7 @@ from data_pipeline.utils.get_logger import get_logger
 from data_pipeline.utils.parsing.json import (
     parse_summaries_completions,
 )
-from data_pipeline.utils.prompts.cluster_summaries.social_summarization import (
+from data_pipeline.utils.prompts.social_summarization import (
     get_summarization_prompt_sequence,
 )
 
