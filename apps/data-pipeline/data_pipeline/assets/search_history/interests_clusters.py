@@ -39,12 +39,12 @@ class InterestsClustersConfig(RowLimitConfig):
         description="Minimum number of samples in an activity cluster to be considered an interest.",
     )
     coarse_recluster_threshold: Optional[float] = Field(
-        default=None,
+        default=0.3,
         description=dedent(
             """
             Cosine distance threshold for merging similar activities into broader categories.
             If None, coarse_n_clusters must be provided.
-            Cosine 0.35 is a good default for broad categorization. (technology, entertainment, etc.)
+            Cosine 0.3 is a good default for broad categorization. (technology, entertainment, etc.)
             """
         ).strip(),
     )
