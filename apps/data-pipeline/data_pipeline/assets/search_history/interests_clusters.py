@@ -1,6 +1,6 @@
 import time
 from textwrap import dedent
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 import polars as pl
@@ -38,7 +38,7 @@ class InterestsClustersConfig(RowLimitConfig):
         default=5,
         description="Minimum number of samples in an activity cluster to be considered an interest.",
     )
-    coarse_recluster_threshold: float = Field(
+    coarse_recluster_threshold: Optional[float] = Field(
         default=None,
         description=dedent(
             """
@@ -48,7 +48,7 @@ class InterestsClustersConfig(RowLimitConfig):
             """
         ).strip(),
     )
-    coarse_n_clusters: int = Field(
+    coarse_n_clusters: Optional[int] = Field(
         default=100,
         description="Number of clusters to merge into. If None, coarse_recluster_threshold must be provided.",
     )
