@@ -2,7 +2,7 @@ import time
 
 from data_pipeline.utils.capabilities import gpu_info
 
-NC24ads_A100_v4_HOURLY_COST_SPOT = 0.44445
+NC24ads_A100_v4_HOURLY_COST_SPOT = 0.5
 
 
 def get_gpu_runtime_cost(start_time: float) -> float:

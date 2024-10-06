@@ -1,12 +1,13 @@
 import time
+from typing import List
 
 import polars as pl
 from dagster import (
     AssetExecutionContext,
     AssetIn,
-    AssetOut,
-    multi_asset,
+    asset,
 )
+from json_repair import repair_json
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
@@ -17,41 +18,60 @@ from data_pipeline.resources.inference.local_llms.gemma27b_resource import (
 )
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.get_logger import get_logger
-from data_pipeline.utils.parsing.json import (
-    parse_summaries_completions,
+from data_pipeline.utils.prompts.apsects_summarization import (
+    get_aspects_summarization_prompt_sequence,
 )
-from data_pipeline.utils.prompts.social_summarization import (
-    get_summarization_prompt_sequence,
-)
+
+
+def parse_aspects_json(text: str) -> tuple[str | None, float | None, List[str] | None]:
+    try:
+        j = repair_json(text, return_objects=True)
+        if isinstance(j, dict):
+            res = (
+                j.get("descriptive_category", None),
+                j.get("sensitivity", None),
+                j.get("all_aspects", None),
+            )
+        else:
+            res = None, None, None
+    except Exception:
+        res = None, None, None
+
+    return res
+
+
+def parse_aspects_completions(summaries_completions: List[List[str]]):
+    descriptive_categories, sensitivities, aspects = zip(
+        *list(
+            map(
+                lambda x: parse_aspects_json(x[-1]) if x else (None, None, None),
+                summaries_completions,
+            )
+        )
+    )
+
+    return {
+        "cluster_title": descriptive_categories,
+        "cluster_is_sensitive": sensitivities,
+        "cluster_aspects": aspects,
+    }
 
 
 class ClusterSummariesConfig(RowLimitConfig):
-    debug: bool = Field(
-        default=True,
-        description="Set to True to materialize the cluster_summaries_debug asset, which includes the full assistant replies.",
-    )
     max_samples: int = Field(
         default=100,
         description="The maximum number of samples for each cluster to use for summarization.",
     )
 
 
-# TODO: break this asset down into one asset per llm invocation
-# otherwise when the vm gets evicted we have to redo everything
-@multi_asset(
+@asset(
     partitions_def=user_partitions_def,
     ins={
         "interests_clusters": AssetIn(
             key=["interests_clusters"],
         ),
     },
-    outs={
-        "cluster_summaries": AssetOut(
-            key=["cluster_summaries"],
-            io_manager_key="parquet_io_manager",
-            is_required=True,
-        ),
-    },
+    io_manager_key="parquet_io_manager",
     op_tags=get_k8s_vllm_config(),
 )
 async def cluster_summaries(
@@ -100,7 +120,8 @@ async def cluster_summaries(
     )
 
     prompt_sequences = [
-        get_summarization_prompt_sequence(row["cluster_items"]) for row in df.to_dicts()
+        get_aspects_summarization_prompt_sequence(row["cluster_items"])
+        for row in df.to_dicts()
     ]
 
     logger.info(f"Processing {len(prompt_sequences)} clusters...")
@@ -114,7 +135,7 @@ async def cluster_summaries(
 
     logger.info(f"Done processing {len(prompt_sequences)} clusters.")
 
-    results = parse_summaries_completions(summaries_completions)
+    results = parse_aspects_completions(summaries_completions)
     results["conversations"] = conversations
 
     logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
@@ -124,19 +145,14 @@ async def cluster_summaries(
     )
 
     invalid_results = result.filter(
-        pl.col("activity_type").eq("unknown")
-        | pl.col("cluster_title").is_null()
-        | pl.col("cluster_summary").is_null()
-        | pl.col("is_sensitive").is_null()
-        | pl.col("social_likelihood").is_null()
+        pl.col("cluster_title").is_null()
+        | pl.col("cluster_is_sensitive").is_null()
+        | pl.col("cluster_aspects").is_null()
     )
 
     if invalid_results.height > 0:
         logger.warning(f"Found invalid {invalid_results.height} summaries.")
 
-    result = result.join(invalid_results, on="cluster_label", how="anti").drop(
-        ["conversations"]
-    )
+    result = result.join(invalid_results, on="cluster_label", how="anti")
 
-    # Columns: date, interests, cluster_label, cluster_title, cluster_summary, is_sensitive, social_likelihood
     return result
