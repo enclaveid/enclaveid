@@ -71,8 +71,8 @@ def match_users(
         other_user_activity_df["cluster_label"].to_numpy(),
     ).rename(
         {
-            "user_item_label": "user_cluster_label",
-            "other_user_item_label": "other_user_cluster_label",
+            "item_label_1": "user_cluster_label",
+            "item_label_2": "other_user_cluster_label",
         }
     )
 

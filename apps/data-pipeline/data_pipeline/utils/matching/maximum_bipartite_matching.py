@@ -29,46 +29,49 @@ def _pad_array(arr, target_len):
 
 
 def maximum_bipartite_matching(
-    user1_embeddings: np.ndarray,
-    user2_embeddings: np.ndarray,
-    user1_item_labels: np.ndarray,
-    user2_item_labels: np.ndarray,
+    embeddings1: np.ndarray,
+    embeddings2: np.ndarray,
+    labels1: np.ndarray,
+    labels2: np.ndarray,
     invert: bool = False,
 ) -> pl.DataFrame:
     """
     Compute the maximum bipartite matching between two sets of embeddings
     with their corresponding cluster labels.
-
     Set invert to True if you want to match on dissimilarity instead of similarity.
+
+    Returns a DataFrame with the following columns:
+    - item_label_1: The cluster label of the first set of embeddings
+    - item_label_2: The cluster label of the second set of embeddings
+    - cosine_similarity: The cosine similarity between the two
+    - cosine_distance: The cosine distance between the two
     """
-    len1, len2 = len(user1_embeddings), len(user2_embeddings)
+    len1, len2 = len(embeddings1), len(embeddings2)
     max_len = max(len1, len2)
 
     # Pad both arrays to the same length
-    padded_user1_embeddings = _pad_array(user1_embeddings, max_len)
-    padded_user2_embeddings = _pad_array(user2_embeddings, max_len)
-    padded_user1_labels = np.pad(
-        user1_item_labels,
+    padded_embeddings1 = _pad_array(embeddings1, max_len)
+    padded_embeddings2 = _pad_array(embeddings2, max_len)
+    padded_labels1 = np.pad(
+        labels1,
         (0, max_len - len1),
         mode="constant",
         constant_values=PAD_VALUE,
     )
-    padded_user2_labels = np.pad(
-        user2_item_labels,
+    padded_labels2 = np.pad(
+        labels2,
         (0, max_len - len2),
         mode="constant",
         constant_values=PAD_VALUE,
     )
 
     # Convert to GPU arrays
-    user1_embeddings_gpu = cp.asarray(padded_user1_embeddings)
-    user2_embeddings_gpu = cp.asarray(padded_user2_embeddings)
+    embeddings1_gpu = cp.asarray(padded_embeddings1)
+    embeddings2_gpu = cp.asarray(padded_embeddings2)
 
     # Compute the pairwise cosine similarity matrix
     # Values between 0 and 2
-    cost_matrix = pairwise_distances(
-        user1_embeddings_gpu, user2_embeddings_gpu, metric="cosine"
-    )
+    cost_matrix = pairwise_distances(embeddings1_gpu, embeddings2_gpu, metric="cosine")
 
     # Invert the cost matrix for dissimilarity
     if invert:
@@ -79,24 +82,21 @@ def maximum_bipartite_matching(
     cost, assignment = cugraph.dense_hungarian(df["weight"], max_len, max_len)
 
     # Calculate similarity from cosine distances
-    user1_indices = cp.arange(max_len)
-    user2_indices = cp.array(assignment.values)
+    indices1 = cp.arange(max_len)
+    indices2 = cp.array(assignment.values)
 
-    if invert:
-        similarities = cost_matrix[user1_indices, user2_indices].get() - 1
-    else:
-        similarities = 1 - cost_matrix[user1_indices, user2_indices].get()
+    costs = cost_matrix[indices1, indices2].get()
 
     result_df = pl.DataFrame(
         {
-            "user_item_label": padded_user1_labels[user1_indices.get().tolist()],
-            "other_user_item_label": padded_user2_labels[user2_indices.get().tolist()],
-            "cosine_similarity": similarities.tolist(),
+            "item_label_1": padded_labels1[indices1.get().tolist()],
+            "item_label_2": padded_labels2[indices2.get().tolist()],
+            "cosine_similarity": (1 - costs if invert else costs).tolist(),
+            "cosine_distance": costs.tolist(),
         }
     )
 
     # Remove padded values and return results in original order
     return result_df.filter(
-        (pl.col("user_item_label") != PAD_VALUE)
-        & (pl.col("other_user_item_label") != PAD_VALUE)
+        (pl.col("item_label_1") != PAD_VALUE) & (pl.col("item_label_2") != PAD_VALUE)
     )

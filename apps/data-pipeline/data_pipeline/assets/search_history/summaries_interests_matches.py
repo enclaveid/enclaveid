@@ -85,6 +85,12 @@ async def summaries_interests_matches(
                     current_user_cluster_interests["interest_id"].to_numpy(),
                     other_user_cluster_interests["interest_id"].to_numpy(),
                 )
+                .rename(
+                    {
+                        "item_label_1": "user_item_label",
+                        "item_label_2": "other_user_item_label",
+                    }
+                )
                 .join(
                     current_user_cluster_interests.select(
                         pl.col("interest_id"),
