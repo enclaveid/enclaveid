@@ -87,8 +87,7 @@ async def funny_cluster_summaries(
                 .unique()
                 .map_elements(
                     lambda x: [i for i in x if i != -1], return_dtype=pl.List(pl.Int64)
-                )
-                .alias("merged_cluster_labels"),
+                ),
             ]
         )
     )

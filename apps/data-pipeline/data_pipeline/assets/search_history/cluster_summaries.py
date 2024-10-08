@@ -114,7 +114,6 @@ async def cluster_summaries(
                 .map_elements(
                     lambda x: [i for i in x if i != -1], return_dtype=pl.List(pl.Int64)
                 )
-                .alias("merged_cluster_labels"),
             ]
         )
     )
