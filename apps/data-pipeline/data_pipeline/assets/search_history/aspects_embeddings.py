@@ -27,7 +27,7 @@ from ...partitions import user_partitions_def
     op_tags=get_k8s_vllm_config(),
     # retry_policy=spot_instance_retry_policy,
 )
-def summaries_embeddings(
+def aspects_embeddings(
     context: AssetExecutionContext,
     config: RowLimitConfig,
     embedding_model: SentenceTransformerResource,
@@ -40,10 +40,13 @@ def summaries_embeddings(
 
     context.log.info("Computing embeddings...")
     result = df.with_columns(
-        summary_embedding=pl.col("cluster_summary").map_batches(
-            embedding_model.get_embeddings
-        ),
-        items_embedding=pl.col("cluster_items").map_batches(
+        # summary_embedding=pl.col("cluster_summary").map_batches(
+        #     embedding_model.get_embeddings
+        # ),
+        # items_embedding=pl.col("cluster_items").map_batches(
+        #     embedding_model.get_embeddings
+        # ),
+        aspects_embeddings=pl.col("cluster_aspects").map_elements(
             embedding_model.get_embeddings
         ),
     )

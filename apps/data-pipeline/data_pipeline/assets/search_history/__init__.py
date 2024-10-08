@@ -1,3 +1,6 @@
+from data_pipeline.assets.search_history.aspects_embeddings import (
+    aspects_embeddings,
+)
 from data_pipeline.assets.search_history.cluster_summaries import cluster_summaries
 from data_pipeline.assets.search_history.clusters_categories import clusters_categories
 from data_pipeline.assets.search_history.funny_cluster_summaries import (
@@ -10,9 +13,6 @@ from data_pipeline.assets.search_history.interests_embeddings import (
     interests_embeddings,
 )
 from data_pipeline.assets.search_history.results_for_api import results_for_api
-from data_pipeline.assets.search_history.summaries_embeddings import (
-    summaries_embeddings,
-)
 from data_pipeline.assets.search_history.summaries_interests_matches import (
     summaries_interests_matches,
 )
@@ -31,7 +31,7 @@ __all__ = [
     cluster_summaries,
     funny_cluster_summaries,
     funny_images,
-    summaries_embeddings,
+    aspects_embeddings,
     summaries_user_matches,
     summaries_interests_matches,
     summaries_user_matches_with_desc,

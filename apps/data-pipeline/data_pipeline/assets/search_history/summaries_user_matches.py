@@ -6,8 +6,8 @@ import polars as pl
 from dagster import AssetExecutionContext, asset
 from pydantic import Field
 
-from data_pipeline.assets.search_history.summaries_embeddings import (
-    summaries_embeddings,
+from data_pipeline.assets.search_history.aspects_embeddings import (
+    aspects_embeddings,
 )
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
 from data_pipeline.utils.costs import get_gpu_runtime_cost
@@ -126,7 +126,7 @@ def match_users(
 
 @asset(
     partitions_def=user_partitions_def,
-    deps=[summaries_embeddings],
+    deps=[aspects_embeddings],
     io_manager_key="parquet_io_manager",
     op_tags=get_k8s_rapids_config(),
 )
@@ -139,10 +139,10 @@ async def summaries_user_matches(
 
     current_user_id = context.partition_key
     current_user_df = pl.read_parquet(
-        DAGSTER_STORAGE_BUCKET / "summaries_embeddings" / f"{current_user_id}.snappy"
+        DAGSTER_STORAGE_BUCKET / "aspects_embeddings" / f"{current_user_id}.snappy"
     ).sort(by="cluster_label")
 
-    other_user_ids = get_materialized_partitions(context, "summaries_embeddings")
+    other_user_ids = get_materialized_partitions(context, "aspects_embeddings")
     context.log.info(f"Matching with {len(other_user_ids)-1} users")
 
     result_dfs: List[pl.DataFrame] = []
@@ -152,7 +152,7 @@ async def summaries_user_matches(
             continue
 
         other_user_df = pl.read_parquet(
-            DAGSTER_STORAGE_BUCKET / "summaries_embeddings" / f"{other_user_id}.snappy"
+            DAGSTER_STORAGE_BUCKET / "aspects_embeddings" / f"{other_user_id}.snappy"
         ).sort(by="cluster_label")
 
         # TODO: allow matching across activity types
