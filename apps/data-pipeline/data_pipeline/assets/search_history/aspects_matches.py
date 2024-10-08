@@ -22,13 +22,13 @@ def aspects_matches(
     context: AssetExecutionContext,
     aspects_embeddings: pl.DataFrame,
 ):
-    matching_interest_ids, match_scores = aspect_bipartite_matching(
-        aspects_embeddings.get_column("interest_id").to_list(),
-        aspects_embeddings.get_column("aspects_embedding").to_list(),
-        aspects_embeddings.get_column("category_label").to_list(),
+    matching_cluster_labels, match_scores = aspect_bipartite_matching(
+        aspects_embeddings.get_column("cluster_label").to_list(),
+        aspects_embeddings.get_column("aspects_embeddings").to_list(),
+        aspects_embeddings.get_column("merged_cluster_label").to_list(),
     )
 
     return aspects_embeddings.with_columns(
-        pl.Series("matching_interest_id", matching_interest_ids),
+        pl.Series("matching_cluster_label", matching_cluster_labels),
         pl.Series("match_score", match_scores),
     )

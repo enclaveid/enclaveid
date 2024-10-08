@@ -120,7 +120,7 @@ def interests_clusters(
             merged_cluster_labels[label] if label != -1 else label
             for label in fine_cluster_labels
         ]
-    )
+    ).flatten()
 
     context.add_output_metadata(
         get_cluster_stats(remapped_merged_cluster_labels, prefix="coarse_")
