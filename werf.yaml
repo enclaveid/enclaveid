@@ -56,7 +56,7 @@ shell:
     - pip install --no-cache-dir --no-deps /app/dist/*.whl
 docker:
   WORKDIR: /app
-  ENTRYPOINT: []
+  ENTRYPOINT: ["dagster", "api", "execute_step"]
   CMD: []
   ENV:
     HF_HOME: /model-cache/huggingface
