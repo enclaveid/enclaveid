@@ -17,10 +17,12 @@ else:
     cudf = None
     cugraph = None
 
+FINITE_INF_VALUE: float = 999
+
 
 def aspect_bipartite_matching(
     original_interest_ids: List[int],
-    interest_aspects_embeddings: List[np.ndarray],
+    interest_aspects_embeddings: List[List[List[float]]],
     category_labels: List[int],
     aspect_similarity_threshold: float = 0.75,
 ) -> Tuple[List[int], List[float]]:
@@ -36,8 +38,9 @@ def aspect_bipartite_matching(
         Tuple[List[int], List[float]]: Tuple of (matching_interest_id, match_score).
     """
     interests_count = len(interest_aspects_embeddings)
+    interest_ids = np.array(original_interest_ids)
 
-    cost_matrix = [[cp.inf] * interests_count for _ in range(interests_count)]
+    cost_matrix = [[FINITE_INF_VALUE] * interests_count for _ in range(interests_count)]
 
     for i in range(interests_count):
         for j in range(i + 1, interests_count):  # Avoid duplicates and self-matching
@@ -53,8 +56,8 @@ def aspect_bipartite_matching(
             #     continue
 
             match_df = maximum_bipartite_matching(
-                aspect_embeddings_i,
-                aspect_embeddings_j,
+                np.array(aspect_embeddings_i),
+                np.array(aspect_embeddings_j),
                 np.arange(len(aspect_embeddings_i)),
                 np.arange(len(aspect_embeddings_j)),
             )
@@ -75,16 +78,22 @@ def aspect_bipartite_matching(
     indices1 = cp.arange(interests_count)
     indices2 = cp.array(assignment.values)
 
-    costs = cost_matrix[indices1, indices2].get()
+    matching_interest_ids = interest_ids[indices2.get().tolist()].tolist()
+    match_scores = cost_matrix[indices1, indices2].get().tolist()
 
-    return original_interest_ids[indices2.get().tolist()], costs.tolist()
+    # Replace indices where costs is FINITE_INF_VALUE with -1
+    for i, cost in enumerate(match_scores):
+        if cost == FINITE_INF_VALUE:
+            matching_interest_ids[i] = -1
+
+    return matching_interest_ids, match_scores
 
 
 if __name__ == "__main__":
     interest_aspects_embeddings = [
-        np.array([[0.1, 0.2], [0.3, 0.4]]),  # Aspects for item 0
-        np.array([[0.5, 0.6], [0.7, 0.8]]),  # Aspects for item 1
-        np.array([[0.9, 1.0], [1.1, 1.2]]),  # Aspects for item 2
+        [[0.1, 0.2], [0.3, 0.4]],  # Aspects for item 0
+        [[0.5, 0.6], [0.7, 0.8]],  # Aspects for item 1
+        [[0.9, 1.0], [1.1, 1.2]],  # Aspects for item 2
     ]
     category_labels = [0, 1, 0]  # Category labels for each item
     interest_ids = [100, 101, 102]  # IDs for each item
