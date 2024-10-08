@@ -61,8 +61,8 @@ docker:
     SENTENCE_TRANSFORMERS_HOME: /model-cache/sentence-transformers
     MKL_THREADING_LAYER: GNU
     VLLM_WORKER_MULTIPROC_METHOD: spawn
-    ENTRYPOINT: [""]
-    CMD: []
+    # ENTRYPOINT: [""]
+    # CMD: []
 mount:
   - fromPath: ./apps/data-pipeline/dist
     to: /app/dist
