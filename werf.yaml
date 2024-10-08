@@ -32,8 +32,8 @@ context: ./apps/spa-frontend
 contextAddFiles: ./dist
 ---
 image: data-pipeline-vllm
-from: nvidia/cuda:12.6.1-cudnn-devel-rockylinux9
-# from: vllm/vllm-openai:v0.6.1.post2 -- TODO this image is much smaller but we need to update rapids to 3.12
+#from: nvidia/cuda:12.6.1-cudnn-devel-rockylinux9
+from: vllm/vllm-openai:v0.6.1.post2 # TODO this image is much smaller but we need to update rapids to 3.12
 git:
   - add: /apps/data-pipeline
     to: /app
@@ -45,15 +45,15 @@ git:
       setup:
         - '**/*.py'
 shell:
-  beforeInstall:
-    - dnf install -y python3.11 python3.11-pip python3.11-devel
+  # beforeInstall:
+  #   - dnf install -y python3.11 python3.11-pip python3.11-devel
   install:
-    - pip3.11 install --no-cache-dir -r /app/requirements.vllm.txt
-    - pip3.11 install --no-cache-dir flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
+    - pip install --no-cache-dir -r /app/requirements.vllm.txt
+    #- pip3.11 install --no-cache-dir flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
   beforeSetup:
-    - pip3.11 install --no-cache-dir -r /app/requirements.prod.txt
+    - pip install --no-cache-dir -r /app/requirements.prod.txt
   setup:
-    - pip3.11 install --no-cache-dir --no-deps /app/dist/*.whl
+    - pip install --no-cache-dir --no-deps /app/dist/*.whl
 docker:
   WORKDIR: /app
   ENV:
@@ -61,8 +61,8 @@ docker:
     SENTENCE_TRANSFORMERS_HOME: /model-cache/sentence-transformers
     MKL_THREADING_LAYER: GNU
     VLLM_WORKER_MULTIPROC_METHOD: spawn
-    # ENTRYPOINT: [""]
-    # CMD: []
+    ENTRYPOINT: ""
+    CMD: ""
 mount:
   - fromPath: ./apps/data-pipeline/dist
     to: /app/dist
