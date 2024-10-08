@@ -32,8 +32,8 @@ context: ./apps/spa-frontend
 contextAddFiles: ./dist
 ---
 image: data-pipeline-vllm
-#from: nvidia/cuda:12.6.1-cudnn-devel-rockylinux9
-from: vllm/vllm-openai:v0.6.1.post2 # TODO this image is much smaller but we need to update rapids to 3.12
+from: nvidia/cuda:12.6.1-cudnn-devel-rockylinux9
+#from: vllm/vllm-openai:v0.6.1.post2 # TODO this image is much smaller but we need to update rapids to 3.12
 git:
   - add: /apps/data-pipeline
     to: /app
@@ -45,19 +45,19 @@ git:
       setup:
         - '**/*.py'
 shell:
-  # beforeInstall:
-  #   - dnf install -y python3.11 python3.11-pip python3.11-devel
+  beforeInstall:
+    - dnf install -y python3.11 python3.11-pip python3.11-devel
   install:
-    - pip install --no-cache-dir -r /app/requirements.vllm.txt
-    #- pip3.11 install --no-cache-dir flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
+    - pip3.11 install --no-cache-dir -r /app/requirements.vllm.txt
+    - pip3.11 install --no-cache-dir flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
   beforeSetup:
-    - pip install --no-cache-dir -r /app/requirements.prod.txt
+    - pip3.11 install --no-cache-dir -r /app/requirements.prod.txt
   setup:
-    - pip install --no-cache-dir --no-deps /app/dist/*.whl
+    - pip3.11 install --no-cache-dir --no-deps /app/dist/*.whl
 docker:
   WORKDIR: /app
-  ENTRYPOINT: ["/bin/bash"]
-  CMD: []
+  # ENTRYPOINT: ["/bin/bash"] # TODO override vllm image entrypoint
+  # CMD: []
   ENV:
     HF_HOME: /model-cache/huggingface
     SENTENCE_TRANSFORMERS_HOME: /model-cache/sentence-transformers

@@ -26,7 +26,7 @@ url = "https://pypi.nvidia.com"
 priority = "supplemental"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = ">=3.10,<3.12"
 dagster = "^1.8.4"
 openai = "^1.43.1"
 aiolimiter = "^1.1.0"
@@ -55,8 +55,8 @@ hdbscan = "^0.8.38"
 # The following are very large packages, they are cached as docker layers and shouldn't be changed often.
 # We split ML deps in two grups to avoid conflicts.
 [tool.poetry.group.vllm.dependencies]
-# torch = "2.4.0"
-# vllm = "0.6.1.post2"
+torch = "2.4.0"
+vllm = "0.6.1.post2"
 transformers = "4.43.4"         # Anything above this breaks nvembed
 sentence-transformers = "3.1.1"
 # Diffusers deps
