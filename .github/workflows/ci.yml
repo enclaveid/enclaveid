@@ -70,6 +70,7 @@ jobs:
           bun nx run data-pipeline:build
 
       - uses: actions/cache@v4
+        if: false
         name: Local registry cache
         with:
           path: ~/docker-registry
@@ -78,9 +79,11 @@ jobs:
             ${{ runner.os }}-docker-registry-
 
       - name: Set up local registry
+        if: false
         run: |
           mkdir -p ~/docker-registry
           docker run -d -p 5000:5000 --name local-registry -v ~/docker-registry:/var/lib/registry registry:2
+          echo "WERF_CACHE_REPO_1=localhost:5000/cluster" >> $GITHUB_ENV
 
       - name: Install werf
         uses: werf/actions/install@v2
@@ -101,7 +104,6 @@ jobs:
           echo "WERF_ALLOWED_LOCAL_CACHE_VOLUME_USAGE=100" >> $GITHUB_ENV
           echo "WERF_REPO=docker.io/enclaveid/cluster" >> $GITHUB_ENV
           echo "WERF_SECRET_VALUES_ENV=k8s/basic/secret-values/secret-values.yaml" >> $GITHUB_ENV
-          echo "WERF_CACHE_REPO_1=localhost:5000/cluster" >> $GITHUB_ENV
 
       - name: werf converge
         run: |
