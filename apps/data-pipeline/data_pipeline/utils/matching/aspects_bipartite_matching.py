@@ -52,8 +52,8 @@ def aspect_bipartite_matching(
             aspect_embeddings_j = interest_aspects_embeddings[j]
 
             # Skip if any item has no aspects
-            # if not aspect_embeddings_i or not aspect_embeddings_j:
-            #     continue
+            if not aspect_embeddings_i or not aspect_embeddings_j:
+                continue
 
             match_df = maximum_bipartite_matching(
                 np.array(aspect_embeddings_i),
