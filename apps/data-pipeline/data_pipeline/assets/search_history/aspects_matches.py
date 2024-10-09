@@ -25,7 +25,10 @@ def aspects_matches(
     matching_cluster_labels, match_scores = aspect_bipartite_matching(
         aspects_embeddings.get_column("cluster_label").to_list(),
         aspects_embeddings.get_column("aspects_embeddings").to_list(),
-        aspects_embeddings.get_column("merged_cluster_label").to_list(),
+        aspects_embeddings.get_column("merged_cluster_label")
+        .to_numpy()
+        .flatten()
+        .tolist(),
     )
 
     return aspects_embeddings.with_columns(
