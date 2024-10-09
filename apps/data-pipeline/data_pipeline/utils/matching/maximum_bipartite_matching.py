@@ -91,7 +91,7 @@ def maximum_bipartite_matching(
         {
             "item_label_1": padded_labels1[indices1.get().tolist()],
             "item_label_2": padded_labels2[indices2.get().tolist()],
-            "cosine_similarity": (1 - costs if invert else costs).tolist(),
+            "cosine_similarity": (1 - costs).tolist(),
             "cosine_distance": costs.tolist(),
         }
     )
