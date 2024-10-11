@@ -1,5 +1,3 @@
-import os
-
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 from pydantic import Field
@@ -42,26 +40,10 @@ def aspects_matches(
         aspect_similarity_threshold=config.aspect_similarity_threshold,
     )
 
+    context.log.info(f"Matching cluster labels: {matching_cluster_labels}")
+    context.log.info(f"Match scores: {match_scores}")
+
     return aspects_embeddings.with_columns(
         pl.Series("matching_cluster_label", matching_cluster_labels),
         pl.Series("match_score", match_scores),
     )
-
-
-if __name__ == "__main__":
-    current_directory = os.path.dirname(os.path.abspath(__file__))
-    aspects_embeddings = pl.read_parquet(
-        "apps/data-pipeline/data/aspects_embeddings/cm0i27jdj0000aqpa73ghpcxf.snappy"
-    )
-    matching_cluster_labels, match_scores = aspects_matching(
-        aspects_embeddings.get_column("cluster_label").to_list(),
-        aspects_embeddings.get_column("aspects_embeddings").to_list(),
-        aspects_embeddings.get_column("merged_cluster_label")
-        .to_numpy()
-        .flatten()
-        .tolist(),
-        aspect_similarity_threshold=0.7,
-    )
-
-    print(matching_cluster_labels)
-    print(match_scores)
