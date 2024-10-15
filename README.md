@@ -1,7 +1,7 @@
 # EnclaveID
 
 [Figma mocks](https://www.figma.com/design/sCKxY4WbgHs13Sd3sNp1GF?fuid=899291250420012310&prev-plan-id=899291252722142386&prev-plan-type=team&prev-selected-view=recentsAndSharing&prev-tab=recently-viewed) |
-[Trello board](https://trello.com/b/jsbSDdMQ/enclaveid)
+[Trello board](https://trello.com/b/jsbSDdMQ/enclaveid) | [Tinkerers Slides](https://docs.google.com/presentation/d/1zX_3J0rcH2t8o6apqhF56PW4a3ipjmwj9UgBtGPgWWc/edit#slide=id.g30acb7aad6b_0_3)
 
 ## Docs
 
