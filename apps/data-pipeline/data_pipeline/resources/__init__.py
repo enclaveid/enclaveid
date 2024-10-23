@@ -21,6 +21,9 @@ from data_pipeline.resources.inference.local_llms.llama8b_resource import (
 from data_pipeline.resources.inference.local_llms.llama70b_bf16_resource import (
     Llama70bBf16Resource,
 )
+from data_pipeline.resources.inference.local_llms.llama70b_nemotron_resource import (
+    Llama70bNemotronResource,
+)
 from data_pipeline.resources.inference.local_llms.llama70b_quantized_resource import (
     Llama70bQuantizedResource,
 )
@@ -46,6 +49,7 @@ resources = {
     "llama405b": Llama405bResource(api_key=EnvVar("AZURE_AI_LLAMA405B_API_KEY")),
     "llama70b": Llama70bResource(api_key=EnvVar("AZURE_AI_LLAMA70B_API_KEY")),
     "llama70b_bf16": Llama70bBf16Resource(),
+    "llama70b_nemotron": Llama70bNemotronResource(),
     "llama70b_quantized": Llama70bQuantizedResource(),
     "llama8b": Llama8bResource(),
     "mistral": MistralResource(api_key=EnvVar("MISTRAL_API_KEY")),
