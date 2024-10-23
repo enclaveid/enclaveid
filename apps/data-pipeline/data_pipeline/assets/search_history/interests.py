@@ -9,7 +9,7 @@ from dagster import (
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.resources.inference.local_llms.llama8b_resource import (
+from data_pipeline.resources.inference.local_llms.llama8b import (
     Llama8bResource,
 )
 from data_pipeline.utils.costs import get_gpu_runtime_cost

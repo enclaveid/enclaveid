@@ -8,7 +8,7 @@ from dagster import (
 )
 from pydantic import Field
 
-from data_pipeline.resources.inference.llama405b_resource import Llama405bResource
+from data_pipeline.resources.inference.llms.llama405b import Llama405bResource
 from data_pipeline.utils.parsing.regex import parse_cluster_summarization
 
 from ...constants.custom_config import RowLimitConfig
@@ -115,7 +115,10 @@ async def summaries_user_matches_with_desc(
 
     means_of_comparison = f"common_summary_prompt_{config.means_of_comparison}"
 
-    summaries_completions, cost = await llama405b.get_prompt_sequences_completions(
+    (
+        summaries_completions,
+        cost,
+    ) = await llama405b.get_prompt_sequences_completions_batch(
         list(
             map(
                 lambda x: [

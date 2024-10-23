@@ -1,30 +1,29 @@
 import itertools
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, List
 
 import ray
-from dagster import ConfigurableResource, InitResourceContext
+from dagster import InitResourceContext
 from pydantic import PrivateAttr
 
+from data_pipeline.resources.inference.base_llm_resource import (
+    BaseLlmResource,
+    PromptSequence,
+)
+from data_pipeline.resources.inference.local_llm_config import LocalLlmConfig
 from data_pipeline.utils.capabilities import gpu_info, is_vllm_image
 from data_pipeline.utils.get_logger import get_logger
 
 if is_vllm_image() or TYPE_CHECKING:
     import torch
 
-    from data_pipeline.resources.inference.local_llms.local_llm import (
-        LocalLlm,
-        PromptSequence,
-    )
+    from data_pipeline.resources.inference.local_llm import LocalLlm
 else:
     LocalLlm = None
-    PromptSequence = None
     torch = None
 
 
-class LocalLlmResource(ConfigurableResource):
-    _model_name: str = PrivateAttr()
-    _sampling_params_args: Dict[str, Any] = PrivateAttr()
-    _vllm_args: Dict[str, Any] = PrivateAttr()
+class LocalLlmResource(BaseLlmResource):
+    config: LocalLlmConfig
 
     _local_llms: List[ray.ObjectRef] = PrivateAttr()
 
@@ -32,14 +31,16 @@ class LocalLlmResource(ConfigurableResource):
         self._logger = get_logger(context)
         ray.init()
         num_actors = (
-            torch.cuda.device_count() // self._vllm_args["tensor_parallel_size"]
+            torch.cuda.device_count() // self.config.vllm_args["tensor_parallel_size"]
         )
 
         self._local_llms = [
-            LocalLlm.options(num_gpus=self._vllm_args["tensor_parallel_size"]).remote(
-                self._model_name,
-                self._vllm_args,
-                self._sampling_params_args,
+            LocalLlm.options(
+                num_gpus=self.config.vllm_args["tensor_parallel_size"]
+            ).remote(
+                self.config.model_name,
+                self.config.vllm_args,
+                self.config.sampling_params_args,
             )
             for _ in range(num_actors)
         ]

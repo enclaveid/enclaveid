@@ -3,38 +3,30 @@ from dagster_polars import PolarsParquetIOManager
 
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
 from data_pipeline.resources.api_db_session import ApiDbSession
-from data_pipeline.resources.inference.gpt4_resource import Gpt4Resource
 from data_pipeline.resources.inference.image_generator_resource import (
     ImageGeneratorResource,
 )
-from data_pipeline.resources.inference.llama70b_resource import Llama70bResource
-from data_pipeline.resources.inference.llama405b_resource import Llama405bResource
-from data_pipeline.resources.inference.local_llms.gemma9b_resource import (
-    Gemma9bResource,
+from data_pipeline.resources.inference.llms.gemma9b import create_gemma9b_resource
+from data_pipeline.resources.inference.llms.gemma27b import create_gemma27b_resource
+from data_pipeline.resources.inference.llms.gpt4 import (
+    create_gpt4_resource,
 )
-from data_pipeline.resources.inference.local_llms.gemma27b_resource import (
-    Gemma27bResource,
+from data_pipeline.resources.inference.llms.llama8b import create_llama8b_resource
+from data_pipeline.resources.inference.llms.llama70b import create_llama70b_resource
+from data_pipeline.resources.inference.llms.llama70b_nemotron import (
+    create_llama70b_nemotron_resource,
 )
-from data_pipeline.resources.inference.local_llms.llama8b_resource import (
-    Llama8bResource,
+from data_pipeline.resources.inference.llms.llama70b_quantized import (
+    create_llama70b_quantized_resource,
 )
-from data_pipeline.resources.inference.local_llms.llama70b_bf16_resource import (
-    Llama70bBf16Resource,
+from data_pipeline.resources.inference.llms.llama405b import (
+    create_llama405b_resource,
 )
-from data_pipeline.resources.inference.local_llms.llama70b_nemotron_resource import (
-    Llama70bNemotronResource,
+from data_pipeline.resources.inference.llms.mistral22b import create_mistral22b_resource
+from data_pipeline.resources.inference.llms.mistral_nemo import (
+    create_mistral_nemo_resource,
 )
-from data_pipeline.resources.inference.local_llms.llama70b_quantized_resource import (
-    Llama70bQuantizedResource,
-)
-from data_pipeline.resources.inference.local_llms.mistral22b_resource import (
-    Mistral22bResource,
-)
-from data_pipeline.resources.inference.local_llms.mistral_nemo_resource import (
-    MistralNemoResource,
-)
-from data_pipeline.resources.inference.local_llms.qwen32b import Qwen32bResource
-from data_pipeline.resources.mistral_resource import MistralResource
+from data_pipeline.resources.inference.llms.qwen32b import create_qwen32b_resource
 from data_pipeline.resources.sentence_transfomer_resource import (
     SentenceTransformerResource,
 )
@@ -42,21 +34,19 @@ from data_pipeline.resources.sentence_transfomer_resource import (
 resources = {
     "api_db": ApiDbSession(conn_string=EnvVar("API_DATABASE_URL")),
     "embedding_model": SentenceTransformerResource(),
-    "gemma27b": Gemma27bResource(),
-    "gemma9b": Gemma9bResource(),
-    "gpt4": Gpt4Resource(api_key=EnvVar("AZURE_AI_GPT4_API_KEY")),
+    "gemma27b": create_gemma27b_resource(),
+    "gemma9b": create_gemma9b_resource(),
+    "gpt4": create_gpt4_resource(),
     "image_generator": ImageGeneratorResource(),
-    "llama405b": Llama405bResource(api_key=EnvVar("AZURE_AI_LLAMA405B_API_KEY")),
-    "llama70b": Llama70bResource(api_key=EnvVar("AZURE_AI_LLAMA70B_API_KEY")),
-    "llama70b_bf16": Llama70bBf16Resource(),
-    "llama70b_nemotron": Llama70bNemotronResource(),
-    "llama70b_quantized": Llama70bQuantizedResource(),
-    "llama8b": Llama8bResource(),
-    "mistral": MistralResource(api_key=EnvVar("MISTRAL_API_KEY")),
-    "mistral22b": Mistral22bResource(),
-    "mistral_nemo": MistralNemoResource(),
+    "llama405b": create_llama405b_resource(),
+    "llama70b": create_llama70b_resource(),
+    "llama70b_nemotron": create_llama70b_nemotron_resource(),
+    "llama70b_quantized": create_llama70b_quantized_resource(),
+    "llama8b": create_llama8b_resource(),
+    "mistral22b": create_mistral22b_resource(),
+    "mistral_nemo": create_mistral_nemo_resource(),
     "parquet_io_manager": PolarsParquetIOManager(
         extension=".snappy", base_dir=str(DAGSTER_STORAGE_BUCKET)
     ),
-    "qwen32b": Qwen32bResource(),
+    "qwen32b": create_qwen32b_resource(),
 }

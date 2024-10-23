@@ -1,23 +1,19 @@
 import asyncio
-from typing import Any, Callable, Dict, List
+from typing import Dict, List
 
 import httpx
-from dagster import ConfigurableResource, InitResourceContext, get_dagster_logger
+from dagster import InitResourceContext, get_dagster_logger
 from pydantic import PrivateAttr
 
-PromptSequence = List[str] | List[Callable[[str], str]]
+from data_pipeline.resources.inference.base_llm_resource import (
+    BaseLlmResource,
+    PromptSequence,
+)
+from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
 
 
-class RemoteLlmResource(ConfigurableResource):
-    api_key: str
-
-    _concurrency_limit: int = PrivateAttr()
-    _timeout: int = PrivateAttr()
-    _inference_url: str = PrivateAttr()
-    _inference_config: Dict[str, Any] = PrivateAttr()
-    _input_cpm: float = PrivateAttr()
-    _output_cpm: float = PrivateAttr()
-    _context_length: int = PrivateAttr()
+class RemoteLlmResource(BaseLlmResource):
+    config: RemoteLlmConfig
 
     _client: httpx.AsyncClient = PrivateAttr()
     _retry_event: asyncio.Event = PrivateAttr(default_factory=asyncio.Event)
@@ -26,10 +22,10 @@ class RemoteLlmResource(ConfigurableResource):
     def setup_for_execution(self, context: InitResourceContext) -> None:
         self._client = httpx.AsyncClient(
             limits=httpx.Limits(
-                max_connections=self._concurrency_limit,
-                max_keepalive_connections=self._concurrency_limit,
+                max_connections=self.config.concurrency_limit,
+                max_keepalive_connections=self.config.concurrency_limit,
             ),
-            timeout=self._timeout,
+            timeout=self.config.timeout,
         )
         self._retry_event.set()  # Initially allow all operations
 
@@ -60,11 +56,11 @@ class RemoteLlmResource(ConfigurableResource):
 
             try:
                 response = await self._client.post(
-                    self._inference_url,
+                    self.config.inference_url,
                     json=payload,
                     headers={
                         "Content-Type": "application/json",
-                        "Authorization": f"Bearer {self.api_key}",
+                        "Authorization": f"Bearer {self.config.api_key}",
                     },
                 )
 
@@ -80,9 +76,9 @@ class RemoteLlmResource(ConfigurableResource):
                 response.raise_for_status()
                 res = response.json()
                 answer: str = res["choices"][0]["message"]["content"]
-                cost = (res["usage"]["prompt_tokens"] * self._input_cpm / 1000) + (
-                    res["usage"]["completion_tokens"] * self._output_cpm / 1000
-                )
+                cost = (
+                    res["usage"]["prompt_tokens"] * self.config.input_cpm / 1000
+                ) + (res["usage"]["completion_tokens"] * self.config.output_cpm / 1000)
                 return answer, cost
 
             except httpx.TimeoutException as e:
@@ -123,7 +119,7 @@ class RemoteLlmResource(ConfigurableResource):
 
         return conversation, total_cost
 
-    async def get_prompt_sequences_completions(
+    async def get_prompt_sequences_completions_batch(
         self, prompt_sequences: List[PromptSequence]
     ) -> tuple[List[List[str]], float]:
         self._remaining_reqs = len(prompt_sequences) * len(prompt_sequences[0])
@@ -132,6 +128,7 @@ class RemoteLlmResource(ConfigurableResource):
         This method is used to get completions for multiple prompt sequences in parallel.
         Prompt sequence items (other than the first in the list) can be callables that take
         the previous assistant response as input and return the next user prompt based on custom logic"""
+
         results = await asyncio.gather(
             *(
                 self._get_prompt_sequence_completion(prompt_sequence, i)
@@ -157,3 +154,6 @@ class RemoteLlmResource(ConfigurableResource):
                 conversations,
             )
         ), sum(costs)
+
+    def teardown_after_execution(self, context: InitResourceContext) -> None:
+        pass

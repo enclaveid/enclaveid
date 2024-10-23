@@ -6,7 +6,7 @@ import polars as pl
 from dagster import get_dagster_logger
 from json_repair import repair_json
 
-from data_pipeline.resources.inference.local_llms.local_llm_resource import (
+from data_pipeline.resources.inference.local_llm_resource import (
     LocalLlmResource,
 )
 

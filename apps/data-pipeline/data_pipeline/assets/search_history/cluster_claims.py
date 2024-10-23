@@ -13,7 +13,7 @@ from pydantic import Field
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.inference.local_llms.llama70b_nemotron_resource import (
+from data_pipeline.resources.inference.local_llms.llama70b_nemotron import (
     Llama70bNemotronResource,
 )
 from data_pipeline.utils.costs import get_gpu_runtime_cost

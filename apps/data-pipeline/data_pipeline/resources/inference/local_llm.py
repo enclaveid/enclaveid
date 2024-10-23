@@ -1,11 +1,11 @@
 import gc
 import time
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import ray
 import torch
 from dagster import get_dagster_logger
-from pydantic import BaseModel, PrivateAttr
+from pydantic import PrivateAttr
 from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
 from vllm import LLM, SamplingParams
 from vllm.distributed.parallel_state import (
@@ -13,7 +13,7 @@ from vllm.distributed.parallel_state import (
     destroy_model_parallel,
 )
 
-PromptSequence = List[str] | List[Callable[[str | BaseModel], str]]
+from data_pipeline.resources.inference.base_llm_resource import PromptSequence
 
 
 @ray.remote(num_gpus=1)

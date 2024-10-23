@@ -81,7 +81,7 @@ async def get_daily_sessions(
     ]
 
     sessions_list = []
-    raw_answers, cost = await llama70b.get_prompt_sequences_completions(
+    raw_answers, cost = await llama70b.get_prompt_sequences_completions_batch(
         prompt_sequences
     )
     for answer in raw_answers:
