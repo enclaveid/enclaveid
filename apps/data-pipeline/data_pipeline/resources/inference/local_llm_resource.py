@@ -29,7 +29,7 @@ class LocalLlmResource(BaseLlmResource):
 
     def setup_for_execution(self, context: InitResourceContext) -> None:
         self._logger = get_logger(context)
-        ray.init()
+        ray.init(object_store_memory=200 * 1024 * 1024 * 1024)  # 200GB
         num_actors = (
             torch.cuda.device_count()
             // self.llm_config.vllm_args["tensor_parallel_size"]
