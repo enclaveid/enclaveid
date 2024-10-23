@@ -2,6 +2,7 @@ from data_pipeline.assets.search_history.aspects_embeddings import (
     aspects_embeddings,
 )
 from data_pipeline.assets.search_history.aspects_matches import aspects_matches
+from data_pipeline.assets.search_history.cluster_claims import cluster_claims
 from data_pipeline.assets.search_history.cluster_summaries import cluster_summaries
 from data_pipeline.assets.search_history.clusters_categories import clusters_categories
 from data_pipeline.assets.search_history.funny_cluster_summaries import (
@@ -31,6 +32,7 @@ __all__ = [
     clusters_categories,
     cluster_summaries,
     funny_cluster_summaries,
+    cluster_claims,
     funny_images,
     aspects_embeddings,
     aspects_matches,
