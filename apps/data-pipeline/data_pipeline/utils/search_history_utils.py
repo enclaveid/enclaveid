@@ -6,9 +6,7 @@ import polars as pl
 from dagster import get_dagster_logger
 from json_repair import repair_json
 
-from data_pipeline.resources.inference.local_llm_resource import (
-    LocalLlmResource,
-)
+from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
 
 
 @dataclass
@@ -48,7 +46,7 @@ def extract_interests_lists(text: str) -> List[str]:
 
 
 def generate_chunked_interests(
-    local_llm: LocalLlmResource,
+    local_llm: BaseLlmResource,
     chunks: Dict[datetime.date, List[pl.DataFrame]],
     prompt_sequence_base: List[str],
 ):
@@ -92,7 +90,7 @@ def get_full_history_sessions(
     full_takeout: pl.DataFrame,
     chunk_size: int,
     prompt_sequence: List[str],
-    local_llm: LocalLlmResource,
+    local_llm: BaseLlmResource,
 ) -> FullHistorySessionsOutput:
     daily_dfs = full_takeout.with_columns(
         date=pl.col("timestamp").dt.date()

@@ -23,7 +23,7 @@ else:
 
 
 class LocalLlmResource(BaseLlmResource):
-    config: LocalLlmConfig
+    llm_config: LocalLlmConfig
 
     _local_llms: List[ray.ObjectRef] = PrivateAttr()
 
@@ -31,16 +31,17 @@ class LocalLlmResource(BaseLlmResource):
         self._logger = get_logger(context)
         ray.init()
         num_actors = (
-            torch.cuda.device_count() // self.config.vllm_args["tensor_parallel_size"]
+            torch.cuda.device_count()
+            // self.llm_config.vllm_args["tensor_parallel_size"]
         )
 
         self._local_llms = [
             LocalLlm.options(
-                num_gpus=self.config.vllm_args["tensor_parallel_size"]
+                num_gpus=self.llm_config.vllm_args["tensor_parallel_size"]
             ).remote(
-                self.config.model_name,
-                self.config.vllm_args,
-                self.config.sampling_params_args,
+                self.llm_config.model_name,
+                self.llm_config.vllm_args,
+                self.llm_config.sampling_params_args,
             )
             for _ in range(num_actors)
         ]

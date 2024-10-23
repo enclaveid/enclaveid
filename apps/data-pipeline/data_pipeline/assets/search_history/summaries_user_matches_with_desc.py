@@ -8,7 +8,7 @@ from dagster import (
 )
 from pydantic import Field
 
-from data_pipeline.resources.inference.llms.llama405b import Llama405bResource
+from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
 from data_pipeline.utils.parsing.regex import parse_cluster_summarization
 
 from ...constants.custom_config import RowLimitConfig
@@ -70,7 +70,7 @@ class UserMatchesSummariesConfig(RowLimitConfig):
 async def summaries_user_matches_with_desc(
     context: AssetExecutionContext,
     config: UserMatchesSummariesConfig,
-    llama405b: Llama405bResource,
+    llama405b: BaseLlmResource,
     summaries_user_matches: pl.DataFrame,
     summaries_interests_matches: pl.DataFrame,
 ) -> pl.DataFrame | None:

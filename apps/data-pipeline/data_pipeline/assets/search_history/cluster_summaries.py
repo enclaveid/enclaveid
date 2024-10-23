@@ -13,9 +13,7 @@ from pydantic import Field
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.inference.local_llms.gemma27b import (
-    Gemma27bResource,
-)
+from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.get_logger import get_logger
 from data_pipeline.utils.prompts.apsects_summarization import (
@@ -77,7 +75,7 @@ class ClusterSummariesConfig(RowLimitConfig):
 async def cluster_summaries(
     context: AssetExecutionContext,
     config: ClusterSummariesConfig,
-    gemma27b: Gemma27bResource,
+    gemma27b: BaseLlmResource,
     interests_clusters: pl.DataFrame,
 ):
     start_time = time.time()

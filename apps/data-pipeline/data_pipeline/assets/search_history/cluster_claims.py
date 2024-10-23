@@ -13,8 +13,8 @@ from pydantic import Field
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.inference.local_llms.llama70b_nemotron import (
-    Llama70bNemotronResource,
+from data_pipeline.resources.inference.base_llm_resource import (
+    BaseLlmResource,
 )
 from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.get_logger import get_logger
@@ -106,7 +106,7 @@ class ClaimGenerationConfig(RowLimitConfig):
 async def cluster_claims(
     context: AssetExecutionContext,
     config: ClaimGenerationConfig,
-    llama70b_nemotron: Llama70bNemotronResource,
+    llama70b_nemotron: BaseLlmResource,
     interests_clusters: pl.DataFrame,
 ):
     start_time = time.time()

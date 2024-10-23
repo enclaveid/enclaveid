@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from dagster import Config
 
 
-class LocalLlmConfig(BaseModel):
+class LocalLlmConfig(Config):
     model_name: str
     sampling_params_args: dict
     vllm_args: dict

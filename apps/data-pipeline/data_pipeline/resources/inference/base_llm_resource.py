@@ -1,15 +1,23 @@
 from abc import ABC, abstractmethod
 from typing import Callable, List, Tuple, Union
 
-from dagster import ConfigurableResource
+from dagster import Config, ConfigurableResource
 
-from data_pipeline.resources.inference.llm_factory import LlmConfig
+from data_pipeline.resources.inference.local_llm_config import LocalLlmConfig
+from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
+
+
+class LlmConfig(Config):
+    colloquial_model_name: str
+    local_llm_config: LocalLlmConfig | None = None
+    remote_llm_config: RemoteLlmConfig | None = None
+
 
 PromptSequence = List[Union[str, Callable[[str], str]]]
 
 
 class BaseLlmResource(ConfigurableResource, ABC):
-    config: LlmConfig
+    llm_config: LlmConfig
 
     @abstractmethod
     def setup_for_execution(self, context) -> None:

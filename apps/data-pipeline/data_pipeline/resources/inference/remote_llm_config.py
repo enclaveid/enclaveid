@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from dagster import Config
 
 
-class RemoteLlmConfig(BaseModel):
+class RemoteLlmConfig(Config):
     api_key: str
     concurrency_limit: int
     timeout: int

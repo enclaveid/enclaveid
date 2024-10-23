@@ -13,7 +13,7 @@ from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
 
 
 class RemoteLlmResource(BaseLlmResource):
-    config: RemoteLlmConfig
+    llm_config: RemoteLlmConfig
 
     _client: httpx.AsyncClient = PrivateAttr()
     _retry_event: asyncio.Event = PrivateAttr(default_factory=asyncio.Event)
@@ -22,10 +22,10 @@ class RemoteLlmResource(BaseLlmResource):
     def setup_for_execution(self, context: InitResourceContext) -> None:
         self._client = httpx.AsyncClient(
             limits=httpx.Limits(
-                max_connections=self.config.concurrency_limit,
-                max_keepalive_connections=self.config.concurrency_limit,
+                max_connections=self.llm_config.concurrency_limit,
+                max_keepalive_connections=self.llm_config.concurrency_limit,
             ),
-            timeout=self.config.timeout,
+            timeout=self.llm_config.timeout,
         )
         self._retry_event.set()  # Initially allow all operations
 
@@ -56,11 +56,11 @@ class RemoteLlmResource(BaseLlmResource):
 
             try:
                 response = await self._client.post(
-                    self.config.inference_url,
+                    self.llm_config.inference_url,
                     json=payload,
                     headers={
                         "Content-Type": "application/json",
-                        "Authorization": f"Bearer {self.config.api_key}",
+                        "Authorization": f"Bearer {self.llm_config.api_key}",
                     },
                 )
 
@@ -77,8 +77,12 @@ class RemoteLlmResource(BaseLlmResource):
                 res = response.json()
                 answer: str = res["choices"][0]["message"]["content"]
                 cost = (
-                    res["usage"]["prompt_tokens"] * self.config.input_cpm / 1000
-                ) + (res["usage"]["completion_tokens"] * self.config.output_cpm / 1000)
+                    res["usage"]["prompt_tokens"] * self.llm_config.input_cpm / 1000
+                ) + (
+                    res["usage"]["completion_tokens"]
+                    * self.llm_config.output_cpm
+                    / 1000
+                )
                 return answer, cost
 
             except httpx.TimeoutException as e:
