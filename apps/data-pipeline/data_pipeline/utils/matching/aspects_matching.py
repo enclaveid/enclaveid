@@ -16,9 +16,7 @@ else:
     torch = None
 
 
-def greedy_embedding_matcher(
-    embeddings1: torch.Tensor, embeddings2: torch.Tensor
-) -> List[Tuple[int, int, float]]:
+def greedy_embedding_matcher(embeddings1, embeddings2) -> List[Tuple[int, int, float]]:
     """
     Match embeddings from two tensors using a greedy approach based on cosine similarity.
 
