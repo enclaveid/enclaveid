@@ -118,7 +118,7 @@ async def summaries_user_matches_with_desc(
     (
         summaries_completions,
         cost,
-    ) = await llama405b.get_prompt_sequences_completions_batch(
+    ) = llama405b.get_prompt_sequences_completions_batch(
         list(
             map(
                 lambda x: [

@@ -1,5 +1,6 @@
 import asyncio
-from typing import Dict, List
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Dict, List, Tuple
 
 import httpx
 from dagster import InitResourceContext, get_dagster_logger
@@ -43,7 +44,7 @@ class RemoteLlmResource(BaseLlmResource):
         # TODO: Ensure payload fits the context window
         payload = {
             "messages": conversation,
-            **self._inference_config,
+            **self.llm_config.inference_config,
         }
 
         # Requests are attempted in seuqnence, meaning that the latter
@@ -123,7 +124,7 @@ class RemoteLlmResource(BaseLlmResource):
 
         return conversation, total_cost
 
-    async def get_prompt_sequences_completions_batch(
+    async def _get_prompt_sequences_completions_batch_async(
         self, prompt_sequences: List[PromptSequence]
     ) -> tuple[List[List[str]], float]:
         self._remaining_reqs = len(prompt_sequences) * len(prompt_sequences[0])
@@ -158,6 +159,35 @@ class RemoteLlmResource(BaseLlmResource):
                 conversations,
             )
         ), sum(costs)
+
+    def get_prompt_sequences_completions_batch(
+        self, prompt_sequences: List[PromptSequence]
+    ) -> Tuple[List[PromptSequence], float]:
+        """
+        Synchronous wrapper for the async get_prompt_sequences_completions_batch function.
+        Uses a thread to run the async function in a new event loop.
+        """
+
+        def run_async_in_thread(async_func: Any, *args) -> Any:
+            # Create a new event loop for this thread
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+            try:
+                # Run the async function and get the result
+                return loop.run_until_complete(async_func(*args))
+            finally:
+                # Clean up
+                loop.close()
+
+        # Create a thread to run the async function
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(
+                run_async_in_thread,
+                self._get_prompt_sequences_completions_batch_async,
+                prompt_sequences,
+            )
+            return future.result()
 
     def teardown_after_execution(self, context: InitResourceContext) -> None:
         pass

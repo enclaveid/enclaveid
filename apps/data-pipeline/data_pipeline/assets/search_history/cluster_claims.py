@@ -1,4 +1,3 @@
-import time
 from typing import Any, Dict, List
 
 import polars as pl
@@ -16,14 +15,13 @@ from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.inference.base_llm_resource import (
     BaseLlmResource,
 )
-from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.get_logger import get_logger
 from data_pipeline.utils.prompts.claim_generation import (  # You'll need to create this
     get_claim_generation_prompt_sequence,
 )
 
 
-def parse_claims_json(text: str) -> List[Dict[str, Any]] | None:
+def parse_claims_json(text: str, cluster_label: int) -> List[Dict[str, Any]] | None:
     try:
         j = repair_json(text, return_objects=True)
         if isinstance(j, dict) and "strong" in j and "weak" in j:
@@ -37,6 +35,7 @@ def parse_claims_json(text: str) -> List[Dict[str, Any]] | None:
                         "claim": claim["claim"],
                         "confidence": 1.0,
                         "claim_type": "strong",
+                        "cluster_label": cluster_label,
                     }
                 )
             # Process weak claims
@@ -48,6 +47,7 @@ def parse_claims_json(text: str) -> List[Dict[str, Any]] | None:
                         "claim": claim["claim"],
                         "confidence": claim.get("confidence", 0.0),
                         "claim_type": "weak",
+                        "cluster_label": cluster_label,
                     }
                 )
             return claims
@@ -55,11 +55,14 @@ def parse_claims_json(text: str) -> List[Dict[str, Any]] | None:
         return None
 
 
-def parse_claims_completions(claims_completions: List[List[str]]):
+def parse_claims_completions(
+    claims_completions: List[List[str]], cluster_labels: List[int]
+):
     all_claims = []
-    for completion in claims_completions:
+    for completion, cluster_label in zip(claims_completions, cluster_labels):
         if completion:
-            claims = parse_claims_json(completion[-1])
+            claims = parse_claims_json(completion[-1], cluster_label)
+
             if claims:
                 all_claims.extend(claims)
             else:
@@ -70,6 +73,7 @@ def parse_claims_completions(claims_completions: List[List[str]]):
                         "claim": None,
                         "confidence": None,
                         "claim_type": None,
+                        "cluster_label": cluster_label,
                     }
                 )
         else:
@@ -80,6 +84,7 @@ def parse_claims_completions(claims_completions: List[List[str]]):
                     "claim": None,
                     "confidence": None,
                     "claim_type": None,
+                    "cluster_label": cluster_label,
                 }
             )
 
@@ -109,7 +114,6 @@ async def cluster_claims(
     llama70b_nemotron: BaseLlmResource,
     interests_clusters: pl.DataFrame,
 ):
-    start_time = time.time()
     logger = get_logger(context)
 
     # Sample max_samples from each cluster
@@ -155,34 +159,33 @@ async def cluster_claims(
     year_end = interests_clusters.select(pl.max("date").dt.year()).item()
     records_count = interests_clusters.shape[0]
 
-    prompt_sequences = [
-        get_claim_generation_prompt_sequence(
-            row["cluster_items"], year_start, year_end, records_count
+    prompt_sequences = []
+    cluster_labels = []
+    for row in df.to_dicts():
+        prompt_sequences.append(
+            get_claim_generation_prompt_sequence(
+                row["cluster_items"], year_start, year_end, records_count
+            )
         )
-        for row in df.to_dicts()
-    ]
+        cluster_labels.append(row["cluster_label"])
 
     logger.info(f"Processing {len(prompt_sequences)} clusters...")
 
     (
         claims_completions,
-        conversations,
+        cost,
     ) = llama70b_nemotron.get_prompt_sequences_completions_batch(
         prompt_sequences,
     )
 
     logger.info(f"Done processing {len(prompt_sequences)} clusters.")
+    logger.info(f"Execution cost: ${cost:.2f}")
 
-    results = parse_claims_completions(claims_completions)
-    # results["conversations"] = conversations
+    results = parse_claims_completions(claims_completions, cluster_labels)
 
-    logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
+    result = pl.DataFrame(results)
 
-    result = df.hstack(pl.DataFrame(results)).drop(
-        ["date_interests", "date", "interests"]
-    )
-
-    invalid_results = result.filter(pl.col("claims").is_null())
+    invalid_results = result.filter(pl.col("claim").is_null())
 
     if invalid_results.height > 0:
         logger.warning(f"Found invalid {invalid_results.height} claims.")

@@ -14,6 +14,7 @@ from vllm.distributed.parallel_state import (
 )
 
 from data_pipeline.resources.inference.base_llm_resource import PromptSequence
+from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 
 @ray.remote(num_gpus=1)
@@ -70,7 +71,9 @@ class LocalLlm:
     def get_prompt_sequences_completions_batch(
         self,
         prompt_sequences: List[PromptSequence],
-    ) -> Tuple[List[List[str]], List[List[Dict[str, str]]]]:
+    ) -> Tuple[List[List[str]], float]:
+        start_time = time.time()
+
         # Assume that all prompt sequences have the same length
         prompt_sequences_length = len(prompt_sequences[0])
 
@@ -114,7 +117,7 @@ class LocalLlm:
                 )
                 results[idx].append(completion)
 
-        return results, conversations
+        return results, get_gpu_runtime_cost(start_time)
 
     def cleanup(self) -> None:
         self._logger.info("Freeing GPU memory...")

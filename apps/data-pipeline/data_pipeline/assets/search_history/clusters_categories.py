@@ -13,7 +13,6 @@ from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
-from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.get_logger import get_logger
 from data_pipeline.utils.parsing.json import parse_category_json
 
@@ -89,10 +88,12 @@ def clusters_categories(
     logger.info(f"Processing {len(prompt_sequences)} merged clusters...")
 
     # Get LLM completions
-    completions, _ = gemma27b.get_prompt_sequences_completions_batch(prompt_sequences)
+    completions, cost = gemma27b.get_prompt_sequences_completions_batch(
+        prompt_sequences
+    )
 
     logger.info(f"Done processing {len(prompt_sequences)} merged clusters.")
-
+    logger.info(f"Execution cost: ${cost:.2f}")
     # Parse completions
     categories = [parse_category_json(completion[-1]) for completion in completions]
 
@@ -107,8 +108,6 @@ def clusters_categories(
         on="merged_cluster_label",
         how="left",
     )
-
-    logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     # Columns:
     # interest_id, date, cluster_interests,

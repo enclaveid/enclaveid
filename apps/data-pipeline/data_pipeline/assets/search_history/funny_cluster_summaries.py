@@ -12,7 +12,6 @@ from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
-from data_pipeline.utils.costs import get_gpu_runtime_cost
 from data_pipeline.utils.get_logger import get_logger
 from data_pipeline.utils.parsing.json import (
     parse_funny_summaries,
@@ -99,26 +98,24 @@ async def funny_cluster_summaries(
 
     (
         summaries_completions,
-        conversations,
+        cost,
     ) = gemma27b.get_prompt_sequences_completions_batch(
         prompt_sequences,
     )
 
     logger.info(f"Done processing {len(prompt_sequences)} clusters.")
+    logger.info(f"Execution cost: ${cost:.2f}")
 
     results = []
-    for completions, conversation in zip(summaries_completions, conversations):
+    for completions in summaries_completions:
         title, summary, image_description = parse_funny_summaries(completions[-1])
         results.append(
             {
                 "cluster_title": title,
                 "cluster_summary": summary,
                 "image_description": image_description,
-                "conversation": conversation,
             }
         )
-
-    logger.info(f"Execution cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     result = df.hstack(pl.DataFrame(results)).drop(
         ["date_interests", "date", "interests"]

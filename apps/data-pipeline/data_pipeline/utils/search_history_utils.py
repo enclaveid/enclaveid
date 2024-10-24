@@ -62,7 +62,8 @@ def generate_chunked_interests(
         ]
     )
 
-    results, _ = local_llm.get_prompt_sequences_completions_batch(prompt_sequences)
+    results, cost = local_llm.get_prompt_sequences_completions_batch(prompt_sequences)
+    get_dagster_logger().info(f"Execution cost: ${cost:.2f}")
 
     chunked_interests, raw_results = zip(
         *[

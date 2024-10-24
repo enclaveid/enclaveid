@@ -10,7 +10,6 @@ from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
-from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.k8s import get_k8s_vllm_config
 from ...partitions import user_partitions_def
@@ -81,8 +80,6 @@ def interests(
             "count_invalid_interests": sessions_output.count_invalid_interests,
         }
     )
-
-    context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")
 
     # Columns: date, interests, raw_interests, raw_results
     # NB: aggregate by date while the other assets are at date granularity
