@@ -37,8 +37,6 @@ def _get_initial_classification_prompt(search_activity: str):
 def _get_summarization_prompt(initial_classification_result: str) -> str:
     CLUSTER_SUMMARIZATION_FORMAT = dedent(
         """
-        Pay particular attention to the elements tagged as "QUIRKY" in the cluster, and make sure to mention them in the summary.
-
         Finally, provide the most detailed possible category that captures all the topics of the activity.
 
         Conclude your analysis with a JSON as follows:

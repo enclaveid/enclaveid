@@ -67,8 +67,8 @@ class LocalLlmResource(BaseLlmResource):
             for local_llm, chunk in zip(self._local_llms, chunks)
         ]
 
-        completions, metadata = zip(*ray.get(futures))
-        return (list(itertools.chain(*completions)), list(itertools.chain(*metadata)))
+        completions, costs = zip(*ray.get(futures))
+        return (list(itertools.chain(*completions)), sum(costs))
 
     def teardown_after_execution(self, context: InitResourceContext) -> None:
         refs = [local_llm.cleanup.remote() for local_llm in self._local_llms]
