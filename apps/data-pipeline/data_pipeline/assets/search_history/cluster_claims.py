@@ -16,7 +16,7 @@ from data_pipeline.resources.inference.base_llm_resource import (
     BaseLlmResource,
 )
 from data_pipeline.utils.get_logger import get_logger
-from data_pipeline.utils.prompts.claim_generation import (  # You'll need to create this
+from data_pipeline.utils.prompts.claim_generation_v2 import (
     get_claim_generation_prompt_sequence,
 )
 
@@ -24,29 +24,27 @@ from data_pipeline.utils.prompts.claim_generation import (  # You'll need to cre
 def parse_claims_json(text: str, cluster_label: int) -> List[Dict[str, Any]] | None:
     try:
         j = repair_json(text, return_objects=True)
-        if isinstance(j, dict) and "strong" in j and "weak" in j:
+        if isinstance(j, dict) and "inferrables" in j and "speculatives" in j:
             claims = []
-            # Process strong claims
-            for claim in j["strong"]:
-                claims.append(
-                    {
-                        "from_date": claim.get("from_date"),
-                        "to_date": claim.get("to_date"),
-                        "claim": claim["claim"],
-                        "confidence": 1.0,
-                        "claim_type": "strong",
-                        "cluster_label": cluster_label,
-                    }
-                )
-            # Process weak claims
-            for claim in j["weak"]:
+            for claim in j["inferrables"]:
                 claims.append(
                     {
                         "from_date": claim.get("from_date"),
                         "to_date": claim.get("to_date"),
                         "claim": claim["claim"],
                         "confidence": claim.get("confidence", 0.0),
-                        "claim_type": "weak",
+                        "claim_type": "inferrable",
+                        "cluster_label": cluster_label,
+                    }
+                )
+            for claim in j["speculatives"]:
+                claims.append(
+                    {
+                        "from_date": claim.get("from_date"),
+                        "to_date": claim.get("to_date"),
+                        "claim": claim["claim"],
+                        "confidence": claim.get("confidence", 0.0),
+                        "claim_type": "speculative",
                         "cluster_label": cluster_label,
                     }
                 )
@@ -111,7 +109,7 @@ class ClaimGenerationConfig(RowLimitConfig):
 async def cluster_claims(
     context: AssetExecutionContext,
     config: ClaimGenerationConfig,
-    llama70b_nemotron: BaseLlmResource,
+    gemini_flash: BaseLlmResource,
     interests_clusters: pl.DataFrame,
 ):
     logger = get_logger(context)
@@ -155,17 +153,15 @@ async def cluster_claims(
     # Sample config.row_limit clusters for testing if any
     df = df.slice(0, config.row_limit)
 
-    year_start = interests_clusters.select(pl.min("date").dt.year()).item()
-    year_end = interests_clusters.select(pl.max("date").dt.year()).item()
-    records_count = interests_clusters.shape[0]
+    # year_start = interests_clusters.select(pl.min("date").dt.year()).item()
+    # year_end = interests_clusters.select(pl.max("date").dt.year()).item()
+    # records_count = interests_clusters.shape[0]
 
     prompt_sequences = []
     cluster_labels = []
     for row in df.to_dicts():
         prompt_sequences.append(
-            get_claim_generation_prompt_sequence(
-                row["cluster_items"], year_start, year_end, records_count
-            )
+            get_claim_generation_prompt_sequence(row["cluster_items"])
         )
         cluster_labels.append(row["cluster_label"])
 
@@ -174,7 +170,7 @@ async def cluster_claims(
     (
         claims_completions,
         cost,
-    ) = llama70b_nemotron.get_prompt_sequences_completions_batch(
+    ) = gemini_flash.get_prompt_sequences_completions_batch(
         prompt_sequences,
     )
 

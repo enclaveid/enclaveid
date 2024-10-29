@@ -10,14 +10,18 @@ from dagster import (
     sensor,
 )
 
-from ..consts import DAGSTER_STORAGE_BUCKET, PRODUCTION_STORAGE_BUCKET
+from ..consts import DAGSTER_STORAGE_BUCKET, PRODUCTION_STORAGE_BUCKET, get_environment
 from ..partitions import user_partitions_def
 
 
 @sensor(
     asset_selection=AssetSelection.all(),
     minimum_interval_seconds=30,
-    default_status=DefaultSensorStatus.RUNNING,
+    default_status=(
+        DefaultSensorStatus.RUNNING
+        if get_environment() != "LOCAL"
+        else DefaultSensorStatus.STOPPED
+    ),
 )
 def inputs_sensor(context: SensorEvaluationContext) -> SensorResult | SkipReason:
     """Polls the storage bucket for user folders.

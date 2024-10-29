@@ -9,6 +9,7 @@ from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
 
 class LlmConfig(Config):
     colloquial_model_name: str
+    is_multimodal: bool = False
     local_llm_config: LocalLlmConfig | None = None
     remote_llm_config: RemoteLlmConfig | None = None
 
