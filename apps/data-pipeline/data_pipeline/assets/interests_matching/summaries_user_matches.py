@@ -6,7 +6,7 @@ import polars as pl
 from dagster import AssetExecutionContext, asset
 from pydantic import Field
 
-from data_pipeline.assets.search_history.aspects_embeddings import (
+from data_pipeline.assets.interests_matching.aspects_embeddings import (
     aspects_embeddings,
 )
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET

@@ -1,21 +1,7 @@
 from textwrap import dedent
+from typing import Any, Dict, List
 
-
-def _get_dag_generation_prompt(search_activity: str):
-    return dedent(
-        f"""
-        Given a chronological list of search queries, identify the major conceptual nodes by:
-        1. Looking for repeated themes and concepts
-        2. Distinguishing between general topics and specific subtopics
-        3. Grouping temporally clustered searches into potential nodes
-        4. Identifying entry points vs. deeper exploration topics
-
-        Output each identified node as:
-        NODE_ID: [Description]
-
-        {search_activity}
-        """
-    ).strip()
+from json_repair import repair_json
 
 
 def _get_inferrables_prompt(search_activity: str):
@@ -95,3 +81,35 @@ def get_claim_generation_prompt_sequence(search_activity: str):
         SPECULATIVES_PROMPT,
         FORMATTING_INSTRUCTIONS,
     ]
+
+
+def parse_claims_json(text: str, cluster_label: int) -> List[Dict[str, Any]] | None:
+    try:
+        j = repair_json(text, return_objects=True)
+        if isinstance(j, dict) and "inferrables" in j and "speculatives" in j:
+            claims = []
+            for claim in j["inferrables"]:
+                claims.append(
+                    {
+                        "from_date": claim.get("from_date"),
+                        "to_date": claim.get("to_date"),
+                        "claim": claim["claim"],
+                        "confidence": claim.get("confidence", 0.0),
+                        "claim_type": "inferrable",
+                        "cluster_label": cluster_label,
+                    }
+                )
+            for claim in j["speculatives"]:
+                claims.append(
+                    {
+                        "from_date": claim.get("from_date"),
+                        "to_date": claim.get("to_date"),
+                        "claim": claim["claim"],
+                        "confidence": claim.get("confidence", 0.0),
+                        "claim_type": "speculative",
+                        "cluster_label": cluster_label,
+                    }
+                )
+            return claims
+    except Exception:
+        return None

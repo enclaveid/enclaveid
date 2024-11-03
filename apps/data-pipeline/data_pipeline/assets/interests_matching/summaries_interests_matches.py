@@ -4,8 +4,10 @@ from typing import List
 import polars as pl
 from dagster import AssetExecutionContext, asset
 
-from data_pipeline.assets.search_history.interests_clusters import interests_clusters
-from data_pipeline.assets.search_history.summaries_user_matches import (
+from data_pipeline.assets.interests_matching.interests_clusters import (
+    interests_clusters,
+)
+from data_pipeline.assets.interests_matching.summaries_user_matches import (
     summaries_user_matches,
 )
 from data_pipeline.constants.custom_config import RowLimitConfig

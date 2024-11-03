@@ -1,7 +1,7 @@
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 
-from data_pipeline.assets.search_history.funny_cluster_summaries import (
+from data_pipeline.assets.interests_matching.funny_cluster_summaries import (
     user_partitions_def,
 )
 from data_pipeline.constants.custom_config import RowLimitConfig

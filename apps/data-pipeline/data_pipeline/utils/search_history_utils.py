@@ -2,6 +2,7 @@ import datetime
 from dataclasses import dataclass
 from typing import Dict, List
 
+import numpy as np
 import polars as pl
 from dagster import get_dagster_logger
 from json_repair import repair_json
@@ -31,22 +32,18 @@ def extract_interests_lists(text: str) -> List[str]:
     try:
         j = repair_json(text, return_objects=True)
 
-        if isinstance(j, dict):
-            # if they're not arrays, return an empty array
-            activities = j.get("activities", [])
-            if not isinstance(activities, list):
-                activities = []
-            res = activities
-        else:
-            res = []
+        res = j if isinstance(j, list) else []
     except Exception:
         res = []
 
-    return res
+    try:
+        return np.hstack(res).tolist()
+    except Exception:
+        return []
 
 
 def generate_chunked_interests(
-    local_llm: BaseLlmResource,
+    llm_resource: BaseLlmResource,
     chunks: Dict[datetime.date, List[pl.DataFrame]],
     prompt_sequence_base: List[str],
 ):
@@ -62,7 +59,9 @@ def generate_chunked_interests(
         ]
     )
 
-    results, cost = local_llm.get_prompt_sequences_completions_batch(prompt_sequences)
+    results, cost = llm_resource.get_prompt_sequences_completions_batch(
+        prompt_sequences
+    )
     get_dagster_logger().info(f"Execution cost: ${cost:.2f}")
 
     chunked_interests, raw_results = zip(
@@ -72,7 +71,7 @@ def generate_chunked_interests(
         ]
     )
 
-    for date, interests, raw_interest, raw_result in zip(
+    for date, interest, raw_interest, raw_result in zip(
         dates,
         chunked_interests,
         raw_interests,
@@ -80,8 +79,8 @@ def generate_chunked_interests(
     ):
         yield {
             "date": date,
-            "interests": interests,
-            "count_invalid_interests": int(not interests),
+            "interests": interest,
+            "count_invalid_interests": int(not interest),
             "raw_interests": raw_interest,
             "raw_results": raw_result,
         }
@@ -91,17 +90,17 @@ def get_full_history_sessions(
     full_takeout: pl.DataFrame,
     chunk_size: int,
     prompt_sequence: List[str],
-    local_llm: BaseLlmResource,
+    llm_resource: BaseLlmResource,
 ) -> FullHistorySessionsOutput:
     daily_dfs = full_takeout.with_columns(
         date=pl.col("timestamp").dt.date()
     ).partition_by("date", as_dict=True, include_key=False)
 
     logger = get_dagster_logger()
-    logger.info(f"Processing {len(daily_dfs)} records")
+    logger.info(f"Processing {len(daily_dfs)} days")
 
     chunks = generate_chunks(daily_dfs, chunk_size)
-    daily_records = generate_chunked_interests(local_llm, chunks, prompt_sequence)
+    daily_records = generate_chunked_interests(llm_resource, chunks, prompt_sequence)
 
     grouped_df = (
         pl.DataFrame(daily_records, strict=False)

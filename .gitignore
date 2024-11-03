@@ -71,6 +71,7 @@ apps/data-pipeline/data/*
 
 apps/data-pipeline/notebooks/*.csv
 apps/data-pipeline/notebooks/*.html
+apps/data-pipeline/notebooks/conversations_viz/*
 
 # Werf
 .werf_secret_key

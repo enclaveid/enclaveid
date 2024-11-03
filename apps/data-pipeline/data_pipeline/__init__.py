@@ -9,13 +9,14 @@ from data_pipeline.consts import get_environment
 from data_pipeline.sensors.inputs_sensor import inputs_sensor
 from data_pipeline.sensors.outputs_sensor import outputs_sensor
 
-from .assets import search_history, takeout
+from .assets import interests_matching, storytelling, takeout
 from .resources import resources
 
 all_assets = load_assets_from_modules(
     [
         takeout,
-        search_history,
+        interests_matching,
+        storytelling,
         # recent_history,  TODO: Uncomment this line to enable the recent_history asset
     ]
 )
