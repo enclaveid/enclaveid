@@ -90,7 +90,9 @@ def _process_conversation_data(original_df: pd.DataFrame) -> pd.DataFrame:
     df_conversations = pd.DataFrame(processed_data)
 
     # Sort by date and time
-    df_conversations = df_conversations.sort_values(["conversation_id", "date", "time"])
+    df_conversations = df_conversations.sort_values(
+        ["conversation_id", "date", "time"], ascending=[True, True, True]
+    )
 
     return df_conversations
 
