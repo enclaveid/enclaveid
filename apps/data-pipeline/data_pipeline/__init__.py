@@ -5,18 +5,18 @@ from dagster import (
 )
 from dagster_k8s import k8s_job_executor
 
+from data_pipeline.assets import chatgpt, interests_matching, takeout
 from data_pipeline.consts import get_environment
 from data_pipeline.sensors.inputs_sensor import inputs_sensor
 from data_pipeline.sensors.outputs_sensor import outputs_sensor
 
-from .assets import interests_matching, storytelling, takeout
 from .resources import resources
 
 all_assets = load_assets_from_modules(
     [
         takeout,
         interests_matching,
-        storytelling,
+        chatgpt,
         # recent_history,  TODO: Uncomment this line to enable the recent_history asset
     ]
 )

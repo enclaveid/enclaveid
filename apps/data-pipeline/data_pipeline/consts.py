@@ -41,5 +41,5 @@ class DataProvider:
     }
     OPENAI = {
         "path_prefix": "openai",
-        "expected_file": "TODO",
+        "expected_file": "conversations.json",
     }
