@@ -12,7 +12,7 @@ from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.k8s import get_k8s_vllm_config
 from ...partitions import user_partitions_def
-from ...resources.sentence_transfomer_resource import SentenceTransformerResource
+from ...resources.nvembed_resource import NVEmbedResource
 from ...utils.capabilities import gpu_info
 
 
@@ -26,7 +26,7 @@ from ...utils.capabilities import gpu_info
 def interests_embeddings(
     context: AssetExecutionContext,
     config: RowLimitConfig,
-    embedding_model: SentenceTransformerResource,
+    nvembed: NVEmbedResource,
     interests: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -44,7 +44,7 @@ def interests_embeddings(
 
     context.log.info("Computing embeddings")
     result = df.with_columns(
-        embeddings=pl.col("interests").map_batches(embedding_model.get_embeddings),
+        embeddings=pl.col("interests").map_batches(nvembed.get_embeddings),
     )
 
     context.log.info(f"Estimated cost: ${get_gpu_runtime_cost(start_time):.2f}")

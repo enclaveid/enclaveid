@@ -27,13 +27,7 @@ def get_conversation_summary_prompt_sequence(conversation_text: str) -> List[str
             """
             What can you infer about the user from this conversation?
             Separate the inference into medium-high confidence claims and low confidence speculations.
-
-            The speculations should be as varied and ambitious as possible, for example:
-            - Intrinsic and extrinsic motivators
-            - Cognitive biases and personality traits
-            - Broad contextual and situational factors
-
-            Think of the speculations as a psychologist trying to understand the user's motivations and life context from their actions.
+            Make the speculations as diverse and ambitious as possible, do not worry about them being low confidence as we will substantiate them later.
             """
         ).strip(),
         dedent(
@@ -110,10 +104,10 @@ async def summaries_and_claims(
         parsed_conversations.with_columns(
             pl.concat_str(
                 [
-                    pl.lit("----------------------------------------"),
                     pl.col("date"),
                     pl.lit(" at "),
                     pl.col("time"),
+                    pl.lit("----------------------------------------"),
                     pl.lit("\n QUESTION: "),
                     pl.col("question"),
                     pl.lit("\n ANSWER: "),

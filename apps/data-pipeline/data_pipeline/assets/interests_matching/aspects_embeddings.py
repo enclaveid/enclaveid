@@ -7,8 +7,8 @@ from dagster import (
     asset,
 )
 
-from data_pipeline.resources.sentence_transfomer_resource import (
-    SentenceTransformerResource,
+from data_pipeline.resources.nvembed_resource import (
+    NVEmbedResource,
 )
 from data_pipeline.utils.capabilities import gpu_info
 from data_pipeline.utils.costs import get_gpu_runtime_cost
@@ -30,7 +30,7 @@ from ...partitions import user_partitions_def
 def aspects_embeddings(
     context: AssetExecutionContext,
     config: RowLimitConfig,
-    embedding_model: SentenceTransformerResource,
+    nvembed: NVEmbedResource,
     cluster_summaries: pl.DataFrame,
 ) -> pl.DataFrame:
     start_time = time.time()
@@ -41,13 +41,13 @@ def aspects_embeddings(
     context.log.info("Computing embeddings...")
     result = df.with_columns(
         # summary_embedding=pl.col("cluster_summary").map_batches(
-        #     embedding_model.get_embeddings
+        #     nvembed.get_embeddings
         # ),
         # items_embedding=pl.col("cluster_items").map_batches(
-        #     embedding_model.get_embeddings
+        #     nvembed.get_embeddings
         # ),
         aspects_embeddings=pl.col("cluster_aspects").map_elements(
-            embedding_model.get_embeddings
+            nvembed.get_embeddings
         ),
     )
 

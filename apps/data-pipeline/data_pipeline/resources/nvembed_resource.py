@@ -13,7 +13,7 @@ else:
     SentenceTransformer = None
 
 
-class SentenceTransformerResource(ConfigurableResource):
+class NVEmbedResource(ConfigurableResource):
     _model_name = "nvidia/NV-Embed-v2"
     _model: SentenceTransformer = PrivateAttr()
     _pool: Dict[Literal["input", "output", "processes"], Any] = PrivateAttr()
