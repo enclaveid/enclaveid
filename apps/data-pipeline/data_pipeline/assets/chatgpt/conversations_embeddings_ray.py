@@ -19,7 +19,7 @@ from data_pipeline.partitions import user_partitions_def
     # },
     # op_tags=get_k8s_vllm_config(gpu_count=1),
 )
-def conversations_embeddings(
+def conversations_embeddings_ray(
     context: AssetExecutionContext,
     pipes_kube_rayjob_client: PipesKubeRayJobClient,
 ):

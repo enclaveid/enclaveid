@@ -7,8 +7,8 @@ from dagster import (
     Config,
     asset,
 )
+from json_repair import repair_json
 
-from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
 from data_pipeline.utils.get_logger import get_logger
@@ -18,24 +18,46 @@ def get_conversation_summarization_prompt_sequence(conversation: str) -> list[st
     return [
         dedent(
             f"""
-            Given this conversation, generate a quick summary of the conversation.
+            Analyze this conversation focusing on how the questioner's thinking evolves. Specifically:
 
-            Pay particular attention to:
+            1. What does their initial framing and word choice reveal about their understanding and goals?
+            2. Track specific numbers, terms, or concepts they introduce, and what these suggest about their thinking
+            3. How do they process and adapt to each new piece of information?
+            4. What do their follow-up questions reveal about:
+                - Their previous knowledge/preparation
+                - Their underlying objectives
+                - Their problem-solving approach
+            5. How do their later questions connect back to their original intent?
 
-            1. How did the user engage with the responder's answers?
-            - Which concepts or approaches did they adopt in later messages?
-            - How did they refine their questions based on received information?
-            - Which parts influenced their subsequent messages?
+            Conclude with what they gained beyond just information - include their evolving understanding and approach.
 
-            2. For the most recent response, briefly describe:
-            - What were the key points made?
-            - Which aspects seem most relevant to the user's needs?
+            Keep your response concise and to the point, maximum 300 words.
+
+            If there the conversation has only one question, limit your answer to points 1 and 2.
 
             Here is the conversation:
             {conversation}
             """
-        ).strip()
+        ).strip(),
+        dedent(
+            """
+            Does the topic or the tone of this conversation have strong emotional implications?
+
+            After your analysis, provide your answer in JSON:
+            {{
+                "emotional": true | false
+            }}
+            """
+        ).strip(),
     ]
+
+
+def parse_emotional_analysis(text: str) -> bool | None:
+    try:
+        j = repair_json(text, return_objects=True)
+        return j.get("emotional", None) if isinstance(j, dict) else None
+    except Exception:
+        return None
 
 
 @asset(
@@ -46,7 +68,7 @@ def get_conversation_summarization_prompt_sequence(conversation: str) -> list[st
         ),
     },
     io_manager_key="parquet_io_manager",
-    op_tags=get_k8s_vllm_config(),
+    # op_tags=get_k8s_vllm_config(),
 )
 async def conversation_summaries(
     context: AssetExecutionContext,
@@ -108,7 +130,12 @@ async def conversation_summaries(
 
     # Parse the completions
     results = [
-        {"summary": completion[-1]} if completion else None
+        {
+            "summary": completion[-2],
+            "emotional": parse_emotional_analysis(completion[-1]),
+        }
+        if completion
+        else {"summary": None, "emotional": None}
         for completion in summaries_completions
     ]
 

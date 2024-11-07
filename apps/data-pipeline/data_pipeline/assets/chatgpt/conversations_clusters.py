@@ -48,8 +48,8 @@ class ConversationsClustersConfig(Config):
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
-        "conversations_embeddings": AssetIn(
-            key=["conversations_embeddings"],
+        "conversation_embeddings": AssetIn(
+            key=["conversation_embeddings"],
         ),
     },
     op_tags=get_k8s_rapids_config(),
@@ -57,12 +57,12 @@ class ConversationsClustersConfig(Config):
 def conversations_clusters(
     context: AssetExecutionContext,
     config: ConversationsClustersConfig,
-    conversations_embeddings: pl.DataFrame,
+    conversation_embeddings: pl.DataFrame,
 ) -> pl.DataFrame:
-    df = conversations_embeddings.filter(pl.col("summaries_embedding").is_not_null())
+    df = conversation_embeddings.filter(pl.col("summary_embedding").is_not_null())
 
     # Convert the embeddings column to a 2D numpy array
-    summaries_embeddings = xp.stack(df["summaries_embedding"].to_list())
+    summaries_embeddings = xp.stack(df["summary_embedding"].to_list())
 
     # Reduce the embeddings dimensions
     umap_model = UMAP(n_neighbors=15, n_components=100, min_dist=0.1, metric="cosine")
