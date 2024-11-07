@@ -43,6 +43,12 @@ class NVEmbedResource(BaseEmbedderResource):
 
         logger.info(f"Model loaded in {(time.time() - self._time_start):.2f} seconds")
 
+    def _add_eos(self, input_examples: list[str]) -> list[str]:
+        return [
+            input_example + self._model.tokenizer.eos_token
+            for input_example in input_examples
+        ]
+
     def get_embeddings(self, series: pl.Series) -> tuple[pl.Series, float]:
         if self._pool is not None:
             embeddings = self._model.encode_multi_process(
