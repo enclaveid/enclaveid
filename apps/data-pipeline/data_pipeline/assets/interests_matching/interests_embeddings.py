@@ -12,7 +12,7 @@ from data_pipeline.utils.costs import get_gpu_runtime_cost
 
 from ...constants.k8s import get_k8s_vllm_config
 from ...partitions import user_partitions_def
-from ...resources.nvembed_resource import NVEmbedResource
+from ...resources.embeddings.nvembed_resource import NVEmbedResource
 from ...utils.capabilities import gpu_info
 
 

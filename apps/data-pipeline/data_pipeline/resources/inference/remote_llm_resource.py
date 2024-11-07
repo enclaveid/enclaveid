@@ -189,5 +189,5 @@ class RemoteLlmResource(BaseLlmResource):
             )
             return future.result()
 
-    def teardown_after_execution(self, context: InitResourceContext) -> None:
-        pass
+    async def teardown_after_execution(self, context: InitResourceContext) -> None:
+        await self._client.aclose()

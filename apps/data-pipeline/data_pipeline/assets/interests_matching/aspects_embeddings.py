@@ -7,7 +7,7 @@ from dagster import (
     asset,
 )
 
-from data_pipeline.resources.nvembed_resource import (
+from data_pipeline.resources.embeddings.nvembed_resource import (
     NVEmbedResource,
 )
 from data_pipeline.utils.capabilities import gpu_info

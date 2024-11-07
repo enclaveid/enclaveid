@@ -1,6 +1,9 @@
+from dagster import EnvVar
+
 from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
 from data_pipeline.resources.inference.llm_factory import LlmConfig, create_llm_resource
 from data_pipeline.resources.inference.local_llm_config import LocalLlmConfig
+from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
 
 gemma27b_config = LlmConfig(
     colloquial_model_name="gemma27b",
@@ -15,6 +18,16 @@ gemma27b_config = LlmConfig(
             "enforce_eager": True,
             "tensor_parallel_size": 2,
         },
+    ),
+    remote_llm_config=RemoteLlmConfig(
+        api_key=EnvVar("DEEPINFRA_API_KEY"),
+        concurrency_limit=200,
+        timeout=60 * 5,
+        inference_url="https://api.deepinfra.com/v1/openai/chat/completions",
+        inference_config={"model": "google/gemma-2-27b-it"},
+        input_cpm=0.27 / 1000,
+        output_cpm=0.27 / 1000,
+        context_length=8192,
     ),
 )
 

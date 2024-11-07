@@ -30,5 +30,5 @@ llama70b_nemotron_config = LlmConfig(
 )
 
 
-def create_llama70b_nemotron_resource() -> BaseLlmResource:
+def create_llama70b_nemotron_resource() -> BaseLlmResource | None:
     return create_llm_resource(llama70b_nemotron_config)

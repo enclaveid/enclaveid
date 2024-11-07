@@ -1,9 +1,15 @@
 from dagster import EnvVar
 from dagster_polars import PolarsParquetIOManager
+from dagster_ray.kuberay.client import RayJobClient
+from dagster_ray.kuberay.configs import in_k8s
+from dagster_ray.kuberay.pipes import PipesKubeRayJobClient
 
 from data_pipeline.consts import DAGSTER_STORAGE_BUCKET
 from data_pipeline.resources.api_db_session import ApiDbSession
-from data_pipeline.resources.bge_m3_resource import BGEM3Resource
+from data_pipeline.resources.embeddings.bge_m3_resource import BGEM3Resource
+from data_pipeline.resources.embeddings.nvembed_resource import (
+    NVEmbedResource,
+)
 from data_pipeline.resources.inference.image_generator_resource import (
     ImageGeneratorResource,
 )
@@ -29,9 +35,6 @@ from data_pipeline.resources.inference.llms.mistral_nemo import (
     create_mistral_nemo_resource,
 )
 from data_pipeline.resources.inference.llms.qwen32b import create_qwen32b_resource
-from data_pipeline.resources.nvembed_resource import (
-    NVEmbedResource,
-)
 
 resources = {
     "api_db": ApiDbSession(conn_string=EnvVar("API_DATABASE_URL")),
@@ -53,4 +56,10 @@ resources = {
         extension=".snappy", base_dir=str(DAGSTER_STORAGE_BUCKET)
     ),
     "qwen32b": create_qwen32b_resource(),
+    "pipes_kube_rayjob_client": PipesKubeRayJobClient(
+        client=RayJobClient(
+            config_file=EnvVar("KUBE_CONFIG_FILE") if not in_k8s else None,
+        ),
+        port_forward=not in_k8s,
+    ),
 }
