@@ -47,6 +47,21 @@ def conversations_embeddings(
                                                 "requests": {"nvidia.com/gpu": "1"},
                                                 "limits": {"nvidia.com/gpu": "1"},
                                             },
+                                            "volumeMounts": [
+                                                {
+                                                    "name": "dshm",
+                                                    "mountPath": "/dev/shm",
+                                                }
+                                            ],
+                                        }
+                                    ],
+                                    "volumes": [
+                                        {
+                                            "name": "dshm",
+                                            "emptyDir": {
+                                                "medium": "Memory",
+                                                "sizeLimit": "64Gi",
+                                            },
                                         }
                                     ],
                                     "tolerations": [
