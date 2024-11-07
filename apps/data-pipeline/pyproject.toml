@@ -53,6 +53,7 @@ hdbscan = "^0.8.38"
 umap-learn = "^0.5.7"
 ray = { version = "2.34.0", extras = ["client", "default"] }
 dagster-ray = { version = "^0.0.9", extras = ["kuberay"] }
+backoff = "^2.2.1"
 
 # The following are very large packages, they are cached as docker layers and shouldn't be changed often.
 # We split ML deps in two grups to avoid conflicts.
