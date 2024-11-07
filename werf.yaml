@@ -33,7 +33,7 @@ contextAddFiles: ./dist
 ---
 image: data-pipeline-vllm
 from: nvidia/cuda:12.6.1-cudnn-devel-rockylinux9
-#from: vllm/vllm-openai:v0.6.1.post2 # TODO this image is much smaller but we need to update rapids to 3.12
+#from: vllm/vllm-openai:v0.6.1.post2 # TODO this image is much smaller
 git:
   - add: /apps/data-pipeline
     to: /app
@@ -94,7 +94,7 @@ mount:
     to: /app/dist
 ---
 image: data-pipeline-base
-from: python:3.11
+from: python:3.11.7
 git:
   - add: /apps/data-pipeline
     to: /app

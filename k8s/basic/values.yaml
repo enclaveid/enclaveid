@@ -26,3 +26,6 @@ ingress:
 certManager:
   enabled: true
   installCRDs: true
+
+kuberay-operator:
+  namespace: ray

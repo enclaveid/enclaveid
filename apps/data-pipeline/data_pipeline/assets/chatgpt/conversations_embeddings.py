@@ -23,25 +23,44 @@ def conversations_embeddings(
     context: AssetExecutionContext,
     pipes_kube_rayjob_client: PipesKubeRayJobClient,
 ):
-    context.log.info("Starting KubeRay job...")
-
     pipes_kube_rayjob_client.run(
         context=context,
         ray_job={
+            "apiVersion": "ray.io/v1",
+            "kind": "RayJob",
             "metadata": {
-                "name": "enclaveid-cluster-prod",
-                "namespace": "enclaveid-production",
+                "name": "conversations-embeddings",
+                "namespace": "ray",
             },
             "spec": {
                 "entrypoint": f"python -m {distributed_embeddings_job.__name__}",
                 "rayClusterSpec": {
+                    "headGroupSpec": {
+                        "rayStartParams": {
+                            "dashboard-host": "0.0.0.0",
+                            "block": "true",
+                        },
+                        "template": {
+                            "spec": {
+                                "containers": [
+                                    {
+                                        "name": "ray-head",
+                                        "image": os.environ.get("BASE_IMAGE", ""),
+                                    }
+                                ]
+                            }
+                        },
+                    },
                     "workerGroupSpecs": [
                         {
-                            "replicas": 4,  # Request 4 worker nodes
+                            "groupName": "gpu-workers",
+                            "rayStartParams": {"block": "true"},
+                            "replicas": 4,
                             "template": {
                                 "spec": {
                                     "containers": [
                                         {
+                                            "name": "ray-worker",
                                             "image": os.environ.get("VLLM_IMAGE", ""),
                                             "resources": {
                                                 "requests": {"nvidia.com/gpu": "1"},
@@ -108,7 +127,7 @@ def conversations_embeddings(
                                 }
                             },
                         }
-                    ]
+                    ],
                 },
             },
         },

@@ -26,7 +26,7 @@ url = "https://pypi.nvidia.com"
 priority = "supplemental"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
+python = "3.11.7"
 dagster = "^1.8.4"
 openai = "^1.43.1"
 aiolimiter = "^1.1.0"
@@ -50,6 +50,7 @@ json-repair = "^0.28.0"
 jsonpickle = "^3.2.2"
 pillow = "10.4.0"
 hdbscan = "^0.8.38"
+umap-learn = "^0.5.7"
 ray = { version = "2.34.0", extras = ["client", "default"] }
 dagster-ray = { version = "^0.0.9", extras = ["kuberay"] }
 

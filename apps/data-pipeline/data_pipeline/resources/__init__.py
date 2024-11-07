@@ -58,8 +58,11 @@ resources = {
     "qwen32b": create_qwen32b_resource(),
     "pipes_kube_rayjob_client": PipesKubeRayJobClient(
         client=RayJobClient(
-            config_file=EnvVar("KUBE_CONFIG_FILE") if not in_k8s else None,
-        ),
+            config_file="/Users/ma9o/.kube/config",
+            context="enclaveid-cluster-prod",
+        )
+        if not in_k8s
+        else None,
         port_forward=not in_k8s,
     ),
 }
