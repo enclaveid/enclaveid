@@ -67,32 +67,32 @@ mount:
   - fromPath: ./apps/data-pipeline/dist
     to: /app/dist
 ---
-image: data-pipeline-rapids
-from: rapidsai/base:24.04-cuda12.2-py3.11
-git:
-  - add: /apps/data-pipeline
-    to: /app
-    stageDependencies:
-      install:
-        - requirements.prod.txt
-      setup:
-        - '**/*.py'
-shell:
-  install:
-    - /bin/bash --login
-    - /opt/conda/bin/pip install --no-cache-dir -r /app/requirements.prod.txt
-  setup:
-    - /bin/bash --login
-    - /opt/conda/bin/pip install --no-deps /app/dist/*.whl
-docker:
-  WORKDIR: /app
-  ENV:
-    HF_HOME: /model-cache/huggingface
-    SENTENCE_TRANSFORMERS_HOME: /model-cache/sentence-transformers
-mount:
-  - fromPath: ./apps/data-pipeline/dist
-    to: /app/dist
----
+# image: data-pipeline-rapids
+# from: rapidsai/base:24.04-cuda12.2-py3.11
+# git:
+#   - add: /apps/data-pipeline
+#     to: /app
+#     stageDependencies:
+#       install:
+#         - requirements.prod.txt
+#       setup:
+#         - '**/*.py'
+# shell:
+#   install:
+#     - /bin/bash --login
+#     - /opt/conda/bin/pip install --no-cache-dir -r /app/requirements.prod.txt
+#   setup:
+#     - /bin/bash --login
+#     - /opt/conda/bin/pip install --no-deps /app/dist/*.whl
+# docker:
+#   WORKDIR: /app
+#   ENV:
+#     HF_HOME: /model-cache/huggingface
+#     SENTENCE_TRANSFORMERS_HOME: /model-cache/sentence-transformers
+# mount:
+#   - fromPath: ./apps/data-pipeline/dist
+#     to: /app/dist
+# ---
 image: data-pipeline-base
 from: python:3.11.7
 git:
@@ -118,11 +118,11 @@ dependencies:
     imports:
       - type: ImageName
         targetEnv: VLLM_IMAGE
-  - image: data-pipeline-rapids
-    after: setup
-    imports:
-      - type: ImageName
-        targetEnv: RAPIDS_IMAGE
+  # - image: data-pipeline-rapids
+  #   after: setup
+  #   imports:
+  #     - type: ImageName
+  #       targetEnv: RAPIDS_IMAGE
 mount:
   - fromPath: ./apps/data-pipeline/dist
     to: /app/dist
