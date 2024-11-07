@@ -5,8 +5,5 @@ dependencies:
 - name: cert-manager
   repository: https://charts.jetstack.io
   version: v1.15.3
-- name: kuberay-operator
-  repository: https://ray-project.github.io/kuberay-helm/
-  version: 1.2.2
-digest: sha256:dd0b89b3c2a8ba34e2ed98eaf2aaf833ba9d373694f2f8c1fbc022b045d83abf
-generated: "2024-11-07T15:06:59.411932+01:00"
+digest: sha256:0a0d553bab2104de9ed5bd8e8ed299edaa8ce724cec0d8df346abf67d131bb68
+generated: "2024-11-07T22:04:56.293584+01:00"

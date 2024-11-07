@@ -27,5 +27,5 @@ certManager:
   enabled: true
   installCRDs: true
 
-kuberay-operator:
-  namespace: ray
+# kuberay-operator:
+#   namespace: ray
