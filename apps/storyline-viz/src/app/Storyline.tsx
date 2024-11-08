@@ -185,11 +185,16 @@ export function Storyline({ data }: { data: StorylineData[] }) {
     const barPadding = 2;
     const coarseClusterPadding = 100;
 
-    // Calculate total height based on number of coarse clusters
-    const height =
-      groupedData.size * (barHeight + coarseClusterPadding) +
-      margin.top +
-      margin.bottom;
+    // Calculate total height based on actual content
+    let totalHeight = margin.top + margin.bottom;
+    groupedData.forEach((coarseGroup) => {
+      const fineGroups = d3.group(coarseGroup, (d) => d.fine_cluster_label);
+      const coarseClusterHeight = fineGroups.size * (barHeight + barPadding);
+      totalHeight += coarseClusterHeight + coarseClusterPadding;
+    });
+
+    // Update height with the calculated total
+    const height = totalHeight;
 
     // Create scales
     const timeScale = d3.scaleTime().domain(timeExtent).range([0, width]);
@@ -253,7 +258,10 @@ export function Storyline({ data }: { data: StorylineData[] }) {
     // Store original order of coarse clusters
     originalOrderRef.current = Array.from(groupedData.keys());
 
-    const renderVisualization = (orderedCoarseClusters: number[]) => {
+    const renderVisualization = (
+      orderedCoarseClusters: number[],
+      highlightedClusters?: Set<number>,
+    ) => {
       // Clear previous chart content but keep the timeline separator
       svg.selectAll('*').remove();
 
@@ -268,12 +276,30 @@ export function Storyline({ data }: { data: StorylineData[] }) {
         .attr('stroke-width', 2);
 
       let yOffset = 0;
-      // Use ordered clusters instead of iterating directly over groupedData
       orderedCoarseClusters.forEach((coarseLabel) => {
         const coarseGroup = groupedData.get(coarseLabel);
         if (!coarseGroup) return;
 
-        // Add top line for this section
+        // Calculate height needed for this coarse cluster
+        const fineGroups = d3.group(coarseGroup, (d) => d.fine_cluster_label);
+        const coarseClusterHeight = fineGroups.size * (barHeight + barPadding);
+
+        // Add background for the entire coarse cluster group
+        svg
+          .append('rect')
+          .attr('x', -margin.left)
+          .attr('y', yOffset - coarseClusterPadding / 2)
+          .attr('width', width + margin.left)
+          .attr('height', coarseClusterHeight + coarseClusterPadding)
+          .attr(
+            'fill',
+            highlightedClusters?.has(coarseLabel)
+              ? '#f0f7ff' // Light blue for highlighted clusters
+              : '#f8f8f8', // Light gray for normal clusters
+          )
+          .attr('opacity', 0.5);
+
+        // Add border lines for the group
         svg
           .append('line')
           .attr('x1', -margin.left)
@@ -283,14 +309,10 @@ export function Storyline({ data }: { data: StorylineData[] }) {
           .attr('stroke', '#ccc')
           .attr('stroke-width', 1);
 
-        // Group by fine cluster within each coarse cluster
-        const fineGroups = d3.group(coarseGroup, (d) => d.fine_cluster_label);
-
-        // Calculate height needed for this coarse cluster
-        const coarseClusterHeight = fineGroups.size * (barHeight + barPadding);
-
-        // Draw fine cluster bars
+        // Initialize fineClusterIndex for this coarse cluster
         let fineClusterIndex = 0;
+
+        // Group by fine cluster within each coarse cluster
         fineGroups.forEach((records, fineLabel) => {
           // Calculate start and end dates for the group
           const start = d3.min(records, (d) => new Date(d.start_date));
@@ -433,7 +455,7 @@ export function Storyline({ data }: { data: StorylineData[] }) {
                 ];
 
                 // Render with new order
-                renderVisualization(newOrder);
+                renderVisualization(newOrder, targetCoarseClusters);
               });
           });
         });
@@ -445,18 +467,35 @@ export function Storyline({ data }: { data: StorylineData[] }) {
 
         const lines = wrapText(coarseGroup[0].cluster_title, 80);
         lines.forEach((line, i) => {
-          svg
-            .append('text')
-            .attr('x', -490)
-            .attr(
-              'y',
-              yOffset +
-                coarseClusterHeight / 2 +
-                (i * 16 - (lines.length - 1) * 8),
-            )
-            .attr('class', 'coarse-label')
-            .style('font-size', '12px')
-            .text(line.trim());
+          // For the first line, prepend the coarse cluster number in bold
+          if (i === 0) {
+            svg
+              .append('text')
+              .attr('x', -490)
+              .attr('y', yOffset + coarseClusterHeight / 2)
+              .attr('class', 'coarse-label')
+              .style('font-size', '12px')
+              .style('font-weight', 'bold')
+              .text(`${coarseLabel}. `);
+
+            // Adjust x position for the title text to account for the cluster number
+            svg
+              .append('text')
+              .attr('x', -470) // Moved slightly right to accommodate the number
+              .attr('y', yOffset + coarseClusterHeight / 2)
+              .attr('class', 'coarse-label')
+              .style('font-size', '12px')
+              .text(line.trim());
+          } else {
+            // Additional lines remain unchanged
+            svg
+              .append('text')
+              .attr('x', -490)
+              .attr('y', yOffset + coarseClusterHeight / 2 + i * 16)
+              .attr('class', 'coarse-label')
+              .style('font-size', '12px')
+              .text(line.trim());
+          }
         });
 
         // Update yOffset to account for all fine clusters plus padding
@@ -464,10 +503,10 @@ export function Storyline({ data }: { data: StorylineData[] }) {
       });
     };
 
-    // Initial render with original order
+    // Initial render with original order and no highlights
     renderVisualization(originalOrderRef.current);
 
-    // Add click handler to reset order when clicking background
+    // Update background click handler to remove highlights
     svg.on('click', () => {
       renderVisualization(originalOrderRef.current);
     });
@@ -484,8 +523,8 @@ export function Storyline({ data }: { data: StorylineData[] }) {
           backgroundColor: 'white',
         }}
       />
-      {/* Main visualization SVG */}
-      <div className="w-full overflow-x-auto">
+      {/* Update the container to allow proper scrolling */}
+      <div className="w-full overflow-x-auto overflow-y-visible">
         <svg
           ref={svgRef}
           className="w-full"
