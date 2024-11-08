@@ -466,13 +466,17 @@ export function Storyline({ data }: { data: StorylineData[] }) {
         };
 
         const lines = wrapText(coarseGroup[0].cluster_title, 80);
+        const lineHeight = 16;
+        const totalTextHeight = lines.length * lineHeight;
+        const startY = yOffset + (coarseClusterHeight - totalTextHeight) / 2;
+
         lines.forEach((line, i) => {
           // For the first line, prepend the coarse cluster number in bold
           if (i === 0) {
             svg
               .append('text')
               .attr('x', -490)
-              .attr('y', yOffset + coarseClusterHeight / 2)
+              .attr('y', startY + lineHeight) // Use startY + lineHeight for baseline alignment
               .attr('class', 'coarse-label')
               .style('font-size', '12px')
               .style('font-weight', 'bold')
@@ -481,17 +485,16 @@ export function Storyline({ data }: { data: StorylineData[] }) {
             // Adjust x position for the title text to account for the cluster number
             svg
               .append('text')
-              .attr('x', -470) // Moved slightly right to accommodate the number
-              .attr('y', yOffset + coarseClusterHeight / 2)
+              .attr('x', -470)
+              .attr('y', startY + lineHeight)
               .attr('class', 'coarse-label')
               .style('font-size', '12px')
               .text(line.trim());
           } else {
-            // Additional lines remain unchanged
             svg
               .append('text')
               .attr('x', -490)
-              .attr('y', yOffset + coarseClusterHeight / 2 + i * 16)
+              .attr('y', startY + (i + 1) * lineHeight)
               .attr('class', 'coarse-label')
               .style('font-size', '12px')
               .text(line.trim());
