@@ -11,7 +11,11 @@ from sklearn.cluster import AgglomerativeClustering
 from umap import UMAP
 
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.utils.clusters import get_cluster_centroids, get_cluster_stats
+from data_pipeline.utils.clusters import (
+    get_cluster_centroids,
+    get_cluster_stats,
+    get_soft_transitions,
+)
 
 
 class ConversationsClustersConfig(Config):
@@ -20,7 +24,7 @@ class ConversationsClustersConfig(Config):
         description="Minimum number of samples in an activity cluster to be considered an interest.",
     )
     coarse_recluster_threshold: Optional[float] = Field(
-        default=0.3,
+        default=None,
         description=dedent(
             """
             Cosine distance threshold for merging similar activities into broader categories.
@@ -75,7 +79,20 @@ def conversations_clusters(
         prediction_data=True,
     ).fit(reduced_data)
 
-    fine_cluster_labels_soft = all_points_membership_vectors(clusterer).argmax(axis=1)
+    membership_vectors = all_points_membership_vectors(clusterer)
+
+    fine_cluster_labels_soft = membership_vectors.argmax(axis=1)
+
+    # For each conversation, get the top 5 most probable clusters
+    fine_cluster_labels_soft_transitions = get_soft_transitions(membership_vectors)
+
+    # Set to None if any transition probability is 1.0 (core member)
+    fine_cluster_labels_soft_transitions = [
+        None
+        if max(transition["probability"] for transition in transitions) == 1.0
+        else transitions
+        for transitions in fine_cluster_labels_soft_transitions
+    ]
 
     context.log.info(f"Fine clusters: {len(fine_cluster_labels_soft)}")
 
@@ -114,6 +131,17 @@ def conversations_clusters(
     context.log.info(get_cluster_stats(coarse_cluster_labels, prefix="coarse_"))
 
     return df.with_columns(
-        fine_cluster_label=fine_cluster_labels_soft,
         coarse_cluster_label=remapped_coarse_cluster_labels,  # type: ignore
+        fine_cluster_label=fine_cluster_labels_soft,
+        fine_cluster_transitions=pl.Series(
+            fine_cluster_labels_soft_transitions,
+            dtype=pl.List(
+                pl.Struct(
+                    [
+                        pl.Field("cluster_id", pl.Int64),
+                        pl.Field("probability", pl.Float64),
+                    ]
+                )
+            ),
+        ),
     )

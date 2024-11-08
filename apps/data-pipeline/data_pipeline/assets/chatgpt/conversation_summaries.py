@@ -148,4 +148,5 @@ async def conversation_summaries(
 
     result = result.join(invalid_results, on="conversation_id", how="anti")
 
-    return result
+    # TODO: why are there nulls?
+    return result.filter(pl.col("datetime_conversations").is_not_null())
