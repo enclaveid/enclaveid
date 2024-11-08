@@ -89,19 +89,27 @@ const createTooltip = (
   let lineNumber = 0;
   const lineHeight = 1.2; // ems
   const maxWidth = 1000;
+  let isBold = false;
 
   words.forEach((word) => {
+    if (word === '**') {
+      isBold = !isBold;
+      return;
+    }
     line.push(word);
-    const test = tooltipText.append('tspan').text(line.join(' '));
+    const test = tooltipText
+      .append('tspan')
+      .attr('font-weight', isBold ? 'bold' : 'normal')
+      .text(line.join(' '));
 
     if (test.node().getComputedTextLength() > maxWidth - 16) {
-      // Account for padding
       line.pop();
       if (line.length) {
         tooltipText
           .append('tspan')
           .attr('x', 8)
           .attr('dy', `${lineNumber === 0 ? 1 : lineHeight}em`)
+          .attr('font-weight', isBold ? 'bold' : 'normal')
           .text(line.join(' '));
       }
       line = [word];
@@ -114,6 +122,7 @@ const createTooltip = (
     .append('tspan')
     .attr('x', 8)
     .attr('dy', `${lineNumber === 0 ? 1 : lineHeight}em`)
+    .attr('font-weight', isBold ? 'bold' : 'normal')
     .text(line.join(' '));
 
   // Calculate tooltip dimensions
@@ -167,11 +176,11 @@ export function Storyline({ data }: { data: StorylineData[] }) {
     const timeExtent = d3.extent(processedData, (d) => new Date(d.start_date));
 
     // Set up dimensions
-    const margin = { top: 40, right: 40, bottom: 40, left: 100 };
+    const margin = { top: 40, right: 40, bottom: 40, left: 500 };
     const width = 1200 - margin.left - margin.right;
     const barHeight = 25;
     const barPadding = 2;
-    const coarseClusterPadding = 20;
+    const coarseClusterPadding = 100;
 
     // Calculate total height based on number of coarse clusters
     const height =
@@ -190,6 +199,16 @@ export function Storyline({ data }: { data: StorylineData[] }) {
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
+    // Add vertical timeline separator FIRST (before any other elements)
+    svg
+      .append('line')
+      .attr('x1', 0)
+      .attr('x2', 0)
+      .attr('y1', 0)
+      .attr('y2', height - margin.bottom)
+      .attr('stroke', '#666')
+      .attr('stroke-width', 2);
+
     // Create axis
     const xAxis = d3.axisBottom(timeScale);
     svg
@@ -200,6 +219,16 @@ export function Storyline({ data }: { data: StorylineData[] }) {
     // Process and draw bars
     let yOffset = 0;
     groupedData.forEach((coarseGroup, coarseLabel) => {
+      // Add top line for this section
+      svg
+        .append('line')
+        .attr('x1', -margin.left)
+        .attr('x2', width)
+        .attr('y1', yOffset - coarseClusterPadding / 2)
+        .attr('y2', yOffset - coarseClusterPadding / 2)
+        .attr('stroke', '#ccc')
+        .attr('stroke-width', 1);
+
       // Group by fine cluster within each coarse cluster
       const fineGroups = d3.group(coarseGroup, (d) => d.fine_cluster_label);
 
@@ -263,21 +292,35 @@ export function Storyline({ data }: { data: StorylineData[] }) {
 
         fineClusterIndex++;
 
-        // Add red dots for individual data points
+        // Add dots for individual data points
         records.forEach((record) => {
+          // Determine dot color based on conditions
+          let dotColor = 'yellow'; // default color
+          if (record.emotional) {
+            dotColor = 'red'; // emotional takes priority
+          } else if (record.fine_cluster_is_core) {
+            dotColor = 'green'; // core clusters if not emotional
+          }
+
           svg
             .append('circle')
             .attr('cx', timeScale(new Date(record.start_date)))
             .attr('cy', fineClusterY + barHeight / 2)
             .attr('r', 4)
-            .attr('fill', 'yellow')
+            .attr('fill', dotColor) // apply the determined color
             .attr('stroke', 'black')
             .attr('stroke-width', 1)
             .attr('class', 'activity-point')
             .on('mouseover', function (event) {
               d3.select(this).attr('r', 6);
               const [mouseX, mouseY] = d3.pointer(event, svg.node());
-              createTooltip(svg, mouseX, mouseY, width, record.summary);
+              createTooltip(
+                svg,
+                mouseX,
+                mouseY,
+                width,
+                `**${record.title}**\n\n${record.summary}`,
+              );
             })
             .on('mouseout', function () {
               d3.select(this).attr('r', 4);
@@ -287,13 +330,25 @@ export function Storyline({ data }: { data: StorylineData[] }) {
       });
 
       // Update coarse cluster label position to center vertically
-      svg
-        .append('text')
-        .attr('x', -90)
-        .attr('y', yOffset + coarseClusterHeight / 2)
-        .attr('class', 'coarse-label')
-        .style('font-weight', 'bold')
-        .text(`Coarse ${coarseLabel}`);
+      const wrapText = (text: string, width: number): string[] => {
+        return text.match(new RegExp(`.{1,${width}}(\\s|$)`, 'g')) || [text];
+      };
+
+      const lines = wrapText(coarseGroup[0].cluster_title, 80);
+      lines.forEach((line, i) => {
+        svg
+          .append('text')
+          .attr('x', -490)
+          .attr(
+            'y',
+            yOffset +
+              coarseClusterHeight / 2 +
+              (i * 16 - (lines.length - 1) * 8),
+          )
+          .attr('class', 'coarse-label')
+          .style('font-size', '12px')
+          .text(line.trim());
+      });
 
       // Update yOffset to account for all fine clusters plus padding
       yOffset += coarseClusterHeight + coarseClusterPadding;
