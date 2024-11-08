@@ -1,26 +1,17 @@
 from textwrap import dedent
 from typing import Optional
 
+import numpy as xp
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
+from hdbscan import HDBSCAN
+from hdbscan.prediction import all_points_membership_vectors
 from pydantic import Field
+from sklearn.cluster import AgglomerativeClustering
+from umap import UMAP
 
-from data_pipeline.constants.k8s import get_k8s_rapids_config
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.utils.capabilities import is_rapids_image
 from data_pipeline.utils.clusters import get_cluster_centroids, get_cluster_stats
-
-IS_RAPIDS = is_rapids_image()
-
-if IS_RAPIDS:
-    import cupy as xp
-    from cuml import UMAP
-    from cuml.cluster import AgglomerativeClustering
-    from cuml.cluster.hdbscan import HDBSCAN
-else:
-    import numpy as xp
-    from sklearn.cluster import HDBSCAN, AgglomerativeClustering
-    from umap import UMAP
 
 
 class ConversationsClustersConfig(Config):
@@ -52,7 +43,7 @@ class ConversationsClustersConfig(Config):
             key=["conversation_embeddings"],
         ),
     },
-    op_tags=get_k8s_rapids_config(),
+    # op_tags=get_k8s_rapids_config(),
 )
 def conversations_clusters(
     context: AssetExecutionContext,
@@ -69,24 +60,29 @@ def conversations_clusters(
     reduced_data = umap_model.fit_transform(summaries_embeddings)
 
     # Move data to cpu if on gpu
-    if IS_RAPIDS:
-        reduced_data = reduced_data.astype(xp.float64).get()
-    else:
-        reduced_data = reduced_data.astype(xp.float64)
+    # if IS_RAPIDS:
+    #     reduced_data = reduced_data.astype(xp.float64).get()
+    # else:
+    #     reduced_data = reduced_data.astype(xp.float64)
+
+    reduced_data = reduced_data.astype(xp.float64)
 
     # Clustering for single interests
-    fine_cluster_labels = HDBSCAN(
+    clusterer = HDBSCAN(
         min_cluster_size=config.fine_min_cluster_size,
         # gen_min_span_tree=True,
         metric="euclidean",
-    ).fit_predict(reduced_data)
+        prediction_data=True,
+    ).fit(reduced_data)
 
-    context.log.info(
-        f"Fine clusters: {xp.unique(fine_cluster_labels, return_counts=True)}"
-    )
+    fine_cluster_labels_soft = all_points_membership_vectors(clusterer).argmax(axis=1)
+
+    context.log.info(f"Fine clusters: {len(fine_cluster_labels_soft)}")
 
     # Calculate centroids of fine clusters
-    fine_cluster_centroids = get_cluster_centroids(reduced_data, fine_cluster_labels)
+    fine_cluster_centroids = get_cluster_centroids(
+        reduced_data, fine_cluster_labels_soft
+    )
 
     agglomerative_clustering_params = (
         {
@@ -108,9 +104,16 @@ def conversations_clusters(
         **agglomerative_clustering_params
     ).fit_predict(list(fine_cluster_centroids.values()))  # type: ignore
 
+    remapped_coarse_cluster_labels = xp.array(
+        [
+            coarse_cluster_labels[label] if label != -1 else label
+            for label in fine_cluster_labels_soft
+        ]
+    ).flatten()
+
     context.log.info(get_cluster_stats(coarse_cluster_labels, prefix="coarse_"))
 
     return df.with_columns(
-        fine_cluster_label=fine_cluster_labels,
-        coarse_cluster_label=coarse_cluster_labels,  # type: ignore
+        fine_cluster_label=fine_cluster_labels_soft,
+        coarse_cluster_label=remapped_coarse_cluster_labels,  # type: ignore
     )
