@@ -19,16 +19,22 @@ class RemoteLlmResource(BaseLlmResource):
     _client: httpx.AsyncClient = PrivateAttr()
     _retry_event: asyncio.Event = PrivateAttr(default_factory=asyncio.Event)
     _remaining_reqs: int = PrivateAttr()
+    _loop: asyncio.AbstractEventLoop = PrivateAttr()
 
-    def setup_for_execution(self, context: InitResourceContext) -> None:
-        self._client = httpx.AsyncClient(
+    def _create_client(self) -> httpx.AsyncClient:
+        return httpx.AsyncClient(
             limits=httpx.Limits(
                 max_connections=self.llm_config.concurrency_limit,
                 max_keepalive_connections=self.llm_config.concurrency_limit,
             ),
             timeout=self.llm_config.timeout,
         )
+
+    def setup_for_execution(self, context: InitResourceContext) -> None:
+        self._client = self._create_client()
         self._retry_event.set()  # Initially allow all operations
+        self._loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._loop)
 
     async def _periodic_status_printer(self) -> None:
         logger = get_dagster_logger()
@@ -142,7 +148,6 @@ class RemoteLlmResource(BaseLlmResource):
         )
 
         self._status_printer_task.cancel()
-        await self._client.aclose()
 
         conversations = [conv for conv, cost in results]
         costs = [cost for conv, cost in results]
@@ -167,18 +172,13 @@ class RemoteLlmResource(BaseLlmResource):
         Synchronous wrapper for the async get_prompt_sequences_completions_batch function.
         Uses a thread to run the async function in a new event loop.
         """
+        # Check if client is closed and recreate if necessary
+        if self._client.is_closed:
+            self._client = self._create_client()
 
         def run_async_in_thread(async_func: Any, *args) -> Any:
-            # Create a new event loop for this thread
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-            try:
-                # Run the async function and get the result
-                return loop.run_until_complete(async_func(*args))
-            finally:
-                # Clean up
-                loop.close()
+            # Use the existing event loop instead of creating a new one
+            return self._loop.run_until_complete(async_func(*args))
 
         # Create a thread to run the async function
         with ThreadPoolExecutor(max_workers=1) as executor:
@@ -191,3 +191,4 @@ class RemoteLlmResource(BaseLlmResource):
 
     async def teardown_after_execution(self, context: InitResourceContext) -> None:
         await self._client.aclose()
+        self._loop.close()

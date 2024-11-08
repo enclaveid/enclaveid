@@ -1,3 +1,6 @@
+from data_pipeline.assets.chatgpt.conversation_clusters_titles import (
+    conversation_clusters_titles,
+)
 from data_pipeline.assets.chatgpt.conversation_embeddings import (
     conversation_embeddings,
 )
@@ -16,4 +19,5 @@ __all__ = [
     conversations_embeddings_ray,
     conversation_embeddings,
     conversations_clusters,
+    conversation_clusters_titles,
 ]  # type: ignore
