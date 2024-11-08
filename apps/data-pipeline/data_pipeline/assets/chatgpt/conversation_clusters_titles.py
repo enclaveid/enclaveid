@@ -11,42 +11,27 @@ from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
 from data_pipeline.utils.get_logger import get_logger
+from data_pipeline.utils.parsing.json import parse_category_json
 
 
-def get_fine_cluster_prompt_sequence(titles: str) -> list[str]:
+def get_categorization_prompt_sequence(input_text: str) -> list[str]:
     return [
         dedent(
             f"""
-            Analyze these conversation titles and create a concise summary that captures
-            the specific theme or topic of these conversations:
+          Analyze this list and identify up to 5 main categories that best describe the contents of the list.
+          For each main category, provide up to 3 sub categories that belong to it also found in the list.
+          These can be much less if the list is short.
 
-            {titles}
-            """
+          {input_text}
+        """
         ).strip(),
         dedent(
             """
-            Write a 1-2 sentence summary that captures the specific focus of these conversations.
-            Respond with only the summary text, without any additional formatting or explanation.
-            """
-        ).strip(),
-    ]
+          Format your answer in JSON: { "descriptive_categorization": "the categorical summary in string format" }.
 
-
-def get_coarse_cluster_prompt_sequence(summaries: str) -> list[str]:
-    return [
-        dedent(
-            f"""
-            Review these cluster summaries and create a concise, high-level title that captures
-            the broader theme or category they represent:
-
-            {summaries}
-            """
-        ).strip(),
-        dedent(
-            """
-            Write a brief (2-5 words) but descriptive title that captures the general topic area.
-            Respond with only the title text, without any additional formatting or explanation.
-            """
+          The descriptive_categorization string should follow this structure, for example:
+          "Main category 1 (sub categories of 1 separated by comma), Main category 2 (sub categories of 2 separated by comma), ..."
+        """
         ).strip(),
     ]
 
@@ -80,7 +65,7 @@ def conversation_clusters_titles(
 
     # Generate prompts for fine clusters
     fine_prompt_sequences = [
-        get_fine_cluster_prompt_sequence("\n".join(row["conversation_titles"]))
+        get_categorization_prompt_sequence("\n".join(row["conversation_titles"]))
         for row in fine_grouped.to_dicts()
     ]
 
@@ -91,7 +76,9 @@ def conversation_clusters_titles(
     logger.info(f"Fine clusters cost: ${fine_cost:.2f}")
 
     # Parse fine cluster summaries (modified to use response directly)
-    fine_summaries = [completion[-1].strip() for completion in fine_completions]
+    fine_summaries = [
+        parse_category_json(completion[-1].strip()) for completion in fine_completions
+    ]
     fine_results = fine_grouped.with_columns(
         pl.Series(name="fine_cluster_summary", values=fine_summaries)
     )
@@ -105,7 +92,7 @@ def conversation_clusters_titles(
 
     # Generate prompts for coarse clusters
     coarse_prompt_sequences = [
-        get_coarse_cluster_prompt_sequence("\n".join(row["fine_summaries"]))
+        get_categorization_prompt_sequence("\n".join(row["fine_summaries"]))
         for row in coarse_grouped.to_dicts()
     ]
 
@@ -117,7 +104,9 @@ def conversation_clusters_titles(
     logger.info(f"Total cost: ${(fine_cost + coarse_cost):.2f}")
 
     # Parse coarse cluster titles (modified to use response directly)
-    coarse_titles = [completion[-1].strip() for completion in coarse_completions]
+    coarse_titles = [
+        parse_category_json(completion[-1].strip()) for completion in coarse_completions
+    ]
 
     # Create final results
     result = coarse_grouped.with_columns(
