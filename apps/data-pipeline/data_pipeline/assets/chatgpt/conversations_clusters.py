@@ -86,13 +86,14 @@ def conversations_clusters(
     # For each conversation, get the top 5 most probable clusters
     fine_cluster_labels_soft_transitions = get_soft_transitions(membership_vectors)
 
-    # Set to None if any transition probability is 1.0 (core member)
-    fine_cluster_labels_soft_transitions = [
-        None
-        if max(transition["probability"] for transition in transitions) == 1.0
-        else transitions
-        for transitions in fine_cluster_labels_soft_transitions
-    ]
+    # Set to True if any transition probability is 1.0 (core member)
+    fine_cluster_labels_soft_is_core = xp.array(
+        [
+            max(transition["probability"] for transition in transitions) == 1.0
+            for transitions in fine_cluster_labels_soft_transitions
+        ],
+        dtype=xp.bool_,
+    ).flatten()
 
     context.log.info(f"Fine clusters: {len(fine_cluster_labels_soft)}")
 
@@ -130,9 +131,10 @@ def conversations_clusters(
 
     context.log.info(get_cluster_stats(coarse_cluster_labels, prefix="coarse_"))
 
-    return df.with_columns(
+    result = df.with_columns(
         coarse_cluster_label=remapped_coarse_cluster_labels,  # type: ignore
         fine_cluster_label=fine_cluster_labels_soft,
+        fine_cluster_is_core=fine_cluster_labels_soft_is_core,  # type: ignore
         fine_cluster_transitions=pl.Series(
             fine_cluster_labels_soft_transitions,
             dtype=pl.List(
@@ -145,3 +147,28 @@ def conversations_clusters(
             ),
         ),
     )
+
+    # Reorder the columns for easier viewing in dtale
+    reordered_columns = [
+        "start_date",
+        "start_time",
+        "title",
+        "emotional",
+        "coarse_cluster_label",
+        "fine_cluster_label",
+        "fine_cluster_is_core",
+        "fine_cluster_transitions",
+    ]
+
+    sorted_result = result.select(
+        *[pl.col(col) for col in reordered_columns],
+        pl.all().exclude(reordered_columns),
+    ).sort(
+        "coarse_cluster_label",
+        "fine_cluster_label",
+        "start_date",
+        "start_time",
+        descending=[True, True, False, False],
+    )
+
+    return sorted_result
