@@ -155,12 +155,14 @@ const createTooltip = (
  */
 export function Storyline({ data }: { data: StorylineData[] }) {
   const svgRef = useRef(null);
+  const fixedAxisRef = useRef(null);
 
   useEffect(() => {
     if (!data || !data.length) return;
 
-    // Clear previous chart
+    // Clear previous charts
     d3.select(svgRef.current).selectAll('*').remove();
+    d3.select(fixedAxisRef.current).selectAll('*').remove();
 
     // Convert BigInts to regular numbers for d3 grouping
     const processedData = data.map((d) => ({
@@ -199,12 +201,43 @@ export function Storyline({ data }: { data: StorylineData[] }) {
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
+    // Create fixed axis SVG
+    const fixedAxisSvg = d3
+      .select(fixedAxisRef.current)
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', margin.top)
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Add white background for the fixed axis
+    fixedAxisSvg
+      .append('rect')
+      .attr('x', -margin.left)
+      .attr('y', -margin.top)
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', margin.top)
+      .attr('fill', 'white');
+
+    // Add the fixed timeline axis
+    const xAxisTop = d3.axisTop(timeScale);
+    fixedAxisSvg.call(xAxisTop);
+
+    // Add vertical timeline separator to fixed axis
+    fixedAxisSvg
+      .append('line')
+      .attr('x1', 0)
+      .attr('x2', 0)
+      .attr('y1', -margin.top)
+      .attr('y2', 0)
+      .attr('stroke', '#666')
+      .attr('stroke-width', 2);
+
     // Add vertical timeline separator FIRST (before any other elements)
     svg
       .append('line')
       .attr('x1', 0)
       .attr('x2', 0)
-      .attr('y1', 0)
+      .attr('y1', -margin.top) // Extend line to top of chart
       .attr('y2', height - margin.bottom)
       .attr('stroke', '#666')
       .attr('stroke-width', 2);
@@ -314,12 +347,13 @@ export function Storyline({ data }: { data: StorylineData[] }) {
             .on('mouseover', function (event) {
               d3.select(this).attr('r', 6);
               const [mouseX, mouseY] = d3.pointer(event, svg.node());
+              const dateStr = new Date(record.start_date).toLocaleDateString();
               createTooltip(
                 svg,
                 mouseX,
                 mouseY,
                 width,
-                `**${record.title}**\n\n${record.summary}`,
+                `${dateStr} - ${record.title} - ${record.summary}`,
               );
             })
             .on('mouseout', function () {
@@ -356,8 +390,26 @@ export function Storyline({ data }: { data: StorylineData[] }) {
   }, [data]);
 
   return (
-    <div className="w-full overflow-x-auto">
-      <svg ref={svgRef} className="w-full" style={{ minWidth: '1200px' }} />
+    <div className="relative w-full">
+      {/* Fixed axis SVG */}
+      <svg
+        ref={fixedAxisRef}
+        className="w-full sticky top-0 z-10"
+        style={{
+          minWidth: '1200px',
+          backgroundColor: 'white',
+        }}
+      />
+      {/* Main visualization SVG */}
+      <div className="w-full overflow-x-auto">
+        <svg
+          ref={svgRef}
+          className="w-full"
+          style={{
+            minWidth: '1200px',
+          }}
+        />
+      </div>
     </div>
   );
 }
