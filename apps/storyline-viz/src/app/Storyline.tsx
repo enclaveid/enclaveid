@@ -30,6 +30,115 @@ interface StorylineData {
   cluster_title: string;
 }
 
+// Add this function before the useEffect
+const createTooltip = (
+  svg: d3.Selection<SVGGElement, unknown, null, undefined>,
+  mouseX: number,
+  mouseY: number,
+  width: number,
+  mainText: string,
+  dateText?: string,
+) => {
+  // Remove any existing tooltips
+  svg.selectAll('.tooltip-group').remove();
+
+  const tooltipGroup = svg.append('g').attr('class', 'tooltip-group');
+
+  // Create temporary text element to measure text width
+  const tempText = tooltipGroup
+    .append('text')
+    .style('visibility', 'hidden')
+    .text(mainText);
+
+  // Calculate text metrics
+  const textWidth = Math.min(300, tempText.node().getComputedTextLength());
+  tempText.remove();
+
+  // Add background rectangle
+  const tooltipBg = tooltipGroup
+    .append('rect')
+    .attr('class', 'tooltip-bg')
+    .attr('fill', 'white')
+    .attr('stroke', '#ccc')
+    .attr('rx', 4)
+    .attr('ry', 4)
+    .attr('opacity', 1); // Fix opacity
+
+  // Add date text if provided
+  let textYOffset = 0;
+  if (dateText) {
+    tooltipGroup
+      .append('text')
+      .attr('class', 'tooltip-date')
+      .attr('x', 8) // Add padding
+      .attr('y', 20)
+      .text(dateText);
+    textYOffset = 40;
+  }
+
+  // Add main text with wrapping
+  const tooltipText = tooltipGroup
+    .append('text')
+    .attr('class', 'tooltip-text')
+    .attr('x', 8) // Add padding
+    .attr('y', textYOffset);
+
+  // Wrap text function
+  const words = mainText.split(/\s+/);
+  let line: string[] = [];
+  let lineNumber = 0;
+  const lineHeight = 1.2; // ems
+  const maxWidth = 1000;
+
+  words.forEach((word) => {
+    line.push(word);
+    const test = tooltipText.append('tspan').text(line.join(' '));
+
+    if (test.node().getComputedTextLength() > maxWidth - 16) {
+      // Account for padding
+      line.pop();
+      if (line.length) {
+        tooltipText
+          .append('tspan')
+          .attr('x', 8)
+          .attr('dy', `${lineNumber === 0 ? 1 : lineHeight}em`)
+          .text(line.join(' '));
+      }
+      line = [word];
+      lineNumber++;
+    }
+    test.remove();
+  });
+
+  tooltipText
+    .append('tspan')
+    .attr('x', 8)
+    .attr('dy', `${lineNumber === 0 ? 1 : lineHeight}em`)
+    .text(line.join(' '));
+
+  // Calculate tooltip dimensions
+  const tooltipBBox = tooltipGroup.node().getBBox();
+  const padding = 8;
+
+  // Position background
+  tooltipBg
+    .attr('x', tooltipBBox.x - padding)
+    .attr('y', tooltipBBox.y - padding)
+    .attr('width', tooltipBBox.width + padding * 2)
+    .attr('height', tooltipBBox.height + padding * 2);
+
+  // Position entire tooltip group
+  const tooltipX = Math.min(
+    width - tooltipBBox.width - padding * 2,
+    Math.max(0, mouseX - tooltipBBox.width / 2),
+  );
+  const tooltipY = mouseY - tooltipBBox.height - 20;
+
+  tooltipGroup.attr('transform', `translate(${tooltipX},${tooltipY})`);
+
+  return tooltipGroup;
+};
+
 /**
  *
  * @param data - OrderedDict([('start_date', String), ('start_time', String), ('title', String), ('emotional', Boolean), ('coarse_cluster_label', Int64), ('fine_cluster_label', Int64), ('fine_cluster_is_core', Boolean), ('fine_cluster_transitions', List(Struct({'cluster_id': Int64, 'probability': Float64}))), ('conversation_id', String), ('datetime_conversations', String), ('datetime_questions', List(Struct({'date': String, 'time': String, 'question': String}))), ('summary', String), ('summary_embedding', Array(Float32, shape=(4096,))), ('fine_cluster_summary', String), ('cluster_title', String)])
@@ -126,117 +235,10 @@ export function Storyline({ data }: { data: StorylineData[] }) {
           .attr('class', 'gantt-bar')
           .on('mouseover', function (event) {
             d3.select(this).attr('opacity', 0.8);
-
-            // Get mouse position relative to the SVG container
             const [mouseX, mouseY] = d3.pointer(event, svg.node());
-
-            const tooltipGroup = svg.append('g').attr('class', 'tooltip-group');
-
-            // Prepare text content
             const tooltipText = `Fine Label ${fineLabel} (${records.length} records): ${records[0].fine_cluster_summary}`;
             const dateText = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
-
-            // Create temporary text element to measure text width
-            const tempText = tooltipGroup
-              .append('text')
-              .style('visibility', 'hidden')
-              .text(tooltipText);
-
-            // Calculate text metrics
-            const textWidth = Math.min(
-              300,
-              tempText.node().getComputedTextLength(),
-            );
-            tempText.remove();
-
-            // Improved text wrapping function
-            function wrapText(selection, width) {
-              selection.each(function () {
-                const text = d3.select(this);
-                const words = text.text().split(/\s+/).reverse();
-                const lineHeight = 1.1; // ems
-                const y = text.attr('y');
-                const dy = parseFloat(text.attr('dy'));
-
-                let line = [];
-                let lineNumber = 0;
-                let word = words.pop();
-                let tspan = text
-                  .text(null)
-                  .append('tspan')
-                  .attr('x', 0)
-                  .attr('y', y)
-                  .attr('dy', dy + 'em');
-
-                while (word) {
-                  line.push(word);
-                  tspan.text(line.join(' '));
-                  if (tspan.node().getComputedTextLength() > width) {
-                    line.pop();
-                    tspan.text(line.join(' '));
-                    line = [word];
-                    tspan = text
-                      .append('tspan')
-                      .attr('x', 0)
-                      .attr('y', y)
-                      .attr('dy', ++lineNumber * lineHeight + dy + 'em')
-                      .text(word);
-                  }
-                  word = words.pop();
-                }
-              });
-            }
-
-            // Add background rectangle (will adjust size after text is added)
-            const tooltipBg = tooltipGroup
-              .append('rect')
-              .attr('class', 'tooltip-bg')
-              .attr('fill', 'white')
-              .attr('stroke', '#ccc')
-              .attr('rx', 4)
-              .attr('ry', 4);
-
-            // Add date text
-            const dateLabel = tooltipGroup
-              .append('text')
-              .attr('class', 'tooltip-date')
-              .attr('x', 0)
-              .attr('y', 0)
-              .attr('dy', '1em')
-              .text(dateText);
-
-            // Add main text with wrapping
-            const mainText = tooltipGroup
-              .append('text')
-              .attr('class', 'tooltip-text')
-              .attr('x', 0)
-              .attr('y', 20)
-              .attr('dy', '1em')
-              .text(tooltipText)
-              .call(wrapText, textWidth);
-
-            // Calculate tooltip dimensions after text is added
-            const tooltipBBox = tooltipGroup.node().getBBox();
-
-            // Position tooltip and background
-            const padding = 10;
-            tooltipBg
-              .attr('x', tooltipBBox.x - padding)
-              .attr('y', tooltipBBox.y - padding)
-              .attr('width', tooltipBBox.width + padding * 2)
-              .attr('height', tooltipBBox.height + padding * 2);
-
-            // Position entire tooltip group
-            const tooltipX = Math.min(
-              width - tooltipBBox.width - padding,
-              Math.max(0, mouseX - tooltipBBox.width / 2),
-            );
-            const tooltipY = Math.max(0, mouseY - tooltipBBox.height - 20);
-
-            tooltipGroup.attr(
-              'transform',
-              `translate(${tooltipX},${tooltipY})`,
-            );
+            createTooltip(svg, mouseX, mouseY, width, tooltipText, dateText);
           })
           .on('mousemove', function (event) {
             const [mouseX, mouseY] = d3.pointer(event, svg.node());
@@ -260,6 +262,28 @@ export function Storyline({ data }: { data: StorylineData[] }) {
           });
 
         fineClusterIndex++;
+
+        // Add red dots for individual data points
+        records.forEach((record) => {
+          svg
+            .append('circle')
+            .attr('cx', timeScale(new Date(record.start_date)))
+            .attr('cy', fineClusterY + barHeight / 2)
+            .attr('r', 4)
+            .attr('fill', 'yellow')
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('class', 'activity-point')
+            .on('mouseover', function (event) {
+              d3.select(this).attr('r', 6);
+              const [mouseX, mouseY] = d3.pointer(event, svg.node());
+              createTooltip(svg, mouseX, mouseY, width, record.summary);
+            })
+            .on('mouseout', function () {
+              d3.select(this).attr('r', 4);
+              svg.selectAll('.tooltip-group').remove();
+            });
+        });
       });
 
       // Update coarse cluster label position to center vertically
