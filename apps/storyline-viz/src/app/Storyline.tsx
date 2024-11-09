@@ -370,7 +370,25 @@ export function Storyline({ data }: { data: StorylineData[] }) {
             .attr('fill', color)
             .attr('rx', 5)
             .attr('ry', 5)
-            .attr('class', 'gantt-bar');
+            .attr('class', 'gantt-bar')
+            .on('mouseover', function (event) {
+              d3.select(this).attr('opacity', 0.8);
+              const [mouseX, mouseY] = d3.pointer(event, svg.node());
+              // Get the first record to show cluster information
+              const clusterRecord = records[0];
+              createTooltip(
+                svg,
+                mouseX,
+                mouseY,
+                width,
+                `Fine Cluster ${fineLabel}: ${clusterRecord.fine_cluster_summary}`,
+                `${records.length} conversations`,
+              );
+            })
+            .on('mouseout', function () {
+              d3.select(this).attr('opacity', 1);
+              svg.selectAll('.tooltip-group').remove();
+            });
 
           // Add probability percentage if applicable
           if (transitionProbabilities?.has(Number(fineLabel))) {
