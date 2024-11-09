@@ -578,23 +578,37 @@ export function Storyline({ data }: { data: StorylineData[] }) {
                   }
                 });
 
-                // Create new order (same as before)
+                // Inside the dot click handler, replace the order creation logic with:
                 const currentIndex = orderedCoarseClusters.indexOf(coarseLabel);
-                const beforeCurrent = orderedCoarseClusters.slice(
+
+                // Split target clusters into those that should go before and after
+                const targetClustersArray = Array.from(
+                  targetCoarseClusters,
+                ).filter((c) => c !== coarseLabel);
+                const midPoint = targetClustersArray.length / 2;
+                const targetsBefore = targetClustersArray.slice(
                   0,
-                  currentIndex,
+                  Math.floor(midPoint),
                 );
+                const targetsAfter = targetClustersArray.slice(
+                  Math.floor(midPoint),
+                );
+
                 const newOrder = [
-                  ...beforeCurrent,
+                  // Keep non-target clusters that were before the current one
+                  ...orderedCoarseClusters
+                    .slice(0, currentIndex)
+                    .filter((c) => !targetCoarseClusters.has(c)),
+                  // Add half of target clusters before
+                  ...targetsBefore,
+                  // Keep the selected cluster in its position
                   coarseLabel,
-                  ...Array.from(targetCoarseClusters).filter(
-                    (c) => c !== coarseLabel && !beforeCurrent.includes(c),
-                  ),
-                  ...originalOrderRef.current.filter(
-                    (c) =>
-                      !targetCoarseClusters.has(c) &&
-                      !beforeCurrent.includes(c),
-                  ),
+                  // Add remaining target clusters after
+                  ...targetsAfter,
+                  // Add remaining non-target clusters that were after
+                  ...orderedCoarseClusters
+                    .slice(currentIndex + 1)
+                    .filter((c) => !targetCoarseClusters.has(c)),
                 ];
 
                 // Render with new order and fine cluster probabilities
