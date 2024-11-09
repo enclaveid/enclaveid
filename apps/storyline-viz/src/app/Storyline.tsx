@@ -170,6 +170,10 @@ export function Storyline({ data }: { data: StorylineData[] }) {
       ...d,
       coarse_cluster_label: Number(d.coarse_cluster_label),
       fine_cluster_label: Number(d.fine_cluster_label),
+      fine_cluster_transitions: d.fine_cluster_transitions.map((t) => ({
+        cluster_id: Number(t.cluster_id),
+        probability: t.probability,
+      })),
     }));
 
     // Process data to group by fine and coarse clusters
@@ -406,24 +410,27 @@ export function Storyline({ data }: { data: StorylineData[] }) {
                 svg.selectAll('.tooltip-group').remove();
               })
               .on('click', function (event) {
-                // Prevent event from bubbling
                 event.stopPropagation();
 
-                // Get transition clusters
                 const transitions = record.fine_cluster_transitions;
                 const targetCoarseClusters = new Set<number>();
 
                 // Add current coarse cluster first
                 targetCoarseClusters.add(coarseLabel);
 
+                // Create a mapping of fine cluster IDs to coarse cluster IDs for faster lookup
+                const fineToCoarseMap = new Map(
+                  processedData.map((d) => [
+                    d.fine_cluster_label,
+                    d.coarse_cluster_label,
+                  ]),
+                );
+
                 // Add coarse clusters from transitions
                 transitions.forEach((transition) => {
-                  // Find coarse cluster for this fine cluster
-                  const transitionCoarseCluster = processedData.find(
-                    (d) =>
-                      d.fine_cluster_label === Number(transition.cluster_id),
-                  )?.coarse_cluster_label;
-
+                  const transitionCoarseCluster = fineToCoarseMap.get(
+                    transition.cluster_id,
+                  );
                   if (transitionCoarseCluster !== undefined) {
                     targetCoarseClusters.add(transitionCoarseCluster);
                   }
@@ -436,11 +443,7 @@ export function Storyline({ data }: { data: StorylineData[] }) {
                   currentIndex,
                 );
 
-                // Create new order:
-                // 1. Everything before current position
-                // 2. Current cluster
-                // 3. Related clusters (excluding current and any that were before)
-                // 4. Remaining clusters
+                // Create new order
                 const newOrder = [
                   ...beforeCurrent,
                   coarseLabel,
@@ -453,6 +456,20 @@ export function Storyline({ data }: { data: StorylineData[] }) {
                       !beforeCurrent.includes(c),
                   ),
                 ];
+
+                console.log('Reordering Debug:', {
+                  clickedCoarseLabel: coarseLabel,
+                  transitions: transitions.map((t) => ({
+                    fine_cluster_id: t.cluster_id,
+                    coarse_cluster_id: fineToCoarseMap.get(t.cluster_id),
+                    probability: t.probability,
+                  })),
+                  targetCoarseClusters: Array.from(targetCoarseClusters),
+                  currentOrder: orderedCoarseClusters,
+                  beforeCurrent: beforeCurrent,
+                  newOrder: newOrder,
+                  originalOrder: originalOrderRef.current,
+                });
 
                 // Render with new order
                 renderVisualization(newOrder, targetCoarseClusters);
