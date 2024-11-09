@@ -407,7 +407,17 @@ export function Storyline({ data }: { data: StorylineData[] }) {
           fineClusterIndex++;
 
           // Add dots for individual data points
+          const datePositions = new Map<number, number>(); // Track dots per x-position
           records.forEach((record) => {
+            const xPos = timeScale(new Date(record.start_date));
+            const baseY = fineClusterY + barHeight / 2;
+
+            // Check for existing dots at this x position
+            const dotsAtPosition = datePositions.get(xPos) || 0;
+            const verticalOffset =
+              dotsAtPosition * 8 - Math.min(dotsAtPosition, 3) * 4; // Offset dots, max 4 levels
+            datePositions.set(xPos, dotsAtPosition + 1);
+
             // Determine dot color based on conditions
             let dotColor = 'yellow'; // default color
             if (record.emotional) {
@@ -418,10 +428,10 @@ export function Storyline({ data }: { data: StorylineData[] }) {
 
             svg
               .append('circle')
-              .attr('cx', timeScale(new Date(record.start_date)))
-              .attr('cy', fineClusterY + barHeight / 2)
+              .attr('cx', xPos)
+              .attr('cy', baseY + verticalOffset)
               .attr('r', 4)
-              .attr('fill', dotColor) // apply the determined color
+              .attr('fill', dotColor)
               .attr('stroke', 'black')
               .attr('stroke-width', 1)
               .attr('class', 'activity-point')
