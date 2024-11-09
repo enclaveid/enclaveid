@@ -318,7 +318,7 @@ export function Storyline({ data }: { data: StorylineData[] }) {
             .attr('y', yOffset + 20) // Position near the top of the cluster
             .attr('fill', '#e53e3e') // Red text
             .attr('font-weight', 'bold')
-            .text(`${(probability * 100).toFixed(1)}%`);
+            .text(`${Math.ceil(probability * 100 * 100) / 100}%`);
         }
 
         // Add border lines for the group
@@ -401,7 +401,7 @@ export function Storyline({ data }: { data: StorylineData[] }) {
               .attr('fill', '#e53e3e') // Red text
               .attr('font-weight', 'bold')
               .attr('font-size', '12px')
-              .text(`${(probability * 100).toFixed(1)}%`);
+              .text(`${Math.ceil(probability * 100 * 100) / 100}%`);
           }
 
           fineClusterIndex++;
@@ -471,6 +471,63 @@ export function Storyline({ data }: { data: StorylineData[] }) {
               .on('click', function (event) {
                 event.stopPropagation();
 
+                // Remove any existing time indicator lines and labels
+                svg
+                  .selectAll('.time-indicator, .time-indicator-label')
+                  .remove();
+                fixedAxisSvg
+                  .selectAll('.time-indicator, .time-indicator-label')
+                  .remove();
+
+                // Get the x position of the dot and format the date
+                const xPos = timeScale(new Date(record.start_date));
+                const dateStr = new Date(
+                  record.start_date,
+                ).toLocaleDateString();
+
+                // Add the line to main SVG with 5px top margin
+                svg
+                  .append('line')
+                  .attr('class', 'time-indicator')
+                  .attr('x1', xPos)
+                  .attr('x2', xPos)
+                  .attr('y1', -margin.top + 25) // Added 25px margin from top
+                  .attr('y2', height - margin.bottom)
+                  .attr('stroke', 'red')
+                  .attr('stroke-width', 1);
+
+                // Add date label to main SVG
+                svg
+                  .append('text')
+                  .attr('class', 'time-indicator-label')
+                  .attr('x', xPos + 5)
+                  .attr('y', 0) // Position at the top of the visible area
+                  .attr('fill', 'red')
+                  .attr('font-size', '12px')
+                  .text(dateStr);
+
+                // Add the line to fixed axis SVG with 25px top margin
+                fixedAxisSvg
+                  .append('line')
+                  .attr('class', 'time-indicator')
+                  .attr('x1', xPos)
+                  .attr('x2', xPos)
+                  .attr('y1', -margin.top + 25) // Added 25px margin from top
+                  .attr('y2', 0)
+                  .attr('stroke', 'red')
+                  .attr('stroke-width', 1);
+
+                // Add date label to fixed axis SVG
+                fixedAxisSvg
+                  .append('text')
+                  .attr('class', 'time-indicator-label')
+                  .attr('x', xPos + 5)
+                  .attr('y', -margin.top / 2) // Position in the middle of the fixed axis area
+                  .attr('fill', 'red')
+                  .attr('font-size', '12px')
+                  .text(dateStr);
+
+                // Existing transition handling code
                 const transitions = record.fine_cluster_transitions;
                 const transitionProbabilities = new Map<number, number>();
 
