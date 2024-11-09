@@ -184,13 +184,14 @@ export function Storyline({ data }: { data: StorylineData[] }) {
 
     // Set up dimensions
     const margin = { top: 40, right: 40, bottom: 40, left: 500 };
+    const extraTopPadding = 300;
     const width = 1200 - margin.left - margin.right;
     const barHeight = 25;
     const barPadding = 2;
     const coarseClusterPadding = 100;
 
     // Calculate total height based on actual content
-    let totalHeight = margin.top + margin.bottom;
+    let totalHeight = margin.top + margin.bottom + extraTopPadding;
     groupedData.forEach((coarseGroup) => {
       const fineGroups = d3.group(coarseGroup, (d) => d.fine_cluster_label);
       const coarseClusterHeight = fineGroups.size * (barHeight + barPadding);
@@ -209,7 +210,10 @@ export function Storyline({ data }: { data: StorylineData[] }) {
       .attr('width', width + margin.left + margin.right)
       .attr('height', height)
       .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+      .attr(
+        'transform',
+        `translate(${margin.left},${margin.top + extraTopPadding})`,
+      );
 
     // Create fixed axis SVG
     const fixedAxisSvg = d3
