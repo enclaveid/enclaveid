@@ -262,6 +262,20 @@ export function Storyline({ data }: { data: StorylineData[] }) {
     // Store original order of coarse clusters
     originalOrderRef.current = Array.from(groupedData.keys());
 
+    // Calculate emotional counts for each coarse cluster
+    const emotionalCounts = new Map<number, number>();
+    groupedData.forEach((coarseGroup, coarseLabel) => {
+      const emotionalCount = coarseGroup.filter((d) => d.emotional).length;
+      emotionalCounts.set(coarseLabel, emotionalCount);
+    });
+
+    // Sort coarse clusters by emotional count (descending)
+    originalOrderRef.current = Array.from(groupedData.keys()).sort((a, b) => {
+      const countA = emotionalCounts.get(a) || 0;
+      const countB = emotionalCounts.get(b) || 0;
+      return countB - countA;
+    });
+
     const renderVisualization = (
       orderedCoarseClusters: number[],
       highlightedClusters?: Set<number>,
@@ -506,7 +520,7 @@ export function Storyline({ data }: { data: StorylineData[] }) {
                   .attr('font-size', '12px')
                   .text(dateStr);
 
-                // Add the line to fixed axis SVG with 25px top margin
+                // Add the line to fixed axis SVG with 5px top margin
                 fixedAxisSvg
                   .append('line')
                   .attr('class', 'time-indicator')
