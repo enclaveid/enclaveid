@@ -265,6 +265,8 @@ export function Storyline({ data }: { data: StorylineData[] }) {
     const renderVisualization = (
       orderedCoarseClusters: number[],
       highlightedClusters?: Set<number>,
+      transitionProbabilities?: Map<number, number>,
+      selectedFineCluster?: number,
     ) => {
       // Clear previous chart content but keep the timeline separator
       svg.selectAll('*').remove();
@@ -295,13 +297,29 @@ export function Storyline({ data }: { data: StorylineData[] }) {
           .attr('y', yOffset - coarseClusterPadding / 2)
           .attr('width', width + margin.left)
           .attr('height', coarseClusterHeight + coarseClusterPadding)
-          .attr(
-            'fill',
-            highlightedClusters?.has(coarseLabel)
-              ? '#f0f7ff' // Light blue for highlighted clusters
-              : '#f8f8f8', // Light gray for normal clusters
-          )
+          .attr('fill', () => {
+            if (transitionProbabilities?.has(coarseLabel)) {
+              // Use red with opacity based on probability
+              const probability = transitionProbabilities.get(coarseLabel) || 0;
+              return d3.interpolate('#fff5f5', '#feb2b2')(probability);
+            }
+            return highlightedClusters?.has(coarseLabel)
+              ? '#f0f7ff'
+              : '#f8f8f8';
+          })
           .attr('opacity', 0.5);
+
+        // Add probability percentage text if applicable
+        if (transitionProbabilities?.has(coarseLabel)) {
+          const probability = transitionProbabilities.get(coarseLabel) || 0;
+          svg
+            .append('text')
+            .attr('x', -margin.left + 10) // Position at the start of the cluster
+            .attr('y', yOffset + 20) // Position near the top of the cluster
+            .attr('fill', '#e53e3e') // Red text
+            .attr('font-weight', 'bold')
+            .text(`${(probability * 100).toFixed(1)}%`);
+        }
 
         // Add border lines for the group
         svg
@@ -326,49 +344,47 @@ export function Storyline({ data }: { data: StorylineData[] }) {
           const fineClusterY =
             yOffset + fineClusterIndex * (barHeight + barPadding);
 
-          // Generate unique color based on fine cluster label
-          const color = d3.interpolateBlues(
-            0.3 + ((Number(fineLabel) % 10) * 0.6) / 10,
-          );
+          // Modify the bar color with a higher red baseline
+          const color = (() => {
+            if (Number(fineLabel) === selectedFineCluster) {
+              return '#e53e3e'; // Darker red for selected cluster
+            } else if (transitionProbabilities?.has(Number(fineLabel))) {
+              const probability =
+                transitionProbabilities.get(Number(fineLabel)) || 0;
+              // Start from a higher baseline red (#fecaca) to darker red (#ef4444)
+              return d3.interpolate('#fecaca', '#ef4444')(probability);
+            } else {
+              return d3.interpolateBlues(
+                0.3 + ((Number(fineLabel) % 10) * 0.6) / 10,
+              );
+            }
+          })();
 
-          // Draw bar
+          // Draw bar with updated color
           svg
             .append('rect')
             .attr('x', timeScale(start))
-            .attr('y', fineClusterY) // Use calculated y position
+            .attr('y', fineClusterY)
             .attr('width', timeScale(end) - timeScale(start))
             .attr('height', barHeight)
             .attr('fill', color)
             .attr('rx', 5)
             .attr('ry', 5)
-            .attr('class', 'gantt-bar')
-            .on('mouseover', function (event) {
-              d3.select(this).attr('opacity', 0.8);
-              const [mouseX, mouseY] = d3.pointer(event, svg.node());
-              const tooltipText = `Fine Label ${fineLabel} (${records.length} records): ${records[0].fine_cluster_summary}`;
-              const dateText = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
-              createTooltip(svg, mouseX, mouseY, width, tooltipText, dateText);
-            })
-            .on('mousemove', function (event) {
-              const [mouseX, mouseY] = d3.pointer(event, svg.node());
-              const tooltipGroup = svg.select('.tooltip-group');
-              const tooltipBBox = tooltipGroup.node().getBBox();
+            .attr('class', 'gantt-bar');
 
-              const tooltipX = Math.min(
-                width - tooltipBBox.width - 10,
-                Math.max(0, mouseX - tooltipBBox.width / 2),
-              );
-              const tooltipY = Math.max(0, mouseY - tooltipBBox.height - 20);
-
-              tooltipGroup.attr(
-                'transform',
-                `translate(${tooltipX},${tooltipY})`,
-              );
-            })
-            .on('mouseout', function (event) {
-              d3.select(this).attr('opacity', 1);
-              svg.selectAll('.tooltip-group').remove();
-            });
+          // Add probability percentage if applicable
+          if (transitionProbabilities?.has(Number(fineLabel))) {
+            const probability =
+              transitionProbabilities.get(Number(fineLabel)) || 0;
+            svg
+              .append('text')
+              .attr('x', timeScale(start) - 45) // Position just before the bar
+              .attr('y', fineClusterY + barHeight / 2 + 4) // Vertically center with the bar
+              .attr('fill', '#e53e3e') // Red text
+              .attr('font-weight', 'bold')
+              .attr('font-size', '12px')
+              .text(`${(probability * 100).toFixed(1)}%`);
+          }
 
           fineClusterIndex++;
 
@@ -413,37 +429,43 @@ export function Storyline({ data }: { data: StorylineData[] }) {
                 event.stopPropagation();
 
                 const transitions = record.fine_cluster_transitions;
-                const targetCoarseClusters = new Set<number>();
+                const transitionProbabilities = new Map<number, number>();
 
-                // Add current coarse cluster first
-                targetCoarseClusters.add(coarseLabel);
-
-                // Create a mapping of fine cluster IDs to coarse cluster IDs for faster lookup
-                const fineToCoarseMap = new Map(
-                  processedData.map((d) => [
-                    d.fine_cluster_label,
-                    d.coarse_cluster_label,
-                  ]),
+                // Set current fine cluster probability to 1
+                transitionProbabilities.set(
+                  Number(record.fine_cluster_label),
+                  1,
                 );
 
-                // Add coarse clusters from transitions
+                // Add probabilities from transitions
                 transitions.forEach((transition) => {
-                  const transitionCoarseCluster = fineToCoarseMap.get(
+                  transitionProbabilities.set(
                     transition.cluster_id,
+                    transition.probability,
                   );
+                });
+
+                // Get coarse clusters for ordering
+                const targetCoarseClusters = new Set<number>();
+                targetCoarseClusters.add(coarseLabel);
+
+                // Add coarse clusters of transition targets
+                transitions.forEach((transition) => {
+                  const transitionCoarseCluster = processedData.find(
+                    (d) =>
+                      Number(d.fine_cluster_label) === transition.cluster_id,
+                  )?.coarse_cluster_label;
                   if (transitionCoarseCluster !== undefined) {
-                    targetCoarseClusters.add(transitionCoarseCluster);
+                    targetCoarseClusters.add(Number(transitionCoarseCluster));
                   }
                 });
 
-                // Get current order up to the clicked cluster
+                // Create new order (same as before)
                 const currentIndex = orderedCoarseClusters.indexOf(coarseLabel);
                 const beforeCurrent = orderedCoarseClusters.slice(
                   0,
                   currentIndex,
                 );
-
-                // Create new order
                 const newOrder = [
                   ...beforeCurrent,
                   coarseLabel,
@@ -457,22 +479,13 @@ export function Storyline({ data }: { data: StorylineData[] }) {
                   ),
                 ];
 
-                console.log('Reordering Debug:', {
-                  clickedCoarseLabel: coarseLabel,
-                  transitions: transitions.map((t) => ({
-                    fine_cluster_id: t.cluster_id,
-                    coarse_cluster_id: fineToCoarseMap.get(t.cluster_id),
-                    probability: t.probability,
-                  })),
-                  targetCoarseClusters: Array.from(targetCoarseClusters),
-                  currentOrder: orderedCoarseClusters,
-                  beforeCurrent: beforeCurrent,
-                  newOrder: newOrder,
-                  originalOrder: originalOrderRef.current,
-                });
-
-                // Render with new order
-                renderVisualization(newOrder, targetCoarseClusters);
+                // Render with new order and fine cluster probabilities
+                renderVisualization(
+                  newOrder,
+                  targetCoarseClusters,
+                  transitionProbabilities,
+                  Number(record.fine_cluster_label),
+                );
               });
           });
         });
