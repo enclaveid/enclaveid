@@ -412,31 +412,43 @@ export function Storyline({ data }: { data: StorylineData[] }) {
             const xPos = timeScale(new Date(record.start_date));
             const baseY = fineClusterY + barHeight / 2;
 
-            // Check for existing dots at this x position
             const dotsAtPosition = datePositions.get(xPos) || 0;
             const verticalOffset =
-              dotsAtPosition * 8 - Math.min(dotsAtPosition, 3) * 4; // Offset dots, max 4 levels
+              dotsAtPosition * 8 - Math.min(dotsAtPosition, 3) * 4;
             datePositions.set(xPos, dotsAtPosition + 1);
 
-            // Determine dot color based on conditions
-            let dotColor = 'yellow'; // default color
+            const dotGroup = svg
+              .append('g')
+              .attr('class', 'activity-point')
+              .attr(
+                'transform',
+                `translate(${xPos},${baseY + verticalOffset})`,
+              );
+
+            // Base circle (green if core, yellow if not)
+            dotGroup
+              .append('circle')
+              .attr('r', 4)
+              .attr('fill', record.fine_cluster_is_core ? 'green' : 'yellow')
+              .attr('stroke', 'black')
+              .attr('stroke-width', 1);
+
+            // Add red half-circle if emotional
             if (record.emotional) {
-              dotColor = 'red'; // emotional takes priority
-            } else if (record.fine_cluster_is_core) {
-              dotColor = 'green'; // core clusters if not emotional
+              dotGroup
+                .append('path')
+                .attr('d', 'M -4,0 A 4,4 0 0,1 4,0 L 0,0 Z')
+                .attr('fill', 'red')
+                .attr('stroke', 'black')
+                .attr('stroke-width', 1);
             }
 
-            svg
-              .append('circle')
-              .attr('cx', xPos)
-              .attr('cy', baseY + verticalOffset)
-              .attr('r', 4)
-              .attr('fill', dotColor)
-              .attr('stroke', 'black')
-              .attr('stroke-width', 1)
-              .attr('class', 'activity-point')
+            dotGroup
               .on('mouseover', function (event) {
-                d3.select(this).attr('r', 6);
+                dotGroup.attr(
+                  'transform',
+                  `translate(${xPos},${baseY + verticalOffset}) scale(1.5)`,
+                );
                 const [mouseX, mouseY] = d3.pointer(event, svg.node());
                 const dateStr = new Date(
                   record.start_date,
@@ -450,7 +462,10 @@ export function Storyline({ data }: { data: StorylineData[] }) {
                 );
               })
               .on('mouseout', function () {
-                d3.select(this).attr('r', 4);
+                dotGroup.attr(
+                  'transform',
+                  `translate(${xPos},${baseY + verticalOffset}) scale(1)`,
+                );
                 svg.selectAll('.tooltip-group').remove();
               })
               .on('click', function (event) {
