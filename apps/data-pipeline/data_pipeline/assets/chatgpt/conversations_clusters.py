@@ -39,6 +39,7 @@ class ConversationsClustersConfig(Config):
     )
 
 
+# TODO: We just do it on the CPU for now since it's fast enough for the amount of conversation data
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
@@ -153,7 +154,7 @@ def conversations_clusters(
         "start_date",
         "start_time",
         "title",
-        "emotional",
+        "is_emotional",
         "coarse_cluster_label",
         "fine_cluster_label",
         "fine_cluster_is_core",

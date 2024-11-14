@@ -8,13 +8,27 @@ from dagster import (
 )
 
 from data_pipeline.constants.k8s import get_k8s_vllm_config
+from data_pipeline.consts import get_environment
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
 from data_pipeline.utils.get_logger import get_logger
 from data_pipeline.utils.parsing.json import parse_category_json
 
 
-def get_categorization_prompt_sequence(input_text: str) -> list[str]:
+def get_fine_categorization_prompt_sequence(input_text: str) -> list[str]:
+    return [
+        dedent(
+            f"""
+          Analyze this list and identify a descriptive categorization of the contents of the list.
+          Format your answer in JSON: {{ "descriptive_categorization": "the categorical summary in string format" }}.
+
+          {input_text}
+        """
+        ).strip(),
+    ]
+
+
+def get_coarse_categorization_prompt_sequence(input_text: str) -> list[str]:
     return [
         dedent(
             f"""
@@ -36,6 +50,9 @@ def get_categorization_prompt_sequence(input_text: str) -> list[str]:
     ]
 
 
+TEST_LIMIT = None if get_environment() == "LOCAL" else None
+
+
 @asset(
     partitions_def=user_partitions_def,
     ins={
@@ -46,12 +63,12 @@ def get_categorization_prompt_sequence(input_text: str) -> list[str]:
     io_manager_key="parquet_io_manager",
     op_tags=get_k8s_vllm_config(4),
 )
-def storyiline_viz(
+def conversations_clusters_summaries(
     context: AssetExecutionContext,
-    gemma27b: BaseLlmResource,
+    gemini_flash: BaseLlmResource,
     conversations_clusters: pl.DataFrame,
 ) -> pl.DataFrame:
-    llm = gemma27b
+    llm = gemini_flash
     logger = get_logger(context)
 
     # Filter out null titles
@@ -61,11 +78,11 @@ def storyiline_viz(
         filtered_clusters.group_by(["coarse_cluster_label", "fine_cluster_label"])
         .agg(pl.col("title").alias("conversation_titles"))
         .sort(["coarse_cluster_label", "fine_cluster_label"])
-    )
+    ).slice(0, TEST_LIMIT)
 
     # Generate prompts for fine clusters
     fine_prompt_sequences = [
-        get_categorization_prompt_sequence("\n".join(row["conversation_titles"]))
+        get_fine_categorization_prompt_sequence("\n".join(row["conversation_titles"]))
         for row in fine_grouped.to_dicts()
     ]
 
@@ -92,7 +109,7 @@ def storyiline_viz(
 
     # Generate prompts for coarse clusters
     coarse_prompt_sequences = [
-        get_categorization_prompt_sequence("\n".join(row["fine_summaries"]))
+        get_coarse_categorization_prompt_sequence("\n".join(row["fine_summaries"]))
         for row in coarse_grouped.to_dicts()
     ]
 

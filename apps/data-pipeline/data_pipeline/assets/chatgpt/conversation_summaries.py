@@ -17,6 +17,7 @@ from data_pipeline.resources.inference.base_llm_resource import (
 from data_pipeline.utils.get_logger import get_logger
 
 
+# TODO: is analysis necessary?
 def get_conversation_summarization_prompt_sequence(conversation: str) -> PromptSequence:
     return [
         dedent(
@@ -77,7 +78,7 @@ def parse_strong_emotional_implications(text: str) -> list[str]:
         return []
 
 
-TEST_LIMIT = 50 if get_environment() == "LOCAL" else None
+TEST_LIMIT = None if get_environment() == "LOCAL" else None
 
 
 @asset(
@@ -92,10 +93,10 @@ TEST_LIMIT = 50 if get_environment() == "LOCAL" else None
 )
 async def conversation_summaries(
     context: AssetExecutionContext,
-    gemma27b: BaseLlmResource,
+    gemini_flash: BaseLlmResource,
     parsed_conversations: pl.DataFrame,
 ):
-    llm = gemma27b
+    llm = gemini_flash
     logger = get_logger(context)
 
     df = (

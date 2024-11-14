@@ -16,7 +16,7 @@ interface StorylineData {
   start_date: string;
   start_time: string;
   title: string;
-  emotional: boolean;
+  is_emotional: boolean;
   coarse_cluster_label: bigint;
   fine_cluster_label: bigint;
   fine_cluster_is_core: boolean;
@@ -28,6 +28,7 @@ interface StorylineData {
   summary_embedding: number[]; // Float32Array of shape 4096
   fine_cluster_summary: string;
   cluster_title: string;
+  strong_emotional_implications?: string;
 }
 
 // Add this function before the useEffect
@@ -80,50 +81,58 @@ const createTooltip = (
   const tooltipText = tooltipGroup
     .append('text')
     .attr('class', 'tooltip-text')
-    .attr('x', 8) // Add padding
+    .attr('x', 8)
     .attr('y', textYOffset);
 
-  // Wrap text function
-  const words = mainText.split(/\s+/);
-  let line: string[] = [];
-  let lineNumber = 0;
+  // Split text into segments based on bold markers
+  const segments = mainText.split('**');
+  let yPos = 0;
+  const x = 8;
   const lineHeight = 1.2; // ems
   const maxWidth = 1000;
-  let isBold = false;
 
-  words.forEach((word) => {
-    if (word === '**') {
-      isBold = !isBold;
-      return;
-    }
-    line.push(word);
-    const test = tooltipText
-      .append('tspan')
-      .attr('font-weight', isBold ? 'bold' : 'normal')
-      .text(line.join(' '));
+  segments.forEach((segment, i) => {
+    const isBold = i % 2 === 1; // Alternate between normal and bold
 
-    if (test.node().getComputedTextLength() > maxWidth - 16) {
-      line.pop();
-      if (line.length) {
-        tooltipText
-          .append('tspan')
-          .attr('x', 8)
-          .attr('dy', `${lineNumber === 0 ? 1 : lineHeight}em`)
-          .attr('font-weight', isBold ? 'bold' : 'normal')
-          .text(line.join(' '));
+    // Split segment into words
+    const words = segment.split(/\s+/);
+    let line: string[] = [];
+
+    words.forEach((word) => {
+      if (word === '') return;
+
+      line.push(word);
+      const testTspan = tooltipText
+        .append('tspan')
+        .attr('font-weight', isBold ? 'bold' : 'normal')
+        .text(line.join(' '));
+
+      if (testTspan.node().getComputedTextLength() > maxWidth - 16) {
+        line.pop();
+        if (line.length) {
+          tooltipText
+            .append('tspan')
+            .attr('x', x)
+            .attr('dy', yPos === 0 ? '1em' : `${lineHeight}em`)
+            .attr('font-weight', isBold ? 'bold' : 'normal')
+            .text(line.join(' '));
+          yPos++;
+        }
+        line = [word];
       }
-      line = [word];
-      lineNumber++;
-    }
-    test.remove();
-  });
+      testTspan.remove();
+    });
 
-  tooltipText
-    .append('tspan')
-    .attr('x', 8)
-    .attr('dy', `${lineNumber === 0 ? 1 : lineHeight}em`)
-    .attr('font-weight', isBold ? 'bold' : 'normal')
-    .text(line.join(' '));
+    if (line.length) {
+      tooltipText
+        .append('tspan')
+        .attr('x', x)
+        .attr('dy', yPos === 0 ? '1em' : `${lineHeight}em`)
+        .attr('font-weight', isBold ? 'bold' : 'normal')
+        .text(line.join(' '));
+      yPos++;
+    }
+  });
 
   // Calculate tooltip dimensions
   const tooltipBBox = tooltipGroup.node().getBBox();
@@ -148,11 +157,6 @@ const createTooltip = (
   return tooltipGroup;
 };
 
-/**
- *
- * @param data - Polars schema: OrderedDict([('start_date', String), ('start_time', String), ('title', String), ('emotional', Boolean), ('coarse_cluster_label', Int64), ('fine_cluster_label', Int64), ('fine_cluster_is_core', Boolean), ('fine_cluster_transitions', List(Struct({'cluster_id': Int64, 'probability': Float64}))), ('conversation_id', String), ('datetime_conversations', String), ('datetime_questions', List(Struct({'date': String, 'time': String, 'question': String}))), ('summary', String), ('summary_embedding', Array(Float32, shape=(4096,))), ('fine_cluster_summary', String), ('cluster_title', String)])
- * @returns
- */
 export function Storyline({ data }: { data: StorylineData[] }) {
   const svgRef = useRef(null);
   const fixedAxisRef = useRef(null);
@@ -269,7 +273,7 @@ export function Storyline({ data }: { data: StorylineData[] }) {
     // Calculate emotional counts for each coarse cluster
     const emotionalCounts = new Map<number, number>();
     groupedData.forEach((coarseGroup, coarseLabel) => {
-      const emotionalCount = coarseGroup.filter((d) => d.emotional).length;
+      const emotionalCount = coarseGroup.filter((d) => d.is_emotional).length;
       emotionalCounts.set(coarseLabel, emotionalCount);
     });
 
@@ -452,7 +456,7 @@ export function Storyline({ data }: { data: StorylineData[] }) {
               .attr('stroke-width', 1);
 
             // Add red half-circle if emotional
-            if (record.emotional) {
+            if (record.is_emotional) {
               dotGroup
                 .append('path')
                 .attr('d', 'M -4,0 A 4,4 0 0,1 4,0 L 0,0 Z')
@@ -471,13 +475,12 @@ export function Storyline({ data }: { data: StorylineData[] }) {
                 const dateStr = new Date(
                   record.start_date,
                 ).toLocaleDateString();
-                createTooltip(
-                  svg,
-                  mouseX,
-                  mouseY,
-                  width,
-                  `${dateStr} - ${record.title} - ${record.summary}`,
-                );
+                const tooltipText = record.is_emotional
+                  ? `${dateStr} **${record.title}** ${record.summary.replace(/\*\*/g, '')}
+
+**Emotional Implications** ${record.strong_emotional_implications}`
+                  : `${dateStr} **${record.title}** ${record.summary.replace(/\*\*/g, '')}`;
+                createTooltip(svg, mouseX, mouseY, width, tooltipText);
               })
               .on('mouseout', function () {
                 dotGroup.attr(
