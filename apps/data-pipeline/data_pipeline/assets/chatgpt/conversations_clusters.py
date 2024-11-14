@@ -34,7 +34,7 @@ class ConversationsClustersConfig(Config):
         ).strip(),
     )
     coarse_n_clusters: Optional[int] = Field(
-        default=100,
+        default=20,
         description="Number of clusters to merge into. If None, coarse_recluster_threshold must be provided.",
     )
 

@@ -16,7 +16,7 @@ gemma27b_config = LlmConfig(
         },
         vllm_args={
             "enforce_eager": True,
-            "tensor_parallel_size": 2,
+            "tensor_parallel_size": 2,  # TODO: limit memory so we can fit in 1 GPU
         },
     ),
     remote_llm_config=RemoteLlmConfig(

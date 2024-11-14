@@ -4,17 +4,20 @@ import polars as pl
 from dagster import (
     AssetExecutionContext,
     AssetIn,
-    Config,
     asset,
 )
 from json_repair import repair_json
 
+from data_pipeline.consts import get_environment
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
+from data_pipeline.resources.inference.base_llm_resource import (
+    BaseLlmResource,
+    PromptSequence,
+)
 from data_pipeline.utils.get_logger import get_logger
 
 
-def get_conversation_summarization_prompt_sequence(conversation: str) -> list[str]:
+def get_conversation_summarization_prompt_sequence(conversation: str) -> PromptSequence:
     return [
         dedent(
             f"""
@@ -31,8 +34,6 @@ def get_conversation_summarization_prompt_sequence(conversation: str) -> list[st
 
             Conclude with what they gained beyond just information - include their evolving understanding and approach.
 
-            Keep your response concise and to the point, maximum 300 words.
-
             If there the conversation has only one question, limit your answer to points 1 and 2.
 
             Here is the conversation:
@@ -41,23 +42,42 @@ def get_conversation_summarization_prompt_sequence(conversation: str) -> list[st
         ).strip(),
         dedent(
             """
-            Does the topic or the tone of this conversation have strong emotional implications?
+            Summarize your analysis as follows, alternating between user and assistant:
+            Starting Mindset/Assumptions (user) -> New Information Encounter (assistant) -> Processing & Questions (user) -> New Information Encounter (assistant) -> ... -> Evolved Understanding (user)
 
-            After your analysis, provide your answer in JSON:
+            If the conversation has only one question, follow this format:
+            Starting Mindset/Assumptions (user) -> New Information Encounter (assistant)
+
+            Keep each item concise and to the point, but do not omit important details in the user's questions.
+            """
+        ).strip(),
+        dedent(
+            """
+            Does the topic or the tone of this conversation have strongemotional implications?
+            If so, list them as follows in chronological order:
             {{
-                "emotional": true | false
+                "strong_emotional_implications": list[str]
+            }}
+            Make sure to ground the emotional implications in the content of the conversation.
+
+            If the conversation is rather practical and not emotional, return an empty list:
+            {{
+                "strong_emotional_implications": []
             }}
             """
         ).strip(),
     ]
 
 
-def parse_emotional_analysis(text: str) -> bool | None:
+def parse_strong_emotional_implications(text: str) -> list[str]:
     try:
         j = repair_json(text, return_objects=True)
-        return j.get("emotional", None) if isinstance(j, dict) else None
+        return j.get("strong_emotional_implications", []) if isinstance(j, dict) else []
     except Exception:
-        return None
+        return []
+
+
+TEST_LIMIT = 50 if get_environment() == "LOCAL" else None
 
 
 @asset(
@@ -72,16 +92,15 @@ def parse_emotional_analysis(text: str) -> bool | None:
 )
 async def conversation_summaries(
     context: AssetExecutionContext,
-    config: Config,
-    gemini_flash: BaseLlmResource,
+    gemma27b: BaseLlmResource,
     parsed_conversations: pl.DataFrame,
 ):
-    llm = gemini_flash
+    llm = gemma27b
     logger = get_logger(context)
 
-    # Prepare conversations using the same format as conversations_embeddings
     df = (
-        parsed_conversations.with_columns(
+        parsed_conversations.sort("date", "time")
+        .with_columns(
             pl.concat_str(
                 [
                     pl.col("date"),
@@ -109,7 +128,8 @@ async def conversation_summaries(
                 pl.col("datetime_question").alias("datetime_questions"),
             ]
         )
-    )
+        .sort("start_date", "start_time")
+    ).slice(0, TEST_LIMIT)
 
     prompt_sequences = [
         get_conversation_summarization_prompt_sequence(row["datetime_conversations"])
@@ -128,20 +148,26 @@ async def conversation_summaries(
     logger.info(f"Done processing {len(prompt_sequences)} conversations.")
     logger.info(f"Execution cost: ${cost:.2f}")
 
-    # Parse the completions
     results = [
         {
+            "analysis": completion[-3],
             "summary": completion[-2],
-            "emotional": parse_emotional_analysis(completion[-1]),
+            "strong_emotional_implications": parse_strong_emotional_implications(
+                completion[-1]
+            ),
         }
         if completion
-        else {"summary": None, "emotional": None}
+        else {"analysis": None, "summary": None, "strong_emotional_implications": []}
         for completion in summaries_completions
     ]
 
-    result = df.hstack(pl.DataFrame(results))
+    result = df.hstack(pl.DataFrame(results)).with_columns(
+        is_emotional=pl.col("strong_emotional_implications").list.len() > 0,
+    )
 
-    invalid_results = result.filter(pl.col("summary").is_null())
+    invalid_results = result.filter(
+        pl.col("analysis").is_null() | pl.col("summary").is_null()
+    )
 
     if invalid_results.height > 0:
         logger.warning(f"Found invalid {invalid_results.height} summaries.")

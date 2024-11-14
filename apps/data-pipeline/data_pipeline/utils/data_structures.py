@@ -1,3 +1,6 @@
+from typing import Sequence
+
+
 def flatten(xss: list[list]):
     return [x for xs in xss for x in xs]
 
@@ -23,3 +26,7 @@ def deep_merge(dict1: dict, dict2: dict) -> dict:
         else:
             merged[key] = value
     return merged
+
+
+def filter_none(xs: Sequence) -> Sequence:
+    return list(filter(lambda x: x is not None, xs))

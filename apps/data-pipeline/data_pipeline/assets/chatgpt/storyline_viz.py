@@ -46,7 +46,7 @@ def get_categorization_prompt_sequence(input_text: str) -> list[str]:
     io_manager_key="parquet_io_manager",
     op_tags=get_k8s_vllm_config(4),
 )
-def conversation_clusters_titles(
+def storyiline_viz(
     context: AssetExecutionContext,
     gemma27b: BaseLlmResource,
     conversations_clusters: pl.DataFrame,
