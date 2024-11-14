@@ -67,7 +67,9 @@ class RemoteLlmResource(BaseLlmResource):
                     json=payload,
                     headers={
                         "Content-Type": "application/json",
+                        # We need both because of inconsistencies across providers
                         "Authorization": f"Bearer {self.llm_config.api_key}",
+                        "api-key": self.llm_config.api_key,
                     },
                 )
 

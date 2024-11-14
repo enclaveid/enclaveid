@@ -29,13 +29,17 @@ class ConversationsClustersConfig(Config):
             """
             Cosine distance threshold for merging similar activities into broader categories.
             If None, coarse_n_clusters must be provided.
-            Cosine 0.3 is a good default for broad categorization. (technology, entertainment, etc.)
+            Takes priority over coarse_n_clusters.
             """
         ).strip(),
     )
     coarse_n_clusters: Optional[int] = Field(
-        default=20,
-        description="Number of clusters to merge into. If None, coarse_recluster_threshold must be provided.",
+        default=50,
+        description=dedent(
+            """
+            Number of clusters to merge into. If None, coarse_recluster_threshold must be provided.
+            """
+        ).strip(),
     )
 
 

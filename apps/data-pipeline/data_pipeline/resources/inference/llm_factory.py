@@ -25,6 +25,6 @@ def create_llm_resource(config: LlmConfig) -> BaseLlmResource | None:
             f"Remote LLM config not found for model: {config.colloquial_model_name}"
         )
 
-        # TODO: Return fallback resource (e.g. gemini 1.5 flash)
+        # TODO: Return fallback resource? (e.g. gemini 1.5 flash)
     else:
         return RemoteLlmResource(llm_config=config.remote_llm_config)

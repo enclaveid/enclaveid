@@ -16,8 +16,8 @@ from data_pipeline.resources.inference.image_generator_resource import (
 from data_pipeline.resources.inference.llms.gemini_flash import gemini_flash_resource
 from data_pipeline.resources.inference.llms.gemma9b import create_gemma9b_resource
 from data_pipeline.resources.inference.llms.gemma27b import create_gemma27b_resource
-from data_pipeline.resources.inference.llms.gpt4 import (
-    create_gpt4_resource,
+from data_pipeline.resources.inference.llms.gpt4o import (
+    create_gpt4o_resource,
 )
 from data_pipeline.resources.inference.llms.llama8b import create_llama8b_resource
 from data_pipeline.resources.inference.llms.llama70b import create_llama70b_resource
@@ -43,7 +43,7 @@ resources = {
     "gemma27b": create_gemma27b_resource(),
     "gemma9b": create_gemma9b_resource(),
     "gemini_flash": gemini_flash_resource(),
-    "gpt4": create_gpt4_resource(),
+    "gpt4o": create_gpt4o_resource(),
     "image_generator": ImageGeneratorResource(),
     "llama405b": create_llama405b_resource(),
     "llama70b": create_llama70b_resource(),
