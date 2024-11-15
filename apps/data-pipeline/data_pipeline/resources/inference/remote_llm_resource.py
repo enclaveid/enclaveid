@@ -135,14 +135,8 @@ class RemoteLlmResource(BaseLlmResource):
             if not response:
                 return [], total_cost
             else:
-                conversation.append(
-                    {
-                        "role": "assistant",
-                        "content": [{"type": "text", "text": response}]
-                        if self.is_multimodal
-                        else response,
-                    }
-                )
+                conversation.append({"role": "assistant", "content": response})
+
             total_cost += cost
 
         return conversation, total_cost

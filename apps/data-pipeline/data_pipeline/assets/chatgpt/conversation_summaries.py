@@ -37,19 +37,20 @@ def get_conversation_summarization_prompt_sequence(conversation: str) -> PromptS
         #     {conversation}
         #     """
         # ).strip(),
+        # NB: do not use "user" or "assistant" in the prompt or it will throw a 500
         dedent(
             f"""
             Analyze this conversation focusing on how the questioner's action evolves in response to the new information.
 
             Format your analysis using this arrow structure:
-            user: [Starting mindset/assumption] -> assistant: [New information provided] -> user: [Processing & follow-up questions] -> assistant: [Additional information]
+            Q: [Starting mindset/assumption] -> A: [New information provided] -> Q: [Processing & follow-up questions] -> A: [Additional information]
 
             For single-question conversations, use:
-            user: [Starting mindset/assumption] -> assistant: [New information provided]
+            Q: [Starting mindset/assumption] -> A: [New information provided]
 
             Keep each segment concise while preserving key details from the user's questions and the evolution of their understanding.
             Example:
-            user: Believes refrigeration is the best storage method for tomatoes to extend their shelf life -> assistant: Explains that cold temperatures harm tomatoes' quality and recommends room temperature storage -> user: Questions the practicality of counter storage and seeks specific timeline information -> assistant: Provides concrete storage duration (5-7 days) and explains cold storage's negative effects on ripening
+            Q: Believes refrigeration is the best storage method for tomatoes to extend their shelf life -> A: Explains that cold temperatures harm tomatoes' quality and recommends room temperature storage -> Q: Questions the practicality of counter storage and seeks specific timeline information -> A: Provides concrete storage duration (5-7 days) and explains cold storage's negative effects on ripening
 
             Here is the conversation:
             {conversation}
@@ -83,7 +84,7 @@ def parse_strong_emotional_implications(text: str) -> list[str]:
         return []
 
 
-TEST_LIMIT = None if get_environment() == "LOCAL" else None
+TEST_LIMIT = 100 if get_environment() == "LOCAL" else None
 
 
 @asset(
