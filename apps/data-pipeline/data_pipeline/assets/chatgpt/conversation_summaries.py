@@ -20,22 +20,36 @@ from data_pipeline.utils.get_logger import get_logger
 # TODO: is analysis necessary?
 def get_conversation_summarization_prompt_sequence(conversation: str) -> PromptSequence:
     return [
+        # dedent(
+        #     f"""
+        #     Analyze this conversation focusing on how the questioner's thinking evolves. Specifically:
+        #     1. What does their initial framing and word choice reveal about their understanding and goals?
+        #     2. Track specific numbers, terms, or concepts they introduce, and what these suggest about their thinking
+        #     3. How do they process and adapt to each new piece of information?
+        #     4. What do their follow-up questions reveal about:
+        #         - Their previous knowledge/preparation
+        #         - Their underlying objectives
+        #         - Their problem-solving approach
+        #     5. How do their later questions connect back to their original intent?
+        #     Conclude with what they gained beyond just information - include their evolving understanding and approach.
+        #     If there the conversation has only one question, limit your answer to points 1 and 2.
+        #     Here is the conversation:
+        #     {conversation}
+        #     """
+        # ).strip(),
         dedent(
             f"""
-            Analyze this conversation focusing on how the questioner's thinking evolves. Specifically:
+            Analyze this conversation focusing on how the questioner's action evolves in response to the new information.
 
-            1. What does their initial framing and word choice reveal about their understanding and goals?
-            2. Track specific numbers, terms, or concepts they introduce, and what these suggest about their thinking
-            3. How do they process and adapt to each new piece of information?
-            4. What do their follow-up questions reveal about:
-                - Their previous knowledge/preparation
-                - Their underlying objectives
-                - Their problem-solving approach
-            5. How do their later questions connect back to their original intent?
+            Format your analysis using this arrow structure:
+            user: [Starting mindset/assumption] -> assistant: [New information provided] -> user: [Processing & follow-up questions] -> assistant: [Additional information]
 
-            Conclude with what they gained beyond just information - include their evolving understanding and approach.
+            For single-question conversations, use:
+            user: [Starting mindset/assumption] -> assistant: [New information provided]
 
-            If there the conversation has only one question, limit your answer to points 1 and 2.
+            Keep each segment concise while preserving key details from the user's questions and the evolution of their understanding.
+            Example:
+            user: Believes refrigeration is the best storage method for tomatoes to extend their shelf life -> assistant: Explains that cold temperatures harm tomatoes' quality and recommends room temperature storage -> user: Questions the practicality of counter storage and seeks specific timeline information -> assistant: Provides concrete storage duration (5-7 days) and explains cold storage's negative effects on ripening
 
             Here is the conversation:
             {conversation}
@@ -43,23 +57,14 @@ def get_conversation_summarization_prompt_sequence(conversation: str) -> PromptS
         ).strip(),
         dedent(
             """
-            Summarize your analysis as follows, alternating between user and assistant:
-            Starting Mindset/Assumptions (user) -> New Information Encounter (assistant) -> Processing & Questions (user) -> New Information Encounter (assistant) -> ... -> Evolved Understanding (user)
-
-            If the conversation has only one question, follow this format:
-            Starting Mindset/Assumptions (user) -> New Information Encounter (assistant)
-
-            Keep each item concise and to the point, but do not omit important details in the user's questions.
-            """
-        ).strip(),
-        dedent(
-            """
-            Does the topic or the tone of this conversation have strongemotional implications?
+            Does the topic or the tone of the questions have strong emotional implications?
             If so, list them as follows in chronological order:
             {{
                 "strong_emotional_implications": list[str]
             }}
-            Make sure to ground the emotional implications in the content of the conversation.
+            Each item in the list should read like a claim about the user, for example:
+            "The user places a lot of importance on finding a compatible partner."
+            Do not use conditional language in the claims.
 
             If the conversation is rather practical and not emotional, return an empty list:
             {{
@@ -93,10 +98,10 @@ TEST_LIMIT = None if get_environment() == "LOCAL" else None
 )
 async def conversation_summaries(
     context: AssetExecutionContext,
-    gemini_flash: BaseLlmResource,
+    gpt4o_mini: BaseLlmResource,
     parsed_conversations: pl.DataFrame,
 ):
-    llm = gemini_flash
+    llm = gpt4o_mini
     logger = get_logger(context)
 
     df = (
@@ -151,14 +156,18 @@ async def conversation_summaries(
 
     results = [
         {
-            "analysis": completion[-3],
+            # "analysis": completion[-3],
             "summary": completion[-2],
             "strong_emotional_implications": parse_strong_emotional_implications(
                 completion[-1]
             ),
         }
         if completion
-        else {"analysis": None, "summary": None, "strong_emotional_implications": []}
+        else {
+            # "analysis": None,
+            "summary": None,
+            "strong_emotional_implications": [],
+        }
         for completion in summaries_completions
     ]
 
@@ -166,9 +175,7 @@ async def conversation_summaries(
         is_emotional=pl.col("strong_emotional_implications").list.len() > 0,
     )
 
-    invalid_results = result.filter(
-        pl.col("analysis").is_null() | pl.col("summary").is_null()
-    )
+    invalid_results = result.filter(pl.col("summary").is_null())
 
     if invalid_results.height > 0:
         logger.warning(f"Found invalid {invalid_results.height} summaries.")

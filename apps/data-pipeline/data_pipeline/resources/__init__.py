@@ -19,6 +19,7 @@ from data_pipeline.resources.inference.llms.gemma27b import create_gemma27b_reso
 from data_pipeline.resources.inference.llms.gpt4o import (
     create_gpt4o_resource,
 )
+from data_pipeline.resources.inference.llms.gpt4o_mini import create_gpt4o_mini_resource
 from data_pipeline.resources.inference.llms.llama8b import create_llama8b_resource
 from data_pipeline.resources.inference.llms.llama70b import create_llama70b_resource
 from data_pipeline.resources.inference.llms.llama70b_nemotron import (
@@ -44,6 +45,7 @@ resources = {
     "gemma9b": create_gemma9b_resource(),
     "gemini_flash": gemini_flash_resource(),
     "gpt4o": create_gpt4o_resource(),
+    "gpt4o_mini": create_gpt4o_mini_resource(),
     "image_generator": ImageGeneratorResource(),
     "llama405b": create_llama405b_resource(),
     "llama70b": create_llama70b_resource(),

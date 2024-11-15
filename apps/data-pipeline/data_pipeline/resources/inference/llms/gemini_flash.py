@@ -41,7 +41,6 @@ openrouter_config = RemoteLlmConfig(
 gemini_flash_config = LlmConfig(
     colloquial_model_name="gemini_flash",
     remote_llm_config=openrouter_config,
-    is_multimodal=True,
 )
 
 

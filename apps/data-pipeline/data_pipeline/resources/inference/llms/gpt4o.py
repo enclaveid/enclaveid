@@ -7,6 +7,7 @@ from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
 # TODO: Implement batch https://platform.openai.com/docs/api-reference/batch
 gpt4o_config = LlmConfig(
     colloquial_model_name="gpt-4o",
+    is_multimodal=True,
     remote_llm_config=RemoteLlmConfig(
         api_key=EnvVar("AZURE_AI_GPT4O_API_KEY"),
         concurrency_limit=32,

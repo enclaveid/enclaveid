@@ -52,10 +52,12 @@ def stories_outlines(
         .with_columns(
             fine_cluster_emotions=pl.concat_str(
                 [
-                    pl.lit("- "),
+                    pl.col("coarse_cluster_label"),
+                    pl.lit(":"),
                     pl.col("fine_cluster_summary"),
                     pl.lit(":\n"),
-                    pl.col("strong_emotional_implications").list.join("\n"),
+                    pl.lit("- "),
+                    pl.col("strong_emotional_implications").list.join("\n- "),
                 ]
             )
         )

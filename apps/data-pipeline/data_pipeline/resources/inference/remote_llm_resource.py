@@ -15,6 +15,7 @@ from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
 
 class RemoteLlmResource(BaseLlmResource):
     llm_config: RemoteLlmConfig
+    is_multimodal: bool = False
 
     _client: httpx.AsyncClient = PrivateAttr()
     _retry_event: asyncio.Event = PrivateAttr(default_factory=asyncio.Event)
@@ -112,7 +113,7 @@ class RemoteLlmResource(BaseLlmResource):
     async def _get_prompt_sequence_completion(
         self, prompts_sequence: PromptSequence, conversation_id: int
     ) -> tuple[list[Dict[str, str]], float]:
-        conversation: List[Dict[str, str]] = []
+        conversation = []
         total_cost = 0.0
 
         for prompt in prompts_sequence:
@@ -121,14 +122,28 @@ class RemoteLlmResource(BaseLlmResource):
             else:
                 content = prompt
 
-            conversation.append({"role": "user", "content": content})
+            conversation.append(
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": content}]
+                    if self.is_multimodal
+                    else content,
+                }
+            )
             response, cost = await self._get_completion(conversation, conversation_id)
             self._remaining_reqs -= 1
             if not response:
                 return [], total_cost
             else:
-                conversation.append({"role": "assistant", "content": response})
-                total_cost += cost
+                conversation.append(
+                    {
+                        "role": "assistant",
+                        "content": [{"type": "text", "text": response}]
+                        if self.is_multimodal
+                        else response,
+                    }
+                )
+            total_cost += cost
 
         return conversation, total_cost
 
