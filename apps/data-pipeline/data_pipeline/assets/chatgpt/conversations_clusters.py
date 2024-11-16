@@ -59,14 +59,14 @@ def conversations_clusters(
     config: ConversationsClustersConfig,
     conversation_embeddings: pl.DataFrame,
 ) -> pl.DataFrame:
-    df = conversation_embeddings.filter(pl.col("summary_embedding").is_not_null())
+    df = conversation_embeddings.filter(pl.col("analysis_embedding").is_not_null())
 
     # Convert the embeddings column to a 2D numpy array
-    summaries_embeddings = xp.stack(df["summary_embedding"].to_list())
+    embeddings = xp.stack(df["analysis_embedding"].to_list())
 
     # Reduce the embeddings dimensions
     umap_model = UMAP(n_neighbors=15, n_components=100, min_dist=0.1, metric="cosine")
-    reduced_data = umap_model.fit_transform(summaries_embeddings)
+    reduced_data = umap_model.fit_transform(embeddings)
 
     # Move data to cpu if on gpu
     # if IS_RAPIDS:

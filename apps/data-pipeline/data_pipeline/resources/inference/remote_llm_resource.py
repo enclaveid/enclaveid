@@ -40,8 +40,8 @@ class RemoteLlmResource(BaseLlmResource):
     async def _periodic_status_printer(self) -> None:
         logger = get_dagster_logger()
         while True:
-            await asyncio.sleep(60)
             logger.info(f"Remaining requests: {self._remaining_reqs}")
+            await asyncio.sleep(60)
 
     async def _get_completion(
         self,
@@ -102,7 +102,13 @@ class RemoteLlmResource(BaseLlmResource):
                 logger.error(f"LLM completion #{conversation_id} timed out: {e}")
                 return None, 0
             except Exception as e:
-                logger.error(f"Error in LLM completion #{conversation_id}: {e}")
+                if response:
+                    logger.error(
+                        f"LLM completion #{conversation_id} returned status code {response.status_code}: {response.text}"
+                    )
+                else:
+                    logger.error(f"Error in LLM completion #{conversation_id}: {e}")
+
                 return None, 0
 
         logger.error(

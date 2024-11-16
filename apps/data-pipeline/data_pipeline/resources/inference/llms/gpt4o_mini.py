@@ -12,7 +12,7 @@ gpt4o_mini_config_azure = LlmConfig(
     is_multimodal=True,
     remote_llm_config=RemoteLlmConfig(
         api_key=EnvVar("AZURE_AI_GPT4O_MINI_API_KEY"),
-        concurrency_limit=200,
+        concurrency_limit=50,
         timeout=60 * 10,
         inference_url="https://enclaveidai2163546968.openai.azure.com/openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-08-01-preview",
         inference_config={

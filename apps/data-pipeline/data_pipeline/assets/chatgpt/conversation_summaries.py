@@ -22,17 +22,9 @@ def get_conversation_summarization_prompt_sequence(conversation: str) -> PromptS
     return [
         dedent(
             f"""
-            Analyze this conversation focusing on how the questioner's thinking evolves. Specifically:
-            1. What does their initial framing and word choice reveal about their understanding and goals?
-            2. Track specific numbers, terms, or concepts they introduce, and what these suggest about their thinking
-            3. How do they process and adapt to each new piece of information?
-            4. What do their follow-up questions reveal about:
-                - Their previous knowledge/preparation
-                - Their underlying objectives
-                - Their problem-solving approach
-            5. How do their later questions connect back to their original intent?
-            Conclude with what they gained beyond just information - include their evolving understanding and approach.
-            If there the conversation has only one question, limit your answer to points 1 and 2.
+            Briefly summarize this conversation.
+            Pay attention to the details of the questions (rather than the answers) and try to infer the questioner's motivations and goals.
+
             Here is the conversation:
             {conversation}
             """
@@ -40,11 +32,7 @@ def get_conversation_summarization_prompt_sequence(conversation: str) -> PromptS
         # NB: do not use "user" or "assistant" in the prompt or it will throw a 500
         dedent(
             """
-            Format your analysis using this arrow structure:
-            Q: [Starting mindset] -> A: [New information provided] -> Q: [Processing & follow-up questions] -> A: [Additional information]
-
-            For single-question conversations, use:
-            Q: [Starting mindset] -> A: [New information provided]
+            Now provide an essential summary of the conversation.
 
             Keep each segment concise while preserving key details from the user's questions and the evolution of their understanding.
             Example:
@@ -54,6 +42,8 @@ def get_conversation_summarization_prompt_sequence(conversation: str) -> PromptS
         dedent(
             """
             Does the topic or the tone of the questions have strong emotional implications?
+            IMPORTANT: It's likely that the conversation is rather practical so be conservative in your assessment.
+
             If so, list them as follows in chronological order:
             {{
                 "strong_emotional_implications": list[str]
@@ -62,7 +52,7 @@ def get_conversation_summarization_prompt_sequence(conversation: str) -> PromptS
             "The user places a lot of importance on finding a compatible partner."
             Do not use conditional language in the claims.
 
-            If the conversation does not imply strong emotions (like love, hate, or jealousy), return an empty list:
+            Otherwise, return an empty list:
             {{
                 "strong_emotional_implications": []
             }}
@@ -122,7 +112,7 @@ async def conversation_summaries(
         .agg(
             [
                 pl.col("datetime_conversation")
-                .str.concat("\nNEW CONVERSATION\n")
+                .str.concat("\n\n")
                 .alias("datetime_conversations"),
                 pl.col("title").first(),
                 pl.col("date").first().alias("start_date"),
