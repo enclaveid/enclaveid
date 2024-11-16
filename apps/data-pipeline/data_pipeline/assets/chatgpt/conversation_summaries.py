@@ -20,40 +20,35 @@ from data_pipeline.utils.get_logger import get_logger
 # TODO: is analysis necessary?
 def get_conversation_summarization_prompt_sequence(conversation: str) -> PromptSequence:
     return [
-        # dedent(
-        #     f"""
-        #     Analyze this conversation focusing on how the questioner's thinking evolves. Specifically:
-        #     1. What does their initial framing and word choice reveal about their understanding and goals?
-        #     2. Track specific numbers, terms, or concepts they introduce, and what these suggest about their thinking
-        #     3. How do they process and adapt to each new piece of information?
-        #     4. What do their follow-up questions reveal about:
-        #         - Their previous knowledge/preparation
-        #         - Their underlying objectives
-        #         - Their problem-solving approach
-        #     5. How do their later questions connect back to their original intent?
-        #     Conclude with what they gained beyond just information - include their evolving understanding and approach.
-        #     If there the conversation has only one question, limit your answer to points 1 and 2.
-        #     Here is the conversation:
-        #     {conversation}
-        #     """
-        # ).strip(),
-        # NB: do not use "user" or "assistant" in the prompt or it will throw a 500
         dedent(
             f"""
-            Analyze this conversation focusing on how the questioner's action evolves in response to the new information.
-
+            Analyze this conversation focusing on how the questioner's thinking evolves. Specifically:
+            1. What does their initial framing and word choice reveal about their understanding and goals?
+            2. Track specific numbers, terms, or concepts they introduce, and what these suggest about their thinking
+            3. How do they process and adapt to each new piece of information?
+            4. What do their follow-up questions reveal about:
+                - Their previous knowledge/preparation
+                - Their underlying objectives
+                - Their problem-solving approach
+            5. How do their later questions connect back to their original intent?
+            Conclude with what they gained beyond just information - include their evolving understanding and approach.
+            If there the conversation has only one question, limit your answer to points 1 and 2.
+            Here is the conversation:
+            {conversation}
+            """
+        ).strip(),
+        # NB: do not use "user" or "assistant" in the prompt or it will throw a 500
+        dedent(
+            """
             Format your analysis using this arrow structure:
-            Q: [Starting mindset/assumption] -> A: [New information provided] -> Q: [Processing & follow-up questions] -> A: [Additional information]
+            Q: [Starting mindset] -> A: [New information provided] -> Q: [Processing & follow-up questions] -> A: [Additional information]
 
             For single-question conversations, use:
-            Q: [Starting mindset/assumption] -> A: [New information provided]
+            Q: [Starting mindset] -> A: [New information provided]
 
             Keep each segment concise while preserving key details from the user's questions and the evolution of their understanding.
             Example:
-            Q: Believes refrigeration is the best storage method for tomatoes to extend their shelf life -> A: Explains that cold temperatures harm tomatoes' quality and recommends room temperature storage -> Q: Questions the practicality of counter storage and seeks specific timeline information -> A: Provides concrete storage duration (5-7 days) and explains cold storage's negative effects on ripening
-
-            Here is the conversation:
-            {conversation}
+            Q: Wonders if refrigeration is the best storage method for tomatoes to extend their shelf life -> A: Explains that cold temperatures harm tomatoes' quality and recommends room temperature storage -> Q: Questions the practicality of counter storage and seeks specific timeline information -> A: Provides concrete storage duration (5-7 days) and explains cold storage's negative effects on ripening
             """
         ).strip(),
         dedent(
@@ -67,7 +62,7 @@ def get_conversation_summarization_prompt_sequence(conversation: str) -> PromptS
             "The user places a lot of importance on finding a compatible partner."
             Do not use conditional language in the claims.
 
-            If the conversation is rather practical and not emotional, return an empty list:
+            If the conversation does not imply strong emotions (like love, hate, or jealousy), return an empty list:
             {{
                 "strong_emotional_implications": []
             }}
@@ -84,7 +79,7 @@ def parse_strong_emotional_implications(text: str) -> list[str]:
         return []
 
 
-TEST_LIMIT = 100 if get_environment() == "LOCAL" else None
+TEST_LIMIT = None if get_environment() == "LOCAL" else None
 
 
 @asset(
@@ -157,7 +152,7 @@ async def conversation_summaries(
 
     results = [
         {
-            # "analysis": completion[-3],
+            "analysis": completion[-3],
             "summary": completion[-2],
             "strong_emotional_implications": parse_strong_emotional_implications(
                 completion[-1]
@@ -165,7 +160,7 @@ async def conversation_summaries(
         }
         if completion
         else {
-            # "analysis": None,
+            "analysis": None,
             "summary": None,
             "strong_emotional_implications": [],
         }

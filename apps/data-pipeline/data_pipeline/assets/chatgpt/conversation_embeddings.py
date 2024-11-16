@@ -19,6 +19,6 @@ def conversation_embeddings(
     conversation_summaries: pl.DataFrame,
     nvembed: NVEmbedResource,
 ) -> pl.DataFrame:
-    embeddings, cost = nvembed.get_embeddings(conversation_summaries["summary"])
+    embeddings, cost = nvembed.get_embeddings(conversation_summaries["analysis"])
     context.log.info(f"Estimated cost: ${cost:.2f}")
-    return conversation_summaries.with_columns(summary_embedding=embeddings)
+    return conversation_summaries.with_columns(analysis_embedding=embeddings)

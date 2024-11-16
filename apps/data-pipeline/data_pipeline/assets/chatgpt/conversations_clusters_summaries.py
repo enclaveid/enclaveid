@@ -65,10 +65,10 @@ TEST_LIMIT = None if get_environment() == "LOCAL" else None
 )
 def conversations_clusters_summaries(
     context: AssetExecutionContext,
-    gemini_flash: BaseLlmResource,
+    gpt4o_mini: BaseLlmResource,
     conversations_clusters: pl.DataFrame,
 ) -> pl.DataFrame:
-    llm = gemini_flash
+    llm = gpt4o_mini
     logger = get_logger(context)
 
     # Filter out null titles
@@ -94,7 +94,8 @@ def conversations_clusters_summaries(
 
     # Parse fine cluster summaries (modified to use response directly)
     fine_summaries = [
-        parse_category_json(completion[-1].strip()) for completion in fine_completions
+        (parse_category_json(completion[-1].strip()) or "") if completion else ""
+        for completion in fine_completions
     ]
     fine_results = fine_grouped.with_columns(
         pl.Series(name="fine_cluster_summary", values=fine_summaries)
@@ -122,7 +123,8 @@ def conversations_clusters_summaries(
 
     # Parse coarse cluster titles (modified to use response directly)
     coarse_titles = [
-        parse_category_json(completion[-1].strip()) for completion in coarse_completions
+        (parse_category_json(completion[-1].strip()) or "") if completion else ""
+        for completion in coarse_completions
     ]
 
     # Create final results
