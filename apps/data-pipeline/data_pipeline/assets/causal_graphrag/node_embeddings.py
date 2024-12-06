@@ -1,6 +1,7 @@
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 
+from data_pipeline.constants.k8s import get_k8s_vllm_config
 from data_pipeline.consts import get_environment
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.embeddings.base_embedder_resource import (
@@ -19,6 +20,7 @@ TEST_LIMIT = 100 if get_environment() == "LOCAL" else None
         ),
     },
     io_manager_key="parquet_io_manager",
+    op_tags=get_k8s_vllm_config() if get_environment() != "LOCAL" else {},
 )
 async def node_embeddings(
     context: AssetExecutionContext,
