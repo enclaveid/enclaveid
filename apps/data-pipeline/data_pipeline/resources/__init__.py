@@ -10,6 +10,9 @@ from data_pipeline.resources.embeddings.bge_m3_resource import BGEM3Resource
 from data_pipeline.resources.embeddings.nvembed_resource import (
     NVEmbedResource,
 )
+from data_pipeline.resources.embeddings.nvembed_serverless_resource import (
+    NVEmbedServerlessResource,
+)
 from data_pipeline.resources.inference.image_generator_resource import (
     ImageGeneratorResource,
 )
@@ -41,6 +44,7 @@ from data_pipeline.resources.inference.llms.qwen32b import create_qwen32b_resour
 resources = {
     "api_db": ApiDbSession(conn_string=EnvVar("API_DATABASE_URL")),
     "nvembed": NVEmbedResource(),
+    "nvembed_serverless": NVEmbedServerlessResource(api_key=EnvVar("NVIDIA_API_KEY")),
     "bge_m3": BGEM3Resource(api_key=EnvVar("DEEPINFRA_API_KEY")),
     "gemma27b": create_gemma27b_resource(),
     "gemma9b": create_gemma9b_resource(),

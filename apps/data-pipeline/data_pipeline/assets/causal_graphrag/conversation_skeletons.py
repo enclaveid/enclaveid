@@ -20,43 +20,48 @@ def get_conversation_skeleton_prompt_sequence(conversation: str) -> PromptSequen
     return [
         # NB: do not use "user" or "assistant" in the prompt or it will throw a 500
         dedent(
-            """
-            Provide an essential summary of the conversation that preserves the user's unique perspective and thought process. Focus on capturing:
+            f"""
+Provide an essential summary of the conversation that preserves the user's unique perspective and thought process. The goal is to maintain maximum fidelity to the user's original voice while keeping the summary readable and focused.
 
-            1. User's Voice and Context
-            - Preserve direct quotes or distinctive phrasings that reveal their thought process
-            - Maintain their specific examples, analogies, or personal experiences
-            - Keep emotional markers or signs of uncertainty/confidence
+1. User's Voice and Context
+- Preserve direct quotes or distinctive phrasings that reveal their thought process
+- Maintain their specific examples, analogies, or personal experiences
+- Keep emotional markers or signs of uncertainty/confidence
 
-            2. Question Structure
-            Primary elements (preserve in detail):
-            - Personal reasoning and assumptions
-            - Specific scenarios they describe
-            - Their explicit or implicit goals
-            - Any unique terminology or frame of reference they use
+2. Question Structure and Length Handling
+For concise questions:
+- Preserve the entire question as written, maintaining all personal context and details
 
-            Secondary elements (summarize briefly):
-            - External information or context they reference
-            - Technical details not specific to their situation
-            - General background information
+For longer questions with distinct sections:
+- Preserve verbatim: The portions containing personal reasoning, experiences, or thought processes
+- Summarize only: Large blocks of external content (like pasted articles, code snippets, or reference materials)
+- Use the format: [Preserved personal content] + [Summary of external content]
 
-            3. Answer Format
-            Represent the assistant's responses concisely, focusing only on key points that influenced the user's subsequent questions.
+Example of handling a long question:
+Original question: "I've been struggling with my sourdough starter for weeks now - it just doesn't seem to rise like the ones I see online. I've tried feeding it twice a day but nothing helps. Here's the full recipe I've been following: [3 paragraphs of technical baking instructions pasted from a website]"
 
-            Format each exchange as:
-            Q at [datetime]: [Preserve detailed user voice and context] + [Brief summary of any external context]
-            A at [datetime]: [Concise summary of main response points]
+Should become:
+Q: "I've been struggling with my sourdough starter for weeks now - it just doesn't seem to rise like the ones I see online. I've tried feeding it twice a day but nothing helps" + References a standard sourdough starter recipe with twice-daily feeding instructions
 
-            Example:
-            Q at 2024-01-01 12:00: "I've always stored my tomatoes in the fridge like my mom taught me" + Asks about optimal storage methods for extending shelf life
-            A at 2024-01-01 12:01: Recommends room temperature storage instead of refrigeration
+3. Answer Format
+Represent the assistant's responses concisely, focusing only on key points that influenced the user's subsequent questions.
 
-            Q at 2024-01-01 12:01: "That seems risky - my kitchen gets really warm and I've had fruit flies before" + Asks for specific timeline guidance
-            A at 2024-01-01 12:02: Provides 5-7 day counter storage guideline with monitoring tips
+Format each exchange as:
+Q: [Complete question if concise] OR [Preserved personal content + Summarized external content]
+A: [Concise summary of main response points]
 
-            Here is the conversation:
-            {conversation}
-            """
+Examples:
+Short question:
+Q: "I've always stored my tomatoes in the fridge like my mom taught me - is this the best way to keep them fresh?"
+A: Recommends room temperature storage instead of refrigeration
+
+Long question with external content:
+Q: "My garden tomatoes are getting spots and I'm really worried about losing the whole crop. My grandfather taught me to always check the leaves first" + [Includes lengthy paste of disease identification guide from gardening website]
+A: Identifies likely early blight and suggests organic treatment options
+
+Here is the conversation:
+{conversation}
+"""
         ).strip(),
     ]
 

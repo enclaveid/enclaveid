@@ -54,6 +54,10 @@ def get_conversation_analysis_prompt_sequence(conversation: str) -> PromptSequen
             - NO: "Class action lawsuits can hold corporations accountable for actions contributing to crony capitalism"
             - YES: "The user has learned that class action lawsuits can hold corporations accountable for actions contributing to crony capitalism"
 
+            IMPORTANT: Each statement has to be self-contained, do not reference other statements:
+            - NO: "The user is frustrated from this conversation"
+            - YES: "The user is frustrated from not being able to debug the Django app"
+
             Output Format (JSON):
             [
               {{
@@ -80,58 +84,49 @@ def get_conversation_analysis_prompt_sequence(conversation: str) -> PromptSequen
         ).strip(),
         dedent(
             """
-            Let's now try to determine the causal relationships among inferrables and observables.
+Let's determine the causal relationships among inferrables (I) and observables (O).
+Inferrables represent internal states or conclusions we draw, while observables are visible actions or events we can directly see.
 
-            Rules:
-            - Temporal order matters - earlier events typically cause later ones
-            - For closely related questions, create direct observable-to-observable chains
-            - New topics or state changes should flow through inferrable statements
-            - Causation can only flow:
-               - Downward (Inferrable → Observable)
-               - Across (Observable → Observable, Inferrable → Inferrable)
-               - Never upward (Observable → Inferrable)
+Rules:
+1. Temporal order matters - earlier events typically cause later ones
+2. For closely related events, create direct observable-to-observable chains
+3. New topics or state changes should flow through inferrable statements
+4. Causation can only flow:
+   - Downward (Inferrable → Observable)
+   - Across (Observable → Observable, Inferrable → Inferrable)
+   - Never upward (Observable → Inferrable)
 
-            For example, given the following statements:
-            [O] Watching coding videos for months
-            [O] Asking how to start Python
-            [O] Asking about functions
-            [O] Asking about Python classes
-            [I] Moving from tutorials to practice
-            [I] Beginning Python journey
-            [O] Getting errors in class inheritance
-            [O] Asking about unit testing classes
-            [I] Building complex OOP project
-            [O] Asking about design patterns
-            [O] Requesting code review
+For example, consider this learning-to-cook scenario:
+[O] Watching cooking videos daily
+[I] Developing interest in cooking
+[O] Buying basic kitchen tools
+[O] Following simple recipes
+[I] Building cooking confidence
+[O] Trying recipe modifications
+[O] Sharing food pictures online
+[O] Getting positive feedback
 
-            Key Decision Points:
-            1. Basic Learning Chain:
-               - The first few Python questions (basics → functions → classes) form a direct O→O chain
-               - Why? They're closely related topics following natural progression without state change
+The causal chain would flow like this:
+[O] Watching cooking videos daily → [I] Developing interest in cooking
+[I] Developing interest in cooking → [O] Buying basic kitchen tools
+[O] Buying basic kitchen tools → [O] Following simple recipes
+[O] Following simple recipes → [I] Building cooking confidence
+[I] Building cooking confidence → [O] Trying recipe modifications
+[O] Trying recipe modifications → [O] Sharing food pictures online
 
-            2. OOP State Change:
-               - After several class-related questions, we infer a new state: "Building complex OOP project"
-               - Why? The questions shifted from learning syntax to implementation challenges
-               - This becomes a new causal background for subsequent questions
+Note that some events can have multiple causes. For example:
+[O] Getting positive feedback is caused by both:
+- [O] Sharing food pictures online → [O] Getting positive feedback
+- [I] Building cooking confidence → [O] Getting positive feedback
+(The confidence influences food quality, while sharing enables feedback)
 
-            3. Multiple Effects:
-               - The "Building complex OOP project" state causes multiple parallel observations
-               - Why? Complex projects typically generate several simultaneous learning needs
+Key principles to remember:
+1. Observable-to-observable chains work for closely related events in the same state
+2. Major state changes or topic shifts should flow through inferrable statements
+3. Multiple events can cause a single outcome
+4. Include as many statements as possible in your causal graph
 
-            4. Return to Direct Chain:
-               - Design patterns → code review is direct O→O
-               - Why? These are closely related activities within the same state
-
-            Example causal chain:
-            [I] Beginning Python journey -> [I] Moving from tutorials to practice
-            [I] Moving from tutorials to practice -> [O] Asking how to start Python
-            [O] Asking how to start Python -> [O] Asking about functions
-            [O] Asking about functions -> [O] Asking about Python classes
-            [O] Asking about Python classes -> [I] Building complex OOP project
-            [I] Building complex OOP project -> [O] Getting errors in class inheritance
-            [I] Building complex OOP project -> [O] Asking about unit testing classes
-            [I] Building complex OOP project -> [O] Asking about design patterns
-            [O] Asking about design patterns -> [O] Requesting code review
+When building your own causal chain, think about how events naturally progress and identify where state changes occur through inferrable conclusions.
             """
         ).strip(),
         # Graph structure:
@@ -194,8 +189,8 @@ TEST_LIMIT = 100 if get_environment() == "LOCAL" else None
 @asset(
     partitions_def=user_partitions_def,
     ins={
-        "parsed_conversations": AssetIn(
-            key=["parsed_conversations"],
+        "conversation_skeletons": AssetIn(
+            key=["conversation_skeletons"],
         ),
     },
     io_manager_key="parquet_io_manager",
@@ -203,47 +198,47 @@ TEST_LIMIT = 100 if get_environment() == "LOCAL" else None
 )
 async def conversation_claims(
     context: AssetExecutionContext,
-    gemini_flash: BaseLlmResource,
-    parsed_conversations: pl.DataFrame,
+    gemini_pro: BaseLlmResource,
+    conversation_skeletons: pl.DataFrame,
 ):
-    llm = gemini_flash
+    llm = gemini_pro
     logger = get_logger(context)
 
     df = (
-        parsed_conversations.sort("date", "time")
-        .with_columns(
-            pl.concat_str(
-                [
-                    pl.col("date"),
-                    pl.lit(" at "),
-                    pl.col("time"),
-                    pl.lit("\n QUESTION: "),
-                    pl.col("question"),
-                    pl.lit("\n ANSWER: "),
-                    pl.col("answer"),
-                ],
-            ).alias("datetime_conversation"),
-            pl.struct([pl.col("date"), pl.col("time"), pl.col("question")]).alias(
-                "datetime_question"
-            ),
-        )
-        .group_by("conversation_id")
-        .agg(
-            [
-                pl.col("datetime_conversation")
-                .str.concat("\n\n")
-                .alias("datetime_conversations"),
-                pl.col("title").first(),
-                pl.col("date").first().alias("start_date"),
-                pl.col("time").first().alias("start_time"),
-                pl.col("datetime_question").alias("datetime_questions"),
-            ]
-        )
-        .sort("start_date", "start_time")
+        conversation_skeletons
+        # .sort("date", "time").with_columns(
+        #     pl.concat_str(
+        #         [
+        #             pl.col("date"),
+        #             pl.lit(" at "),
+        #             pl.col("time"),
+        #             pl.lit("\n QUESTION: "),
+        #             pl.col("question"),
+        #             pl.lit("\n ANSWER: "),
+        #             pl.col("answer"),
+        #         ],
+        #     ).alias("datetime_conversation"),
+        #     pl.struct([pl.col("date"), pl.col("time"), pl.col("question")]).alias(
+        #         "datetime_question"
+        #     ),
+        # )
+        # .group_by("conversation_id")
+        # .agg(
+        #     [
+        #         pl.col("datetime_conversation")
+        #         .str.concat("\n\n")
+        #         .alias("datetime_conversations"),
+        #         pl.col("title").first(),
+        #         pl.col("date").first().alias("start_date"),
+        #         pl.col("time").first().alias("start_time"),
+        #         pl.col("datetime_question").alias("datetime_questions"),
+        #     ]
+        # )
+        # .sort("start_date", "start_time")
     ).slice(0, TEST_LIMIT)
 
     prompt_sequences = [
-        get_conversation_analysis_prompt_sequence(row["datetime_conversations"])
+        get_conversation_analysis_prompt_sequence(row["skeleton"])
         for row in df.to_dicts()
     ]
 
@@ -261,8 +256,8 @@ async def conversation_claims(
 
     results = [
         {
-            **parse_analysis_results(completion[-3]),
-            "causal_relationships": repair_json(completion[-1]),
+            **parse_analysis_results(completion[0]),
+            "causal_relationships": repair_json(completion[-1], return_objects=True),
         }
         if completion
         else {
@@ -284,4 +279,10 @@ async def conversation_claims(
     result = result.join(invalid_results, on="conversation_id", how="anti")
 
     # TODO: why are there nulls?
-    return result.filter(pl.col("datetime_conversations").is_not_null())
+    filtered_result = result.filter(pl.col("datetime_conversations").is_not_null())
+
+    # Output:
+    # ... | speculatives              | inferrables               | observables               | causal_relationships
+    # ----|---------------------------|---------------------------|---------------------------|-----------------------
+    # ... | List[{description,label}] | List[{description,label}] | List[{description,label}] | List[{source,target}]
+    return filtered_result

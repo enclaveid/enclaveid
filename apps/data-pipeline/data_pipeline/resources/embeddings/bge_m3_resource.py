@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 import backoff
 import numpy as np
@@ -131,10 +132,23 @@ class BGEM3Resource(BaseEmbedderResource):
 
         logger.info(f"Processing {len(batches)} batches of size {batch_size}")
 
-        # Run async code in sync context
-        all_embeddings, total_tokens = asyncio.run(
-            self._process_all_batches(batches, max_concurrent)
-        )
+        # Use ThreadPoolExecutor like in remote_llm_resource.py
+        def run_async_in_thread(async_func, *args):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                return loop.run_until_complete(async_func(*args))
+            finally:
+                loop.close()
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(
+                run_async_in_thread,
+                self._process_all_batches,
+                batches,
+                max_concurrent,
+            )
+            all_embeddings, total_tokens = future.result()
 
         # Filter out None values for normalization
         valid_embeddings = [emb for emb in all_embeddings if emb is not None]

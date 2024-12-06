@@ -1,5 +1,3 @@
-import json
-
 import networkx as nx
 import polars as pl
 from dagster import (
@@ -15,17 +13,17 @@ from data_pipeline.partitions import user_partitions_def
 @asset(
     partitions_def=user_partitions_def,
     ins={
-        "conversation_claims": AssetIn(
-            key=["conversation_claims"],
+        "deduplicated_graph_raw": AssetIn(
+            key=["deduplicated_graph_raw"],
         ),
     },
     io_manager_key="parquet_io_manager",
 )
 def base_graph_manual(
     context: AssetExecutionContext,
-    conversation_claims: pl.DataFrame,
+    deduplicated_graph_raw: pl.DataFrame,
 ) -> None:
-    df = conversation_claims
+    df = deduplicated_graph_raw
     working_dir = (
         PRODUCTION_STORAGE_BUCKET / "base_graph_manual" / context.partition_key
     )
@@ -50,11 +48,11 @@ def base_graph_manual(
 
         # Parse and add edges from causal_relationships
         try:
-            edges = json.loads(row["causal_relationships"])
+            edges = row["causal_relationships"]
             for edge in edges:
                 G.add_edge(edge["source"], edge["target"])
-        except (json.JSONDecodeError, KeyError):
-            context.log.warning("Failed to parse causal relationships")
+        except Exception as e:
+            context.log.warning(f"Failed to parse causal relationships: {e}")
             continue
 
     # Create output directory if it doesn't exist
