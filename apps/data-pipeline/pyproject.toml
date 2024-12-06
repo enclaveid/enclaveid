@@ -57,6 +57,7 @@ backoff = "^2.2.1"
 hf-transfer = "^0.1.8"
 faiss-cpu = "^1.9.0"
 fast-graphrag = "^0.0.4"
+networkx = "^3.4.2"
 
 # The following are very large packages, they are cached as docker layers and shouldn't be changed often.
 # We split ML deps in two grups to avoid conflicts.
