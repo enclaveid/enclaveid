@@ -1191,30 +1191,28 @@ packaging = "*"
 
 [[package]]
 name = "fast-graphrag"
-version = "0.0.3"
+version = "0.0.4"
 description = ""
 optional = false
-python-versions = "^3.10.1"
-files = []
-develop = false
+python-versions = "<4.0,>=3.10"
+files = [
+    {file = "fast_graphrag-0.0.4-py3-none-any.whl", hash = "sha256:7cd000752028361e1907e053de01e8a9449225fd5855999a3c641917bfe0a0e1"},
+    {file = "fast_graphrag-0.0.4.tar.gz", hash = "sha256:639fd05f543558219dbd3c31c40460afe7c74317825d44d449fe5882ec530953"},
+]
 
 [package.dependencies]
-hnswlib = "^0.8.0"
-igraph = "^0.11.6"
-instructor = "^1.6.3"
-openai = "^1.52.1"
-pydantic = "^2.9.2"
-python-dotenv = "^1.0.1"
-requests = "^2.32.3"
-scikit-learn = "^1.5.2"
-scipy = "^1.14.1"
-scipy-stubs = "^1.14.1.3"
-tenacity = "^9.0.0"
-xxhash = "^3.5.0"
-
-[package.source]
-type = "directory"
-url = "../../../fast-graphrag"
+hnswlib = ">=0.8.0,<0.9.0"
+igraph = ">=0.11.6,<0.12.0"
+instructor = ">=1.6.3,<2.0.0"
+openai = ">=1.52.1,<2.0.0"
+pydantic = ">=2.9.2,<3.0.0"
+python-dotenv = ">=1.0.1,<2.0.0"
+requests = ">=2.32.3,<3.0.0"
+scikit-learn = ">=1.5.2,<2.0.0"
+scipy = ">=1.14.1,<2.0.0"
+scipy-stubs = ">=1.14.1.5,<2.0.0.0"
+tenacity = ">=9.0.0,<10.0.0"
+xxhash = ">=3.5.0,<4.0.0"
 
 [[package]]
 name = "fastapi"
@@ -5191,17 +5189,17 @@ test = ["Cython", "array-api-strict (>=2.0)", "asv", "gmpy2", "hypothesis (>=6.3
 
 [[package]]
 name = "scipy-stubs"
-version = "1.14.1.4"
-description = "Typing Stubs for SciPy"
+version = "1.14.1.5"
+description = "Precise type-hints for all of SciPy"
 optional = false
-python-versions = "<4.0,>=3.10"
+python-versions = ">=3.10"
 files = [
-    {file = "scipy_stubs-1.14.1.4-py3-none-any.whl", hash = "sha256:137523d0eb4936ec249ddb01a3afd172ae8ad52cef9fddffc913a32a5f71c412"},
-    {file = "scipy_stubs-1.14.1.4.tar.gz", hash = "sha256:215a2c9d865e355a5c5cc088ec6d87f489a584396256113d72d7d24cfb0e889c"},
+    {file = "scipy_stubs-1.14.1.5-py3-none-any.whl", hash = "sha256:ca927802cae4c83e75b2a4b8c41271f36ebe0d928cee25ef3968e143b1793a75"},
+    {file = "scipy_stubs-1.14.1.5.tar.gz", hash = "sha256:66c160c6b72b1406edc7827879ef25ea81dc3d95ab7e4af3a2de836f27c26ce6"},
 ]
 
 [package.dependencies]
-optype = ">=0.7.1"
+optype = ">=0.7.3"
 
 [package.extras]
 scipy = ["scipy (>=1.10)"]
@@ -6888,4 +6886,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "3.11.7"
-content-hash = "ffd6bfb74f1d7baae9d26587af37879937c3d48d62c65ce27693f1cd4f20e3dc"
+content-hash = "bedd0a54a417a6c539d4f41b4b5470eea949b4efd78b6c76e74e87b62891df17"
