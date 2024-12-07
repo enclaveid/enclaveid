@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Set, Tuple
 
 import faiss
 import numpy as np
@@ -6,218 +6,220 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.utils.get_logger import get_logger
 
 DEFAULT_THRESHOLD = 0.9
 
 
-def create_node_mapping(
-    original_nodes: List[Dict[str, str]],
-    deduped_nodes: List[Dict[str, str]],
-    embeddings: List[List[float]],
-    threshold: float = DEFAULT_THRESHOLD,
-) -> Dict[str, str]:
+def find_similar_nodes(
+    embeddings: List[List[float]], threshold: float = DEFAULT_THRESHOLD
+) -> List[Tuple[int, List[Tuple[int, float]]]]:
     """
-    Creates a mapping from original node labels to their deduplicated versions using
-    cosine similarity between embeddings.
+    Performs a single FAISS similarity search and returns all similar node pairs.
 
-    The cosine similarity between two vectors a and b is:
-    cos(θ) = (a · b) / (||a|| ||b||)
-
-    When vectors are L2-normalized, their dot product directly gives cosine similarity
-    because ||a|| = ||b|| = 1, so cos(θ) = a · b
+    Returns:
+        List of tuples containing (node_idx, [(similar_node_idx, similarity_score)])
     """
-    if not embeddings or not original_nodes:
-        return {node["label"]: node["label"] for node in original_nodes}
+    if not embeddings:
+        return []
 
-    # Convert embeddings to numpy array
     embeddings_array = np.array(embeddings, dtype=np.float32)
-
-    # L2 normalize the embeddings - this ensures dot product equals cosine similarity
     faiss.normalize_L2(embeddings_array)
 
-    # Create FAISS index for normalized vectors
     dimension = embeddings_array.shape[1]
     index = faiss.IndexFlatIP(dimension)
     index.add(embeddings_array)
 
     # Search for similar nodes
-    # We use embeddings_array as queries against itself
-    similarities, indices = index.search(embeddings_array, k=min(len(embeddings), 5))
+    k = min(len(embeddings), 20)
+    similarities, indices = index.search(embeddings_array, k=k)
 
-    # Create mapping using similarity scores
-    mapping = {}
-    for i, (node, sim_scores, idx_list) in enumerate(
-        zip(original_nodes, similarities, indices)
-    ):
-        original_label = node["label"]
-
-        # Find most similar deduped node above threshold
-        # Note: After L2 normalization, similarities will be in [-1, 1]
-        # with 1 being most similar (parallel vectors)
-        mapped = False
-        for j, sim in zip(idx_list, sim_scores):
-            if j != i and sim >= threshold:  # Skip self-matches
-                target_idx = min(j, len(deduped_nodes) - 1)
-                mapping[original_label] = deduped_nodes[target_idx]["label"]
-                mapped = True
-                break
-
-        # If no similar nodes found above threshold, map to self
-        if not mapped:
-            mapping[original_label] = original_label
-
-    return mapping
-
-
-def merge_similar_nodes(
-    nodes: List[Dict[str, str]],
-    embeddings: List[List[float]],
-    threshold: float = DEFAULT_THRESHOLD,
-) -> List[Dict[str, str]]:
-    """
-    Merges similar nodes based on cosine similarity of their embeddings.
-    Returns deduplicated list of nodes with frequency information added.
-    """
-    if not nodes or not embeddings:
-        return nodes
-
-    # Convert embeddings to numpy array
-    embeddings_array = np.array(embeddings, dtype=np.float32)
-
-    # L2 normalize embeddings
-    faiss.normalize_L2(embeddings_array)
-
-    # Create FAISS index
-    dimension = embeddings_array.shape[1]
-    index = faiss.IndexFlatIP(dimension)
-    index.add(embeddings_array)
-
-    # Search for similar nodes
-    similarities, indices = index.search(embeddings_array, k=len(embeddings))
-
-    # Track merged nodes and their frequencies
-    merged = {}
-    frequencies = {}
-
+    # Process results to find all similar pairs (both directions)
+    similar_pairs = []
     for i, (sim_scores, idx_list) in enumerate(zip(similarities, indices)):
-        if i in merged:
-            continue
+        matches = []
+        for j, sim in zip(idx_list, sim_scores):
+            if i != j and sim >= threshold:
+                matches.append((j, float(sim)))
+        similar_pairs.append((i, matches))
 
-        # Find similar nodes above threshold (skip self-matches)
-        similar_indices = [
-            j
-            for j, sim in zip(idx_list, sim_scores)
-            if j > i and sim >= threshold and j not in merged
-        ]
-
-        if similar_indices:
-            merged.update({j: i for j in similar_indices})
-            frequencies[i] = len(similar_indices) + 1
-
-    # Create deduplicated list
-    result = []
-    for i, node in enumerate(nodes):
-        if i in merged:
-            continue
-
-        new_node = node.copy()
-        if i in frequencies:
-            new_node[
-                "description"
-            ] = f"{node['description']} (repeated {frequencies[i]} times)"
-        result.append(new_node)
-
-    return result
+    return similar_pairs
 
 
-def adjust_causal_relationships(
-    relationships: List[Dict[str, str]], old_to_new_labels: Dict[str, str]
-) -> List[Dict[str, str]]:
-    result = []
-    seen = set()
+def build_merge_groups(
+    similar_pairs: List[Tuple[int, List[Tuple[int, float]]]],
+    nodes: List[Dict[str, str]],
+) -> List[Set[str]]:
+    """
+    Builds groups of nodes that should be merged together, considering transitive relationships.
+    """
+    # Create initial groups using Union-Find data structure
+    parent = {node["label"]: node["label"] for node in nodes}
+    rank = {node["label"]: 0 for node in nodes}
 
-    for rel in relationships:
-        if "source" not in rel or "target" not in rel:
-            continue
+    def find(x: str) -> str:
+        if parent[x] != x:
+            parent[x] = find(parent[x])
+        return parent[x]
 
-        # Map the source and target to their new labels if they exist in old_to_new_labels
-        source = old_to_new_labels.get(rel["source"], rel["source"])
-        target = old_to_new_labels.get(rel["target"], rel["target"])
+    def union(x: str, y: str):
+        px, py = find(x), find(y)
+        if px == py:
+            return
+        if rank[px] < rank[py]:
+            px, py = py, px
+        parent[py] = px
+        if rank[px] == rank[py]:
+            rank[px] += 1
 
-        # Skip self-loops but keep all other valid relationships
-        if source != target:
-            key = f"{source}->{target}"
-            if key not in seen:
-                new_rel = {"source": source, "target": target}
-                result.append(new_rel)
-                seen.add(key)
+    # Group similar nodes
+    for idx, matches in similar_pairs:
+        node_label = nodes[idx]["label"]
+        for match_idx, sim in matches:
+            match_label = nodes[match_idx]["label"]
+            union(node_label, match_label)
 
-    return result
+    # Collect final groups
+    groups = {}
+    for node in nodes:
+        root = find(node["label"])
+        if root not in groups:
+            groups[root] = set()
+        groups[root].add(node["label"])
+
+    return list(groups.values())
+
+
+def merge_nodes(
+    nodes: List[Dict[str, str]], merge_groups: List[Set[str]]
+) -> Tuple[List[Dict[str, str]], Dict[str, str]]:
+    """
+    Merges nodes based on merge groups and returns merged nodes and mapping.
+    """
+    # Create mapping from old to new labels
+    label_mapping = {}
+    for group in merge_groups:
+        representative = min(group)  # Use consistent selection criteria
+        for label in group:
+            label_mapping[label] = representative
+
+    # For nodes not in any group, map to themselves
+    for node in nodes:
+        if node["label"] not in label_mapping:
+            label_mapping[node["label"]] = node["label"]
+
+    # Merge nodes
+    merged_nodes = {}
+    for node in nodes:
+        new_label = label_mapping[node["label"]]
+        if new_label not in merged_nodes:
+            merged_nodes[new_label] = {
+                "label": new_label,
+                "description": node["description"],
+                "merged_nodes": [node["label"]],
+                "category": node.get("category", "unknown"),
+            }
+        else:
+            merged_nodes[new_label]["merged_nodes"].append(node["label"])
+
+    return list(merged_nodes.values()), label_mapping
 
 
 @asset(
     partitions_def=user_partitions_def,
-    ins={
-        "node_embeddings": AssetIn(
-            key=["node_embeddings"],
-        ),
-    },
+    ins={"node_embeddings": AssetIn(key=["node_embeddings"])},
     io_manager_key="parquet_io_manager",
 )
 def deduplicated_graph_raw(
     context: AssetExecutionContext,
     node_embeddings: pl.DataFrame,
 ) -> pl.DataFrame:
-    logger = get_logger(context)
-
-    # Collect all nodes and embeddings globally
+    # Collect all nodes and embeddings
     all_observables = []
     all_inferrables = []
+    all_speculatives = []
     all_observable_embeddings = []
     all_inferrable_embeddings = []
+    all_speculative_embeddings = []
+    all_relationships = []
 
     for row in node_embeddings.iter_rows(named=True):
         all_observables.extend(row["observables"])
         all_inferrables.extend(row["inferrables"])
+        all_speculatives.extend(row["speculatives"])
         all_observable_embeddings.extend(row["observables_embeddings"])
         all_inferrable_embeddings.extend(row["inferrables_embeddings"])
+        all_speculative_embeddings.extend(row["speculatives_embeddings"])
+        all_relationships.extend(row["causal_relationships"])
 
-    # Perform global deduplication
-    deduped_observables = merge_similar_nodes(
-        all_observables, all_observable_embeddings
+    # Single FAISS search for each node type
+    observable_similarities = find_similar_nodes(all_observable_embeddings)
+    inferrable_similarities = find_similar_nodes(all_inferrable_embeddings)
+    speculative_similarities = find_similar_nodes(all_speculative_embeddings)
+    # Build merge groups
+    observable_groups = build_merge_groups(observable_similarities, all_observables)
+    inferrable_groups = build_merge_groups(inferrable_similarities, all_inferrables)
+    speculative_groups = build_merge_groups(speculative_similarities, all_speculatives)
+    # Merge nodes and get mappings
+    merged_observables, obs_mapping = merge_nodes(all_observables, observable_groups)
+    merged_inferrables, inf_mapping = merge_nodes(all_inferrables, inferrable_groups)
+    merged_speculatives, spec_mapping = merge_nodes(
+        all_speculatives, speculative_groups
     )
-    deduped_inferrables = merge_similar_nodes(
-        all_inferrables, all_inferrable_embeddings
+    # Combine all nodes and mappings
+    all_nodes = merged_observables + merged_inferrables + merged_speculatives
+    combined_mapping = {**obs_mapping, **inf_mapping, **spec_mapping}
+
+    # Update relationships using combined mapping
+    final_relationships = []
+    seen_relationships = set()
+
+    for rel in all_relationships:
+        new_source = combined_mapping.get(rel["source"], rel["source"])
+        new_target = combined_mapping.get(rel["target"], rel["target"])
+
+        if new_source != new_target:  # Avoid self-loops
+            rel_key = f"{new_source}->{new_target}"
+            if rel_key not in seen_relationships:
+                final_relationships.append({"source": new_source, "target": new_target})
+                seen_relationships.add(rel_key)
+
+    # Build edge lists from final relationships
+    node_edges = {}
+    for rel in final_relationships:
+        source, target = rel["source"], rel["target"]
+        if source not in node_edges:
+            node_edges[source] = []
+        if (
+            target not in node_edges[source]
+        ):  # Fixed condition from target not in node_edges[target]
+            node_edges[source].append(target)
+
+    # Create final DataFrame
+    result = pl.DataFrame(
+        {
+            "label": [node["label"] for node in all_nodes],
+            "description": [node["description"] for node in all_nodes],
+            "merged_nodes": [node["merged_nodes"] for node in all_nodes],
+            "frequency": [len(node["merged_nodes"]) for node in all_nodes],
+            "edges": [node_edges.get(node["label"], []) for node in all_nodes],
+            "category": [
+                "observable"
+                if node["label"] in obs_mapping
+                else "inferrable"
+                if node["label"] in inf_mapping
+                else "speculative"
+                if node["label"] in spec_mapping
+                else "unknown"
+                for node in all_nodes
+            ],
+        }
     )
 
-    # Create comprehensive mappings using similarity-based approach
-    observable_mapping = create_node_mapping(
-        all_observables, deduped_observables, all_observable_embeddings
-    )
-    inferrable_mapping = create_node_mapping(
-        all_inferrables, deduped_inferrables, all_inferrable_embeddings
-    )
+    context.log.info(f"Processed {len(result)} nodes")
 
-    # Combine mappings
-    global_old_to_new = {**observable_mapping, **inferrable_mapping}
-
-    # Process each row with the global mapping
-    processed_relationships = []
-    for row in node_embeddings.iter_rows(named=True):
-        adjusted_relationships = adjust_causal_relationships(
-            row["causal_relationships"], global_old_to_new
-        )
-        processed_relationships.append(adjusted_relationships)
-
-    # Create the result DataFrame
-    result = node_embeddings.with_columns(
-        [
-            pl.Series("observables", [deduped_observables] * len(node_embeddings)),
-            pl.Series("inferrables", [deduped_inferrables] * len(node_embeddings)),
-            pl.Series("causal_relationships", processed_relationships),
-        ]
-    )
-
-    logger.info(f"Processed {len(result)} conversations")
+    # label | description | merged_nodes | edges   | category
+    # ------|-------------|--------------|---------|---------
+    # node1 | desc1       | [node2]      | [node2] | observable
+    # node2 | desc2       | [node3]      | [node3] | inferrable
+    # ...
     return result

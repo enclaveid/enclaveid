@@ -66,7 +66,7 @@ Here is the conversation:
     ]
 
 
-TEST_LIMIT = 100 if get_environment() == "LOCAL" else None
+TEST_LIMIT = 300 if get_environment() == "LOCAL" else None
 
 
 @asset(

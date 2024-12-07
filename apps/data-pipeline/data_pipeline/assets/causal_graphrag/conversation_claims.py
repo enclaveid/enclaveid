@@ -183,7 +183,7 @@ def parse_analysis_results(text: str) -> dict:
         return {"speculatives": [], "inferrables": [], "observables": []}
 
 
-TEST_LIMIT = 100 if get_environment() == "LOCAL" else None
+TEST_LIMIT = None if get_environment() == "LOCAL" else None
 
 
 @asset(
