@@ -1,9 +1,10 @@
 import os
+from typing import Literal
 
 from upath import UPath
 
 
-def get_environment() -> str:
+def get_environment() -> Literal["LOCAL", "BRANCH", "PROD"]:
     if os.getenv("DAGSTER_CLOUD_IS_BRANCH_DEPLOYMENT", "") == "1":
         return "BRANCH"
     if os.getenv("DAGSTER_CLOUD_DEPLOYMENT_NAME", "") == "prod":
