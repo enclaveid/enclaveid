@@ -9,7 +9,7 @@ from data_pipeline.resources.embeddings.base_embedder_resource import (
 )
 from data_pipeline.utils.get_logger import get_logger
 
-TEST_LIMIT = 100 if get_environment() == "LOCAL" else None
+TEST_LIMIT = None if get_environment() == "LOCAL" else None
 
 
 @asset(
@@ -27,9 +27,14 @@ async def node_embeddings(
     nvembed: BaseEmbedderResource,
     conversation_claims: pl.DataFrame,
 ) -> pl.DataFrame:
+    embedder = nvembed
     logger = get_logger(context)
     result = conversation_claims.slice(0, TEST_LIMIT).clone()
-    categories = ["speculatives", "inferrables", "observables"]
+    categories = [
+        # "speculatives",
+        "inferrables",
+        "observables",
+    ]
 
     # Convert to Python dictionaries for easier processing
     rows = result.to_dicts()
@@ -55,7 +60,7 @@ async def node_embeddings(
 
     # Get all embeddings in one batch if we have any descriptions
     if all_descriptions:
-        all_embeddings, total_cost = nvembed.get_embeddings(
+        all_embeddings, total_cost = embedder.get_embeddings(
             pl.Series(name="descriptions", values=all_descriptions)
         )
         logger.info(f"Total embedding cost: ${total_cost:.2f}")

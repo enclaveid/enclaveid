@@ -22,7 +22,7 @@ llama70b_config = LlmConfig(
         concurrency_limit=200,
         timeout=60 * 5,
         inference_url="https://api.deepinfra.com/v1/openai/chat/completions",
-        inference_config={"model": "meta-llama/Meta-Llama-3.3-70B-Instruct"},
+        inference_config={"model": "meta-llama/Llama-3.3-70B-Instruct"},
         # inference_url="https://Meta-Llama-3-70B-Instruct-pbssd-serverless.eastus2.inference.ai.azure.com/v1/chat/completions",
         # inference_config={
         #     "max_tokens": 1024,

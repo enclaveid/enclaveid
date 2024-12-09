@@ -142,10 +142,10 @@ def parse_graph_edges(text: str) -> list[dict] | None:
 
 
 class ConversationClaimsConfig(RowLimitConfig):
-    row_limit = 500 if get_environment() == "LOCAL" else None
+    row_limit: int | None = 500 if get_environment() == "LOCAL" else None
 
     save_subgraphs: bool = Field(
-        default=False,
+        default=True,
         description=("Save subgraphs to disk in .graphml format for debugging."),
     )
 
@@ -178,7 +178,7 @@ async def conversation_claims(
         raw_observables_completions,
         raw_observables_cost,
     ) = llama70b.get_prompt_sequences_completions_batch(
-        [get_observables_extraction_prompt(row["skeleton"]) for row in df.to_dicts()]
+        [[get_observables_extraction_prompt(row["skeleton"])] for row in df.to_dicts()]
     )
     logger.info(f"Execution cost: ${raw_observables_cost:.2f}")
 
@@ -188,7 +188,7 @@ async def conversation_claims(
         formatted_observables_cost,
     ) = llama8b.get_prompt_sequences_completions_batch(
         [
-            get_json_formatting_prompt(raw_observables_completion[-1])
+            [get_json_formatting_prompt(raw_observables_completion[-1])]
             for raw_observables_completion in raw_observables_completions
         ]
     )
@@ -200,7 +200,7 @@ async def conversation_claims(
         raw_inferrables_cost,
     ) = llama70b.get_prompt_sequences_completions_batch(
         [
-            get_inferrables_extraction_prompt(raw_observables_completion[-1])
+            [get_inferrables_extraction_prompt(raw_observables_completion[-1])]
             for raw_observables_completion in raw_observables_completions
         ]
     )
@@ -212,7 +212,7 @@ async def conversation_claims(
         formatted_inferrables_cost,
     ) = llama8b.get_prompt_sequences_completions_batch(
         [
-            get_json_formatting_prompt(raw_inferrables_completion[-1])
+            [get_json_formatting_prompt(raw_inferrables_completion[-1])]
             for raw_inferrables_completion in raw_inferrables_completions
         ]
     )
@@ -224,10 +224,12 @@ async def conversation_claims(
         causal_relationships_cost,
     ) = llama70b.get_prompt_sequences_completions_batch(
         [
-            get_causal_relationships_extraction_prompt(
-                formatted_observables_completion[-1],
-                formatted_inferrables_completion[-1],
-            )
+            [
+                get_causal_relationships_extraction_prompt(
+                    formatted_observables_completion[-1],
+                    formatted_inferrables_completion[-1],
+                )
+            ]
             for (
                 formatted_observables_completion,
                 formatted_inferrables_completion,
@@ -296,9 +298,23 @@ async def conversation_claims(
     if config.save_subgraphs:
         working_dir.mkdir(parents=True, exist_ok=True)
         G = nx.DiGraph()
-        G.add_nodes_from(filtered_result["inferrables"].to_list())
-        G.add_nodes_from(filtered_result["observables"].to_list())
-        G.add_edges_from(filtered_result["causal_relationships"].to_list())
+
+        for nodes in filtered_result["inferrables"].to_list():
+            for node in nodes:
+                G.add_node(
+                    node["label"], type="inferrable", description=node["description"]
+                )
+
+        for nodes in filtered_result["observables"].to_list():
+            for node in nodes:
+                G.add_node(
+                    node["label"], type="observable", description=node["description"]
+                )
+
+        for edges in filtered_result["causal_relationships"].to_list():
+            for edge in edges:
+                G.add_edge(edge["source"], edge["target"])
+
         nx.write_graphml(G, working_dir / f"{context.partition_key}.graphml")
 
     # Output:
