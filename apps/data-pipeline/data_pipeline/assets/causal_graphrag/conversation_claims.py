@@ -22,7 +22,8 @@ from data_pipeline.utils.get_logger import get_logger
 def get_observables_extraction_prompt(text: str) -> str:
     return dedent(
         f"""
-          Given this Q&A conversation between a person and an AI, extract a list of contextually complete facts about the user. Limit your response to facts that are directly evident in their behavior and require no inference beyond the evidence:
+          Given this Q&A conversation between a person and an AI, extract a list of contextually complete facts about the user.
+          Limit your response to facts that are directly evident in their behavior and require no inference beyond the evidence:
           - Like reviewing security camera footage - simply stating what's there
           - Requires no interpretation, just accurate description
           - Any observer would agree on these facts
@@ -61,39 +62,83 @@ def get_observables_extraction_prompt(text: str) -> str:
     ).strip()
 
 
-# TODO refine
 def get_inferrables_extraction_prompt(text: str) -> str:
     return dedent(
         f"""
-          Given the following list of behavioral claims about a user for a topical sequence of actions, what reasonable causes for those actions can you infer?
+          Given the following list of behavioral claims about a user for a topical sequence of actions, extract a list of contextually complete facts about the user that are most likely to have caused those actions.
+          Limit your response to reasonable conclusions based on the evidence:
+          - Like a detective connecting pieces of evidence
+          - Requires domain expertise to make logical connections
+          - Most qualified observers would reach similar conclusions
+          - Add synthesized meaning beyond just restating behaviors
+
+          Format each fact as a complete, standalone statement that requires no reference to other facts or the original behaviors.
+
+          Example Input:
+          - The user needs to take a single general physics exam online and is looking for universities that offer proctored exams for a fee.
+          - The user inquired about the National Evaluation Series (NES) as a potential option for taking a physics exam.
+          - The user asked about universities that do not require course enrollment to take exams, seeking an exception to the general rule.
+          - The user expressed interest in alternatives to traditional university exams, such as CLEP and DSST, that offer college credit via subject exams.
+          - The user specifically asked about options available in Italy, seeking information on Italian equivalents to CLEP or DSST, or other alternatives like Coursera/edX courses or International Baccalaureate exams.
+
+          Example Output:
+          - The user is either currently located in Italy or planning to be in Italy when taking their physics examination.
+          - The user is pursuing formal academic credit or certification in physics, not merely seeking knowledge assessment for personal reasons.
+          - The user is not affiliated with any academic institution and is acting as an independent learner.
+          - The user requires official validation of their physics knowledge through recognized institutions.
+          - The user faces institutional or geographic barriers that prevent them from pursuing traditional physics education paths.
+
+          Note how:
+          - Each fact is contextually complete, can be red independently while still delivering complete information.
+          - The claims are high confidence and coherent, with only one interpretation possible across them
 
           {text}
         """
     ).strip()
 
 
-# TODO refine
 def get_causal_relationships_extraction_prompt(
     observables_json: str, inferrables_json: str
 ) -> str:
     return dedent(
         f"""
-          Given a list of actions and potential causes for those actions, generate the list of relevant causal relationships.
-          The causal relationships can also be cause <-> cause and action <-> action if relevant.
+          Generate a network of causal relationships between observable behaviors and contributing factors.
+          - Create chains of relationships where elements directly influence each other
+          - Multiple factors or behaviors can influence a single outcome, but prefer chains over stars
+          - Both factors and behaviors can serve as causes
+          - Factors can have causal relationships with other factors
+          - Behaviors can have causal relationships with other behaviors
 
-          Provide your answer in JSON format:
+          Example of good causal chain combining factors and behaviors:
+          NEGATIVE_PAST_EXPERIENCES -> INTENTIONAL_RELATIONSHIP_APPROACH -> WANTS_TO_ASSESS_TRAITS
+
+          IMPORTANT: Avoid creating "star schemas" where multiple nodes all point to/from a central node.
+          Instead, build chains of influence where behaviors and factors lead to each other in meaningful sequences.
+
+          Example of star schema to AVOID:
+          Factor1 -> CentralNode
+          Factor2 -> CentralNode
+          Factor3 -> CentralNode
+          Factor4 -> CentralNode
+
+          Example of good chain structure:
+          Factor1 -> Factor2 -> Behavior1 -> Behavior2
+          Factor3 -> Factor2
+          Factor4 -> Behavior1
+
+          Provide the resulting list of relationships in the following JSON format:
           [
             {{
-              "source": "label_1",
-              "target": "label_2"
+              "source": "source_label",
+              "target": "target_label",
             }},
             ...
           ]
 
-          Actions:
+          Observable Behaviors:
           {observables_json}
 
-          Causes:
+          Contributing Factors:
           {inferrables_json}
         """
     ).strip()
@@ -102,14 +147,16 @@ def get_causal_relationships_extraction_prompt(
 def get_json_formatting_prompt(text: str) -> str:
     return dedent(
         f"""
-          Given a list of statements, return a JSON object with the following schema:
+          The following text contains a list, return a JSON object with the following schema for each list item:
 
           [
             {{
               "description": "The original statement text verbatim",
-              "label": "THE_LABEL_OF_THE_STATEMENT"
+              "label": "LABEL_FOR_THE_STATEMENT_IN_SNAKE_CASE"
             }}
           ]
+
+          Here is the text to format:
           {text}
         """
     ).strip()
@@ -142,7 +189,7 @@ def parse_graph_edges(text: str) -> list[dict] | None:
 
 
 class ConversationClaimsConfig(RowLimitConfig):
-    row_limit: int | None = 500 if get_environment() == "LOCAL" else None
+    row_limit: int | None = None if get_environment() == "LOCAL" else None
 
     save_subgraphs: bool = Field(
         default=True,
