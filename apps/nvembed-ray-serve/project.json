@@ -1,0 +1,105 @@
+{
+  "name": "nvembed-ray-serve",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/nvembed-ray-serve/nvembed_ray_serve",
+  "targets": {
+    "lock": {
+      "executor": "@nxlv/python:run-commands",
+      "options": {
+        "command": "poetry lock --no-update",
+        "cwd": "apps/nvembed-ray-serve"
+      }
+    },
+    "add": {
+      "executor": "@nxlv/python:add",
+      "options": {}
+    },
+    "update": {
+      "executor": "@nxlv/python:update",
+      "options": {}
+    },
+    "remove": {
+      "executor": "@nxlv/python:remove",
+      "options": {}
+    },
+    "build": {
+      "executor": "@nxlv/python:build",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "outputPath": "apps/nvembed-ray-serve/dist",
+        "publish": false,
+        "lockedVersions": true,
+        "bundleLocalDependencies": true
+      }
+    },
+    "install": {
+      "executor": "@nxlv/python:install",
+      "options": {
+        "silent": false,
+        "args": "",
+        "cacheDir": ".cache/pypoetry",
+        "verbose": false,
+        "debug": false
+      }
+    },
+    "lint": {
+      "executor": "@nxlv/python:ruff-check",
+      "outputs": [],
+      "options": {
+        "lintFilePatterns": ["nvembed_ray_serve", "tests"]
+      }
+    },
+    "test": {
+      "executor": "@nxlv/python:run-commands",
+      "outputs": [
+        "{workspaceRoot}/reports/apps/nvembed-ray-serve/unittests",
+        "{workspaceRoot}/coverage/apps/nvembed-ray-serve"
+      ],
+      "options": {
+        "command": "poetry run pytest tests/",
+        "cwd": "apps/nvembed-ray-serve"
+      }
+    },
+    "export": {
+      "executor": "@nxlv/python:run-commands",
+      "dependsOn": ["lock"],
+      "options": {
+        "commands": [
+          "poetry export -f requirements.txt --output requirements.txt --without-hashes"
+        ],
+        "cwd": "apps/nvembed-ray-serve"
+      },
+      "cache": true,
+      "outputs": ["{projectRoot}/requirements.txt"],
+      "inputs": ["{projectRoot}/poetry.lock"]
+    },
+    "cluster:replace": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "kubectl replace --force -f cluster/ray-cluster.yaml",
+        "cwd": "apps/nvembed-ray-serve"
+      }
+    },
+    "cluster:update": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "kubectl apply -f cluster/ray-cluster.yaml",
+        "cwd": "apps/nvembed-ray-serve"
+      }
+    },
+    "cluster:build-image": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker buildx build -t enclaveid/nvembed-ray-serve:latest . --platform linux/amd64 --push -D",
+        "cwd": "apps/nvembed-ray-serve"
+      }
+    }
+  },
+  "tags": [],
+  "release": {
+    "version": {
+      "generator": "@nxlv/python:release-version"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ray-head-ingress
+  namespace: default
+  annotations:
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+    # 10m timeout for ray cluster to start up
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: '600'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '600'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '600'
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  tls:
+    - hosts:
+        - raycluster.enclaveid.com
+      secretName: raycluster-tls
+  rules:
+    - host: raycluster.enclaveid.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: enclaveid-nvembed-ray-serve-serve-svc
+                port:
+                  number: 8000
+            path: /
+            pathType: Prefix

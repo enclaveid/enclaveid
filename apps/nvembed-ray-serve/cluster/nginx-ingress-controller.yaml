@@ -1,0 +1,8 @@
+apiVersion: approuting.kubernetes.azure.com/v1alpha1
+kind: NginxIngressController
+metadata:
+  name: default
+  namespace: app-routing-system
+spec:
+  scaling:
+    minReplicas: 1 # Down from 2 so we fit everything in one node

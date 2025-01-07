@@ -1,0 +1,17 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # The ACME server URL for Let’s Encrypt’s production environment
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Your email address (used by Let’s Encrypt to notify about expiring certs)
+    email: giovanni@enclaveid.com
+    # Use DNS-01 or HTTP-01 challenges. HTTP-01 is simpler if you have public ingress.
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+      - http01:
+          ingress:
+            class: webapprouting.kubernetes.azure.com

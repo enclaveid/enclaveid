@@ -1,0 +1,104 @@
+apiVersion: ray.io/v1
+kind: RayService
+metadata:
+  name: enclaveid-nvembed-ray-serve
+spec:
+  # See for autoscaling config: https://docs.ray.io/en/latest/serve/advanced-guides/advanced-autoscaling.html
+  serveConfigV2: |
+    applications:
+      - name: nvembed_ray_serve
+        import_path: nvembed_ray_serve.main:app
+        route_prefix: "/embedding"
+        deployments:
+          - name: EmbeddingService
+            num_replicas: auto
+            autoscaling_config:
+              min_replicas: 0
+              max_replicas: 4
+              target_num_ongoing_requests_per_replica: 1
+              downscale_delay_s: 300
+              upscale_delay_s: 0
+              upscaling_factor: 999
+  rayClusterConfig:
+    rayVersion: '2.40.0'
+    enableInTreeAutoscaling: true
+    autoscalerOptions:
+      upscalingMode: Default
+      idleTimeoutSeconds: 60
+
+    #####################################
+    # Head Node Configuration
+    #####################################
+    headGroupSpec:
+      rayStartParams:
+        dashboard-host: '0.0.0.0'
+      template:
+        spec:
+          containers:
+            - name: ray-head
+              image: docker.io/enclaveid/nvembed-ray-serve:latest
+              ports:
+                - containerPort: 6379
+                  name: gcs
+                - containerPort: 8265
+                  name: dashboard
+                - containerPort: 10001
+                  name: client
+                - containerPort: 8000
+                  name: serve
+              volumeMounts:
+                - mountPath: /tmp/ray
+                  name: ray-logs
+              resources:
+                # Down from 2 to 1 to fit everything in one node
+                limits:
+                  cpu: '1'
+                  memory: '8G'
+                requests:
+                  cpu: '1'
+                  memory: '8G'
+          volumes:
+            - name: ray-logs
+              emptyDir: {}
+
+    #####################################
+    # Worker Node Configuration
+    #####################################
+    workerGroupSpecs:
+      - groupName: gpu-group
+        replicas: 0
+        minReplicas: 0
+        maxReplicas: 100
+        rayStartParams: {}
+        template:
+          spec:
+            containers:
+              - name: ray-worker
+                image: docker.io/enclaveid/nvembed-ray-serve:latest
+                resources:
+                  # Take up the entire node (slightly less than the node size)
+                  limits:
+                    nvidia.com/gpu: 1
+                    cpu: '23'
+                    memory: '200G'
+                  requests:
+                    nvidia.com/gpu: 1
+                    cpu: '23'
+                    memory: '200G'
+            tolerations:
+              - key: 'sku'
+                operator: 'Equal'
+                value: 'gpu'
+                effect: 'NoSchedule'
+              - key: 'kubernetes.azure.com/scalesetpriority'
+                operator: 'Equal'
+                value: 'spot'
+                effect: 'NoSchedule'
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: 'sku'
+                          operator: 'In'
+                          values: ['gpu']
