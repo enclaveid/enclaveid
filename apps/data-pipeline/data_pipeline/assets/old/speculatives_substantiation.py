@@ -21,7 +21,7 @@ from data_pipeline.partitions import user_partitions_def
 
 
 class SpeculativesSubstantiationConfig(Config):
-    row_limit: int | None = 1000 if get_environment() == "LOCAL" else None
+    row_limit: int | None = None if get_environment() == "LOCAL" else None
     top_k: int = Field(default=20, description="Number of similar nodes to return")
     alpha: float = Field(default=0.85, description="PageRank damping parameter")
     batch_size: int = Field(default=1000, description="Batch size for FAISS queries")

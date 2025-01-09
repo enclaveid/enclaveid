@@ -8,6 +8,7 @@ from dagster import (
 
 from data_pipeline.constants.environments import DAGSTER_STORAGE_DIRECTORY
 from data_pipeline.partitions import user_partitions_def
+from data_pipeline.utils.save_graph import save_graph
 
 
 @asset(
@@ -27,9 +28,6 @@ def final_graph(
     base_graph: pl.DataFrame,
     speculatives_causality: pl.DataFrame,
 ) -> pl.DataFrame:
-    working_dir = DAGSTER_STORAGE_DIRECTORY / "final_graph"
-    working_dir.mkdir(parents=True, exist_ok=True)
-
     # Load the base graph from GraphML
     base_graph_path = (
         DAGSTER_STORAGE_DIRECTORY / "base_graph" / f"{context.partition_key}.graphml"
@@ -57,7 +55,7 @@ def final_graph(
                     G.add_edge(row["label"], target_label)
 
     # Save the final graph
-    nx.write_graphml(G, working_dir / f"{context.partition_key}.graphml")
+    save_graph(G, context)
 
     # Convert graph to DataFrame for output
     nodes_data = []

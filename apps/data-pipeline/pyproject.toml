@@ -26,9 +26,7 @@ dagster = "^1.9.4"
 polars = "^1.17.1"
 dagster-polars = "^0.25.4"
 dagster-cloud = "^1.9.4"
-numpy = "^2.2.0"
 faiss-cpu = "^1.9.0.post1"
-lxml = "^5.3.0"                 # for networkx graphml serialization
 networkx = "^3.4.2"
 json-repair = "^0.30.3"
 universal-pathlib = "^0.2.5"
@@ -39,7 +37,11 @@ igraph = "^0.11.8"
 scikit-learn = "^1.6.0"
 pandas = "^2.2.3"
 plotext = "^5.3.2"
-umap-learn = "^0.5.7"
+lxml = "^5.3.0"                 # for networkx graphml serialization
+umap-learn = "^0.5.7"           # careful with these
+numpy = "^2.0.2"                # careful with these
+llvmlite = "^0.43.0"            # careful with these
+numba = "^0.60.0"               # careful with these
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "2.0.2"

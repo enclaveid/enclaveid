@@ -3,8 +3,8 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 from pydantic import Field
 
-from data_pipeline.constants.environments import DAGSTER_STORAGE_DIRECTORY
 from data_pipeline.partitions import user_partitions_def
+from data_pipeline.utils.save_graph import save_graph
 
 
 class GraphNodesConfig(Config):
@@ -145,10 +145,8 @@ def graph_nodes(
             )
         )
 
-    working_dir = DAGSTER_STORAGE_DIRECTORY / "graph_nodes"
     if config.save_subgraphs:
         logger.info("Saving subgraphs to disk...")
-        working_dir.mkdir(parents=True, exist_ok=True)
         G = nx.DiGraph()
 
         for row in result.to_dicts():
@@ -165,7 +163,7 @@ def graph_nodes(
                     for edge in edges:
                         G.add_edge(edge["source"], edge["target"])
 
-        nx.write_graphml(G, working_dir / f"{context.partition_key}.graphml")
+        save_graph(G, context)
 
     logger.info(f"Generated {result.height} graph nodes")
     return result

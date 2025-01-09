@@ -7,8 +7,8 @@ from dagster import (
 )
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.constants.environments import DAGSTER_STORAGE_DIRECTORY
 from data_pipeline.partitions import user_partitions_def
+from data_pipeline.utils.save_graph import save_graph
 
 
 @asset(
@@ -26,7 +26,6 @@ def base_graph(
     deduplicated_graph_w_embeddings: pl.DataFrame,
 ) -> pl.DataFrame:
     df = deduplicated_graph_w_embeddings
-    working_dir = DAGSTER_STORAGE_DIRECTORY / "base_graph"
 
     # Initialize directed graph
     G = nx.DiGraph()
@@ -50,9 +49,6 @@ def base_graph(
         for target in row["edges"]:
             G.add_edge(row["label"], target)
 
-    # Create output directory if it doesn't exist
-    working_dir.mkdir(parents=True, exist_ok=True)
-
     # Find nodes with degree 0
     isolated_nodes = [
         (
@@ -74,12 +70,7 @@ def base_graph(
     G.remove_nodes_from([node[0] for node in isolated_nodes])
 
     # Save graph in GraphML format
-    nx.write_graphml(G, working_dir / f"{context.partition_key}.graphml")
-
-    # Save reversed graph in GraphML format
-    nx.write_graphml(
-        G.reverse(), working_dir / f"{context.partition_key}_reversed.graphml"
-    )
+    save_graph(G, context)
 
     # Return a dataframe of isolated nodes and previously unassigned speculative claims
     return pl.DataFrame(

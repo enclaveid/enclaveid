@@ -9,13 +9,12 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 from json_repair import repair_json
 from pydantic import Field
-from upath import UPath
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.constants.environments import DAGSTER_STORAGE_DIRECTORY
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
 from data_pipeline.utils.expressions.relevance_period_expr import relevance_period_expr
+from data_pipeline.utils.save_graph import save_graph
 
 
 def get_causality_prompt_sequence(
@@ -191,6 +190,7 @@ async def recursive_causality(
             description=row["description"] or "",
             category=row["category"] or "",
             node_type=row["node_type"] or "",
+            frequency=row["frequency"] or "",
             relevance_period=row["relevance_period"] or "",
         )
 
@@ -236,10 +236,7 @@ async def recursive_causality(
         f"Final graph has {G.number_of_nodes()} nodes and {G.number_of_edges()} edges"
     )
 
-    # Write graph & debug data to disk
-    working_dir = DAGSTER_STORAGE_DIRECTORY / UPath(context.asset_key.path[-1])
-    working_dir.mkdir(parents=True, exist_ok=True)
-    nx.write_graphml(G, f"{working_dir}/{context.partition_key}.graphml")
+    save_graph(G, context)
 
     return (
         deduplicated_graph_w_embeddings.join(

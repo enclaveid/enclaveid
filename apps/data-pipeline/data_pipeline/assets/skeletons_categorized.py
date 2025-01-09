@@ -27,7 +27,7 @@ def get_cluster_summary_prompt_sequence(skeletons: list[str]) -> PromptSequence:
             Provide your response in this JSON structure, for example:
             {{
               "descriptive_categorization":"Main category 1 (sub categories of 1 separated by comma), Main category 2 (sub categories of 2 separated by comma), ...",
-              "personal_domain": true | false
+              "humanistic_domain": true | false
             }}
 
 
@@ -45,12 +45,12 @@ def parse_category_summary(summary: str) -> tuple[str, bool]:
         if isinstance(res, dict):
             return (
                 res.get("descriptive_categorization", None),
-                res.get("personal_domain", False),
+                res.get("humanistic_domain", False),
             )
         elif isinstance(res, list):
             return (
                 res[-1].get("descriptive_categorization", None),
-                res[-1].get("personal_domain", False),
+                res[-1].get("humanistic_domain", False),
             )
         else:
             return "", False

@@ -16,7 +16,7 @@ from data_pipeline.assets.skeleton_claims import skeleton_claims
 from data_pipeline.assets.skeletons_categorized import skeletons_categorized
 from data_pipeline.assets.skeletons_clusters import skeletons_clusters
 from data_pipeline.assets.skeletons_embeddings import skeletons_embeddings
-
+from data_pipeline.assets.speculatives_substantiation import speculatives_substantiation
 __all__ = [
     parsed_conversations,
     conversation_skeletons,
@@ -32,8 +32,8 @@ __all__ = [
     base_graph,
     recursive_causality,
     d3_viz,
+    speculatives_substantiation,
     # graph_nodes_w_daily_causality,
-    # speculatives_substantiation,
     # speculatives_causality,
     # final_graph,
     # test_query,
