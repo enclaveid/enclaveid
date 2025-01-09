@@ -32,6 +32,13 @@ class SpeculativesSubstantiationConfig(Config):
     )
 
 
+SIMILAR_NODES_METADATA = [
+    "description",
+    "category",
+    "node_type",
+]
+
+
 def create_faiss_index(graph_nodes: pl.DataFrame) -> faiss.IndexFlatIP:
     """Create and populate FAISS index from graph node embeddings."""
     embeddings = np.stack(graph_nodes.get_column("embedding").to_list())
@@ -69,9 +76,7 @@ def get_baseline_results(
             {
                 "label": node["label"],
                 "score": float(max_similarities[idx]),
-                "category": node["category"],
-                "node_type": node["node_type"],
-                "description": node["description"],
+                **{k: node[k] for k in SIMILAR_NODES_METADATA},
             }
         )
 
@@ -109,21 +114,23 @@ def calculate_personalization_vector(
 
 
 def get_scored_nodes(
-    G: ig.Graph, pagerank_scores: list[float], config: SpeculativesSubstantiationConfig
-):
+    G: ig.Graph,
+    pagerank_scores: list[float],
+    personalization: np.ndarray,
+    config: SpeculativesSubstantiationConfig,
+) -> list[dict]:
     """Get sorted scored nodes."""
     return sorted(
         [
-            (
-                v["id"],
-                v["category"],
-                v["node_type"],
-                v["description"],
-                score,
-            )
-            for v, score in zip(G.vs, pagerank_scores)
+            {
+                "label": v["id"],
+                **{k: v[k] for k in SIMILAR_NODES_METADATA},
+                "score": score,
+                "is_seed": bool(personalization[i] > 0),
+            }
+            for i, (v, score) in enumerate(zip(G.vs, pagerank_scores))
         ],
-        key=lambda x: x[-1],
+        key=lambda x: x["score"],
         reverse=True,
     )[: config.top_k]
 
@@ -146,11 +153,6 @@ def speculatives_substantiation(
     recursive_causality: pl.DataFrame,
     config: SpeculativesSubstantiationConfig,
 ) -> pl.DataFrame:
-    """
-    Restructured so that if there are multiple embeddings for a single query `label`, we
-    combine their FAISS similarities by taking the maximum similarity per graph node.
-    The rest of the PageRank logic remains similar.
-    """
     # Slice queries for debugging or limited run
     query_nodes = speculatives_query_entities_w_embeddings.slice(0, config.row_limit)
     # Only keep real nodes (non-speculative) in the graph
@@ -253,25 +255,14 @@ def speculatives_substantiation(
 
             result_dict = {}
 
-            if np.sum(personalization) == 0:
-                # Get top-k nodes sorted by similarity
-                top_k_nodes = [
-                    {
-                        "label": graph_nodes.row(idx, named=True)["label"],
-                        "description": graph_nodes.row(idx, named=True)["description"],
-                        "category": graph_nodes.row(idx, named=True)["category"],
-                        "node_type": graph_nodes.row(idx, named=True)["node_type"],
-                        "score": sim,
-                    }
-                    for idx, sim in sorted(
-                        max_similarities.items(), key=lambda x: x[1], reverse=True
-                    )[: config.top_k]
-                ]
+            if config.benchmark_baseline_rag:
+                result_dict["similar_nodes_baseline"] = baseline_similar_nodes
 
-                result_dict = {
+            if np.sum(personalization) == 0:
+                result_dict = result_dict | {
                     **curr_node,
                     "success": False,
-                    "similar_nodes": top_k_nodes,
+                    "similar_nodes": [],
                 }
             else:
                 # Run personalized PageRank
@@ -285,31 +276,15 @@ def speculatives_substantiation(
                 pagerank_time = time() - pagerank_start_time
 
                 # Sort and retrieve top-k nodes
-                scored_nodes = get_scored_nodes(G, pagerank_scores, config)
+                scored_nodes = get_scored_nodes(
+                    G, pagerank_scores, personalization, config
+                )
 
-                result_dict = {
+                result_dict = result_dict | {
                     **curr_node,
                     "success": True,
-                    "similar_nodes": [
-                        {
-                            "label": node,
-                            "score": score,
-                            "category": category,
-                            "node_type": node_type,
-                            "description": description,
-                        }
-                        for (
-                            node,
-                            category,
-                            node_type,
-                            description,
-                            score,
-                        ) in scored_nodes
-                    ],
+                    "similar_nodes": scored_nodes,
                 }
-
-            if config.benchmark_baseline_rag:
-                result_dict["similar_nodes_baseline"] = baseline_similar_nodes
 
             results.append(result_dict)
 
@@ -338,6 +313,8 @@ def speculatives_substantiation(
 
     failed_queries_count = result.filter(pl.col("success") == False).height
 
-    context.log.info(f"Failed queries: {failed_queries_count}/{result.height}.")
+    context.log.info(
+        f"Failed queries: {failed_queries_count}/{result.height} ({failed_queries_count/result.height:.1%})."
+    )
 
     return result

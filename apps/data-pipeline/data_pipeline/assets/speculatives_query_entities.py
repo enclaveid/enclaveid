@@ -5,7 +5,6 @@ from dagster import AssetExecutionContext, AssetIn, asset
 from json_repair import repair_json
 
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.batch_embedder import BatchEmbedderResource
 from data_pipeline.resources.inference.base_llm_resource import (
     BaseLlmResource,
 )
@@ -47,7 +46,6 @@ async def speculatives_query_entities(
     context: AssetExecutionContext,
     recursive_causality: pl.DataFrame,
     llama70b: BaseLlmResource,
-    batch_embedder: BatchEmbedderResource,
 ) -> pl.DataFrame:
     query_nodes = (
         recursive_causality.filter(pl.col("node_type") == "speculative")

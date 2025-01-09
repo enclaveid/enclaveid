@@ -21,6 +21,7 @@ from data_pipeline.assets.speculatives_query_entities_w_embeddings import (
     speculatives_query_entities_w_embeddings,
 )
 from data_pipeline.assets.speculatives_substantiation import speculatives_substantiation
+from data_pipeline.assets.substantiation_eval import substantiation_eval
 
 __all__ = [
     parsed_conversations,
@@ -40,4 +41,5 @@ __all__ = [
     speculatives_query_entities,
     speculatives_query_entities_w_embeddings,
     speculatives_substantiation,
+    substantiation_eval,
 ]  # type: ignore
