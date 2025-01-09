@@ -30,12 +30,24 @@ class BatchEmbedderResource(ConfigurableResource):
         api_batch_size: int | None = None,
         gpu_batch_size: int | None = None,
     ) -> Tuple[float, List[List[float]]]:
+        """
+        Get embeddings for a list of texts.
+
+        Args:
+            texts: The texts to embed
+            api_batch_size: The batch size for the API. At each given time, the API will process this many texts x4 (for each of the 4 GPUs).
+            gpu_batch_size: The batch size for the GPU. Adjust this based on the length of the input texts to avoid OOM errors.
+
+        Returns:
+            The cost of the embeddings and the embeddings
+        """
         try:
             kwargs = {}
             if gpu_batch_size is not None:
                 kwargs["gpu_batch_size"] = gpu_batch_size
+                # The API batch size should be at least as large as the GPU batch size
+                kwargs["api_batch_size"] = gpu_batch_size
 
-            # The API batch size should be at least as large as the GPU batch size
             if api_batch_size is not None:
                 kwargs["api_batch_size"] = api_batch_size
 

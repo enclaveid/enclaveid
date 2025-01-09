@@ -15,9 +15,6 @@ from pydantic import Field
 
 from data_pipeline.constants.environments import get_environment
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.inference.base_llm_resource import (
-    BaseLlmResource,
-)
 from data_pipeline.utils.get_working_dir import get_working_dir
 
 
@@ -122,7 +119,6 @@ def speculatives_substantiation(
     context: AssetExecutionContext,
     speculatives_query_entities_w_embeddings: pl.DataFrame,
     recursive_causality: pl.DataFrame,
-    llama70b: BaseLlmResource,
     config: SpeculativesSubstantiationConfig,
 ) -> pl.DataFrame:
     query_nodes = speculatives_query_entities_w_embeddings.slice(0, config.row_limit)

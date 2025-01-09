@@ -19,10 +19,14 @@ async def speculatives_query_entities_w_embeddings(
     speculatives_query_entities: pl.DataFrame,
     batch_embedder: BatchEmbedderResource,
 ) -> pl.DataFrame:
-    embeddings = await batch_embedder.get_embeddings(
-        speculatives_query_entities.get_column("seed_nodes").to_list()
+    df = speculatives_query_entities
+
+    cost, embeddings = await batch_embedder.get_embeddings(
+        df.get_column("seed_nodes").to_list(),
+        api_batch_size=32,
+        gpu_batch_size=32,
     )
 
-    return speculatives_query_entities.with_columns(
-        pl.Series(embeddings).alias("embedding")
-    )
+    context.log.info(f"Embeddings cost: ${cost:.2f}")
+
+    return df.with_columns(pl.Series(embeddings).alias("embedding"))
