@@ -1,4 +1,3 @@
-from textwrap import dedent
 from time import time
 from typing import Literal
 
@@ -12,21 +11,19 @@ from dagster import (
     Config,
     asset,
 )
-from json_repair import repair_json
 from pydantic import Field
 
 from data_pipeline.constants.environments import get_environment
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.inference.base_llm_resource import (
     BaseLlmResource,
-    PromptSequence,
 )
 from data_pipeline.utils.get_working_dir import get_working_dir
 
 
 class SpeculativesSubstantiationConfig(Config):
-    row_limit: int | None = 100 if get_environment() == "LOCAL" else None
-    top_k: int = Field(default=20, description="Number of similar nodes to return")
+    row_limit: int | None = None if get_environment() == "LOCAL" else None
+    top_k: int = Field(default=100, description="Number of similar nodes to return")
     personalization_threshold: float = Field(
         default=0.7,
         description="Similarity threshold for a node to get assigned a personalization score during PageRank",
@@ -39,31 +36,6 @@ class SpeculativesSubstantiationConfig(Config):
     direction: Literal["forward", "backward", "undirected"] = Field(
         default="undirected", description="Direction of the graph to search"
     )
-
-
-def get_seed_nodes_prompt_sequence(query_node: str) -> PromptSequence:
-    return [
-        dedent(
-            f"""
-            I want to substantiate this hypothetical claim about a user: "{query_node}"
-            Specify a list of true claims that you would need to know about the user to be able to affirm the hypothetical above.
-            Respond with an array of strings.
-            """
-        ).strip(),
-    ]
-
-
-def parse_seed_nodes(completion: str) -> list[str] | None:
-    try:
-        result = repair_json(completion, return_objects=True)
-        if result and isinstance(result, list):
-            # Ensure list is flat and contains only strings
-            if all(isinstance(item, str) for item in result):
-                return result
-            return None
-        return None
-    except Exception:
-        return None
 
 
 def create_faiss_index(graph_nodes):
@@ -85,6 +57,7 @@ def get_baseline_results(graph_nodes, batch_idx, I, D, config):
             "label": graph_nodes.row(i, named=True)["label"],
             "score": float(D[batch_idx][j]),
             "category": graph_nodes.row(i, named=True)["category"],
+            "node_type": graph_nodes.row(i, named=True)["node_type"],
             "description": graph_nodes.row(i, named=True)["description"],
             "conversation_id": graph_nodes.row(i, named=True)["conversation_id"],
         }
@@ -121,6 +94,7 @@ def get_scored_nodes(G, pagerank_scores, config):
             (
                 v["id"],
                 v["category"],
+                v["node_type"],
                 v["description"],
                 v["conversation_id"],
                 score * (1.0 / v["frequency"]),
@@ -138,19 +112,21 @@ def get_scored_nodes(G, pagerank_scores, config):
         "recursive_causality": AssetIn(
             key=["recursive_causality"],
         ),
+        "speculatives_query_entities_w_embeddings": AssetIn(
+            key=["speculatives_query_entities_w_embeddings"],
+        ),
     },
     io_manager_key="parquet_io_manager",
 )
 def speculatives_substantiation(
     context: AssetExecutionContext,
+    speculatives_query_entities_w_embeddings: pl.DataFrame,
     recursive_causality: pl.DataFrame,
     llama70b: BaseLlmResource,
     config: SpeculativesSubstantiationConfig,
 ) -> pl.DataFrame:
-    query_nodes = recursive_causality.filter(pl.col("category") == "speculative").slice(
-        0, config.row_limit
-    )
-    graph_nodes = recursive_causality.filter(pl.col("category") != "speculative")
+    query_nodes = speculatives_query_entities_w_embeddings.slice(0, config.row_limit)
+    graph_nodes = recursive_causality.filter(pl.col("node_type") != "speculative")
 
     working_dir = get_working_dir(context)
     G: ig.Graph = ig.Graph.Read_GraphML(
@@ -166,29 +142,6 @@ def speculatives_substantiation(
     label_to_idx = {
         label: idx for idx, label in enumerate(graph_nodes.get_column("label"))
     }
-
-    query_nodes = query_nodes.with_columns(
-        pl.col("description")
-        .map_elements(get_seed_nodes_prompt_sequence)
-        .alias("prompt")
-    )
-
-    context.log.info(f"Processing {len(query_nodes)} nodes...")
-
-    completions, cost = llama70b.get_prompt_sequences_completions_batch(
-        query_nodes.get_column("prompt").to_list()
-    )
-
-    context.log.info(f"Query nodes processing cost: {cost}")
-
-    seed_nodes = [
-        parse_seed_nodes(completion[-1]) if completion else None
-        for completion in completions
-    ]
-
-    query_nodes = query_nodes.drop("prompt").with_columns(
-        pl.Series(seed_nodes).alias("seed_nodes")
-    )
 
     def process_batch_pagerank(query_embeddings, node_info_list):
         batch_size = len(query_embeddings)
@@ -231,14 +184,16 @@ def speculatives_substantiation(
                     "label": node,
                     "score": score,
                     "category": category,
+                    "node_type": node_type,
                     "description": description,
                     "conversation_id": conversation_id,
                 }
-                for node, category, description, conversation_id, score in scored_nodes
+                for node, category, node_type, description, conversation_id, score in scored_nodes
             ]
 
             result_dict = {
                 "label": node_info_list[batch_idx]["label"],
+                "node_type": node_info_list[batch_idx]["node_type"],
                 "description": node_info_list[batch_idx]["description"],
                 "category": node_info_list[batch_idx]["category"],
                 "conversation_id": node_info_list[batch_idx]["conversation_id"],

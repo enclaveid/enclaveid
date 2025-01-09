@@ -45,6 +45,57 @@ class RayClusterEmbedderClient:
             self._logger.info(f"Remaining embedding requests: {self._remaining_reqs}")
             await asyncio.sleep(60)
 
+    async def _get_batch_embeddings(
+        self,
+        batch: List[str],
+        batch_id: int,
+        gpu_batch_size: int,
+    ) -> List[List[float] | None]:
+        """
+        A helper function that sends a single batch request to the server
+        and handles retries.
+        """
+        response = None
+
+        for attempt in range(self._max_retries):
+            try:
+                payload = {
+                    "inputs": batch,
+                    "normalize_embeddings": True,
+                    "batch_size": gpu_batch_size,
+                }
+
+                response = await self._client.post(
+                    self._base_url,
+                    json=payload,
+                    headers={
+                        "Content-Type": "application/json",
+                    },
+                )
+                self._remaining_reqs -= 1
+                response.raise_for_status()
+
+                result = response.json()["embeddings"]
+                return result
+
+            except Exception as e:
+                error_details = response.text if response else str(e)
+
+                self._logger.error(
+                    f"Error processing batch {batch_id} of size {len(batch)}: {error_details}"
+                )
+                if attempt < self._max_retries - 1:
+                    self._logger.info(
+                        f"Retrying batch {batch_id} (attempt {attempt + 2}/{self._max_retries})"
+                    )
+                    continue
+
+                # Max attempts reached
+                return [None] * len(batch)
+
+        # Should never reach here because of the return statements
+        return [None] * len(batch)
+
     async def get_embeddings(
         self,
         texts: List[str],
@@ -58,64 +109,32 @@ class RayClusterEmbedderClient:
             texts[i : i + api_batch_size] for i in range(0, len(texts), api_batch_size)
         ]
 
-        # Set remaining requests count to number of batches instead of texts
+        # Set remaining requests count to number of batches
         self._remaining_reqs = len(batches)
         self._status_printer_task = asyncio.create_task(self._periodic_status_printer())
 
         t0 = time.time()
 
         try:
+            # If only one batch, run it directly
+            if len(batches) == 1:
+                responses = [
+                    await self._get_batch_embeddings(batches[0], 0, gpu_batch_size)
+                ]
+            else:
+                # If more than one batch, warm up with the first batch
+                first_batch_response = await self._get_batch_embeddings(
+                    batches[0], 0, gpu_batch_size
+                )
 
-            async def get_batch_embeddings(
-                batch: List[str], batch_id: int
-            ) -> List[List[float] | None]:
-                response = None
-
-                for attempt in range(self._max_retries):
-                    try:
-                        payload = {
-                            "inputs": batch,
-                            "normalize_embeddings": True,
-                            "batch_size": gpu_batch_size,
-                        }
-
-                        response = await self._client.post(
-                            self._base_url,
-                            json=payload,
-                            headers={
-                                "Content-Type": "application/json",
-                            },
-                        )
-                        self._remaining_reqs -= 1
-                        response.raise_for_status()
-
-                        result = response.json()["embeddings"]
-
-                        # If we got a valid embeddings list
-                        return result
-
-                    except Exception as e:
-                        error_details = response.text if response else str(e)
-
-                        self._logger.error(
-                            f"Error processing batch {batch_id} of size {len(batch)}: {error_details}"
-                        )
-                        if attempt < self._max_retries - 1:
-                            self._logger.info(
-                                f"Retrying batch {batch_id} (attempt {attempt + 2}/{self._max_retries})"
-                            )
-                            continue
-
-                        # Max attempts reached
-                        return [None] * len(batch)
-
-                # Should never reach here because of return statements
-                return [None] * len(batch)
-
-            # Run requests concurrently
-            responses = await asyncio.gather(
-                *(get_batch_embeddings(batch, i) for i, batch in enumerate(batches))
-            )
+                # Then run the remaining batches in parallel
+                other_responses = await asyncio.gather(
+                    *(
+                        self._get_batch_embeddings(batches[i], i, gpu_batch_size)
+                        for i in range(1, len(batches))
+                    )
+                )
+                responses = [first_batch_response] + list(other_responses)
 
             # Combine all embeddings
             all_embeddings = []
