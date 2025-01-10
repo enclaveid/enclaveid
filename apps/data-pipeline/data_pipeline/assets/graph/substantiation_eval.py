@@ -13,7 +13,7 @@ from data_pipeline.resources.inference.base_llm_resource import (
 
 
 class SubstantiationEvalConfig(Config):
-    row_limit: int = 200
+    row_limit: int = 100
 
 
 def create_eval_prompt_sequence(query: dict) -> PromptSequence:
@@ -28,9 +28,8 @@ def create_eval_prompt_sequence(query: dict) -> PromptSequence:
     )
 
     # Randomly shuffle lists to avoid bias
-    lists = [(list_1, "A"), (list_2, "B"), (list_3, "C")]
+    lists = [list_1, list_2, list_3]
     random.shuffle(lists)
-    shuffled_lists, letters = zip(*lists)
 
     return [
         dedent(
@@ -39,27 +38,39 @@ def create_eval_prompt_sequence(query: dict) -> PromptSequence:
 
           Speculative claim: "{query['description']}"
 
-          {shuffled_lists[0]}
+          {lists[0]}
 
-          {shuffled_lists[1]}
+          {lists[1]}
 
-          {shuffled_lists[2]}
+          {lists[2]}
 
           Provide your analysis and conclude with the list number as follows:
-          {{ "best_list": "{letters[0]}"|"{letters[1]}"|"{letters[2]}" }}
+          {{
+            "best_list": "A" | "B" | "C",
+            "relevant_items_per_list": {{
+                "A": number,
+                "B": number,
+                "C": number
+            }}
+          }}
           """
         ).strip()
     ]
 
 
-def parse_eval_response(completion: str) -> int | None:
+def parse_eval_response(completion: str):
     try:
         result = repair_json(completion, return_objects=True)
-        if result and isinstance(result, dict) and "best_list" in result:
-            return result["best_list"]
-        return None
+        if (
+            result
+            and isinstance(result, dict)
+            and "best_list" in result
+            and "relevant_items_per_list" in result
+        ):
+            return (result["best_list"], result["relevant_items_per_list"])
+        return (None, None)
     except Exception:
-        return None
+        return (None, None)
 
 
 @asset(
@@ -74,10 +85,10 @@ def parse_eval_response(completion: str) -> int | None:
 def substantiation_eval(
     context: AssetExecutionContext,
     speculatives_substantiation: pl.DataFrame,
-    claude: BaseLlmResource,
+    gemini_pro: BaseLlmResource,
     config: SubstantiationEvalConfig,
 ) -> pl.DataFrame:
-    llm = claude
+    llm = gemini_pro
     # Filter for successful queries only
     successful_queries = speculatives_substantiation.filter(pl.col("success")).sample(
         n=config.row_limit
@@ -99,11 +110,11 @@ def substantiation_eval(
     completions, cost = llm.get_prompt_sequences_completions_batch(prompt_sequences)
     context.log.info(f"Evaluation cost: {cost}")
 
-    winners, analyses = zip(
+    winners, relevant_items_per_list, analyses = zip(
         *[
-            (parse_eval_response(completion[-1]), completion[-1])
+            (*parse_eval_response(completion[-1]), completion[-1])
             if completion
-            else (None, None)
+            else (None, None, None)
             for completion in completions
         ]
     )
@@ -111,6 +122,16 @@ def substantiation_eval(
     result_df = successful_queries.with_columns(
         winner=pl.Series(winners, dtype=pl.Utf8),
         analysis=pl.Series(analyses, dtype=pl.Utf8),
+        relevant_items_per_list=pl.Series(relevant_items_per_list, dtype=pl.Struct),
+        similar_nodes=pl.col("similar_nodes").map_elements(
+            lambda x: [node["description"] for node in x]
+        ),
+        similar_nodes_baseline=pl.col("similar_nodes_baseline").map_elements(
+            lambda x: [node["description"] for node in x]
+        ),
+        similar_nodes_baseline_no_prep=pl.col(
+            "similar_nodes_baseline_no_prep"
+        ).map_elements(lambda x: [node["description"] for node in x]),
     )
 
     # Log summary statistics

@@ -53,15 +53,9 @@ def get_baseline_results(
     max_similarities: dict[int, float],
     config: SpeculativesSubstantiationConfig,
 ):
-    """Get baseline RAG results if enabled.
-
-    Instead of a direct FAISS top_k (for a single embedding),
-    we use the `max_similarities` dictionary: node_idx -> similarity.
-    We’ll select the top_k nodes by similarity.
     """
-    if not config.benchmark_baseline_rag:
-        return None
-
+    Get baseline RAG results by sorting nodes according to `max_similarities` (i.e., top_k).
+    """
     # Sort node indices by max similarity
     top_node_indices = sorted(
         max_similarities.keys(),
@@ -90,17 +84,9 @@ def calculate_personalization_vector(
     vertex_indices: np.ndarray,
     config: SpeculativesSubstantiationConfig,
 ):
-    """Calculate personalization vector for PageRank using the aggregated (max) similarities.
-
-    `max_similarities` is a dict of {graph_node_index_in_faiss: similarity}.
-    """
+    """Calculate personalization vector for PageRank using the aggregated (max) similarities."""
     personalization = np.zeros(len(G.vs))
 
-    # For each vertex in the graph, figure out which row in graph_nodes it corresponds to.
-    # The array `label_indices` tells us which index of graph_nodes each vertex maps to.
-    # If label_indices[v] == -1, that vertex doesn't match anything in graph_nodes.
-    # If label_indices[v] != -1, it's the row in graph_nodes that vertex corresponds to.
-    # We see if that row is in our max_similarities dictionary.
     for v_idx in range(len(G.vs)):
         graph_node_row_idx = label_indices[v_idx]
         if graph_node_row_idx in max_similarities:
@@ -153,8 +139,16 @@ def speculatives_substantiation(
     recursive_causality: pl.DataFrame,
     config: SpeculativesSubstantiationConfig,
 ) -> pl.DataFrame:
-    # Slice queries for debugging or limited run
+    # 1) Slice queries (query_nodes) for the main approach
     query_nodes = speculatives_query_entities_w_embeddings.slice(0, config.row_limit)
+
+    # 2) (Optional) Baseline "no prep" query nodes:
+    #    We'll grab all 'speculative' nodes (embedding must exist).
+    #    No grouping is required for these.
+    query_nodes_no_prep = recursive_causality.filter(
+        pl.col("node_type") == "speculative"
+    )
+
     # Only keep real nodes (non-speculative) in the graph
     graph_nodes = recursive_causality.filter(pl.col("node_type") != "speculative")
 
@@ -178,7 +172,36 @@ def speculatives_substantiation(
     label_indices = np.array([label_to_idx.get(vid, -1) for vid in vertex_ids])
     vertex_indices = np.arange(len(G.vs))
 
-    # First get the speculative nodes
+    # -------------------------------------------------------------------------
+    # Precompute "similar_nodes_baseline_no_prep" for all speculative nodes
+    # (one per row) using a simple FAISS top_k approach—no grouping needed
+    # -------------------------------------------------------------------------
+    baseline_no_prep_map = {}  # label -> baseline result list
+
+    if config.benchmark_baseline_rag:
+        # Go through each speculative node
+        for row in query_nodes_no_prep.iter_rows(named=True):
+            lbl = row["label"]
+            # If there's no embedding or we already processed it, skip
+            if "embedding" not in row or lbl in baseline_no_prep_map:
+                continue
+
+            # Search in FAISS
+            D, I = index.search(np.array([row["embedding"]], dtype=np.float32), len(graph_nodes))
+            # Build a max_similarities dict with a single embedding
+            max_similarities: dict[int, float] = defaultdict(float)
+            for idx_in_faiss, sim in zip(I[0], D[0]):
+                if sim > max_similarities[idx_in_faiss]:
+                    max_similarities[idx_in_faiss] = sim
+
+            # Build the baseline top-k
+            baseline_no_prep_map[lbl] = get_baseline_results(
+                graph_nodes, max_similarities, config
+            )
+    # -------------------------------------------------------------------------
+
+    # Next: group the query_nodes for the main logic
+    #   (these are speculative nodes that come from `speculatives_query_entities_w_embeddings`)
     speculative_nodes = recursive_causality.select(
         pl.col("label"),
         pl.col("node_type"),
@@ -207,14 +230,11 @@ def speculatives_substantiation(
         f"Processing {total_labels} unique query labels in batches of {config.batch_size}..."
     )
 
-    # We will process grouped labels in "batches" as well,
-    # primarily to limit memory usage if you have many labels.
+    # Process grouped labels in "batches"
     for batch_start in range(0, total_labels, config.batch_size):
         batch_end = min(batch_start + config.batch_size, total_labels)
         batch_df = grouped_query.slice(batch_start, batch_end - batch_start)
 
-        # We won't use the older process_batch_pagerank() directly,
-        # but the logic is nearly identical.
         for row in batch_df.iter_rows(named=True):
             embeddings_list = row["embeddings"]  # all embeddings for this label
 
@@ -229,37 +249,42 @@ def speculatives_substantiation(
             # shape = (M, dimension)
             query_embeddings = np.stack(embeddings_list)
 
-            # 1) Search each of the M embeddings in FAISS
-            # 2) Collect the maximum similarity for each returned index
-            #    across all embeddings.
+            # 1) Collect the maximum similarity for each returned index across all embeddings.
             max_similarities: dict[int, float] = defaultdict(float)
 
             for emb in query_embeddings:
-                # shape(1, dim) for current embedding
                 emb_2d = emb[np.newaxis, :]
                 D, I = index.search(emb_2d.astype(np.float32), len(graph_nodes))
-                # D, I shapes: (1, k)
                 for idx_in_faiss, sim in zip(I[0], D[0]):
                     if sim > max_similarities[idx_in_faiss]:
                         max_similarities[idx_in_faiss] = sim
 
-            # If baseline is enabled, let's also build a baseline list for debug.
-            baseline_similar_nodes = get_baseline_results(
-                graph_nodes, max_similarities, config
-            )
+            # Build "similar_nodes_baseline" (original baseline) if enabled
+            baseline_similar_nodes = None
+            if config.benchmark_baseline_rag:
+                baseline_similar_nodes = get_baseline_results(
+                    graph_nodes, max_similarities, config
+                )
 
-            # Build personalization vector from these aggregated similarities
+            # Build personalization vector
             personalization = calculate_personalization_vector(
                 G, max_similarities, label_indices, vertex_indices, config
             )
 
             result_dict = {}
 
+            # If requested, add the original baseline RAG
+            # Also add the brand-new "similar_nodes_baseline_no_prep"
+            # using the map we precomputed above.
             if config.benchmark_baseline_rag:
                 result_dict["similar_nodes_baseline"] = baseline_similar_nodes
+                result_dict[
+                    "similar_nodes_baseline_no_prep"
+                ] = baseline_no_prep_map.get(row["label"], [])
 
+            # If personalization is all zeros, PageRank won't help
             if np.sum(personalization) == 0:
-                result_dict = result_dict | {
+                result_dict |= {
                     **curr_node,
                     "success": False,
                     "similar_nodes": [],
@@ -271,7 +296,7 @@ def speculatives_substantiation(
                     damping=config.alpha,
                     reset=personalization,
                     implementation="prpack",
-                    directed=False,  # ?
+                    directed=False,  # If your graph is undirected
                 )
                 pagerank_time = time() - pagerank_start_time
 
@@ -280,7 +305,7 @@ def speculatives_substantiation(
                     G, pagerank_scores, personalization, config
                 )
 
-                result_dict = result_dict | {
+                result_dict |= {
                     **curr_node,
                     "success": True,
                     "similar_nodes": scored_nodes,
@@ -293,7 +318,7 @@ def speculatives_substantiation(
         if current_time - last_log_time >= 30:
             elapsed_time = current_time - start_time
             progress = total_processed / total_labels
-            estimated_total_time = elapsed_time / progress
+            estimated_total_time = elapsed_time / progress if progress > 0 else 0
             remaining_time = estimated_total_time - elapsed_time
 
             context.log.info(
@@ -314,7 +339,8 @@ def speculatives_substantiation(
     failed_queries_count = result.filter(pl.col("success") == False).height
 
     context.log.info(
-        f"Failed queries: {failed_queries_count}/{result.height} ({failed_queries_count/result.height:.1%})."
+        f"Failed queries: {failed_queries_count}/{result.height} "
+        f"({failed_queries_count/result.height:.1%})."
     )
 
     return result
