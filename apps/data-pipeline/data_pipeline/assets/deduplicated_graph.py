@@ -38,7 +38,7 @@ def get_description_consolidation_prompt_sequence(descriptions: list[str]) -> li
 )
 async def deduplicated_graph(
     context: AssetExecutionContext,
-    llama70b: BaseLlmResource,
+    gpt4o: BaseLlmResource,
     deduplicated_graph_raw: pl.DataFrame,
 ) -> pl.DataFrame:
     logger = context.log
@@ -54,9 +54,7 @@ async def deduplicated_graph(
         for row in nodes_to_process.to_dicts()
     ]
 
-    completions, cost = llama70b.get_prompt_sequences_completions_batch(
-        prompt_sequences
-    )
+    completions, cost = gpt4o.get_prompt_sequences_completions_batch(prompt_sequences)
 
     logger.info(f"Done processing. Execution cost: ${cost:.2f}")
 

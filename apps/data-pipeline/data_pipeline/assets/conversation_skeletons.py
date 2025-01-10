@@ -109,10 +109,10 @@ TEST_LIMIT = None if get_environment() == "LOCAL" else None
 )
 async def conversation_skeletons(
     context: AssetExecutionContext,
-    llama70b: BaseLlmResource,
+    gpt4o: BaseLlmResource,
     parsed_conversations: pl.DataFrame,
 ):
-    llm = llama70b
+    llm = gpt4o
     logger = context.log
 
     df = (

@@ -11,7 +11,7 @@ gpt4o_mini_config_azure = LlmConfig(
     colloquial_model_name="gpt-4o-mini",
     is_multimodal=True,
     remote_llm_config=RemoteLlmConfig(
-        api_key=EnvVar("AZURE_AI_GPT4O_MINI_API_KEY"),
+        api_key=EnvVar("AZURE_OPENAI_API_KEY"),
         concurrency_limit=50,
         timeout=60 * 10,
         inference_url="https://enclaveidai2163546968.openai.azure.com/openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-08-01-preview",
@@ -59,7 +59,24 @@ def create_gpt4o_mini_resource() -> BaseLlmResource:
 
 
 if __name__ == "__main__":
-    resource = create_gpt4o_mini_resource()
+    import os
+    import time
+
+    import dotenv
+
+    dotenv.load_dotenv()
+
+    # Need to manaully read the api key from the env
+    test_config = gpt4o_mini_config_azure.model_copy(
+        update={
+            "remote_llm_config": gpt4o_mini_config_azure.remote_llm_config.model_copy(
+                update={"api_key": os.environ["AZURE_OPENAI_API_KEY"]}
+            )
+        }
+    )
+    resource = create_llm_resource(test_config)
     context = build_init_resource_context()
     resource.setup_for_execution(context)
+    t0 = time.time()
     print(resource.get_prompt_sequences_completions_batch([["Hi"]]))
+    print(time.time() - t0)

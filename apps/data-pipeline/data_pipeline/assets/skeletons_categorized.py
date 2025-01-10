@@ -70,7 +70,7 @@ def parse_category_summary(summary: str) -> tuple[str, bool]:
 )
 async def skeletons_categorized(
     context: AssetExecutionContext,
-    llama70b: BaseLlmResource,
+    gpt4o: BaseLlmResource,
     skeletons_clusters: pl.DataFrame,
 ) -> pl.DataFrame:
     """
@@ -113,7 +113,7 @@ async def skeletons_categorized(
     logger.info(f"Processing summaries for {len(prompt_sequences)} clusters...")
 
     # Get LLM completions
-    summaries_completions, cost = llama70b.get_prompt_sequences_completions_batch(
+    summaries_completions, cost = gpt4o.get_prompt_sequences_completions_batch(
         prompt_sequences,
     )
 

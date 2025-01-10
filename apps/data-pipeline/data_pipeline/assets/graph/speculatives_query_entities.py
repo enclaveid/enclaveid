@@ -45,7 +45,7 @@ def parse_seed_nodes(completion: str) -> list[str] | None:
 async def speculatives_query_entities(
     context: AssetExecutionContext,
     recursive_causality: pl.DataFrame,
-    llama70b: BaseLlmResource,
+    gpt4o: BaseLlmResource,
 ) -> pl.DataFrame:
     query_nodes = (
         recursive_causality.filter(pl.col("node_type") == "speculative")
@@ -63,9 +63,7 @@ async def speculatives_query_entities(
         [prompt] for prompt in query_nodes.get_column("prompt").to_list()
     ]
 
-    completions, cost = llama70b.get_prompt_sequences_completions_batch(
-        prompt_sequences
-    )
+    completions, cost = gpt4o.get_prompt_sequences_completions_batch(prompt_sequences)
 
     context.log.info(f"Query nodes processing cost: {cost}")
 

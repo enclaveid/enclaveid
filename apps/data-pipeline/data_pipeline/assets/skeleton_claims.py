@@ -260,11 +260,11 @@ class ConversationClaimsConfig(RowLimitConfig):
 async def skeleton_claims(
     context: AssetExecutionContext,
     config: ConversationClaimsConfig,
-    llama70b: BaseLlmResource,
+    gpt4o: BaseLlmResource,
     skeletons_categorized: pl.DataFrame,
 ):
     logger = context.log
-    reasoning_llm = llama70b
+    reasoning_llm = gpt4o
 
     df = (
         skeletons_categorized.with_columns(

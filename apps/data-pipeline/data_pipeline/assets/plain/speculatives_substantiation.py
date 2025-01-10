@@ -120,11 +120,11 @@ def speculatives_substantiation(
     context: AssetExecutionContext,
     deduplicated_graph_w_embeddings: pl.DataFrame,
     config: SpeculativesSubstantiationConfig,
-    llama70b: BaseLlmResource,
+    gpt4o: BaseLlmResource,
     gemini_pro: BaseLlmResource,
 ) -> pl.DataFrame:
     # Gemini is faster -> quicker iterations during development
-    llm = gemini_pro if get_environment() == "LOCAL" else llama70b
+    llm = gemini_pro if get_environment() == "LOCAL" else gpt4o
 
     query_nodes = deduplicated_graph_w_embeddings.filter(
         pl.col("node_type") == "speculative"

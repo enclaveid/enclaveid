@@ -78,12 +78,12 @@ class RecursiveCausalityConfig(RowLimitConfig):
 )
 async def recursive_causality(
     context: AssetExecutionContext,
-    llama70b: BaseLlmResource,
+    gpt4o: BaseLlmResource,
     deduplicated_graph_w_embeddings: pl.DataFrame,
     config: RecursiveCausalityConfig,
 ) -> pl.DataFrame:
     logger = context.log
-    llm = llama70b
+    llm = gpt4o
 
     # Filter and sort nodes
     nodes_df = (
