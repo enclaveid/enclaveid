@@ -30,8 +30,8 @@
     "../../dist/apps/webapp/.next/types/**/*.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts",
-    "postcss.config.js"
-  ],
+    "../../libs/ui-utils/postcss.config.js"
+, "postcss.config.js"  ],
   "exclude": [
     "node_modules",
     "jest.config.ts",

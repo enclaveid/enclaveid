@@ -1,5 +1,5 @@
-import DiscordIcon from '~icons/mdi/discord.tsx';
-import GitHubIcon from '~icons/mdi/github.tsx';
+// import DiscordIcon from '~icons/mdi/discord.tsx';
+// import GitHubIcon from '~icons/mdi/github.tsx';
 import Image from 'next/image';
 import { Logo } from './components/logo';
 import LandingVideo from './components/landing-video';
@@ -36,7 +36,7 @@ function Header() {
               rel="noopener noreferrer"
               className="text-content-secondary hover:text-content-primary"
             >
-              <DiscordIcon className="w-6 h-6" />
+              {/* <DiscordIcon className="w-6 h-6" /> */}
             </a>
             <a
               href="https://github.com/enclaveid/enclaveid"
@@ -44,7 +44,7 @@ function Header() {
               rel="noopener noreferrer"
               className="text-content-secondary hover:text-content-primary"
             >
-              <GitHubIcon className="w-6 h-6" />
+              {/* <GitHubIcon className="w-6 h-6" /> */}
             </a>
           </nav>
         </div>

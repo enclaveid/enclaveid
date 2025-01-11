@@ -1,10 +1,8 @@
-import { createGlobPatternsForDependencies } from '@nx/react/tailwind';
-import { join } from 'node:path';
-import TailwindAnimate from 'tailwindcss-animate';
+const { createGlobPatternsForDependencies } = require('@nx/react/tailwind');
+const { join } = require('node:path');
+const TailwindAnimate = require('tailwindcss-animate');
 
-import type { Config } from 'tailwindcss';
-
-export function buildConfig(appDir: string): Config {
+function buildConfig(appDir) {
   return {
     darkMode: ['class'],
     content: [
@@ -17,22 +15,18 @@ export function buildConfig(appDir: string): Config {
     theme: {
       extend: {
         colors: {
-          white: '#ffffff',
-          offwhite: '#f7f6f2',
-          brand: '#3d524d',
-          text: '#000000',
-          border: '#3d524d',
-          input: '#3d524d',
-          ring: '#3d524d',
-          background: '#ffffff',
-          foreground: '#000000',
+          border: 'hsl(var(--border))',
+          input: 'hsl(var(--input))',
+          ring: 'hsl(var(--ring))',
+          background: 'hsl(var(--background))',
+          foreground: 'hsl(var(--foreground))',
           primary: {
-            DEFAULT: '#3d524d',
-            foreground: '#ffffff',
+            DEFAULT: 'hsl(var(--primary))',
+            foreground: 'hsl(var(--primary-foreground))',
           },
           secondary: {
-            DEFAULT: '#f7f6f2',
-            foreground: '#3d524d',
+            DEFAULT: 'hsl(var(--secondary))',
+            foreground: 'hsl(var(--secondary-foreground))',
           },
           destructive: {
             DEFAULT: 'hsl(var(--destructive))',
@@ -66,12 +60,36 @@ export function buildConfig(appDir: string): Config {
           },
         },
         borderRadius: {
-          lg: '`var(--radius)`',
-          md: '`calc(var(--radius) - 2px)`',
+          lg: 'var(--radius)',
+          md: 'calc(var(--radius) - 2px)',
           sm: 'calc(var(--radius) - 4px)',
+        },
+        keyframes: {
+          'accordion-down': {
+            from: {
+              height: '0',
+            },
+            to: {
+              height: 'var(--radix-accordion-content-height)',
+            },
+          },
+          'accordion-up': {
+            from: {
+              height: 'var(--radix-accordion-content-height)',
+            },
+            to: {
+              height: '0',
+            },
+          },
+        },
+        animation: {
+          'accordion-down': 'accordion-down 0.2s ease-out',
+          'accordion-up': 'accordion-up 0.2s ease-out',
         },
       },
     },
     plugins: [TailwindAnimate],
   };
 }
+
+module.exports = { buildConfig };

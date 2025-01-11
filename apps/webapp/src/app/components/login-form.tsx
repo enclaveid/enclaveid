@@ -4,7 +4,7 @@ import { cn } from '@enclaveid/ui-utils';
 import { Button } from '@enclaveid/ui/button';
 import { Input } from '@enclaveid/ui/input';
 import { Label } from '@enclaveid/ui/label';
-import GitHubIcon from '~icons/mdi/github.tsx';
+// import GitHubIcon from '~icons/mdi/github.tsx';
 import { signIn } from 'next-auth/react';
 import { Logo } from './logo';
 
@@ -63,7 +63,7 @@ export function LoginForm({
             className="w-full"
             onClick={() => signIn('github')}
           >
-            <GitHubIcon className="w-6 h-6" />
+            {/* <GitHubIcon className="w-6 h-6" /> */}
             Continue with GitHub
           </Button>
         </div>
