@@ -1,4 +1,6 @@
-import './global.css';
+//import '../../../../libs/ui-utils/src/global.css';
+
+import '@enclaveid/ui-utils/global.css';
 
 import type { Metadata } from 'next';
 

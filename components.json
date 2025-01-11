@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": false,
+  "tailwind": {
+    "config": "libs/ui-utils/src/tailwind.config.ts",
+    "css": "libs/ui-utils/src/global.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  },
+  "aliases": {
+    "ui": "@enclaveid/ui",
+    "components": "@enclaveid/ui/components",
+    "utils": "@enclaveid/ui-utils",
+    "hooks": "@enclaveid/ui/hooks"
+  }
+}

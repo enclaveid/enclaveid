@@ -13,7 +13,15 @@
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": "."
+    "traceResolution": true,
+    "extendedDiagnostics": true,
+    "baseUrl": ".",
+    "paths": {
+      "@enclaveid/ui": ["libs/ui/src/index.ts"],
+      "@enclaveid/ui/*": ["libs/ui/src/*"],
+      "@enclaveid/ui-utils": ["libs/ui-utils/src"],
+      "@enclaveid/ui-utils/*": ["libs/ui-utils/src/*"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

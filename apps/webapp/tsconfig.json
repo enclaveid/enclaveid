@@ -19,10 +19,7 @@
         "name": "next"
       }
     ],
-    "types": ["unplugin-icons/types/react"],
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "types": ["unplugin-icons/types/react"]
   },
   "include": [
     "**/*.ts",
@@ -32,7 +29,8 @@
     "../../apps/webapp/.next/types/**/*.ts",
     "../../dist/apps/webapp/.next/types/**/*.ts",
     "next-env.d.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "postcss.config.js"
   ],
   "exclude": [
     "node_modules",

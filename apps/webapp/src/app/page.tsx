@@ -1,5 +1,5 @@
-import DiscordIcon from '~icons/mdi/discord';
-import GitHubIcon from '~icons/mdi/github';
+import DiscordIcon from '~icons/mdi/discord.tsx';
+import GitHubIcon from '~icons/mdi/github.tsx';
 import Image from 'next/image';
 import { Logo } from './components/logo';
 import LandingVideo from './components/landing-video';
