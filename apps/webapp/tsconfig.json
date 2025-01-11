@@ -19,7 +19,10 @@
         "name": "next"
       }
     ],
-    "types": ["unplugin-icons/types/react"]
+    "types": ["unplugin-icons/types/react"],
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
   "include": [
     "**/*.ts",

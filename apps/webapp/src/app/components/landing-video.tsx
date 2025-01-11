@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function Video() {
+export default function LandingVideo() {
   const [isPaused, setIsPaused] = useState(false);
 
   return (

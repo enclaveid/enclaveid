@@ -2,7 +2,7 @@ import DiscordIcon from '~icons/mdi/discord';
 import GitHubIcon from '~icons/mdi/github';
 import Image from 'next/image';
 import { Logo } from './components/logo';
-import Video from './components/video';
+import LandingVideo from './components/landing-video';
 
 export default function Index() {
   return (
@@ -74,7 +74,7 @@ function Hero() {
 
           {/* Video Container */}
           <div className="w-full md:w-1/2 mb-8 md:mb-0">
-            <Video />
+            <LandingVideo />
             <div className="relative text-center text-sm text-gray-400 mt-4">
               Click / touch to pause and unpause
             </div>
