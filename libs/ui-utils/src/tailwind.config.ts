@@ -15,6 +15,14 @@ function buildConfig(appDir) {
     theme: {
       extend: {
         colors: {
+          // TODO: Remove these and just use shadcn colors
+          // Landing page
+          white: 'hsl(var(--white))',
+          offwhite: 'hsl(var(--offwhite))',
+          brand: 'hsl(var(--brand))',
+          text: 'hsl(var(--text))',
+
+          // Shadcn
           border: 'hsl(var(--border))',
           input: 'hsl(var(--input))',
           ring: 'hsl(var(--ring))',
