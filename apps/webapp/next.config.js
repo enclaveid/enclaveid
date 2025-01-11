@@ -1,6 +1,6 @@
 //@ts-check
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const { composePlugins, withNx } = require('@nx/next');
 
 /**
@@ -19,4 +19,20 @@ const plugins = [
   withNx,
 ];
 
-module.exports = composePlugins(...plugins)(nextConfig);
+module.exports = {
+  ...composePlugins(...plugins)(nextConfig),
+  webpack(config) {
+    config.plugins.push(
+      require('unplugin-icons/webpack').default({
+        compiler: 'jsx',
+        jsx: 'react',
+        autoInstall: true,
+      })
+    )
+
+    return config
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+};

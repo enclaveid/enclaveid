@@ -22,11 +22,18 @@ from data_pipeline.resources.inference.base_llm_resource import (
 
 
 class SpeculativesSubstantiationConfig(Config):
-    row_limit: int | None = 300 if get_environment() == "LOCAL" else None
-    top_k: int = Field(default=20, description="Number of similar nodes to return")
+    row_limit: int | None = None if get_environment() == "LOCAL" else None
+    top_k: int = Field(
+        default=20,
+        description="Number of similar nodes to consider for order of substantiation",
+    )
     min_score: float | None = Field(
         default=0.7,
-        description="Minimum similarity score to consider for substantiation order",
+        description="Minimum similarity score to consider for order of substantiation",
+    )
+    min_confidence: float = Field(
+        default=0.6,
+        description="Minimum confidence score to consider for substantiation",
     )
 
 
@@ -121,10 +128,8 @@ def speculatives_substantiation(
     deduplicated_graph_w_embeddings: pl.DataFrame,
     config: SpeculativesSubstantiationConfig,
     gpt4o: BaseLlmResource,
-    gemini_pro: BaseLlmResource,
 ) -> pl.DataFrame:
-    # Gemini is faster -> quicker iterations during development
-    llm = gemini_pro if get_environment() == "LOCAL" else gpt4o
+    llm = gpt4o
 
     query_nodes = deduplicated_graph_w_embeddings.filter(
         pl.col("node_type") == "speculative"
@@ -238,7 +243,7 @@ def speculatives_substantiation(
         )
 
         # Add back to the index if the claim is supported
-        if supports[0] and confidence[0] > 0.5:
+        if supports[0] and confidence[0] > config.min_confidence:
             index.add(emb)
             indexed_nodes.append(lbl)  # Keep track of the new node's label
 
