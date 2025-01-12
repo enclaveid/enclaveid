@@ -3,11 +3,14 @@
 import json
 import sys
 import subprocess
+import os
 
 
-def read_cleanignore():
+def read_cleanignore(notebook_path):
+    directory = os.path.dirname(notebook_path)
+    cleanignore_path = os.path.join(directory, ".cleanignore")
     try:
-        with open(".cleanignore", "r") as f:
+        with open(cleanignore_path, "r") as f:
             # Read lines and remove whitespace, empty lines, and comments
             return {
                 line.strip() for line in f if line.strip() and not line.startswith("#")
@@ -22,12 +25,14 @@ def get_staged_notebooks():
         capture_output=True,
         text=True,
     )
-    ignored_files = read_cleanignore()
-    return [
-        file
-        for file in result.stdout.split("\n")
-        if file.endswith(".ipynb") and file not in ignored_files
-    ]
+    staged_files = result.stdout.split("\n")
+    notebooks = []
+    for file in staged_files:
+        if file.endswith(".ipynb"):
+            ignored_files = read_cleanignore(file)
+            if file not in ignored_files:
+                notebooks.append(file)
+    return notebooks
 
 
 def clean_notebook(file_path):
