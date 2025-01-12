@@ -5,13 +5,29 @@ import sys
 import subprocess
 
 
+def read_cleanignore():
+    try:
+        with open(".cleanignore", "r") as f:
+            # Read lines and remove whitespace, empty lines, and comments
+            return {
+                line.strip() for line in f if line.strip() and not line.startswith("#")
+            }
+    except FileNotFoundError:
+        return set()
+
+
 def get_staged_notebooks():
     result = subprocess.run(
         ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
         capture_output=True,
         text=True,
     )
-    return [file for file in result.stdout.split("\n") if file.endswith(".ipynb")]
+    ignored_files = read_cleanignore()
+    return [
+        file
+        for file in result.stdout.split("\n")
+        if file.endswith(".ipynb") and file not in ignored_files
+    ]
 
 
 def clean_notebook(file_path):
