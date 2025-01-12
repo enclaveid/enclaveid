@@ -7,20 +7,21 @@ export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 import type { NodeType } from './kyselyEnums';
 
 export type ClaimCategory = {
-  id: Generated<number>;
+  id: string;
   name: string;
   clusterLabel: number;
   isPersonal: boolean;
 };
 export type User = {
-  id: Generated<number>;
+  id: string;
   email: string;
   name: string | null;
+  apiKey: Generated<string>;
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
 };
 export type UserClaim = {
-  id: Generated<number>;
+  id: string;
   label: string;
   description: string;
   nodeType: NodeType;
@@ -28,11 +29,11 @@ export type UserClaim = {
   frequency: number;
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;
-  claimCategoryId: number;
-  userId: number;
+  claimCategoryId: string;
+  userId: string;
 };
 export type WhitelistedEmail = {
-  id: Generated<number>;
+  id: string;
   email: string;
   createdAt: Generated<Timestamp>;
   updatedAt: Timestamp;

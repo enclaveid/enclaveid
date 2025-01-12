@@ -1,12 +1,9 @@
--- CreateExtension
-CREATE EXTENSION IF NOT EXISTS "vector";
-
 -- CreateEnum
 CREATE TYPE "NodeType" AS ENUM ('Observable', 'Inferrable', 'Speculative');
 
 -- CreateTable
 CREATE TABLE "User" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "name" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -17,7 +14,7 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "WhitelistedEmail" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -27,24 +24,23 @@ CREATE TABLE "WhitelistedEmail" (
 
 -- CreateTable
 CREATE TABLE "UserClaim" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "label" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "nodeType" "NodeType" NOT NULL,
-    "embedding" halfvec(4096) NOT NULL,
     "conversationId" TEXT NOT NULL,
     "frequency" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "claimCategoryId" INTEGER NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "claimCategoryId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
 
     CONSTRAINT "UserClaim_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "ClaimCategory" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "clusterLabel" INTEGER NOT NULL,
     "isPersonal" BOOLEAN NOT NULL,

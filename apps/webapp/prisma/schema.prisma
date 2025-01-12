@@ -1,8 +1,7 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider      = "prisma-client-js"
   // One for local dev, one for nodejs docker
-  binaryTargets   = ["native", "debian-openssl-3.0.x"]
-  previewFeatures = ["postgresqlExtensions"]
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 generator kysely {
@@ -13,15 +12,17 @@ generator kysely {
 }
 
 datasource db {
-  provider   = "postgresql"
-  url        = env("DATABASE_URL")
-  extensions = [vector]
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
+  id    String  @id @default(uuid())
+  email String  @unique
+  name  String?
+
+  apiKey String @unique @default(dbgenerated("encode(sha256(random()::text::bytea), 'hex')")) @db.Char(64)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -29,7 +30,7 @@ model User {
 }
 
 model WhitelistedEmail {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   email     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -42,12 +43,11 @@ enum NodeType {
 }
 
 model UserClaim {
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
 
   label          String
   description    String
   nodeType       NodeType
-  embedding      Unsupported("halfvec(4096)")
   conversationId String
   frequency      Int
 
@@ -55,14 +55,14 @@ model UserClaim {
   updatedAt DateTime @updatedAt
 
   claimCategory   ClaimCategory @relation(fields: [claimCategoryId], references: [id])
-  claimCategoryId Int
+  claimCategoryId String
 
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 }
 
 model ClaimCategory {
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
 
   name         String
   clusterLabel Int
