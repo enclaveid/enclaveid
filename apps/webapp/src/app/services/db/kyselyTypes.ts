@@ -11,6 +11,8 @@ export type ClaimCategory = {
   name: string;
   clusterLabel: number;
   isPersonal: boolean;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Timestamp;
 };
 export type User = {
   id: string;

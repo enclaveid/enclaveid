@@ -1,11 +1,12 @@
 -- CreateEnum
-CREATE TYPE "NodeType" AS ENUM ('Observable', 'Inferrable', 'Speculative');
+CREATE TYPE "NodeType" AS ENUM ('observable', 'inferrable', 'speculative');
 
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "name" TEXT,
+    "apiKey" CHAR(64) NOT NULL DEFAULT encode(sha256(random()::text::bytea), 'hex'),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -44,12 +45,17 @@ CREATE TABLE "ClaimCategory" (
     "name" TEXT NOT NULL,
     "clusterLabel" INTEGER NOT NULL,
     "isPersonal" BOOLEAN NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ClaimCategory_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_apiKey_key" ON "User"("apiKey");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "WhitelistedEmail_email_key" ON "WhitelistedEmail"("email");

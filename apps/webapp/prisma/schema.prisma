@@ -1,9 +1,3 @@
-generator client {
-  provider      = "prisma-client-js"
-  // One for local dev, one for nodejs docker
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
-}
-
 generator kysely {
   provider     = "prisma-kysely"
   output       = "../src/app/services/db"
@@ -17,33 +11,34 @@ datasource db {
 }
 
 model User {
-  id    String  @id @default(uuid())
+  id    String  @id
   email String  @unique
   name  String?
 
   apiKey String @unique @default(dbgenerated("encode(sha256(random()::text::bytea), 'hex')")) @db.Char(64)
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime
 
   userClaims UserClaim[]
 }
 
 model WhitelistedEmail {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id    String @id
+  email String @unique
+
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime
 }
 
 enum NodeType {
-  Observable
-  Inferrable
-  Speculative
+  observable
+  inferrable
+  speculative
 }
 
 model UserClaim {
-  id String @id @default(uuid())
+  id String @id
 
   label          String
   description    String
@@ -52,7 +47,7 @@ model UserClaim {
   frequency      Int
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime
 
   claimCategory   ClaimCategory @relation(fields: [claimCategoryId], references: [id])
   claimCategoryId String
@@ -62,11 +57,14 @@ model UserClaim {
 }
 
 model ClaimCategory {
-  id String @id @default(uuid())
+  id String @id
 
   name         String
   clusterLabel Int
   isPersonal   Boolean
 
   userClaims UserClaim[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime
 }
