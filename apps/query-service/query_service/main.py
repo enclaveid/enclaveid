@@ -1,93 +1,66 @@
-"""Flask service implementing FAISS similarity search with request queue."""
-import time
-from queue import Queue
-from threading import Lock, Thread
+"""FastAPI service implementing FAISS similarity search with request queue."""
+from typing import List, Optional
 
 import numpy as np
-from flask import Flask, jsonify, request
+from fastapi import Depends, FastAPI, Header, HTTPException
+from pydantic import BaseModel
 
 from query_service.db import get_user_id_from_api_key
 from query_service.embedding_client import EmbeddingClient
 from query_service.faiss_index import FaissIndex
 
-app = Flask(__name__)
-
-# Global variables
-request_queue = Queue()
-processing_lock = Lock()
-embedding_client = EmbeddingClient()
+DEFAULT_K = 30
 
 
-def process_queue():
-    """Process requests from the queue."""
-    while True:
-        if not request_queue.empty():
-            with processing_lock:
-                query_data, response_queue = request_queue.get()
-                try:
-                    query_vector = np.array(
-                        embedding_client.get_embeddings([query_data["query"]])[0],
-                        dtype=np.float32,
-                    ).reshape(1, -1)
-
-                    faiss_index = FaissIndex(query_data["userId"])
-
-                    results = faiss_index.search(query_vector, query_data.get("k", 30))
-
-                    response_queue.put({"status": "success", "results": results})
-                except Exception as e:
-                    response_queue.put({"status": "error", "message": str(e)})
-
-                request_queue.task_done()
-
-        time.sleep(0.01)  # Small delay to prevent CPU spinning
+# Define request/response models
+class SearchRequest(BaseModel):
+    query: str
+    k: Optional[int] = DEFAULT_K
 
 
-@app.before_first_request
-def startup():
-    """Initialize the service."""
-    # Start queue processing thread
-    worker_thread = Thread(target=process_queue, daemon=True)
-    worker_thread.start()
+class SearchResponse(BaseModel):
+    results: List[dict]
 
 
-@app.route("/search", methods=["POST"])
-def search():
+# Move embedding client to dependency
+def get_embedding_client():
+    """Dependency to get embedding client."""
+    return EmbeddingClient()
+
+
+app = FastAPI()
+
+
+@app.post("/search", response_model=SearchResponse)
+async def search(
+    request: SearchRequest,
+    authorization: str = Header(..., description="API key for authentication"),
+    embedding_client: EmbeddingClient = Depends(get_embedding_client),
+):
     """Handle search requests."""
-    # Check for API key in headers
-    api_key = request.headers.get("Authorization")
-    if not api_key:
-        return jsonify({"error": "Authorization header is required"}), 401
-
     # Authenticate API key
-    user_id = get_user_id_from_api_key(api_key)
+    user_id = get_user_id_from_api_key(authorization)
     if not user_id:
-        return jsonify({"error": "Invalid API key"}), 401
+        raise HTTPException(status_code=401, detail="Invalid API key")
 
-    if not request.is_json:
-        return jsonify({"error": "Content-Type must be application/json"}), 400
+    try:
+        # Process directly since FastAPI handles concurrent requests
+        query_vector = np.array(
+            embedding_client.get_embeddings([request.query])[0],
+            dtype=np.float32,
+        ).reshape(1, -1)
 
-    data = request.get_json()
-    if "query" not in data:
-        return jsonify({"error": "query is required"}), 400
+        faiss_index = FaissIndex(user_id)
+        results = faiss_index.search(query_vector, request.k or DEFAULT_K)
 
-    # Add authenticated user ID to the request data
-    data["userId"] = user_id
-
-    # Create response queue for this request
-    response_queue = Queue()
-
-    # Add request to queue
-    request_queue.put((data, response_queue))
-
-    # Wait for response
-    response = response_queue.get()
-
-    if response["status"] == "error":
-        return jsonify({"error": response["message"]}), 500
-
-    return jsonify(response["results"])
+        return SearchResponse(results=results)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Search operation failed: {str(e)}"
+        ) from e
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=5000)

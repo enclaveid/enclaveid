@@ -4,6 +4,13 @@
   "projectType": "application",
   "sourceRoot": "apps/query-service/query_service",
   "targets": {
+    "dev": {
+      "executor": "@nxlv/python:run-commands",
+      "options": {
+        "command": "poetry run uvicorn query_service.main:app --reload",
+        "cwd": "apps/query-service"
+      }
+    },
     "lock": {
       "executor": "@nxlv/python:run-commands",
       "options": {
