@@ -1,0 +1,72 @@
+generator client {
+  provider        = "prisma-client-js"
+  // One for local dev, one for nodejs docker
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+generator kysely {
+  provider     = "prisma-kysely"
+  output       = "../src/app/services/db"
+  fileName     = "kyselyTypes.ts"
+  enumFileName = "kyselyEnums.ts"
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userClaims UserClaim[]
+}
+
+model WhitelistedEmail {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum NodeType {
+  Observable
+  Inferrable
+  Speculative
+}
+
+model UserClaim {
+  id Int @id @default(autoincrement())
+
+  label          String
+  description    String
+  nodeType       NodeType
+  embedding      Unsupported("halfvec(4096)")
+  conversationId String
+  frequency      Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  claimCategory   ClaimCategory @relation(fields: [claimCategoryId], references: [id])
+  claimCategoryId Int
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+}
+
+model ClaimCategory {
+  id Int @id @default(autoincrement())
+
+  name         String
+  clusterLabel Int
+  isPersonal   Boolean
+
+  userClaims UserClaim[]
+}
