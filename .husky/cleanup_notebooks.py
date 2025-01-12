@@ -9,6 +9,7 @@ import os
 def read_cleanignore(notebook_path):
     directory = os.path.dirname(notebook_path)
     cleanignore_path = os.path.join(directory, ".cleanignore")
+
     try:
         with open(cleanignore_path, "r") as f:
             # Read lines and remove whitespace, empty lines, and comments
@@ -30,8 +31,16 @@ def get_staged_notebooks():
     for file in staged_files:
         if file.endswith(".ipynb"):
             ignored_files = read_cleanignore(file)
-            if file not in ignored_files:
+
+            # Check if any ignore pattern matches the file path
+            is_ignored = any(
+                ignored_pattern in file for ignored_pattern in ignored_files
+            )
+
+            if not is_ignored:
                 notebooks.append(file)
+            else:
+                print(f"Skipping {file} (found in .cleanignore)")
     return notebooks
 
 
