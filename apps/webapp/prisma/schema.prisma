@@ -1,8 +1,7 @@
-generator kysely {
-  provider     = "prisma-kysely"
-  output       = "../src/app/services/db"
-  fileName     = "kyselyTypes.ts"
-  enumFileName = "kyselyEnums.ts"
+generator client {
+  provider      = "prisma-client-js"
+  // One for local dev, one for nodejs docker
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -11,24 +10,30 @@ datasource db {
 }
 
 model User {
-  id    String  @id
+  id    String  @id @default(cuid())
   email String  @unique
   name  String?
+
+  // Auth.js fields
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
 
   apiKey String @unique @default(dbgenerated("encode(sha256(random()::text::bytea), 'hex')")) @db.Char(64)
 
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
 
-  userClaims UserClaim[]
+  claimCategories ClaimCategory[]
 }
 
 model WhitelistedEmail {
-  id    String @id
+  id    String @id @default(cuid())
   email String @unique
 
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
 }
 
 enum NodeType {
@@ -38,7 +43,7 @@ enum NodeType {
 }
 
 model UserClaim {
-  id String @id
+  id String @id @default(cuid())
 
   label          String
   description    String
@@ -47,17 +52,14 @@ model UserClaim {
   frequency      Int
 
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
 
   claimCategory   ClaimCategory @relation(fields: [claimCategoryId], references: [id])
   claimCategoryId String
-
-  user   User   @relation(fields: [userId], references: [id])
-  userId String
 }
 
 model ClaimCategory {
-  id String @id
+  id String @id @default(cuid())
 
   name         String
   clusterLabel Int
@@ -66,5 +68,50 @@ model ClaimCategory {
   userClaims UserClaim[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
+  @@unique([userId, clusterLabel])
+}
+
+// -------------------- Auth.js models --------------------
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
 }

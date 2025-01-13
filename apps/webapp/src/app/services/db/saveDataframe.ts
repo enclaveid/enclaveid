@@ -1,5 +1,4 @@
-import { db } from './db';
-import { createId } from '@paralleldrive/cuid2';
+import { prisma } from './prisma';
 
 export interface DataframeRow {
   // UserClaim fields
@@ -19,30 +18,16 @@ export async function saveDataframe(
   data: DataframeRow[]
 ): Promise<void> {
   try {
-    await db.transaction().execute(async (trx) => {
-      // Group rows by category to avoid duplicate categories
-      const categoriesMap = new Map<string, DataframeRow>();
-      data.forEach((row) => {
-        const key = `${row.category}-${row.cluster_label}-${row.is_personal}`;
-        if (!categoriesMap.has(key)) {
-          categoriesMap.set(key, row);
-        }
-      });
-
+    await prisma.$transaction(async (prisma) => {
       // Bulk insert categories
-      const categories = await trx
-        .insertInto('ClaimCategory')
-        .values(
-          Array.from(categoriesMap.values()).map((row) => ({
-            id: createId(),
-            name: row.category,
-            clusterLabel: row.cluster_label,
-            isPersonal: row.is_personal,
-            updatedAt: new Date(),
-          }))
-        )
-        .returning(['id', 'name', 'clusterLabel', 'isPersonal'])
-        .execute();
+      const categories = await prisma.claimCategory.createManyAndReturn({
+        data: data.map((row) => ({
+          name: row.category,
+          clusterLabel: row.cluster_label,
+          isPersonal: row.is_personal,
+        })),
+        skipDuplicates: true,
+      });
 
       // Create a map of category attributes to ID for lookup
       const categoryIdMap = new Map(
@@ -53,24 +38,19 @@ export async function saveDataframe(
       );
 
       // Bulk insert claims
-      await trx
-        .insertInto('UserClaim')
-        .values(
-          data.map((row) => ({
-            id: createId(),
-            label: row.label,
-            description: row.description,
-            nodeType: row.node_type,
-            conversationId: row.conversation_id,
-            frequency: row.frequency,
-            claimCategoryId: categoryIdMap.get(
-              `${row.category}-${row.cluster_label}-${row.is_personal}`
-            )!,
-            userId: userId,
-            updatedAt: new Date(),
-          }))
-        )
-        .execute();
+      await prisma.userClaim.createMany({
+        data: data.map((row) => ({
+          label: row.label,
+          description: row.description,
+          nodeType: row.node_type,
+          conversationId: row.conversation_id,
+          frequency: row.frequency,
+          claimCategoryId: categoryIdMap.get(
+            `${row.category}-${row.cluster_label}-${row.is_personal}`
+          )!,
+          userId: userId,
+        })),
+      });
     });
   } catch (error) {
     if (error instanceof Error) {

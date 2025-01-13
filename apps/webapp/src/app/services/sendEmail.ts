@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { EmailClient } from '@azure/communication-email';
 
 const emailClient = new EmailClient(process.env.AZURE_EMAIL_CONNECTION_STRING!);
