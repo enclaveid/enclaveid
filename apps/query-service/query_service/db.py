@@ -14,8 +14,8 @@ def get_user_id_from_api_key(api_key):
         psycopg.connect(conn_string, row_factory=dict_row) as conn,
         conn.cursor() as cur,
     ):
-        cur.execute('SELECT id FROM "User" WHERE "apiKey" = %s', (api_key,))
+        cur.execute('SELECT "userId" FROM "ApiKey" WHERE "key" = %s', (api_key,))
         result = cur.fetchone()
         if not result:
             return None
-        return result["id"]
+        return result["userId"]

@@ -6,8 +6,8 @@ import { Input } from '@enclaveid/ui/input';
 import { Label } from '@enclaveid/ui/label';
 import GitHubIcon from '~icons/mdi/github';
 import { Logo } from '@enclaveid/ui/logo';
-import { emailSignIn } from '../actions/emailSignIn';
-import { githubSignIn } from '../actions/githubSignIn';
+import { emailSignIn } from '../actions/auth/emailSignIn';
+import { githubSignIn } from '../actions/auth/githubSignIn';
 
 export function LoginForm({
   className,

@@ -3,7 +3,7 @@
 import { ExitIcon } from '@radix-ui/react-icons';
 
 import { SidebarMenuButton } from '@enclaveid/ui/sidebar';
-import { logOut } from '../actions/logOut';
+import { logOut } from '../actions/auth/logOut';
 
 export function LogoutButton() {
   return (
