@@ -41,3 +41,11 @@ class DataProvider:
         "path_prefix": "openai",
         "expected_file": "conversations.json",
     }
+    WHATSAPP_DESKTOP = {
+        "path_prefix": "whatsapp_desktop",
+        "expected_file": "TODO",
+    }
+    WHATSAPP_MOBILE = {
+        "path_prefix": "whatsapp_mobile",
+        "expected_file": "TODO",
+    }
