@@ -31,7 +31,8 @@
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "../../libs/ui-utils/postcss.config.js",
-    "postcss.config.js"
+    "postcss.config.js",
+    "../../libs/ui/src/logo.tsx"
   ],
   "exclude": [
     "node_modules",

@@ -5,8 +5,9 @@ import { Button } from '@enclaveid/ui/button';
 import { Input } from '@enclaveid/ui/input';
 import { Label } from '@enclaveid/ui/label';
 import GitHubIcon from '~icons/mdi/github';
-import { signIn } from 'next-auth/react';
-import { Logo } from './logo';
+import { Logo } from '@enclaveid/ui/logo';
+import { emailSignIn } from '../actions/emailSignIn';
+import { githubSignIn } from '../actions/githubSignIn';
 
 export function LoginForm({
   className,
@@ -18,9 +19,7 @@ export function LoginForm({
         onSubmit={async (e) => {
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
-          await signIn('email', {
-            email: formData.get('email'),
-          });
+          await emailSignIn(formData.get('email') as string);
         }}
       >
         <div className="flex flex-col gap-6">
@@ -61,7 +60,7 @@ export function LoginForm({
             type="button"
             variant="outline"
             className="w-full"
-            onClick={() => signIn('github')}
+            onClick={() => githubSignIn()}
           >
             <GitHubIcon className="w-6 h-6" />
             Continue with GitHub

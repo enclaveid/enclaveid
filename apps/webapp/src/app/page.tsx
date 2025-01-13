@@ -1,8 +1,10 @@
 import DiscordIcon from '~icons/mdi/discord.tsx';
 import GitHubIcon from '~icons/mdi/github.tsx';
 import Image from 'next/image';
-import { Logo } from './components/logo';
+import { Logo } from '../../../../libs/ui/src/logo';
 import LandingVideo from './components/landing-video';
+import { Button } from '@enclaveid/ui/button';
+import Link from 'next/link';
 
 export default function Index() {
   return (
@@ -29,7 +31,7 @@ function Header() {
           </div>
 
           {/* Navigation / Social Icons */}
-          <nav className="flex gap-4">
+          <nav className="flex gap-4 items-center">
             <a
               href="https://discord.gg/3BHPkHDs"
               target="_blank"
@@ -46,6 +48,10 @@ function Header() {
             >
               <GitHubIcon className="w-6 h-6" />
             </a>
+
+            <Link href="/dashboard/home">
+              <Button size="sm">Sign In</Button>
+            </Link>
           </nav>
         </div>
       </div>
@@ -67,9 +73,9 @@ function Hero() {
               life and your projects so you can stop re-explaining yourself
               every time and focus on your goals.
             </p>
-            <button className="bg-brand text-white px-8 py-3 rounded-lg font-medium transition-colors cursor-not-allowed">
-              Coming Soon!
-            </button>
+            <Link href="/dashboard/home">
+              <Button size="lg">Get Started</Button>
+            </Link>
           </div>
 
           {/* Video Container */}

@@ -28,7 +28,6 @@ pre {
   box-sizing: border-box;
   border-width: 0;
   border-style: solid;
-  border-color: currentColor;
 }
 h1,
 h2 {
@@ -50,7 +49,6 @@ pre {
    --white: 0,0%,100%; /* #ffffff */
    --offwhite: 48, 24%, 96%; /* #f7f6f2 */
    --brand: 166, 15%, 28%; /* #3d524d */
-   --brand-foreground: 166, 15%, 20%;
    --text:0, 0%, 0%; /* #000000 */
 
     --background: var(--white);
@@ -63,7 +61,7 @@ pre {
     --input: 214.3 31.8% 91.4%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 47.4% 11.2%;
-    --primary: 166, 15%, 28%;
+    --primary: var(--brand);
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -112,6 +110,16 @@ pre {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   } */
+  .dark {
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
 }
 
 @layer base {
