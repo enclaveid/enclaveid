@@ -6,10 +6,10 @@ export interface DataframeRow {
   description: string;
   node_type: 'observable' | 'inferrable' | 'speculative';
   conversation_id: string;
-  frequency: number;
+  frequency: bigint;
   // ClaimCategory fields
   category: string;
-  cluster_label: number;
+  cluster_label: bigint;
   is_personal: boolean;
 }
 
@@ -23,8 +23,9 @@ export async function saveDataframe(
       const categories = await prisma.claimCategory.createManyAndReturn({
         data: data.map((row) => ({
           name: row.category,
-          clusterLabel: row.cluster_label,
+          clusterLabel: Number(row.cluster_label),
           isPersonal: row.is_personal,
+          userId,
         })),
         skipDuplicates: true,
       });
@@ -44,12 +45,12 @@ export async function saveDataframe(
           description: row.description,
           nodeType: row.node_type,
           conversationId: row.conversation_id,
-          frequency: row.frequency,
+          frequency: Number(row.frequency),
           claimCategoryId: categoryIdMap.get(
             `${row.category}-${row.cluster_label}-${row.is_personal}`
           )!,
-          userId: userId,
         })),
+        skipDuplicates: true,
       });
     });
   } catch (error) {

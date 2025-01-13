@@ -12,8 +12,12 @@ async function main() {
   await prisma.user.create({
     data: {
       id: 'cm0i27jdj0000aqpa73ghpcxf',
-      email: 'john.doe@example.com',
-      apiKey: '1234567890',
+      email: 'magogagiovanni@gmail.com',
+      apiKeys: {
+        create: {
+          key: '1234567890',
+        },
+      },
     },
   });
 }

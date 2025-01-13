@@ -8,11 +8,21 @@ CREATE TABLE "User" (
     "name" TEXT,
     "emailVerified" TIMESTAMP(3),
     "image" TEXT,
-    "apiKey" CHAR(64) NOT NULL DEFAULT encode(sha256(random()::text::bytea), 'hex'),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ApiKey" (
+    "id" TEXT NOT NULL,
+    "key" CHAR(64) NOT NULL DEFAULT encode(sha256(random()::text::bytea), 'hex'),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "ApiKey_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -94,7 +104,7 @@ CREATE TABLE "VerificationToken" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_apiKey_key" ON "User"("apiKey");
+CREATE UNIQUE INDEX "ApiKey_key_key" ON "ApiKey"("key");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "WhitelistedEmail_email_key" ON "WhitelistedEmail"("email");
@@ -104,6 +114,9 @@ CREATE UNIQUE INDEX "ClaimCategory_userId_clusterLabel_key" ON "ClaimCategory"("
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
+
+-- AddForeignKey
+ALTER TABLE "ApiKey" ADD CONSTRAINT "ApiKey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserClaim" ADD CONSTRAINT "UserClaim_claimCategoryId_fkey" FOREIGN KEY ("claimCategoryId") REFERENCES "ClaimCategory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

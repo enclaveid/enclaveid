@@ -35,7 +35,7 @@ model ApiKey {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 }
 
@@ -65,7 +65,7 @@ model UserClaim {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  claimCategory   ClaimCategory @relation(fields: [claimCategoryId], references: [id])
+  claimCategory   ClaimCategory @relation(fields: [claimCategoryId], references: [id], onDelete: Cascade)
   claimCategoryId String
 }
 
@@ -81,8 +81,8 @@ model ClaimCategory {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user   User?   @relation(fields: [userId], references: [id])
-  userId String?
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
 
   @@unique([userId, clusterLabel])
 }

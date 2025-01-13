@@ -30,7 +30,10 @@
       "executor": "@nx-tools/nx-prisma:push"
     },
     "prisma-reset": {
-      "executor": "@nx-tools/nx-prisma:reset"
+      "executor": "@nx-tools/nx-prisma:reset",
+      "options": {
+        "force": true
+      }
     },
     "prisma-resolve": {
       "executor": "@nx-tools/nx-prisma:resolve"
