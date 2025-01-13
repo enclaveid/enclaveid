@@ -8,6 +8,48 @@ import {
 } from '@enclaveid/ui/sidebar';
 import { LogoutButton } from '../../components/logout-button';
 import { DashboardBreadcrumb } from '../../components/dashboard-breadcrumb';
+import {
+  CodeIcon,
+  HomeIcon,
+  Share1Icon,
+  PersonIcon,
+} from '@radix-ui/react-icons';
+
+const sidebarItems = {
+  navMain: [
+    {
+      title: 'Dashboard',
+      items: [
+        {
+          title: 'Home',
+          url: '/dashboard/home',
+          icon: <HomeIcon />,
+        },
+        {
+          title: 'Social',
+          url: '#',
+          icon: <Share1Icon />,
+          badge: 'Coming soon!',
+        },
+      ],
+    },
+    {
+      title: 'Settings',
+      items: [
+        {
+          title: 'API Keys',
+          url: '/dashboard/api-keys',
+          icon: <CodeIcon />,
+        },
+        {
+          title: 'Profile',
+          url: '/dashboard/profile',
+          icon: <PersonIcon />,
+        },
+      ],
+    },
+  ],
+};
 
 export default async function Layout({
   children,
@@ -16,7 +58,7 @@ export default async function Layout({
 }) {
   return (
     <SidebarProvider>
-      <AppSidebar LogoutButton={<LogoutButton />} />
+      <AppSidebar LogoutButton={<LogoutButton />} sidebarItems={sidebarItems} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
