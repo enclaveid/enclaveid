@@ -8,7 +8,7 @@ import {
 } from '@enclaveid/ui/sidebar';
 import { LogoutButton } from '../../components/logout-button';
 import { DashboardBreadcrumb } from '../../components/dashboard-breadcrumb';
-import { CodeIcon, HomeIcon, PersonIcon } from '@radix-ui/react-icons';
+import { CodeIcon, HomeIcon } from '@radix-ui/react-icons';
 
 const sidebarItems = {
   navMain: [
@@ -36,11 +36,11 @@ const sidebarItems = {
           url: '/dashboard/api-keys',
           icon: <CodeIcon />,
         },
-        {
-          title: 'Profile',
-          url: '/dashboard/profile',
-          icon: <PersonIcon />,
-        },
+        // {
+        //   title: 'Data sources',
+        //   url: '/dashboard/data-sources',
+        //   icon: <Share1Icon />,
+        // },
       ],
     },
   ],
@@ -60,7 +60,7 @@ export default async function Layout({
           <Separator orientation="vertical" className="mr-2 h-4" />
           <DashboardBreadcrumb />
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-16">{children}</div>
+        <div className="flex flex-1 flex-col gap-4 p-8">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

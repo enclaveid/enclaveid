@@ -7,6 +7,7 @@
   },
   "private": true,
   "dependencies": {
+    "@ai-sdk/azure": "^1.0.20",
     "@auth/prisma-adapter": "^2.7.4",
     "@azure/communication-email": "^1.0.0",
     "@azure/storage-blob": "^12.26.0",
@@ -43,6 +44,7 @@
     "@react-three/drei": "^9.120.4",
     "@react-three/fiber": "^8.17.10",
     "@tanstack/react-table": "^8.20.6",
+    "ai": "^4.0.33",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.0",

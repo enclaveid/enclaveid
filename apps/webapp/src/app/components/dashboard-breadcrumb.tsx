@@ -5,6 +5,7 @@ import {
   BreadcrumbItem,
   BreadcrumbList,
   Breadcrumb,
+  BreadcrumbPage,
 } from '@enclaveid/ui/breadcrumb';
 
 export function DashboardBreadcrumb() {
@@ -42,7 +43,9 @@ export function DashboardBreadcrumb() {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          {breadcrumbs[breadcrumbs.length - 1].label}
+          <BreadcrumbPage>
+            {breadcrumbs[breadcrumbs.length - 1].label}
+          </BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
