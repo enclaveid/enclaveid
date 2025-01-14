@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from collections import defaultdict
 import os
 import sqlite3
 import urllib.request
@@ -12,6 +13,28 @@ from datetime import datetime, timedelta
 MESSAGE_COUNTS_ENDPOINT = "/api/file-upload/whatsapp-counts"
 MESSAGE_ARCHIVES_ENDPOINT = "/api/file-upload/whatsapp-chats"
 # ---------------------------------------------------------------------
+
+MESSAGE_MEDIA_TYPES = defaultdict(
+    lambda: None,
+    {
+        1: "IMAGE",
+        38: "SEE_ONCE_IMAGE",
+        6: "SEE_ONCE_IMAGE",
+        2: "VIDEO",
+        39: "SEE_ONCE_VIDEO",
+        13: "SEE_ONCE_VIDEO",
+        3: "AUDIO",
+        4: "CONTACT",
+        5: "LOCATION",
+        7: "URL",
+        8: "FILE",
+        11: "GIF",
+        14: "DELETED_MESSAGE",
+        15: "STICKER",
+        46: "POLL",
+        54: "VIDEO_NOTE",
+    },
+)
 
 
 def main(api_key, test):
@@ -34,10 +57,13 @@ def main(api_key, test):
         m.ZTOJID,            -- 3 to_jid
         m.ZTEXT,             -- 4 text
         m.ZMESSAGEDATE,      -- 5 message_date (Apple epoch)
-        m.ZMEDIAITEM         -- 6 media_item
+        m.ZMESSAGETYPE,      -- 6 media_item
+        mi.ZTITLE            -- 7 media_title (link title)
     FROM ZWACHATSESSION cs
     JOIN ZWAMESSAGE m
          ON (m.ZFROMJID = cs.ZCONTACTJID OR m.ZTOJID = cs.ZCONTACTJID)
+    LEFT JOIN ZWAMEDIAITEM mi
+          ON m.Z_PK = mi.ZMESSAGE
     WHERE cs.ZCONTACTJID NOT LIKE '%@g.us'
     """
     cursor.execute(query)
@@ -72,6 +98,23 @@ def main(api_key, test):
         from_jid = row[2] or ""
         text = row[4] or ""  # might be None
         msg_date_apple_epoch = row[5] or 0
+        message_type = row[6]
+        media_title = row[7]
+
+        # If text is empty, try to get the media type
+        if not text and message_type:
+            text = f"MEDIA: {MESSAGE_MEDIA_TYPES.get(message_type, 'UNKNOWN')}"
+
+        # If the text contains a link and media_title is not empty, replace the full URL with the media title
+        if "https://" in text and media_title:
+            # Find the start of the URL
+            url_start = text.find("https://")
+            # Find the end of the URL (space or end of string)
+            url_end = text.find(" ", url_start)
+            if url_end == -1:  # URL is at the end of the text
+                url_end = len(text)
+            # Replace the full URL with the media title
+            text = text[:url_start] + "Sent a link: " + media_title + text[url_end:]
 
         # Parse out phone number from partner_jid by splitting at '@'
         # (If there's no '@', we'll just keep the original partner_jid.)
@@ -90,8 +133,8 @@ def main(api_key, test):
         # Bump message count
         partner_data[partner_name]["message_count"] += 1
 
-        # Build the role: "Partner" if from_jid == partner_jid else "Me"
-        role = "Partner" if (from_jid == partner_jid) else "Me"
+        # Build the role: "partner" if from_jid == partner_jid else "me"
+        role = "partner" if (from_jid == partner_jid) else "me"
 
         # Convert Apple epoch (2001-01-01) to a human-friendly ISO datetime
         dt = apple_epoch + timedelta(seconds=msg_date_apple_epoch)
@@ -99,7 +142,12 @@ def main(api_key, test):
 
         # Add this message to the partner_messages structure
         partner_messages[partner_name].append(
-            {"datetime": dt_str, "content": text, "role": role}
+            {
+                "datetime": dt_str,
+                "content": text,
+                "role": role,
+                "message_type": message_type,
+            }
         )
 
     cursor.close()
@@ -110,9 +158,7 @@ def main(api_key, test):
     with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
         for p_name, messages in partner_messages.items():
             json_str = json.dumps(messages, ensure_ascii=False, indent=2)
-            filename = (
-                f"{p_name}.json"  # In practice, sanitize p_name for filesystem safety
-            )
+            filename = f"{p_name}.json"
             zf.writestr(filename, json_str)
 
     BASE_URL = "http://localhost:3000" if test else "https://enclaveid.com"
