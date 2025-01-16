@@ -13,7 +13,7 @@ from data_pipeline.partitions import user_partitions_def
         ),
     },
 )
-def whatsapp_conversation_rechunking(
+def whatsapp_conversation_rechunked(
     context: AssetExecutionContext,
     config: Config,
     whatsapp_conversation_chunks: pl.DataFrame,

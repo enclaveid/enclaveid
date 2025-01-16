@@ -103,4 +103,41 @@ def parsed_whatsapp_conversations(
         .sort("datetime")
     )
 
-    return processed_df
+    # Squash consecutive identical messages within the same conversation
+    squashed_df = (
+        processed_df.sort(["from", "to", "datetime"])
+        .with_columns(
+            [
+                (
+                    (pl.col("content") != pl.col("content").shift(1))
+                    | (pl.col("from") != pl.col("from").shift(1))
+                    | (pl.col("to") != pl.col("to").shift(1))
+                )
+                .cum_sum()
+                .alias("message_group")
+            ]
+        )
+        .group_by(["from", "to", "content", "message_group"])
+        .agg(
+            [
+                pl.col("datetime").min(),
+                pl.when(pl.count() > 1)
+                .then(
+                    pl.concat_str(
+                        pl.lit("Sent "),
+                        pl.count(),
+                        pl.lit(" of "),
+                        pl.col("content"),
+                    )
+                )
+                .otherwise(pl.col("content"))
+                .unique()
+                .first()
+                .alias("squashed_content"),
+            ]
+        )
+        .drop(["message_group", "content"])
+        .rename({"squashed_content": "content"})
+    )
+
+    return squashed_df
