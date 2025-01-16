@@ -18,6 +18,15 @@ def whatsapp_conversation_rechunking(
     config: Config,
     whatsapp_conversation_chunks: pl.DataFrame,
 ) -> pl.DataFrame:
+    """
+    Standardize chunk outputs from the LLM.
+
+    Columns:
+    - start_dt: Start datetime of the chunk
+    - end_dt: End datetime of the chunk
+    - decisions: List of decisions merged during this rechunking process
+    - messages_struct: List of messages in the chunk (from, to, date, time, content)
+    """
     df = whatsapp_conversation_chunks.filter(
         pl.col("decision").is_not_null()
     ).with_columns(
@@ -89,29 +98,39 @@ def whatsapp_conversation_rechunking(
             ),
             end_dt=pl.col("date").dt.combine(pl.col("chunks").struct.field("end_time")),
         )
+        .sort("start_dt")
         .drop(["date", "chunks"])
     )
 
     context.log.info(f"Computed {len(combined_df)} combined conversations")
 
-    # Incorporate INCONCLUSIVE chunks with next row until CHUNK
-    result_df = (
-        combined_df.sort(["start_dt"])
-        .with_columns(
-            # Create a group ID that changes when we hit a CHUNK decision
-            group_id=pl.col("decision").eq("CHUNK").cum_sum()
-        )
-        .group_by("group_id")
-        .agg(
-            messages_struct=pl.col("messages_struct"),
-            decision=pl.col("decision").last(),  # Take the last decision (CHUNK)
-            start_dt=pl.col("start_dt").min(),  # Take earliest start time
-            end_dt=pl.col("end_dt").max(),  # Take latest end time
-        )
-        .drop("group_id")
+    # ---- Merge INCONCLUSIVE rows with adjacent CHUNK rows ----
+
+    # Mark chunk rows; all others get null for chunk_id
+    df_with_chunk_id = combined_df.with_columns(
+        pl.when(pl.col("decision") == "CHUNK")
+        .then(pl.arange(0, pl.count(), 1))
+        .otherwise(None)
+        .alias("chunk_id")
     )
 
-    context.log.info(f"Computed {len(result_df)} final conversations")
+    # Forward-fill and backward-fill chunk_id so the merged rows get the chunk_id of the first CHUNK above and below them
+    result_df = (
+        df_with_chunk_id.with_columns(
+            pl.col("chunk_id").fill_null(strategy="backward"),
+        )
+        .with_columns(
+            pl.col("chunk_id").fill_null(strategy="forward"),
+        )
+        .group_by("chunk_id")
+        .agg(
+            [
+                pl.col("start_dt").min().alias("merged_start"),
+                pl.col("end_dt").max().alias("merged_end"),
+                pl.col("decision").alias("decisions"),
+                pl.col("messages_struct").flatten(),
+            ]
+        )
+    )
 
-    # Combine both dataframes
     return result_df

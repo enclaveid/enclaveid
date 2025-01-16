@@ -123,6 +123,10 @@ def whatsapp_conversation_chunks(
                     pl.col("from"),
                     pl.col("to"),
                     pl.col("datetime").dt.time().cast(pl.Utf8).alias("time"),
+                    pl.col("datetime")
+                    .dt.date()
+                    .cast(pl.Utf8)
+                    .alias("date"),  # For downstream asset
                     pl.col("content"),
                 ]
             ),
