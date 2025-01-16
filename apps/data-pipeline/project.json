@@ -7,7 +7,7 @@
     "dev": {
       "executor": "@nxlv/python:run-commands",
       "options": {
-        "command": "dagster dev --port 3001",
+        "command": "rm -rf tmp_dagster_home && mkdir -p tmp_dagster_home && DAGSTER_HOME=$(pwd)/tmp_dagster_home dagster dev --port 3001",
         "cwd": "apps/data-pipeline"
       }
     },

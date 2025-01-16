@@ -4,8 +4,7 @@ from dagster import AssetExecutionContext, AssetIn, asset
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-
-from ..partitions import user_partitions_def
+from data_pipeline.partitions import user_partitions_def
 
 
 class D3VizConfig(RowLimitConfig):

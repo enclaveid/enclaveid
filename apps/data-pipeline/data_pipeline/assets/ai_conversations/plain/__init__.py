@@ -1,4 +1,4 @@
-from data_pipeline.assets.plain.speculatives_substantiation import (
+from .speculatives_substantiation import (
     speculatives_substantiation,
 )
 

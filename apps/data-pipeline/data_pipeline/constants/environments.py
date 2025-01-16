@@ -33,19 +33,19 @@ class DataProvider:
         "path_prefix": "google",
         "expected_file": "Takeout/My Activity/Search/MyActivity.json",
     }
-    FACEBOOK = {
-        "path_prefix": "facebook",
-        "expected_file": "TODO",
-    }
     OPENAI = {
         "path_prefix": "openai",
         "expected_file": "conversations.json",
     }
     WHATSAPP_DESKTOP = {
         "path_prefix": "whatsapp_desktop",
-        "expected_file": "TODO",
+        "expected_file": "messages.json",
     }
-    WHATSAPP_MOBILE = {
-        "path_prefix": "whatsapp_mobile",
-        "expected_file": "TODO",
-    }
+    # WHATSAPP_MOBILE = {
+    #     "path_prefix": "whatsapp_mobile",
+    #     "expected_file": "TODO",
+    # }
+    # FACEBOOK = {
+    #     "path_prefix": "facebook",
+    #     "expected_file": "TODO",
+    # }
