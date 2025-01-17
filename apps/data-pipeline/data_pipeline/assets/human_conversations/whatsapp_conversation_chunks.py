@@ -5,11 +5,14 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 from json_repair import repair_json
 
-from data_pipeline.constants.environments import get_environment
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
+)
+from data_pipeline.utils.get_messaging_partner_name import (
+    MIN_HUMAN_CONVERSATION_CHUNK_SIZE,
+    get_messaging_partners_names,
 )
 
 DECISIONS = ["INCONCLUSIVE", "NO_CHUNK", "CHUNK"]
@@ -34,7 +37,7 @@ def _get_whatsapp_chunking_prompt_sequence(text: str) -> PromptSequence:
             Each chunk should be independently analyzable and contain enough information
             to understand the participants’ intent and the broader context of the conversation.
             This means the chunks cannot be too short: if that's the case proceed with the
-            "NO_CHUNK" decision.
+            "NO_CHUNK" decision. Avoid creating chunks under {MIN_HUMAN_CONVERSATION_CHUNK_SIZE} messages.
 
           **NO_CHUNK**:
           - Choose this if the conversation is not too long and contains enough information to be considered a single segment.
@@ -76,14 +79,6 @@ def _parse_whatsapp_chunking_response(
         return (None, None)
 
 
-# TODO
-def _get_partner_name() -> str:
-    if get_environment() == "LOCAL":
-        return "Estela"
-
-    raise NotImplementedError("Partner name not implemented for non-local environments")
-
-
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
@@ -99,11 +94,12 @@ def whatsapp_conversation_chunks(
     gpt4o: BaseLlmResource,
     parsed_whatsapp_conversations: pl.DataFrame,
 ) -> pl.DataFrame:
-    partner_name = _get_partner_name()
+    partner_names = get_messaging_partners_names()
 
     df = (
         parsed_whatsapp_conversations.filter(
-            pl.col("from").eq(partner_name) | pl.col("to").eq(partner_name)
+            pl.col("from").eq(partner_names["partner"])
+            | pl.col("to").eq(partner_names["partner"])
         )
         .with_columns(
             message_str=pl.concat_str(

@@ -1,7 +1,18 @@
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
+from pydantic import Field
 
 from data_pipeline.partitions import user_partitions_def
+from data_pipeline.utils.get_messaging_partner_name import (
+    MIN_HUMAN_CONVERSATION_CHUNK_SIZE,
+)
+
+
+class WhatsappConversationRechunkedConfig(Config):
+    min_chunk_size: int = Field(
+        default=MIN_HUMAN_CONVERSATION_CHUNK_SIZE,
+        description="The minimum number of messages in a chunk",
+    )
 
 
 @asset(
@@ -15,7 +26,7 @@ from data_pipeline.partitions import user_partitions_def
 )
 def whatsapp_conversation_rechunked(
     context: AssetExecutionContext,
-    config: Config,
+    config: WhatsappConversationRechunkedConfig,
     whatsapp_conversation_chunks: pl.DataFrame,
 ) -> pl.DataFrame:
     """
@@ -104,17 +115,20 @@ def whatsapp_conversation_rechunked(
 
     context.log.info(f"Computed {len(combined_df)} combined conversations")
 
-    # ---- Merge INCONCLUSIVE rows with adjacent CHUNK rows ----
+    # ---- Merge INCONCLUSIVE and size < min_chunk_size rows with adjacent CHUNK and size >= min_chunk_size rows ----
 
-    # Mark chunk rows; all others get null for chunk_id
+    # Mark good rows; all others get null for chunk_id
     df_with_chunk_id = combined_df.with_columns(
-        pl.when(pl.col("decision") == "CHUNK")
+        pl.when(
+            pl.col("decision").eq("CHUNK")
+            & pl.col("messages_struct").list.len().ge(config.min_chunk_size)
+        )
         .then(pl.arange(0, pl.count(), 1))
         .otherwise(None)
         .alias("chunk_id")
     )
 
-    # Forward-fill and backward-fill chunk_id so the merged rows get the chunk_id of the first CHUNK above and below them
+    # Forward-fill and backward-fill chunk_id so the merged rows get the chunk_id of the first good row above and below them
     result_df = (
         df_with_chunk_id.with_columns(
             pl.col("chunk_id").fill_null(strategy="backward"),
@@ -125,11 +139,20 @@ def whatsapp_conversation_rechunked(
         .group_by("chunk_id")
         .agg(
             [
-                pl.col("start_dt").min().alias("merged_start"),
-                pl.col("end_dt").max().alias("merged_end"),
+                pl.col("start_dt").min(),
+                pl.col("end_dt").max(),
                 pl.col("decision").alias("decisions"),
                 pl.col("messages_struct").flatten(),
             ]
+        )
+        .sort("start_dt")
+        .with_columns(
+            pl.col("messages_struct").list.eval(
+                pl.element().sort_by(
+                    pl.element().struct.field("date"),
+                    pl.element().struct.field("time"),
+                )
+            )
         )
     )
 
