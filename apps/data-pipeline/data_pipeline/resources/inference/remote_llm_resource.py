@@ -39,7 +39,7 @@ class RemoteLlmResource(BaseLlmResource):
 
     async def _periodic_status_printer(self) -> None:
         logger = get_dagster_logger()
-        while True:
+        while True and self._remaining_reqs > 1:
             logger.info(f"Remaining requests: {self._remaining_reqs}")
             await asyncio.sleep(60)
 

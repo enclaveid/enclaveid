@@ -133,5 +133,7 @@ async def whatsapp_claims_deduplicated(
         .drop("cluster_id")
     )
 
+    print(aggregated.schema)
+
     # Return aggregated (deduplicated) DataFrame
     return aggregated
