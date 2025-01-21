@@ -2,15 +2,15 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 from pydantic import Field
 
-from data_pipeline.partitions import user_partitions_def
-from data_pipeline.utils.get_messaging_partner_name import (
-    MIN_HUMAN_CONVERSATION_CHUNK_SIZE,
+from data_pipeline.constants.whatsapp_conversations import (
+    MIN_WHATSAPP_CONVERSATION_CHUNK_SIZE,
 )
+from data_pipeline.partitions import user_partitions_def
 
 
 class WhatsappConversationRechunkedConfig(Config):
     min_chunk_size: int = Field(
-        default=MIN_HUMAN_CONVERSATION_CHUNK_SIZE,
+        default=MIN_WHATSAPP_CONVERSATION_CHUNK_SIZE,
         description="The minimum number of messages in a chunk",
     )
 

@@ -11,7 +11,7 @@ from data_pipeline.partitions import user_partitions_def
 
 class WhatsappClaimsDeduplicatedConfig(Config):
     threshold: float = Field(
-        default=0.9, description="Cosine similarity threshold for merging claims"
+        default=0.85, description="Cosine similarity threshold for merging claims"
     )
     top_n: int = Field(default=30, description="Top-n claims to aggregate")
 

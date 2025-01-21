@@ -3,17 +3,21 @@ from textwrap import dedent
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 
+from data_pipeline.constants.whatsapp_conversations import PartnerType
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
 )
-from data_pipeline.utils.get_messaging_partner_name import (
-    get_messaging_partners_names,
+from data_pipeline.utils.get_messaging_partners import (
+    get_messaging_partners,
 )
 from data_pipeline.utils.parsing.parse_whatsapp_claims import parse_whatsapp_claims
 from data_pipeline.utils.polars_expressions.messages_struct_to_string_format_expr import (
     get_messages_struct_to_string_format_expr,
+)
+from data_pipeline.utils.speculative_hypotheses_guidance import (
+    get_speculative_hypotheses_guidance,
 )
 
 
@@ -35,13 +39,15 @@ def _get_json_formatting_prompt(user_name: str, partner_name: str) -> str:
             ]
           }}
 
-          If a claim involves both users at the same time, assign it to the most relevant user.
+          IMPORTANT:
+          - If a claim involves both users, both their names must be present in the claim description!
+          - If a claim involves both users at the same time, assign it to the most relevant user.
         """
     ).strip()
 
 
 def _get_speculatives_extraction_prompt_sequence(
-    text: str, user_name: str, partner_name: str
+    text: str, user_name: str, partner_name: str, partner_type: PartnerType
 ) -> PromptSequence:
     return [
         dedent(
@@ -65,8 +71,8 @@ def _get_speculatives_extraction_prompt_sequence(
             - From {partner_name} to {user_name}: "And my personal trainer texted me today so I’ll organise my routine to go twice a week"
             - From {partner_name} to {user_name}: "💪🏼💪🏼"
 
-            You should extract the following claims:
-            - {partner_name} desires to please {user_name} or gain their approval. {partner_name} is reporting their health progress to receive positive feedback and affirmation from {user_name}.
+            You could extract the following claims:
+            - {partner_name} desires to please {user_name} or gain their approval.
             - {partner_name} is reshaping their fitness habits due to an underlying health issue (e.g., pre-diabetes, weight concerns, or chronic fatigue).
             - {partner_name} is attempting to deepen the bond with {user_name} by sharing personal details and experiences.
             - {partner_name} values {user_name}'s opinion and is using health changes as a way to stay close or create a sense of shared journey.
@@ -74,7 +80,8 @@ def _get_speculatives_extraction_prompt_sequence(
             - {partner_name} shifts in diet and exercise habits are driven by stress or a recent life change—such as a breakup, job change, or mental-health struggles.
             - {partner_name} is using fitness and nutrition as a way to regain control or manage emotions.
 
-            IMPORTANT: If a claim involves both users, both their names must be present in the claim!
+            IMPORTANT:
+            {get_speculative_hypotheses_guidance(partner_type)}
 
             Here is the conversation:
             {text}
@@ -99,15 +106,18 @@ def whatsapp_chunks_speculatives(
     gpt4o: BaseLlmResource,
     whatsapp_conversation_rechunked: pl.DataFrame,
 ) -> pl.DataFrame:
-    partner_names = get_messaging_partners_names()
+    messaging_partners = get_messaging_partners()
 
     df = whatsapp_conversation_rechunked.with_columns(
-        messages_str=get_messages_struct_to_string_format_expr(partner_names)
+        messages_str=get_messages_struct_to_string_format_expr(messaging_partners)
     )
 
     prompt_sequences = [
         _get_speculatives_extraction_prompt_sequence(
-            messages_str, partner_names["me"], partner_names["partner"]
+            messages_str,
+            messaging_partners.me,
+            messaging_partners.partner,
+            messaging_partners.partner_type,
         )
         for messages_str in df.get_column("messages_str").to_list()
     ]
@@ -122,7 +132,7 @@ def whatsapp_chunks_speculatives(
         *[
             (
                 *parse_whatsapp_claims(
-                    partner_names["me"], partner_names["partner"], completion[-1]
+                    messaging_partners.me, messaging_partners.partner, completion[-1]
                 ),
                 completion[-2],
             )

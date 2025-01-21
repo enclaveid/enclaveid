@@ -1,7 +1,11 @@
 import polars as pl
 
+from data_pipeline.utils.get_messaging_partners import MessagingPartners
 
-def get_messages_struct_to_string_format_expr(partner_names: dict[str, str]) -> pl.Expr:
+
+def get_messages_struct_to_string_format_expr(
+    messaging_partners: MessagingPartners
+) -> pl.Expr:
     return (
         pl.col("messages_struct")
         .list.eval(
@@ -9,11 +13,11 @@ def get_messages_struct_to_string_format_expr(partner_names: dict[str, str]) -> 
                 [
                     pl.lit("From: "),
                     pl.when(pl.element().struct.field("from").eq("me"))
-                    .then(pl.lit(partner_names["me"]))
+                    .then(pl.lit(messaging_partners.me))
                     .otherwise(pl.element().struct.field("from")),
                     pl.lit(", To: "),
                     pl.when(pl.element().struct.field("to").eq("me"))
-                    .then(pl.lit(partner_names["me"]))
+                    .then(pl.lit(messaging_partners.me))
                     .otherwise(pl.element().struct.field("to")),
                     pl.lit(", Date: "),
                     pl.element().struct.field("date"),

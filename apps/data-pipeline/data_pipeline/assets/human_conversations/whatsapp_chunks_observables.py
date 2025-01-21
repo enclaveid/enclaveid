@@ -8,8 +8,8 @@ from data_pipeline.resources.inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
 )
-from data_pipeline.utils.get_messaging_partner_name import (
-    get_messaging_partners_names,
+from data_pipeline.utils.get_messaging_partners import (
+    get_messaging_partners,
 )
 from data_pipeline.utils.parsing.parse_whatsapp_claims import parse_whatsapp_claims
 from data_pipeline.utils.polars_expressions.messages_struct_to_string_format_expr import (
@@ -106,15 +106,15 @@ def whatsapp_chunks_observables(
     gpt4o: BaseLlmResource,
     whatsapp_conversation_rechunked: pl.DataFrame,
 ) -> pl.DataFrame:
-    partner_names = get_messaging_partners_names()
+    messaging_partners = get_messaging_partners()
 
     df = whatsapp_conversation_rechunked.with_columns(
-        messages_str=get_messages_struct_to_string_format_expr(partner_names)
+        messages_str=get_messages_struct_to_string_format_expr(messaging_partners)
     )
 
     prompt_sequences = [
         _get_observables_extraction_prompt_sequence(
-            messages_str, partner_names["me"], partner_names["partner"]
+            messages_str, messaging_partners.me, messaging_partners.partner
         )
         for messages_str in df.get_column("messages_str").to_list()
     ]
@@ -129,7 +129,7 @@ def whatsapp_chunks_observables(
         *[
             (
                 *parse_whatsapp_claims(
-                    partner_names["me"], partner_names["partner"], completion[-1]
+                    messaging_partners.me, messaging_partners.partner, completion[-1]
                 ),
                 completion[-2],
             )

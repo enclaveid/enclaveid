@@ -83,7 +83,7 @@ select = [
   # isort
   "I",
 ]
-ignore = []
+ignore = ["E501"]
 
 fixable = ["ALL"]
 unfixable = []
