@@ -11,13 +11,12 @@ from data_pipeline.partitions import user_partitions_def
 
 class WhatsappClaimsDeduplicatedConfig(Config):
     threshold: float = Field(
-        default=0.85, description="Cosine similarity threshold for merging claims"
+        default=0.9, description="Cosine similarity threshold for merging claims"
     )
-    top_n: int = Field(default=30, description="Top-n claims to aggregate")
 
 
-def find_similar_claims(
-    embeddings: List[List[float]], config: WhatsappClaimsDeduplicatedConfig
+def find_similar_pairs(
+    embeddings: List[List[float]], threshold: float
 ) -> List[Tuple[int, List[Tuple[int, float]]]]:
     """
     Performs a single FAISS similarity search and returns all similar claim pairs.
@@ -35,14 +34,13 @@ def find_similar_claims(
     index = faiss.IndexFlatIP(dimension)
     index.add(embeddings_array)
 
-    k = min(len(embeddings), config.top_n)
-    similarities, indices = index.search(embeddings_array, k=k)
+    similarities, indices = index.search(embeddings_array, k=len(embeddings))
 
     similar_pairs = []
     for i, (sim_scores, idx_list) in enumerate(zip(similarities, indices)):
         matches = []
         for j, sim in zip(idx_list, sim_scores):
-            if i != j and sim >= config.threshold:
+            if i != j and sim >= threshold:
                 matches.append((j, float(sim)))
         similar_pairs.append((i, matches))
 
@@ -76,6 +74,18 @@ class UnionFind:
                 self.rank[rootX] += 1
 
 
+def get_dedup_clusters(
+    n: int,
+    similar_pairs: List[Tuple[int, List[Tuple[int, float]]]],
+) -> list[int]:
+    uf = UnionFind(n)
+    for i, matches in similar_pairs:
+        for j, _sim_score in matches:
+            uf.union(i, j)
+
+    return [uf.find(i) for i in range(n)]
+
+
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
@@ -99,23 +109,16 @@ async def whatsapp_claims_deduplicated(
     and produce a DataFrame of aggregated/deduplicated claims.
     """
 
-    # 1. Gather embeddings and find similarities
+    # Gather embeddings and find similarities
     df = whatsapp_claims_embeddings
     embeddings = df["embedding"].to_list()
-    similar_pairs = find_similar_claims(embeddings, config)
 
-    # 2. Build clusters using Union-Find
-    n = df.height
-    uf = UnionFind(n)
-    for i, matches in similar_pairs:
-        for j, _sim_score in matches:
-            uf.union(i, j)
+    similar_pairs = find_similar_pairs(embeddings, config.threshold)
+    clusters = get_dedup_clusters(df.height, similar_pairs)
 
-    # 3. Assign each row to its cluster
-    clusters = [uf.find(i) for i in range(n)]
     df = df.with_columns(pl.Series(name="cluster_id", values=clusters))
 
-    # 4. Aggregate clusters:
+    # Aggregate clusters:
     # We just keep the first instance of each duplicate
     aggregated = (
         df.group_by("cluster_id", "claim_subject")
@@ -132,8 +135,6 @@ async def whatsapp_claims_deduplicated(
         )
         .drop("cluster_id")
     )
-
-    print(aggregated.schema)
 
     # Return aggregated (deduplicated) DataFrame
     return aggregated
