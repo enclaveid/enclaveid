@@ -41,7 +41,7 @@ def create_faiss_index(df: pl.DataFrame) -> faiss.IndexFlatIP:
     return index
 
 
-def get_similar_nodes(
+def get_similar_claims(
     idx_to_id: dict[int, int],
     similarities: dict[int, float],
     top_k: int,
@@ -85,7 +85,7 @@ def get_substantiation_prompt_sequence(
             determine if the following evidence supports it:
             {"".join(f"- {ev}\n" for ev in evidence)}
 
-            Answer with the following JSON:
+            Provide an analysis of the evidence and conclude with the following JSON:
             {{
                 "supports": true | false,
                 "confidence": 0-1
@@ -138,47 +138,47 @@ def whatsapp_speculatives_substantiation(
     df = whatsapp_claims_deduplicated.with_row_count("id")
 
     # 2) Separate query (speculative) vs. non-speculative
-    query_nodes = df.filter(pl.col("claim_type") == "speculative")
-    graph_nodes = df.filter(pl.col("claim_type") != "speculative")
+    query_claims = df.filter(pl.col("claim_type") == "speculative")
+    substantiative_claims = df.filter(pl.col("claim_type") != "speculative")
 
-    # 3) Build the FAISS index from the embeddings in graph_nodes
-    index = create_faiss_index(graph_nodes)
-    # Keep a list of the 'id' values for graph_nodes in the order they appear
-    indexed_ids = graph_nodes.get_column("id").to_list()
+    # 3) Build the FAISS index from the embeddings in substantiative_claims
+    index = create_faiss_index(substantiative_claims)
+    # Keep a list of the 'id' values for substantiative_claims in the order they appear
+    indexed_ids = substantiative_claims.get_column("id").to_list()
 
-    # 4) Build initial 'similar_nodes' mapping: { query_node_id: [ {id, score}, ... ] }
-    similar_nodes_map = {}
-    for row in query_nodes.iter_rows(named=True):
+    # 4) Build initial 'similar_claims' mapping: { query_node_id: [ {id, score}, ... ] }
+    similar_claims_map = {}
+    for row in query_claims.iter_rows(named=True):
         row_id = row["id"]
-        if "embedding" not in row or row_id in similar_nodes_map:
+        if "embedding" not in row or row_id in similar_claims_map:
             continue
 
         emb = np.array([row["embedding"]], dtype=np.float32)
-        D, I = index.search(emb, len(graph_nodes))
+        D, I = index.search(emb, len(substantiative_claims))
 
         # create mapping from FAISS index → actual row_id
         idx_to_id = {idx: indexed_ids[idx] for idx in I[0]}
 
         # top-k neighbors with min_score
-        similar_nodes_map[row_id] = get_similar_nodes(
+        similar_claims_map[row_id] = get_similar_claims(
             idx_to_id, dict(zip(I[0], D[0])), config.top_k, config.min_score
         )
 
     # 5) Turn that dictionary into a Polars DataFrame
-    #    containing columns: id, similar_nodes_scored, average_score, similar_ids
-    similar_nodes_init_df = (
+    #    containing columns: id, similar_claims_scored, average_score, similar_ids
+    similar_claims_init_df = (
         pl.DataFrame(
             {
-                "id": list(similar_nodes_map.keys()),
-                "similar_nodes_scored": list(similar_nodes_map.values()),
+                "id": list(similar_claims_map.keys()),
+                "similar_claims_scored": list(similar_claims_map.values()),
             }
         )
         .with_columns(
-            pl.col("similar_nodes_scored")
+            pl.col("similar_claims_scored")
             .map_elements(lambda arr: [item["score"] for item in arr])
             .list.mean()
             .alias("average_score"),
-            pl.col("similar_nodes_scored")
+            pl.col("similar_claims_scored")
             .map_elements(lambda arr: [item["id"] for item in arr])
             .alias("similar_ids"),
         )
@@ -186,28 +186,30 @@ def whatsapp_speculatives_substantiation(
     )
 
     # Join so that each row has original columns + average_score + similar_ids
-    similar_nodes_init_df = query_nodes.join(similar_nodes_init_df, on="id", how="left")
+    similar_claims_init_df = query_claims.join(
+        similar_claims_init_df, on="id", how="left"
+    )
 
     # 6) Substantiate each speculative in order of average_score
     start_time = time()
     last_log_time = start_time
-    total_labels = len(similar_nodes_init_df)
+    total_labels = len(similar_claims_init_df)
     total_processed = 0
     total_cost = 0.0  # track if your LLM resource gives cost
 
     context.log.info(f"Processing {total_labels} speculative claims...")
 
     results = []
-    for row in similar_nodes_init_df.iter_rows(named=True):
+    for row in similar_claims_init_df.iter_rows(named=True):
         row_id = row["id"]
         claim_text = row["claim_text"]
 
         # Re-run search in case we added new embeddings
         emb = np.array([row["embedding"]], dtype=np.float32)
-        D, I = index.search(emb, len(graph_nodes))
+        D, I = index.search(emb, len(substantiative_claims))
 
         idx_to_id = {idx: indexed_ids[idx] for idx in I[0]}
-        top_k_info = get_similar_nodes(
+        top_k_info = get_similar_claims(
             idx_to_id, dict(zip(I[0], D[0])), config.top_k, config.min_score
         )
         top_k_ids = [x["id"] for x in top_k_info]
@@ -224,6 +226,7 @@ def whatsapp_speculatives_substantiation(
                     "supports": False,
                     "confidence": 0.0,
                     "substantiation_analysis": "No supporting evidence found",
+                    "evidence": [],
                 }
             )
             continue
@@ -265,6 +268,7 @@ def whatsapp_speculatives_substantiation(
                 "supports": supports[0],
                 "confidence": confidence[0],
                 "substantiation_analysis": substantiation_analysis[0],
+                "evidence": evidence_texts,
             }
         )
 

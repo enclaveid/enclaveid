@@ -8,13 +8,13 @@ from data_pipeline.resources.inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
 )
-from data_pipeline.utils.expressions.messages_struct_to_string_format_expr import (
-    get_messages_struct_to_string_format_expr,
-)
 from data_pipeline.utils.get_messaging_partner_name import (
     get_messaging_partners_names,
 )
 from data_pipeline.utils.parsing.parse_whatsapp_claims import parse_whatsapp_claims
+from data_pipeline.utils.polars_expressions.messages_struct_to_string_format_expr import (
+    get_messages_struct_to_string_format_expr,
+)
 
 
 def _get_json_formatting_prompt(user_name: str, partner_name: str) -> str:

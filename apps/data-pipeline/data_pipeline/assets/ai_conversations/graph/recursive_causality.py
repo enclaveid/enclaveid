@@ -13,7 +13,9 @@ from pydantic import Field
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
-from data_pipeline.utils.expressions.relevance_period_expr import relevance_period_expr
+from data_pipeline.utils.polars_expressions.relevance_period_expr import (
+    relevance_period_expr,
+)
 from data_pipeline.utils.save_graph import save_graph
 
 
