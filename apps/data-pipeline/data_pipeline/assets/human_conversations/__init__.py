@@ -25,8 +25,8 @@ from data_pipeline.assets.human_conversations.whatsapp_conversation_chunks impor
 from data_pipeline.assets.human_conversations.whatsapp_conversation_rechunked import (
     whatsapp_conversation_rechunked,
 )
-from data_pipeline.assets.human_conversations.whatsapp_speculatives_substantiation import (
-    whatsapp_speculatives_substantiation,
+from data_pipeline.assets.human_conversations.whatsapp_speculatives_substantiated import (
+    whatsapp_speculatives_substantiated,
 )
 
 __all__ = [
@@ -38,6 +38,6 @@ __all__ = [
     whatsapp_chunks_speculatives,
     whatsapp_claims_embeddings,
     whatsapp_claims_deduplicated,
-    whatsapp_speculatives_substantiation,
+    whatsapp_speculatives_substantiated,
     whatsapp_chunks_sentiment,
 ]  # type: ignore

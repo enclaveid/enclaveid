@@ -20,7 +20,7 @@ class WhatsappSpeculativesSubstantiationConfig(Config):
         description="Number of similar nodes to consider for order of substantiation",
     )
     min_score: float | None = Field(
-        default=0.7,
+        default=0.6,
         description="Minimum similarity score to consider for order of substantiation",
     )
     min_confidence: float = Field(
@@ -123,7 +123,7 @@ def parse_substantiation(response: str) -> tuple[bool | None, float | None]:
         ),
     },
 )
-def whatsapp_speculatives_substantiation(
+def whatsapp_speculatives_substantiated(
     context: AssetExecutionContext,
     config: WhatsappSpeculativesSubstantiationConfig,
     whatsapp_claims_deduplicated: pl.DataFrame,
