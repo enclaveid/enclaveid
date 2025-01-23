@@ -6,11 +6,11 @@ import httpx
 from dagster import InitResourceContext, get_dagster_logger
 from pydantic import PrivateAttr
 
-from data_pipeline.resources.inference.base_llm_resource import (
+from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
 )
-from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
+from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
 
 
 class RemoteLlmResource(BaseLlmResource):

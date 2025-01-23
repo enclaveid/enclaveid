@@ -68,6 +68,13 @@
         "command": "poetry run pytest tests/",
         "cwd": "apps/data-pipeline"
       }
+    },
+    "start-wandb-server": {
+      "executor": "@nxlv/python:run-commands",
+      "options": {
+        "command": "wandb server start",
+        "cwd": "apps/data-pipeline"
+      }
     }
   },
   "tags": [],

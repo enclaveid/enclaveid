@@ -30,7 +30,6 @@ faiss-cpu = "^1.9.0.post1"
 networkx = "^3.4.2"
 json-repair = "^0.30.3"
 universal-pathlib = "^0.2.5"
-httpx = "^0.28.1"
 azure-storage-blob = "^12.24.0"
 adlfs = "^2024.7.0"
 igraph = "^0.11.8"
@@ -42,6 +41,8 @@ umap-learn = "^0.5.7"           # careful with these
 numpy = "^2.0.2"                # careful with these
 llvmlite = "^0.43.0"            # careful with these
 numba = "^0.60.0"               # careful with these
+openai = "^1.60.0"
+wandb = "^0.19.4"
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "2.0.2"

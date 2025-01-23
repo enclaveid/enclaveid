@@ -3,8 +3,8 @@ from typing import Callable, List, Sequence, Tuple, Union
 
 from dagster import Config, ConfigurableResource
 
-from data_pipeline.resources.inference.local_llm_config import LocalLlmConfig
-from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
+from data_pipeline.resources.batch_inference.local_llm_config import LocalLlmConfig
+from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
 
 
 class LlmConfig(Config):

@@ -1,11 +1,11 @@
 from dagster import EnvVar
 
-from data_pipeline.resources.inference.base_llm_resource import (
+from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     LlmConfig,
 )
-from data_pipeline.resources.inference.llm_factory import create_llm_resource
-from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
+from data_pipeline.resources.batch_inference.llm_factory import create_llm_resource
+from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
 
 openrouter_config = RemoteLlmConfig(
     api_key=EnvVar("OPENROUTER_API_KEY"),

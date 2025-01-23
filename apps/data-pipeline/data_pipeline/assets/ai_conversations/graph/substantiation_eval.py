@@ -6,7 +6,7 @@ from dagster import AssetExecutionContext, AssetIn, Config, asset
 from json_repair import repair_json
 
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.inference.base_llm_resource import (
+from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
 )

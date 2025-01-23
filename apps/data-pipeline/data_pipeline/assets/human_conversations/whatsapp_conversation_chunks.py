@@ -9,7 +9,7 @@ from data_pipeline.constants.whatsapp_conversations import (
     MIN_WHATSAPP_CONVERSATION_CHUNK_SIZE,
 )
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.inference.base_llm_resource import (
+from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
 )

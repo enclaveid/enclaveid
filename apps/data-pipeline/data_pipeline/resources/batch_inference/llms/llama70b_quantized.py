@@ -1,6 +1,6 @@
-from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
-from data_pipeline.resources.inference.llm_factory import LlmConfig, create_llm_resource
-from data_pipeline.resources.inference.local_llm_config import LocalLlmConfig
+from data_pipeline.resources.batch_inference.base_llm_resource import BaseLlmResource
+from data_pipeline.resources.batch_inference.llm_factory import LlmConfig, create_llm_resource
+from data_pipeline.resources.batch_inference.local_llm_config import LocalLlmConfig
 
 llama70b_quantized_config = LlmConfig(
     colloquial_model_name="llama70b_quantized",

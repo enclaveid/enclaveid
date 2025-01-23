@@ -1,11 +1,11 @@
 from dagster import EnvVar, build_init_resource_context
 
-from data_pipeline.resources.inference.base_llm_resource import (
+from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     LlmConfig,
 )
-from data_pipeline.resources.inference.llm_factory import create_llm_resource
-from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
+from data_pipeline.resources.batch_inference.llm_factory import create_llm_resource
+from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
 
 gpt4o_mini_config_azure = LlmConfig(
     colloquial_model_name="gpt-4o-mini",

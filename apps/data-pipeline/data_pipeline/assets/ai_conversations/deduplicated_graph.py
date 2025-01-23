@@ -4,7 +4,7 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
+from data_pipeline.resources.batch_inference.base_llm_resource import BaseLlmResource
 
 
 def get_description_consolidation_prompt_sequence(descriptions: list[str]) -> list[str]:

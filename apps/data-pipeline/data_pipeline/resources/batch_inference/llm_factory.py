@@ -1,10 +1,10 @@
 from dagster import get_dagster_logger
 
-from data_pipeline.resources.inference.base_llm_resource import (
+from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     LlmConfig,
 )
-from data_pipeline.resources.inference.remote_llm_resource import RemoteLlmResource
+from data_pipeline.resources.batch_inference.remote_llm_resource import RemoteLlmResource
 
 
 def create_llm_resource(config: LlmConfig) -> BaseLlmResource | None:

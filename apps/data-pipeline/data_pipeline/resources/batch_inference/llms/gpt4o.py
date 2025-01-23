@@ -1,8 +1,8 @@
 from dagster import EnvVar, build_init_resource_context
 
-from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
-from data_pipeline.resources.inference.llm_factory import LlmConfig, create_llm_resource
-from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
+from data_pipeline.resources.batch_inference.base_llm_resource import BaseLlmResource
+from data_pipeline.resources.batch_inference.llm_factory import LlmConfig, create_llm_resource
+from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
 
 # TODO: Implement batch https://platform.openai.com/docs/api-reference/batch
 gpt4o_config = LlmConfig(

@@ -3,21 +3,15 @@ from textwrap import dedent
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 
-from data_pipeline.constants.whatsapp_conversations import PartnerType
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
 )
-from data_pipeline.utils.get_messaging_partners import (
-    get_messaging_partners,
-)
+from data_pipeline.utils.get_messaging_partners import get_messaging_partners
 from data_pipeline.utils.parsing.parse_whatsapp_claims import parse_whatsapp_claims
 from data_pipeline.utils.polars_expressions.messages_struct_to_string_format_expr import (
     get_messages_struct_to_string_format_expr,
-)
-from data_pipeline.utils.speculative_hypotheses_guidance import (
-    get_speculative_hypotheses_guidance,
 )
 
 
@@ -28,37 +22,38 @@ def _get_json_formatting_prompt(user_name: str, partner_name: str) -> str:
 
           {{
             "{user_name}": [
-              "Description of speculation 1",
-              "Description of speculation 2",
+              {{
+                "datetime": "YYYY-MM-DD HH:MM:SS",
+                "claim": "description of the claim"
+              }},
               ...
             ],
             "{partner_name}": [
-              "Description of speculation 1",
-              "Description of speculation 2",
+              {{
+                "datetime": "YYYY-MM-DD HH:MM:SS",
+                "claim": "description of the claim"
+              }},
               ...
             ]
           }}
 
-          IMPORTANT:
-          - If a claim involves both users, both their names must be present in the claim description!
-          - If a claim involves both users at the same time, assign it to the most relevant user.
+          If a claim involves both users at the same time, assign it to the most relevant user.
         """
     ).strip()
 
 
-def _get_speculatives_extraction_prompt_sequence(
-    text: str, user_name: str, partner_name: str, partner_type: PartnerType
+def _get_observables_extraction_prompt_sequence(
+    text: str, user_name: str, partner_name: str
 ) -> PromptSequence:
     return [
         dedent(
             f"""
-            Given this chat conversation between {user_name} and {partner_name}, come up with a list of speculations about the users' deeper motivations and/or circumstances.
+            Given this chat conversation between {user_name} and {partner_name}, extract claims about them.
 
-            Rules:
-            - Consider all possible factors: psychological, social, environmental, technological, economic, cultural, etc.
-            - Prioritize insight over certainty as each speculation will be validated individually at a later stage
-            - Do not use hypothetical language in the speculations
-            - Each speculation should be a standalone statement without referencing the original behaviors verbatim.
+            Include only claims that are:
+            - Directly evident in their words or behavior (like reviewing security camera footage—just stating what’s visible).
+            - Accurate and observable without guessing or adding interpretation.
+            - Agreed upon by any neutral observer, requiring no assumptions beyond what is plainly stated.
 
             For example, given this input:
             - From {partner_name} to {user_name}: "Sent 2 of MEDIA: IMAGE"
@@ -71,17 +66,20 @@ def _get_speculatives_extraction_prompt_sequence(
             - From {partner_name} to {user_name}: "And my personal trainer texted me today so I’ll organise my routine to go twice a week"
             - From {partner_name} to {user_name}: "💪🏼💪🏼"
 
-            You could extract the following claims:
-            - {partner_name} desires to please {user_name} or gain their approval.
-            - {partner_name} is reshaping their fitness habits due to an underlying health issue (e.g., pre-diabetes, weight concerns, or chronic fatigue).
-            - {partner_name} is attempting to deepen the bond with {user_name} by sharing personal details and experiences.
-            - {partner_name} values {user_name}'s opinion and is using health changes as a way to stay close or create a sense of shared journey.
-            - {user_name} has experience with health and nutrition, having gone through a similar health journey as {partner_name}.
-            - {partner_name} shifts in diet and exercise habits are driven by stress or a recent life change—such as a breakup, job change, or mental-health struggles.
-            - {partner_name} is using fitness and nutrition as a way to regain control or manage emotions.
+            You should extract the following claims:
+            - {partner_name} has sent pictures of Kefir
+            - {user_name} suggested that {partner_name} drinks Kefir in the mornings
+            - {user_name} wonders if his suggestion of drinking Kefir in the mornings helped {partner_name}
+            - {partner_name} has more energy in the mornings because of Kefir as a result of {user_name}'s suggestion
+            - {partner_name} doesn't eat sugar anymore in the mornings
+            - {partner_name} is eating protein every day
+            - {partner_name}'s personal trainer texted them today so they'll organise their gym routine to go twice a week
 
-            IMPORTANT:
-            {get_speculative_hypotheses_guidance(partner_type)}
+
+            Note how each claim is:
+            - Contextually complete, can be red independently while still delivering complete information.
+            - High confidence and descriptive, without additional assumptions
+            - Avoids restating the raw message content verbatim
 
             Here is the conversation:
             {text}
@@ -100,7 +98,7 @@ def _get_speculatives_extraction_prompt_sequence(
         ),
     },
 )
-def whatsapp_chunks_speculatives(
+def whatsapp_chunk_inferrables(
     context: AssetExecutionContext,
     config: Config,
     gpt4o: BaseLlmResource,
@@ -113,11 +111,8 @@ def whatsapp_chunks_speculatives(
     )
 
     prompt_sequences = [
-        _get_speculatives_extraction_prompt_sequence(
-            messages_str,
-            messaging_partners.me,
-            messaging_partners.partner,
-            messaging_partners.partner_type,
+        _get_observables_extraction_prompt_sequence(
+            messages_str, messaging_partners.me, messaging_partners.partner
         )
         for messages_str in df.get_column("messages_str").to_list()
     ]
@@ -126,12 +121,12 @@ def whatsapp_chunks_speculatives(
         prompt_sequences,
     )
 
-    context.log.info(f"speculatives extraction cost: ${cost:.6f}")
+    context.log.info(f"Observables extraction cost: ${cost:.6f}")
 
-    speculatives_me, speculatives_partner, raw_analysis = zip(
+    observables_me, observables_partner, raw_analysis = zip(
         *[
             (
-                *parse_whatsapp_claims(
+                parse_whatsapp_claims(
                     messaging_partners.me, messaging_partners.partner, completion[-1]
                 ),
                 completion[-2],
@@ -143,8 +138,8 @@ def whatsapp_chunks_speculatives(
     )
 
     result_df = df.with_columns(
-        speculatives_me=pl.Series(speculatives_me),
-        speculatives_partner=pl.Series(speculatives_partner),
+        observables_me=pl.Series(observables_me),
+        observables_partner=pl.Series(observables_partner),
         raw_analysis=pl.Series(raw_analysis),
     )
     return result_df

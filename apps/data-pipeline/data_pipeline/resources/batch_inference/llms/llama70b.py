@@ -1,8 +1,8 @@
 from dagster import EnvVar
 
-from data_pipeline.resources.inference.base_llm_resource import BaseLlmResource
-from data_pipeline.resources.inference.llm_factory import LlmConfig, create_llm_resource
-from data_pipeline.resources.inference.remote_llm_config import RemoteLlmConfig
+from data_pipeline.resources.batch_inference.base_llm_resource import BaseLlmResource
+from data_pipeline.resources.batch_inference.llm_factory import LlmConfig, create_llm_resource
+from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
 
 llama70b_config = LlmConfig(
     colloquial_model_name="llama70b",
