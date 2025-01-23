@@ -81,7 +81,6 @@ def calculate_personalization_vector(
     G: ig.Graph,
     max_similarities: dict[int, float],
     label_indices: np.ndarray,
-    vertex_indices: np.ndarray,
     config: SpeculativesSubstantiationConfig,
 ):
     """Calculate personalization vector for PageRank using the aggregated (max) similarities."""
@@ -170,7 +169,6 @@ def speculatives_substantiation(
     # We'll use this to map from graph vertex to an index in graph_nodes
     vertex_ids = np.array([v["id"] for v in G.vs])
     label_indices = np.array([label_to_idx.get(vid, -1) for vid in vertex_ids])
-    vertex_indices = np.arange(len(G.vs))
 
     # -------------------------------------------------------------------------
     # Precompute "similar_nodes_baseline_no_prep" for all speculative nodes
@@ -187,7 +185,9 @@ def speculatives_substantiation(
                 continue
 
             # Search in FAISS
-            D, I = index.search(np.array([row["embedding"]], dtype=np.float32), len(graph_nodes))
+            D, I = index.search(
+                np.array([row["embedding"]], dtype=np.float32), len(graph_nodes)
+            )
             # Build a max_similarities dict with a single embedding
             max_similarities: dict[int, float] = defaultdict(float)
             for idx_in_faiss, sim in zip(I[0], D[0]):
@@ -268,7 +268,7 @@ def speculatives_substantiation(
 
             # Build personalization vector
             personalization = calculate_personalization_vector(
-                G, max_similarities, label_indices, vertex_indices, config
+                G, max_similarities, label_indices, config
             )
 
             result_dict = {}
