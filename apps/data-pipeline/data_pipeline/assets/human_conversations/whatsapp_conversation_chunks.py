@@ -28,23 +28,19 @@ def _get_whatsapp_chunking_prompt_sequence(text: str) -> PromptSequence:
           Examine the list of messages carefully and decide which of the following three actions to take:
 
           **INCONCLUSIVE**:
-          - Choose this if the messages do not provide enough clarity or information
-            for you to meaningfully understand the participants’ intent or the broader
-            context of the conversation. For example, if the conversation is too short,
-            too vague, or lacks substantive content.
+          Choose this if:
+          - The messages do not provide enough clarity or information
+          - The conversation is too short, too vague, or lacks substantive content.
 
           **CHUNK**:
-          - Choose this if the conversation is long and contains enough variation that it
-            would be more useful to break it down into time-based segments (“chunks”).
-            Each chunk should be independently analyzable and contain enough information
-            to understand the participants’ intent and the broader context of the conversation.
-            This means the chunks cannot be too short: if that's the case proceed with the
-            "NO_CHUNK" decision. Avoid creating chunks under {MIN_WHATSAPP_CONVERSATION_CHUNK_SIZE} messages.
+          Choose this if the number of messages is greater than {MIN_WHATSAPP_CONVERSATION_CHUNK_SIZE} AND:
+          - The conversation is long and contains many independent topics and segments (chunks). Messages in separate chunks must not be referring to each other.
+          - Each chunk contains enough information to understand the participants’ intent and the broader context of the conversation.
 
           **NO_CHUNK**:
-          - Choose this if the conversation is not too long and contains enough information to be considered a single segment.
-            The chunk is independently analyzable and contain enough information
-            to understand the participants’ intent and the broader context of the conversation.
+          Choose this if:
+          - The conversation is not too long and contains enough information to be considered a single segment.
+          - All messages relate to each other in a chain and cannot be separated
 
           Reason on your decision and conclude with a JSON with the exact structure shown below (and no additional keys or text):
           {{

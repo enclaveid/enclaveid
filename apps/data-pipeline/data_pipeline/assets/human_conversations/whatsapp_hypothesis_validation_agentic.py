@@ -53,4 +53,7 @@ def whatsapp_hypothesis_validation_agentic(
 
     context.log.info(f"Result: {result}")
 
+    total_cost = sum(float(t.cost) if t.cost else 0 for t in trace) if trace else 0
+    context.log.info(f"Total cost: {total_cost}")
+
     return trace
