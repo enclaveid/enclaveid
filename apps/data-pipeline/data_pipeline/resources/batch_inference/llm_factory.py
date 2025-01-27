@@ -4,7 +4,9 @@ from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     LlmConfig,
 )
-from data_pipeline.resources.batch_inference.remote_llm_resource import RemoteLlmResource
+from data_pipeline.resources.batch_inference.remote_llm_resource import (
+    RemoteLlmResource,
+)
 
 
 def create_llm_resource(config: LlmConfig) -> BaseLlmResource | None:

@@ -36,10 +36,9 @@ Analyze temporal patterns and contextual relationships between nodes:
 3. Check counterfactual context-recurrence patterns (same cause->effect across multiple dates, but with a different context)
 
 The actions you can use at this step are:
-- `get_parents(node_id: str, depth: int) -> AdjacencyList`: Get direct (depth=1) or indirect (depth>1) parents for the current node, including their metadata properties. Use this to examine the established causes of the current node.
-- `get_children(node_id: str, depth: int) -> AdjacencyList`: Get direct (depth=1) or indirect (depth>1) children for the current node, including their metadata properties. Use this to examine the established effects of the current node.
-- `get_causal_chain(node_id1: str, node_id2: str) -> AdjacencyList`: Get the causal chain between two nodes. If no causal chain is found, it will return the most likely causal chain. You can decide to use the `connect_nodes` action if the two nodes belong to different dates.
-- `connect_nodes(node_id1: str, node_id2: str)`: Connect two nodes belonging to different dates with a causal link. This operation does not consume any budget and does not return any data.
+- `get_causal_chain(node_id1: str, node_id2: str) -> AdjacencyList`: Get the causal chain between two nodes. If no causal chain is found, it will return the closest one.
+- `get_parents(node_id: str, depth: int) -> AdjacencyList`: Explore parents of the current node, with their metadata properties.
+- `get_children(node_id: str, depth: int) -> AdjacencyList`: Explore children of the current node, with their metadata properties.
 
 You can perform many iterations of this step but try to perform as many actions as possible in a single batch.
 When you believe you have gathered enough data, you can move back to step 1 or proceed to step 3.
@@ -75,7 +74,7 @@ When you want to perform one or multiple actions, answer with the JSON format:
   ]
 }
 
-Most actions will return an AdjacencyList, which is a list of nodes with their properties:
+Actions will return an AdjacencyList, which is a list of nodes with their properties:
 [
   {
     "id": "node_id",
@@ -84,14 +83,14 @@ Most actions will return an AdjacencyList, which is a list of nodes with their p
     "parents": [ # Interpret these as the "causes" of the node
       {
         "id": "parent_node_id",
-        "datetime": "YYYY-MM-DD HH:MM:SS" # When did the parent node cause the current node?
+        "datetime": "YYYY-MM-DD HH:MM:SS" # When did the parent node cause the current node (if applicable)
       },
       ...
     ],
     "children": [ # Interpret these as the "effects" of the node
       {
         "id": "child_node_id",
-        "datetime": "YYYY-MM-DD HH:MM:SS" # When did the current node cause the child node?
+        "datetime": "YYYY-MM-DD HH:MM:SS" # When did the current node cause the child node (if applicable)
       },
       ...
     ],

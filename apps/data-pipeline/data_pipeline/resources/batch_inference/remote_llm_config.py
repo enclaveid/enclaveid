@@ -10,3 +10,4 @@ class RemoteLlmConfig(Config):
     input_cpm: float
     output_cpm: float
     context_length: int
+    provider: dict | None = None

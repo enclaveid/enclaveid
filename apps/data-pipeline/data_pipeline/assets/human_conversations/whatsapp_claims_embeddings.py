@@ -53,23 +53,15 @@ def _get_exploded_df(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
-        "whatsapp_chunks_observables": AssetIn(
-            key=["whatsapp_chunks_observables"],
-        ),
-        "whatsapp_chunks_inferrables": AssetIn(
-            key=["whatsapp_chunks_inferrables"],
-        ),
-        "whatsapp_chunks_speculatives": AssetIn(
-            key=["whatsapp_chunks_speculatives"],
+        "whatsapp_chunks_subgraphs": AssetIn(
+            key=["whatsapp_chunks_subgraphs"],
         ),
     },
 )
 async def whatsapp_claims_embeddings(
     context: AssetExecutionContext,
     config: Config,
-    whatsapp_chunks_observables: pl.DataFrame,
-    whatsapp_chunks_inferrables: pl.DataFrame,
-    whatsapp_chunks_speculatives: pl.DataFrame,
+    whatsapp_chunks_subgraphs: pl.DataFrame,
     batch_embedder: BatchEmbedderResource,
 ) -> pl.DataFrame:
     df = pl.concat(

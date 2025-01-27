@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from openai import OpenAI
 from openai.types import CompletionUsage
@@ -59,6 +60,7 @@ class GraphExplorerAgent:
                 content=new_question,
                 reasoning_content=None,
                 cost=input_cost,
+                timestamp=datetime.now(),
             )
         )
 
@@ -71,6 +73,7 @@ class GraphExplorerAgent:
                 content=answer,
                 reasoning_content=response.choices[0].message.reasoning_content,  # type: ignore
                 cost=output_cost,
+                timestamp=datetime.now(),
             )
         )
 

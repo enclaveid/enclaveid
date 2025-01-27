@@ -54,6 +54,9 @@ class RemoteLlmResource(BaseLlmResource):
             **self.llm_config.inference_config,
         }
 
+        if self.llm_config.provider:
+            payload["provider"] = self.llm_config.provider
+
         # Requests are attempted in seuqnence, meaning that the latter
         # will likely be blocked more often
         max_attempts = conversation_id + 3
@@ -75,13 +78,16 @@ class RemoteLlmResource(BaseLlmResource):
                     },
                 )
 
-                if response.status_code == 429:
-                    retry_after = response.headers.get("Retry-After")
-                    if retry_after:
-                        wait_time = int(retry_after)
-                        self._retry_event.clear()  # Block further requests
-                        await asyncio.sleep(wait_time)  # Wait as advised by the server
-                        self._retry_event.set()  # Allow requests again
+                # Providers often return 500s for rate limits
+                if response.status_code == 429 or response.status_code >= 500:
+                    retry_after = response.headers.get("Retry-After") or (2**_)
+                    logger.info(
+                        f"LLM completion #{conversation_id} returned status code {response.status_code}: {response.text}. Retrying in {retry_after}s..."
+                    )
+                    wait_time = int(retry_after)
+                    self._retry_event.clear()  # Block further requests
+                    await asyncio.sleep(wait_time)  # Wait as advised by the server
+                    self._retry_event.set()  # Allow requests again
                     continue
 
                 response.raise_for_status()
