@@ -1,5 +1,7 @@
 import asyncio
+import time
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
 import httpx
@@ -13,6 +15,14 @@ from data_pipeline.resources.batch_inference.base_llm_resource import (
 from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
 
 
+@dataclass
+class SequenceMetrics:
+    start_time: float
+    duration: float | None = None
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+
 class RemoteLlmResource(BaseLlmResource):
     llm_config: RemoteLlmConfig
     is_multimodal: bool = False
@@ -21,6 +31,7 @@ class RemoteLlmResource(BaseLlmResource):
     _retry_event: asyncio.Event = PrivateAttr(default_factory=asyncio.Event)
     _remaining_reqs: int = PrivateAttr()
     _loop: asyncio.AbstractEventLoop = PrivateAttr()
+    _sequence_metrics: Dict[int, SequenceMetrics] = PrivateAttr(default_factory=dict)
 
     def _create_client(self) -> httpx.AsyncClient:
         return httpx.AsyncClient(
@@ -39,15 +50,38 @@ class RemoteLlmResource(BaseLlmResource):
 
     async def _periodic_status_printer(self) -> None:
         logger = get_dagster_logger()
-        while True and self._remaining_reqs > 1:
-            logger.info(f"Remaining requests: {self._remaining_reqs}")
+        while True:
+            # Only consider completed sequences (those with duration set)
+            completed_metrics = [
+                m for m in self._sequence_metrics.values() if m.duration is not None
+            ]
+
+            log_mgs = (
+                f"Progress: {len(completed_metrics)}/{len(self._sequence_metrics)}"
+            )
+
+            if completed_metrics:
+                avg_duration = sum(m.duration for m in completed_metrics) / len(
+                    completed_metrics
+                )
+                avg_input_tokens = sum(m.input_tokens for m in completed_metrics) / len(
+                    completed_metrics
+                )
+                avg_output_tokens = sum(
+                    m.output_tokens for m in completed_metrics
+                ) / len(completed_metrics)
+
+                log_mgs += f" | Avg duration: {avg_duration:.2f}s | Avg input tokens: {avg_input_tokens:.1f} | Avg output tokens: {avg_output_tokens:.1f}"
+
+            logger.info(log_mgs)
+
             await asyncio.sleep(60)
 
     async def _get_completion(
         self,
         conversation: List[Dict[str, str]],
         conversation_id: int,
-    ) -> tuple[str | None, float]:
+    ) -> tuple[str | None, float, tuple[int, int]]:
         # TODO: Ensure payload fits the context window
         payload = {
             "messages": conversation,
@@ -93,21 +127,17 @@ class RemoteLlmResource(BaseLlmResource):
                 response.raise_for_status()
                 res = response.json()
                 answer: str = res["choices"][0]["message"]["content"]
-                cost = (
-                    res["usage"]["prompt_tokens"] * self.llm_config.input_cpm / 1000
-                ) + (
-                    res["usage"]["completion_tokens"]
-                    * self.llm_config.output_cpm
-                    / 1000
-                )
-                return answer, cost
+                input_tokens = res["usage"]["prompt_tokens"]
+                output_tokens = res["usage"]["completion_tokens"]
 
-            except httpx.TimeoutException as e:
+                cost = (input_tokens * self.llm_config.input_cpm / 1000) + (
+                    output_tokens * self.llm_config.output_cpm / 1000
+                )
+                return answer, cost, (input_tokens, output_tokens)
+
+            except (httpx.TimeoutException, httpx.ReadError) as e:
                 logger.error(f"LLM completion #{conversation_id} timed out: {e}")
-                return None, 0
-            except httpx.ReadError as e:
-                logger.error(f"LLM completion #{conversation_id} timed out: {e}")
-                return None, 0
+                return None, 0, (0, 0)
             except Exception as e:
                 if response:
                     logger.error(
@@ -116,16 +146,19 @@ class RemoteLlmResource(BaseLlmResource):
                 else:
                     logger.error(f"Error in LLM completion #{conversation_id}: {e}")
 
-                return None, 0
+                return None, 0, (0, 0)
 
         logger.error(
             f"Failed to get completion #{conversation_id} after {max_attempts} attempts."
         )
-        return None, 0
+        return None, 0, (0, 0)
 
     async def _get_prompt_sequence_completion(
         self, prompts_sequence: PromptSequence, conversation_id: int
     ) -> tuple[list[Dict[str, str]], float]:
+        self._sequence_metrics[conversation_id] = SequenceMetrics(
+            start_time=time.time()
+        )
         conversation = []
         total_cost = 0.0
 
@@ -143,14 +176,23 @@ class RemoteLlmResource(BaseLlmResource):
                     else content,
                 }
             )
-            response, cost = await self._get_completion(conversation, conversation_id)
+            response, cost, (input_tokens, output_tokens) = await self._get_completion(
+                conversation, conversation_id
+            )
             self._remaining_reqs -= 1
+
             if not response:
                 return [], total_cost
-            else:
-                conversation.append({"role": "assistant", "content": response})
 
+            conversation.append({"role": "assistant", "content": response})
+            metrics = self._sequence_metrics[conversation_id]
+            metrics.input_tokens += input_tokens
+            metrics.output_tokens += output_tokens
             total_cost += cost
+
+        # Store final duration
+        metrics = self._sequence_metrics[conversation_id]
+        metrics.duration = time.time() - metrics.start_time
 
         return conversation, total_cost
 

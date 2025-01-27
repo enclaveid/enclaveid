@@ -165,7 +165,7 @@ def parse_subgraphs(response: str) -> list[dict] | None:
 
 
 class WhatsappChunksSubgraphsConfig(RowLimitConfig):
-    row_limit: int | None = 3 if get_environment() == "LOCAL" else None
+    row_limit: int | None = 1 if get_environment() == "LOCAL" else None
 
 
 @asset(
