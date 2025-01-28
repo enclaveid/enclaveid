@@ -1,6 +1,6 @@
 from enum import Enum
 
-MIN_WHATSAPP_CONVERSATION_CHUNK_SIZE = 10
+MIN_WHATSAPP_CONVERSATION_CHUNK_SIZE = 5
 
 
 class PartnerType(Enum):

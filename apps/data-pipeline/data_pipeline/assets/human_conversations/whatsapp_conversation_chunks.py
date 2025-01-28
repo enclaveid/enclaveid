@@ -5,6 +5,8 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 from json_repair import repair_json
 
+from data_pipeline.constants.custom_config import RowLimitConfig
+from data_pipeline.constants.environments import get_environment
 from data_pipeline.constants.whatsapp_conversations import (
     MIN_WHATSAPP_CONVERSATION_CHUNK_SIZE,
 )
@@ -38,7 +40,7 @@ def _get_whatsapp_chunking_prompt_sequence(text: str) -> PromptSequence:
           - Each chunk contains enough information to understand the participants’ intent and the broader context of the conversation.
 
           **NO_CHUNK**:
-          Choose this if:
+          Choose this if the number of messages is less than {MIN_WHATSAPP_CONVERSATION_CHUNK_SIZE} OR:
           - The conversation is not too long and contains enough information to be considered a single segment.
           - All messages relate to each other in a chain and cannot be separated
 
@@ -77,6 +79,10 @@ def _parse_whatsapp_chunking_response(
         return (None, None)
 
 
+class WhatsappChunkingConfig(RowLimitConfig):
+    row_limit: int | None = None if get_environment() == "LOCAL" else None
+
+
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
@@ -89,9 +95,10 @@ def _parse_whatsapp_chunking_response(
 def whatsapp_conversation_chunks(
     context: AssetExecutionContext,
     config: Config,
-    gpt4o: BaseLlmResource,
+    llama70b: BaseLlmResource,
     parsed_whatsapp_conversations: pl.DataFrame,
 ) -> pl.DataFrame:
+    llm = llama70b
     messaging_partners = get_messaging_partners()
 
     df = (
@@ -141,7 +148,7 @@ def whatsapp_conversation_chunks(
         for messages_str in df.get_column("messages_str").to_list()
     ]
 
-    completions, cost = gpt4o.get_prompt_sequences_completions_batch(prompt_sequences)
+    completions, cost = llm.get_prompt_sequences_completions_batch(prompt_sequences)
 
     decisions, chunks = zip(
         *[

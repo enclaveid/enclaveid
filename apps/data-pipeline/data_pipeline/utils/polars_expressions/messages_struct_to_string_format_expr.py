@@ -11,19 +11,18 @@ def get_messages_struct_to_string_format_expr(
         .list.eval(
             pl.concat_str(
                 [
-                    pl.lit("From: "),
                     pl.when(pl.element().struct.field("from").eq("me"))
                     .then(pl.lit(messaging_partners.me))
                     .otherwise(pl.element().struct.field("from")),
-                    pl.lit(", To: "),
-                    pl.when(pl.element().struct.field("to").eq("me"))
-                    .then(pl.lit(messaging_partners.me))
-                    .otherwise(pl.element().struct.field("to")),
-                    pl.lit(", Date: "),
+                    # pl.lit(", To: "),
+                    # pl.when(pl.element().struct.field("to").eq("me"))
+                    # .then(pl.lit(messaging_partners.me))
+                    # .otherwise(pl.element().struct.field("to")),
+                    pl.lit(" at "),
                     pl.element().struct.field("date"),
-                    pl.lit(", Time: "),
+                    pl.lit(" "),
                     pl.element().struct.field("time"),
-                    pl.lit(", Content: "),
+                    pl.lit(": "),
                     pl.element().struct.field("content"),
                 ]
             )

@@ -56,12 +56,10 @@ class RemoteLlmResource(BaseLlmResource):
                 m for m in self._sequence_metrics.values() if m.duration is not None
             ]
 
-            log_mgs = (
-                f"Progress: {len(completed_metrics)}/{len(self._sequence_metrics)}"
-            )
+            log_mgs = f"{self._remaining_reqs} requests remaining"
 
             if completed_metrics:
-                avg_duration = sum(m.duration for m in completed_metrics) / len(
+                avg_duration = sum(m.duration for m in completed_metrics) / len(  # type: ignore
                     completed_metrics
                 )
                 avg_input_tokens = sum(m.input_tokens for m in completed_metrics) / len(
@@ -71,7 +69,7 @@ class RemoteLlmResource(BaseLlmResource):
                     m.output_tokens for m in completed_metrics
                 ) / len(completed_metrics)
 
-                log_mgs += f" | Avg duration: {avg_duration:.2f}s | Avg input tokens: {avg_input_tokens:.1f} | Avg output tokens: {avg_output_tokens:.1f}"
+                log_mgs += f" | Avg seq duration: {avg_duration:.2f}s | Avg seq in tokens: {avg_input_tokens:.1f} | Avg seq out tokens: {avg_output_tokens:.1f}"
 
             logger.info(log_mgs)
 
@@ -82,9 +80,16 @@ class RemoteLlmResource(BaseLlmResource):
         conversation: List[Dict[str, str]],
         conversation_id: int,
     ) -> tuple[str | None, float, tuple[int, int]]:
+        # If a message has with_memory set to False, remove all previous messages from the payload
+        conversation_payload = [
+            {"role": msg["role"], "content": msg["content"]}
+            for i, msg in enumerate(conversation)
+            if msg.get("with_memory", True) or i == len(conversation) - 1
+        ]
+
         # TODO: Ensure payload fits the context window
         payload = {
-            "messages": conversation,
+            "messages": conversation_payload,
             **self.llm_config.inference_config,
         }
 
@@ -163,8 +168,12 @@ class RemoteLlmResource(BaseLlmResource):
         total_cost = 0.0
 
         for prompt in prompts_sequence:
+            with_memory = True
             if callable(prompt):
                 content = prompt(conversation[-1]["content"])
+                # We reset the "memory" when the prompt is a callable
+                # since we carry over just the last response as parameter
+                with_memory = False
             else:
                 content = prompt
 
@@ -174,6 +183,7 @@ class RemoteLlmResource(BaseLlmResource):
                     "content": [{"type": "text", "text": content}]
                     if self.is_multimodal
                     else content,
+                    "with_memory": with_memory,
                 }
             )
             response, cost, (input_tokens, output_tokens) = await self._get_completion(

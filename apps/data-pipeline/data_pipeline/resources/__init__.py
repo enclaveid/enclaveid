@@ -7,6 +7,9 @@ from data_pipeline.resources.batch_inference.llms.claude import claude_resource
 from data_pipeline.resources.batch_inference.llms.deepseek_r1 import (
     create_deepseek_r1_resource,
 )
+from data_pipeline.resources.batch_inference.llms.deepseek_v3 import (
+    create_deepseek_v3_resource,
+)
 from data_pipeline.resources.batch_inference.llms.gemini_pro import gemini_pro_resource
 from data_pipeline.resources.batch_inference.llms.gpt4o import create_gpt4o_resource
 from data_pipeline.resources.batch_inference.llms.gpt4o_mini import (
@@ -33,6 +36,7 @@ resources = {
     "gpt4o": create_gpt4o_resource(),
     "gpt4o_mini": create_gpt4o_mini_resource(),
     "deepseek_r1": create_deepseek_r1_resource(),
+    "deepseek_v3": create_deepseek_v3_resource(),
     "graph_explorer_agent": GraphExplorerAgentResource(
         api_key=EnvVar("DEEPSEEK_API_KEY")
     ),
