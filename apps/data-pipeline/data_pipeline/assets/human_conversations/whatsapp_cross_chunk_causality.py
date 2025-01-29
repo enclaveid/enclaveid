@@ -53,7 +53,7 @@ def _get_cross_chunk_causality_prompt_sequence(
             Use this format:
             [
               {{
-                "current_id": "current_node_label",
+                "id": "current_node_label",
                 "caused_by": ["prev_node_label", ...],
                 "caused": ["prev_node_label", ...]
               }},
@@ -107,7 +107,7 @@ def whatsapp_cross_chunk_causality(
 
     df = (
         whatsapp_chunks_subgraphs.with_columns(
-            combined_subgraph=pl.concat_list(
+            subgraph_combined=pl.concat_list(
                 ["subgraph_attributes", "subgraph_context", "subgraph_meta"]
             )
         )
@@ -120,7 +120,7 @@ def whatsapp_cross_chunk_causality(
     min_comparisons = 1
     max_comparisons = 3
 
-    # Result schema: chunk_id, combined_subgraph, picked: {prev_chunk_id, prev_end_dt, prev_combined_subgraph, rank}
+    # Result schema: chunk_id, subgraph_combined, picked: {prev_chunk_id, prev_end_dt, prev_subgraph_combined, rank}
     df_pairs = (
         df.lazy()
         # 1) Cross-join with itself, renaming the "previous" side
@@ -129,7 +129,7 @@ def whatsapp_cross_chunk_causality(
                 [
                     pl.col("chunk_id").alias("prev_chunk_id"),
                     pl.col("end_dt").alias("prev_end_dt"),
-                    pl.col("combined_subgraph").alias("prev_combined_subgraph"),
+                    pl.col("subgraph_combined").alias("prev_subgraph_combined"),
                 ]
             ),
             how="cross",
@@ -164,13 +164,13 @@ def whatsapp_cross_chunk_causality(
                         pl.col("prev_chunk_id"),
                         pl.col("prev_end_dt"),
                         pl.col("rank"),
-                        pl.col("prev_combined_subgraph"),
+                        pl.col("prev_subgraph_combined"),
                     ]
                 )
                 # We sort them by ascending rank to get them in “most recent first” order
                 .sort_by("rank")
                 .alias("picked"),
-                pl.col("combined_subgraph"),
+                pl.col("subgraph_combined"),
             ]
         )
         .collect()
@@ -184,7 +184,7 @@ def whatsapp_cross_chunk_causality(
                 (
                     row["chunk_id"],
                     _get_cross_chunk_causality_prompt_sequence(
-                        row["combined_subgraph"], pick["prev_combined_subgraph"]
+                        row["subgraph_combined"], pick["prev_subgraph_combined"]
                     ),
                 )
             )
@@ -203,17 +203,17 @@ def whatsapp_cross_chunk_causality(
     ]
 
     chunk_id_to_new_causal_links = {
-        k: list(concat(v for v in vals if v is not None))
+        k: list(concat(v[1] for v in vals if v[1] is not None))
         for k, vals in groupby(lambda x: x[0], chunk_id_new_causal_links).items()
     }
 
     # For each chunk_id, merge the new causal links with the existing ones
     return df.with_columns(
-        pl.struct(["chunk_id", "combined_subgraph"])
+        pl.struct(["chunk_id", "subgraph_combined"])
         .map_elements(
             lambda x: _merge_dict_lists(
-                x["combined_subgraph"], chunk_id_to_new_causal_links.get(x["chunk_id"])
+                x["subgraph_combined"], chunk_id_to_new_causal_links.get(x["chunk_id"])
             )
         )
-        .alias("combined_subgraph")
+        .alias("subgraph_combined")
     )

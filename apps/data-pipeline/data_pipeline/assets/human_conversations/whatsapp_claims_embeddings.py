@@ -48,14 +48,16 @@ async def whatsapp_claims_embeddings(
     whatsapp_chunks_subgraphs: pl.DataFrame,
     batch_embedder: BatchEmbedderResource,
 ) -> pl.DataFrame:
-    df = pl.concat(
-        [
-            _get_exploded_df(whatsapp_chunks_subgraphs, "meta"),
-            _get_exploded_df(whatsapp_chunks_subgraphs, "context"),
-            _get_exploded_df(whatsapp_chunks_subgraphs, "attributes"),
-        ],
-        how="vertical",
-    )
+    # df = pl.concat(
+    #     [
+    #         _get_exploded_df(whatsapp_chunks_subgraphs, "meta"),
+    #         _get_exploded_df(whatsapp_chunks_subgraphs, "context"),
+    #         _get_exploded_df(whatsapp_chunks_subgraphs, "attributes"),
+    #     ],
+    #     how="vertical",
+    # )
+
+    df = _get_exploded_df(whatsapp_chunks_subgraphs, "combined")
 
     cost, embeddings = await batch_embedder.get_embeddings(
         df.get_column("proposition").to_list(),
