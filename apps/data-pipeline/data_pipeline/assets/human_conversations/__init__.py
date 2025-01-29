@@ -19,6 +19,9 @@ from data_pipeline.assets.human_conversations.whatsapp_conversation_chunks impor
 from data_pipeline.assets.human_conversations.whatsapp_conversation_rechunked import (
     whatsapp_conversation_rechunked,
 )
+from data_pipeline.assets.human_conversations.whatsapp_cross_chunk_causality import (
+    whatsapp_cross_chunk_causality,
+)
 
 __all__ = [
     parsed_whatsapp_conversations,
@@ -28,4 +31,5 @@ __all__ = [
     whatsapp_claims_deduplicated,
     whatsapp_chunks_sentiment,
     whatsapp_chunks_subgraphs,
+    whatsapp_cross_chunk_causality,
 ]  # type: ignore

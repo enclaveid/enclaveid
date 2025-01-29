@@ -43,6 +43,7 @@ llvmlite = "^0.43.0"            # careful with these
 numba = "^0.60.0"               # careful with these
 openai = "^1.60.0"
 wandb = "^0.19.4"
+toolz = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "2.0.2"

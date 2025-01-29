@@ -4,49 +4,33 @@ from dagster import AssetExecutionContext, AssetIn, Config, asset
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.batch_embedder import BatchEmbedderResource
 
-# We'll exclude these columns because of explosion
-CHUNK_COLS = [
-    "start_dt",
-    "end_dt",
-    "decisions",
-    "messages_struct",
-    "messages_str",
-    "raw_analysis",
-]
-
 
 def _get_exploded_df(
-    df: pl.DataFrame, claim_type: str, claim_subject: str
+    df: pl.DataFrame,
+    claim_type: str,
 ) -> pl.DataFrame:
-    claim_counterpart = "partner" if claim_subject == "me" else "me"
-    col_to_explode = f"{claim_type}s_{claim_subject}"
-    col_to_explode_is_struct = df.schema[col_to_explode] != pl.List(pl.String)
+    col_to_explode = f"subgraph_{claim_type}"
 
-    if col_to_explode_is_struct:
-        claim_text_expr = pl.col(col_to_explode).struct.field("claim")
-        claim_datetime_expr = (
-            pl.col(col_to_explode)
-            .struct.field("datetime")
-            .str.to_datetime(strict=False)
-        )
-    else:
-        claim_text_expr = pl.col(col_to_explode)
-        claim_datetime_expr = pl.lit(None, dtype=pl.Datetime)
-
-    return (
-        df.select(pl.exclude(*CHUNK_COLS, f"{claim_type}s_{claim_counterpart}"))
+    res_df = (
+        df.select("chunk_id", col_to_explode)
         .explode(col_to_explode)
         .with_columns(
-            [
-                claim_text_expr.alias("claim_text"),
-                claim_datetime_expr.alias("claim_datetime"),
-                pl.lit(claim_type).alias("claim_type"),
-                pl.lit(claim_subject).alias("claim_subject"),
-            ]
+            pl.col(col_to_explode).struct.unnest(),
         )
         .drop(col_to_explode)
-        .filter(pl.col("claim_text").is_not_null())
+        .filter(pl.col("proposition").is_not_null())
+        .cast(
+            {
+                "id": pl.Utf8,
+                "datetime": pl.Utf8,
+                "proposition": pl.Utf8,
+                "caused_by": pl.List(pl.Utf8),
+                "caused": pl.List(pl.Utf8),
+            }
+        )
     )
+
+    return res_df
 
 
 @asset(
@@ -66,18 +50,15 @@ async def whatsapp_claims_embeddings(
 ) -> pl.DataFrame:
     df = pl.concat(
         [
-            _get_exploded_df(whatsapp_chunks_observables, "observable", "me"),
-            _get_exploded_df(whatsapp_chunks_observables, "observable", "partner"),
-            _get_exploded_df(whatsapp_chunks_inferrables, "inferrable", "me"),
-            _get_exploded_df(whatsapp_chunks_inferrables, "inferrable", "partner"),
-            _get_exploded_df(whatsapp_chunks_speculatives, "speculative", "me"),
-            _get_exploded_df(whatsapp_chunks_speculatives, "speculative", "partner"),
+            _get_exploded_df(whatsapp_chunks_subgraphs, "meta"),
+            _get_exploded_df(whatsapp_chunks_subgraphs, "context"),
+            _get_exploded_df(whatsapp_chunks_subgraphs, "attributes"),
         ],
         how="vertical",
     )
 
     cost, embeddings = await batch_embedder.get_embeddings(
-        df.get_column("claim_text").to_list(),
+        df.get_column("proposition").to_list(),
         api_batch_size=32,
         gpu_batch_size=32,
     )

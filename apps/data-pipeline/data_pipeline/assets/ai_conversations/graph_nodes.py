@@ -4,7 +4,7 @@ from dagster import AssetExecutionContext, AssetIn, Config, asset
 from pydantic import Field
 
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.utils.save_graph import save_graph
+from data_pipeline.utils.graph.save_graph import save_graph
 
 
 class GraphNodesConfig(Config):

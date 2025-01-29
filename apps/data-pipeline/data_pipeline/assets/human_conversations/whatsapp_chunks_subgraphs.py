@@ -21,7 +21,16 @@ def parse_subgraphs(response: str) -> list[dict] | None:
     try:
         res = repair_json(response, return_objects=True)
         if isinstance(res, list):
-            return res
+            return [
+                {
+                    "id": node.get("id", None),
+                    "datetime": node.get("datetime", None),
+                    "proposition": node.get("proposition", None),
+                    "caused_by": node.get("caused_by", []),
+                    "caused": node.get("caused", []),
+                }
+                for node in res
+            ]
         else:
             return None
     except Exception:
@@ -29,7 +38,7 @@ def parse_subgraphs(response: str) -> list[dict] | None:
 
 
 class WhatsappChunksSubgraphsConfig(RowLimitConfig):
-    row_limit: int | None = 10 if get_environment() == "LOCAL" else None
+    row_limit: int | None = None if get_environment() == "LOCAL" else None
 
 
 @asset(

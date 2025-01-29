@@ -1,89 +1,18 @@
-from typing import List, Tuple
-
-import faiss
-import numpy as np
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 from pydantic import Field
 
 from data_pipeline.partitions import user_partitions_def
+from data_pipeline.utils.get_messaging_partners import get_messaging_partners
+from data_pipeline.utils.graph.build_graph_from_df import build_graph_from_df
+from data_pipeline.utils.graph.save_graph import save_graph
+from data_pipeline.utils.super_deduplicator import deduplicate_nodes_dataframe
 
 
 class WhatsappClaimsDeduplicatedConfig(Config):
     threshold: float = Field(
         default=0.9, description="Cosine similarity threshold for merging claims"
     )
-
-
-def find_similar_pairs(
-    embeddings: List[List[float]], threshold: float
-) -> List[Tuple[int, List[Tuple[int, float]]]]:
-    """
-    Performs a single FAISS similarity search and returns all similar claim pairs.
-
-    Returns:
-        List of tuples (claim_idx, [(similar_claim_idx, similarity_score)])
-    """
-    if not embeddings:
-        return []
-
-    embeddings_array = np.array(embeddings, dtype=np.float32)
-    faiss.normalize_L2(embeddings_array)
-
-    dimension = embeddings_array.shape[1]
-    index = faiss.IndexFlatIP(dimension)
-    index.add(embeddings_array)
-
-    similarities, indices = index.search(embeddings_array, k=len(embeddings))
-
-    similar_pairs = []
-    for i, (sim_scores, idx_list) in enumerate(zip(similarities, indices)):
-        matches = []
-        for j, sim in zip(idx_list, sim_scores):
-            if i != j and sim >= threshold:
-                matches.append((j, float(sim)))
-        similar_pairs.append((i, matches))
-
-    return similar_pairs
-
-
-class UnionFind:
-    """
-    A simple Disjoint Set / Union-Find data structure to merge
-    similar claims into clusters.
-    """
-
-    def __init__(self, n: int):
-        self.parent = list(range(n))
-        self.rank = [0] * n
-
-    def find(self, x: int) -> int:
-        if self.parent[x] != x:
-            self.parent[x] = self.find(self.parent[x])
-        return self.parent[x]
-
-    def union(self, x: int, y: int):
-        rootX = self.find(x)
-        rootY = self.find(y)
-        if rootX != rootY:
-            # Union by rank
-            if self.rank[rootX] < self.rank[rootY]:
-                rootX, rootY = rootY, rootX
-            self.parent[rootY] = rootX
-            if self.rank[rootX] == self.rank[rootY]:
-                self.rank[rootX] += 1
-
-
-def get_dedup_clusters(
-    n: int,
-    similar_pairs: List[Tuple[int, List[Tuple[int, float]]]],
-) -> list[int]:
-    uf = UnionFind(n)
-    for i, matches in similar_pairs:
-        for j, _sim_score in matches:
-            uf.union(i, j)
-
-    return [uf.find(i) for i in range(n)]
 
 
 @asset(
@@ -100,41 +29,99 @@ async def whatsapp_claims_deduplicated(
     config: WhatsappClaimsDeduplicatedConfig,
     whatsapp_claims_embeddings: pl.DataFrame,
 ) -> pl.DataFrame:
-    """
-    Given a Polars DataFrame with columns such as:
-        - "embedding": List[float] (the claim embedding)
-        - "claim_text": str         (optional actual text)
-        - "id": some unique ID      (optional, if you have it)
-    this asset will group claims that are similar (based on FAISS)
-    and produce a DataFrame of aggregated/deduplicated claims.
-    """
+    messaging_partners = get_messaging_partners()
 
     # Gather embeddings and find similarities
     df = whatsapp_claims_embeddings
-    embeddings = df["embedding"].to_list()
 
-    similar_pairs = find_similar_pairs(embeddings, config.threshold)
-    clusters = get_dedup_clusters(df.height, similar_pairs)
-
-    df = df.with_columns(pl.Series(name="cluster_id", values=clusters))
-
-    # Aggregate clusters:
-    # We just keep the first instance of each duplicate
-    aggregated = (
-        df.group_by("cluster_id", "claim_subject")
-        .agg(
-            [
-                pl.col("cluster_id").count().alias("claim_frequency"),
-                pl.col("claim_text").first().alias("claim_text"),
-                pl.col("claim_datetime").min().alias("claim_datetime_start_dt"),
-                pl.col("claim_datetime").max().alias("claim_datetime_end_dt"),
-                pl.col("embedding").first().alias("embedding"),
-                # This prioritizes inferrable over speculative
-                pl.col("claim_type").sort().first().alias("claim_type"),
-            ]
+    # Add a user column based on the contents of the proposition column
+    df = df.with_columns(
+        pl.when(
+            # Check if both names appear in either order using regex
+            pl.col("proposition").str.contains(
+                f"{messaging_partners.me} and {messaging_partners.partner}|{messaging_partners.partner} and {messaging_partners.me}"
+            )
         )
-        .drop("cluster_id")
+        .then(pl.lit("both"))
+        # Check which name appears first and use that
+        .when(
+            pl.col("proposition")
+            .str.extract(f"({messaging_partners.me}|{messaging_partners.partner})", 0)
+            .is_not_null()
+        )
+        .then(
+            pl.col("proposition").str.extract(
+                f"({messaging_partners.me}|{messaging_partners.partner})", 0
+            )
+        )
+        .otherwise(pl.lit("both"))
+        .alias("user")
     )
 
-    # Return aggregated (deduplicated) DataFrame
-    return aggregated
+    # Create a relationship column
+    df = df.with_columns(
+        pl.when(
+            (pl.col("caused").list.len() > 0) | (pl.col("caused_by").list.len() > 0)
+        )
+        .then(
+            # Build a new list of relationship dicts for each row
+            pl.struct(["id", "caused", "caused_by"]).map_elements(
+                lambda row: (
+                    # Relationships from this node -> items in caused
+                    [{"source": row["id"], "target": c} for c in row["caused"]]
+                    +
+                    # Relationships from items in caused_by -> this node
+                    [{"source": c_by, "target": row["id"]} for c_by in row["caused_by"]]
+                ),
+                return_dtype=pl.List(
+                    pl.Struct(
+                        [pl.Field("source", pl.Utf8), pl.Field("target", pl.Utf8)]
+                    )
+                ),
+            )
+        )
+        .otherwise(None)
+        .alias("relationships")
+    )
+
+    deduplication_args = {
+        "label_col": "id",
+        "embedding_col": "embedding",
+        "single_fields": ["proposition", "embedding", "user", "chunk_id"],
+        "list_fields": [
+            ("ids", "id"),
+            ("chunk_ids", "chunk_id"),
+            ("datetimes", "datetime"),
+            # ("propositions", "proposition"),
+            # ("embeddings", "embedding"),
+        ],
+        "relationship_col": "relationships",
+        "threshold": config.threshold,
+    }
+
+    # Deduplicate within user groups
+    deduplicated_df = pl.concat(
+        [
+            deduplicate_nodes_dataframe(
+                df.filter(pl.col("user") == "both"), **deduplication_args
+            ),
+            deduplicate_nodes_dataframe(
+                df.filter(pl.col("user") == messaging_partners.me), **deduplication_args
+            ),
+            deduplicate_nodes_dataframe(
+                df.filter(pl.col("user") == messaging_partners.partner),
+                **deduplication_args,
+            ),
+        ],
+        how="vertical",
+    )
+
+    G = build_graph_from_df(
+        deduplicated_df,
+        "relationships",
+        "id",
+        ["frequency", "user", "proposition", "chunk_id"],
+    )
+    save_graph(G, context)
+
+    return deduplicated_df

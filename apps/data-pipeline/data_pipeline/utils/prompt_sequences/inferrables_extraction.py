@@ -75,6 +75,8 @@ def _get_context_inference_prompt(user_name: str, partner_name: str) -> str:
         4. Make sure to also link contexts that caused each other, using the "caused_by" field.
 
         For example: {user_name} and {partner_name} are in Italy -> {user_name} is making plans for a dinner date
+
+        IMPORTANT: Return an empty array if it's not possible to infer any context!
         """
     ).strip()
 
@@ -102,6 +104,8 @@ def _get_paritcipant_attributes_inference_prompt(
         "{user_name} has messed up their plans in italy"
         And it could have "caused" the meta-pattern:
         "{user_name} is sending multiple messages one after the other to {partner_name}"
+
+        IMPORTANT: Return an empty array if it's not possible to infer any attribute about the participants!
         """
     ).strip()
 

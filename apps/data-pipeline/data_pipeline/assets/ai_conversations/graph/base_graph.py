@@ -8,7 +8,7 @@ from dagster import (
 
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.utils.save_graph import save_graph
+from data_pipeline.utils.graph.save_graph import save_graph
 
 
 @asset(
