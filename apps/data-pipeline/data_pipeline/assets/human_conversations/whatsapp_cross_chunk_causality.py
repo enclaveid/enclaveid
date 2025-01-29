@@ -14,23 +14,45 @@ from data_pipeline.resources.batch_inference.base_llm_resource import (
 )
 
 
-def _merge_dict_lists(list1: list[dict], list2: list[dict] | None) -> list[dict]:
-    if list2 is None:
+def _get_only_nodes_without_causes(subgraph: list[dict]) -> list[dict]:
+    # Get all node IDs that appear in any "caused" array
+    caused_ids = set()
+    for node in subgraph:
+        if "caused" in node:
+            caused_ids.update(node["caused"])
+
+    # Only keep nodes that don't have explicit caused_by relationships or appear in others' caused arrays
+    return [
+        node
+        for node in subgraph
+        if (len(node.get("caused_by", [])) == 0) and (node["id"] not in caused_ids)
+    ]
+
+
+# TODO: do in polars
+def _merge_dict_lists(list1, list2):
+    if not list2:
         return list1
 
-    lookup1 = {item["id"]: item for item in list1}
+    # Create lookup for the right side list
     lookup2 = {item["id"]: item for item in list2}
-    common_ids = set(lookup1.keys()) & set(lookup2.keys())
 
     def combine_values(values):
         if isinstance(values[0], list):
-            return values[0] + values[1]
+            # If we have a matching item from list2, concatenate
+            return values[0] + values[1] if len(values) > 1 else values[0]
         # Take first non-null value
         return next((v for v in values if v is not None), None)
 
     result = []
-    for id_ in common_ids:
-        merged = merge_with(combine_values, lookup1[id_], lookup2[id_])
+    # Iterate through all items in list1
+    for item1 in list1:
+        id_ = item1["id"]
+        # Get matching item from list2 if it exists
+        if id_ in lookup2:
+            merged = merge_with(combine_values, item1, lookup2[id_])
+        else:
+            merged = item1  # Keep original item if no match
         result.append(merged)
 
     return result
@@ -42,13 +64,12 @@ def _get_cross_chunk_causality_prompt_sequence(
     return [
         dedent(
             f"""
-            You will be given two causal graphs belonging to two subsequent chunks of a conversation between two people.
-            The two causal graphs have been contructed separately, so we need to find any missing causal relationships
-            between the two graphs.
+            You will be given two sets of nodes belonging to two subsequent chunks of a conversation between two people.
+            The two sets have been analyzed separately, so we need to find any missing causal relationships between them.
 
-            Provide your answer as a list of node_labels for the current chunk with "caused_by" and "caused" arrays of node_labels from the previous chunk.
-            "caused_by" should contain the node_labels that are likely to have caused the current node_label.
-            "caused" should contain the node_labels that are likely to have been caused by the current node_label.
+            Provide your answer as a list of node_labels (for the current chunk) with "caused_by" and "caused" arrays of node_labels (from the previous chunk).
+            "caused_by" should contain the node_labels that are likely to HAVE CAUSED the current node_label.
+            "caused" should contain the node_labels that are likely to HAVE BEEN CAUSED BY the current node_label.
 
             Use this format:
             [
@@ -59,12 +80,12 @@ def _get_cross_chunk_causality_prompt_sequence(
               }},
               ...
             ]
-            If you believe there are no missing causal links between the two graphs, return an empty list.
+            If you believe there are no missing causal links between the two sets, return an empty list.
 
             The causal graph for the previous chunk is:
             {prev_chunk_subgraph}
 
-            The causal graph for the current chunk is:
+            The nodes of the current chunk are:
             {chunk_subgraph}
             """
         ).strip(),
@@ -74,7 +95,16 @@ def _get_cross_chunk_causality_prompt_sequence(
 def _parse_cross_chunk_causality_response(response: str) -> list[dict] | None:
     try:
         res = repair_json(response, return_objects=True)
-        if isinstance(res, list):
+
+        # Do some validation
+        required_keys = {"id", "caused_by", "caused"}
+        if (
+            isinstance(res, list)
+            and all(isinstance(x, dict) for x in res)
+            and all(required_keys.issubset(x.keys()) for x in res)
+            and all(isinstance(x["caused_by"], list) for x in res)
+            and all(isinstance(x["caused"], list) for x in res)
+        ):
             return res
         else:
             return None
@@ -98,7 +128,7 @@ class WhatsappCrossChunkCausalityConfig(RowLimitConfig):
 def whatsapp_cross_chunk_causality(
     context: AssetExecutionContext,
     whatsapp_chunks_subgraphs: pl.DataFrame,
-    llama70b: BaseLlmResource,
+    gpt4o: BaseLlmResource,
     config: WhatsappCrossChunkCausalityConfig,
 ) -> pl.DataFrame:
     """
@@ -167,10 +197,10 @@ def whatsapp_cross_chunk_causality(
                         pl.col("prev_subgraph_combined"),
                     ]
                 )
-                # We sort them by ascending rank to get them in “most recent first” order
+                # We sort them by ascending rank to get them in "most recent first" order
                 .sort_by("rank")
                 .alias("picked"),
-                pl.col("subgraph_combined"),
+                pl.col("subgraph_combined").flatten(),
             ]
         )
         .collect()
@@ -184,12 +214,15 @@ def whatsapp_cross_chunk_causality(
                 (
                     row["chunk_id"],
                     _get_cross_chunk_causality_prompt_sequence(
-                        row["subgraph_combined"], pick["prev_subgraph_combined"]
+                        _get_only_nodes_without_causes(
+                            row["subgraph_combined"]
+                        ),  # For the current chunk, only submit nodes with degree 0
+                        pick["prev_subgraph_combined"],
                     ),
                 )
             )
 
-    completions, cost = llama70b.get_prompt_sequences_completions_batch(
+    completions, cost = gpt4o.get_prompt_sequences_completions_batch(
         [x[1] for x in chunk_id_prompt_sequences]
     )
 
@@ -209,11 +242,12 @@ def whatsapp_cross_chunk_causality(
 
     # For each chunk_id, merge the new causal links with the existing ones
     return df.with_columns(
-        pl.struct(["chunk_id", "subgraph_combined"])
-        .map_elements(
+        subgraph_combined=pl.struct(["chunk_id", "subgraph_combined"]).map_elements(
             lambda x: _merge_dict_lists(
                 x["subgraph_combined"], chunk_id_to_new_causal_links.get(x["chunk_id"])
             )
-        )
-        .alias("subgraph_combined")
+        ),
+        new_causal_links=pl.col("chunk_id").map_elements(
+            lambda x: chunk_id_to_new_causal_links.get(x, [])
+        ),
     )

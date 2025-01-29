@@ -37,27 +37,27 @@ def _get_exploded_df(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
-        "whatsapp_chunks_subgraphs": AssetIn(
-            key=["whatsapp_chunks_subgraphs"],
+        "whatsapp_cross_chunk_causality": AssetIn(
+            key=["whatsapp_cross_chunk_causality"],
         ),
     },
 )
 async def whatsapp_claims_embeddings(
     context: AssetExecutionContext,
     config: Config,
-    whatsapp_chunks_subgraphs: pl.DataFrame,
+    whatsapp_cross_chunk_causality: pl.DataFrame,
     batch_embedder: BatchEmbedderResource,
 ) -> pl.DataFrame:
     # df = pl.concat(
     #     [
-    #         _get_exploded_df(whatsapp_chunks_subgraphs, "meta"),
-    #         _get_exploded_df(whatsapp_chunks_subgraphs, "context"),
-    #         _get_exploded_df(whatsapp_chunks_subgraphs, "attributes"),
+    #         _get_exploded_df(whatsapp_cross_chunk_causality, "meta"),
+    #         _get_exploded_df(whatsapp_cross_chunk_causality, "context"),
+    #         _get_exploded_df(whatsapp_cross_chunk_causality, "attributes"),
     #     ],
     #     how="vertical",
     # )
 
-    df = _get_exploded_df(whatsapp_chunks_subgraphs, "combined")
+    df = _get_exploded_df(whatsapp_cross_chunk_causality, "combined")
 
     cost, embeddings = await batch_embedder.get_embeddings(
         df.get_column("proposition").to_list(),
