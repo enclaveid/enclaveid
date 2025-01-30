@@ -14,9 +14,11 @@ class AdjacencyListRecord:
     id: str
     description: str
     datetime: str
-    parents: list[NodeReference]
-    children: list[NodeReference]
     frequency: int
+    parents_count: int
+    children_count: int
+    # parents: list[NodeReference]
+    # children: list[NodeReference]
 
 
 AdjacencyList = list[AdjacencyListRecord]
@@ -29,13 +31,14 @@ class TraceRecord:
     content: str | None
     reasoning_content: str | None
     cost: float | None
+    token_count: int | None
 
 
 @dataclass
 class HypothesisValidationResult:
     decision: Literal["accept", "refine", "reject"]
     explanation: str
-    new_hypothesis: str | None
+    new_hypothesis: str | None = None
 
 
 @dataclass

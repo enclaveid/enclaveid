@@ -5,7 +5,6 @@ import networkx as nx
 from data_pipeline.resources.graph_explorer_agent.types import (
     AdjacencyList,
     AdjacencyListRecord,
-    NodeReference,
 )
 from data_pipeline.utils.get_node_datetime import get_node_datetime
 
@@ -35,30 +34,30 @@ def _get_relatives(
     # Process each relative
     for rel_id in relatives:
         # Get parent and child references
-        parents = [
-            NodeReference(
-                id=parent,
-                datetime=graph.nodes(data=True)[parent].get("datetime", None),
-            )
-            for parent in graph.predecessors(rel_id)
-        ]
+        # parents = [
+        #     NodeReference(
+        #         id=parent,
+        #         datetime=graph.nodes(data=True)[parent].get("datetime", None),
+        #     )
+        #     for parent in graph.predecessors(rel_id)
+        # ]
 
-        children = [
-            NodeReference(
-                id=child,
-                datetime=graph.nodes(data=True)[child].get("datetime", None),
-            )
-            for child in graph.successors(rel_id)
-        ]
+        # children = [
+        #     NodeReference(
+        #         id=child,
+        #         datetime=graph.nodes(data=True)[child].get("datetime", None),
+        #     )
+        #     for child in graph.successors(rel_id)
+        # ]
 
         # Create record for this node
         record = AdjacencyListRecord(
             id=rel_id,
             description=graph.nodes(data=True)[rel_id].get("description", ""),
             datetime=graph.nodes(data=True)[rel_id].get("datetime", None),
-            parents=parents,
-            children=children,
             frequency=graph.nodes(data=True)[rel_id].get("frequency", 1),
+            parents_count=len(list(graph.predecessors(rel_id))),
+            children_count=len(list(graph.successors(rel_id))),
         )
 
         result.append(record)

@@ -1,3 +1,5 @@
+from data_pipeline.pre_init import pre_init  # noqa: I001
+
 from typing import Any
 
 from dagster import (
@@ -18,6 +20,8 @@ from data_pipeline.utils.feature_flags import (
 )
 
 from .resources import resources
+
+pre_init()
 
 asset_modules: list[Any] = [assets]
 

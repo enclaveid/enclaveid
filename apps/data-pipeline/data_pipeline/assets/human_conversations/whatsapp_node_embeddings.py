@@ -1,6 +1,7 @@
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 
+from data_pipeline.constants.environments import get_environment
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResource
 
@@ -61,8 +62,8 @@ async def whatsapp_node_embeddings(
 
     cost, embeddings = await batch_embedder.get_embeddings(
         df.get_column("proposition").to_list(),
-        api_batch_size=32,
-        gpu_batch_size=32,
+        api_batch_size=32 if get_environment() != "LOCAL" else 1,
+        gpu_batch_size=32 if get_environment() != "LOCAL" else 1,
     )
 
     context.log.info(f"Total cost: ${cost:.2f}")

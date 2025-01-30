@@ -9,8 +9,8 @@ def build_graph_from_df(
     relationships_col: str,
     label_column: str,
     metadata_columns: List[str],
-) -> nx.Graph:
-    G = nx.Graph()
+) -> nx.DiGraph:
+    G = nx.DiGraph()
 
     # Add nodes with metadata
     for row in df.iter_rows(named=True):
@@ -21,8 +21,6 @@ def build_graph_from_df(
 
     # Add edges based on relationships
     for relationship in df[relationships_col].explode().drop_nulls().to_list():
-        source = relationship["source"]
-        target = relationship["target"]
-        G.add_edge(source, target)
+        G.add_edge(relationship["source"], relationship["target"])
 
     return G

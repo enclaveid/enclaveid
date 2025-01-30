@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Set, Tuple
 
 import faiss
 import numpy as np
@@ -8,7 +8,7 @@ import polars as pl
 def _find_similar_nodes(
     embeddings: List[List[float]],
     threshold: float,
-    max_k: Optional[int] = None,
+    max_k: int,
 ) -> List[Tuple[int, List[Tuple[int, float]]]]:
     """
     Performs a FAISS similarity search and returns all similar node pairs
@@ -32,7 +32,11 @@ def _find_similar_nodes(
     index = faiss.IndexFlatIP(dimension)
     index.add(embeddings_array)  # type: ignore
 
-    similarities, indices = index.search(embeddings_array, k=(max_k or len(embeddings)))  # type: ignore
+    # Adding a try-except because there are no infos if OOM
+    try:
+        similarities, indices = index.search(embeddings_array, k=max_k)  # type: ignore
+    except Exception as e:
+        raise RuntimeError(f"Error in FAISS search: {e}") from e
 
     # Collect similar pairs
     similar_pairs = []
@@ -181,7 +185,7 @@ def deduplicate_nodes_dataframe(
     list_fields: List[Tuple[str, str]],
     relationship_col: str,
     threshold: float = 0.9,
-    max_k: Optional[int] = None,
+    max_k: int = 30,
 ) -> pl.DataFrame:
     """
     High-level pipeline that:

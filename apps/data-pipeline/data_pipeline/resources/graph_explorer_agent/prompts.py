@@ -40,7 +40,8 @@ The actions you can use at this step are:
 - `get_effects(node_id: str, depth: int) -> AdjacencyList`: Explore the immediate (if depth=1) or indirect (if depth>1) effects of the current node, with their metadata properties.
 - `get_causes(node_id: str) -> AdjacencyList`: Explore the immediate causes of the current node, with their metadata properties.
 
-You can perform many iterations of this step but try to perform as many actions as possible in a single batch.
+You can perform ONLY ONE of the these actions at a time.
+You can perform many iterations of this step.
 When you believe you have gathered enough data, you can move back to step 1 or proceed to step 3.
 
 > Step 3: Accept, refine or reject the hypothesis

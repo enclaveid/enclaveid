@@ -1,12 +1,6 @@
-from typing import TYPE_CHECKING, List
+from typing import Any, List
 
-from data_pipeline.constants.environments import get_environment
 from data_pipeline.utils.embeddings.base_embedder_client import BaseEmbedderClient
-
-if get_environment() == "LOCAL" or TYPE_CHECKING:
-    from sentence_transformers import SentenceTransformer
-else:
-    SentenceTransformer = object
 
 
 class LocalEmbedderClient(BaseEmbedderClient):
@@ -14,9 +8,11 @@ class LocalEmbedderClient(BaseEmbedderClient):
     Embedder that uses a local model on the CPU for development purposes.
     """
 
-    _model: SentenceTransformer
+    _model: Any
 
     def __init__(self, model_name="nvidia/NV-Embed-v2"):
+        from sentence_transformers import SentenceTransformer
+
         self._model = SentenceTransformer(model_name, trust_remote_code=True)
         self._model.max_seq_length = 32768
         self._model.tokenizer.padding_side = "right"

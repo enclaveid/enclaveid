@@ -14,7 +14,7 @@ class WhatsappClaimsDeduplicatedConfig(Config):
         default=0.9, description="Cosine similarity threshold for merging claims"
     )
     debug_graph: bool = Field(
-        default=False, description="Whether to save the graph to the debug directory"
+        default=True, description="Whether to save the graph to the debug directory"
     )
 
 

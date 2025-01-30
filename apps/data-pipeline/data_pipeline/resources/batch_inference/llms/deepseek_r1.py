@@ -58,6 +58,19 @@ _openrouter_config = RemoteLlmConfig(
     },
 )
 
+_azure_config = RemoteLlmConfig(
+    api_key=EnvVar("DEEPSEEK_AZURE_API_KEY"),
+    concurrency_limit=10,
+    timeout=60 * 10,
+    inference_url="https://DeepSeek-R1-ozcav.eastus2.models.ai.azure.com/v1/chat/completions",
+    inference_config={
+        "model": "deepseek-reasoner",
+        "max_tokens": 8192,
+    },
+    input_cpm=0.55 / 1000,
+    output_cpm=2.19 / 1000,
+    context_length=16_000,
+)
 
 r1_config = LlmConfig(
     colloquial_model_name="deepseek_r1",

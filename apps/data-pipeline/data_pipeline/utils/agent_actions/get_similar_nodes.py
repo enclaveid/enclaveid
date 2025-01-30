@@ -6,7 +6,6 @@ from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResourc
 from data_pipeline.resources.graph_explorer_agent.types import (
     AdjacencyList,
     AdjacencyListRecord,
-    NodeReference,
 )
 
 
@@ -16,6 +15,7 @@ def get_similar_nodes(
     batch_embedder: BatchEmbedderResource,
     query: str,
     top_k: int = 7,
+    threshold: float = 0.6,
 ) -> AdjacencyList:
     embeddings = np.array([d["embedding"] for d in label_embeddings], dtype=np.float32)
 
@@ -28,10 +28,19 @@ def get_similar_nodes(
     query_embedding = np.array(query_embeddings[0], dtype=np.float32).reshape(1, -1)
 
     # Perform similarity search
-    _, indices = index.search(query_embedding, min(top_k, len(embeddings)))  # type: ignore
-    # Get nodes by index - networkx doesn't have direct index access, so we'll get all nodes first
+    scores, indices = index.search(query_embedding, len(embeddings))  # type: ignore
+
+    # Filter nodes based on threshold and get top_k
+    filtered_indices = [
+        (idx, score) for idx, score in zip(indices[0], scores[0]) if score >= threshold
+    ]
+    filtered_indices = sorted(filtered_indices, key=lambda x: x[1], reverse=True)[
+        :top_k
+    ]
+
+    # Get nodes by filtered indices
     all_nodes = list(G.nodes(data=True))
-    similar_nodes = [all_nodes[i] for i in indices[0]]
+    similar_nodes = [all_nodes[idx] for idx, _ in filtered_indices]
 
     # Convert to AdjacencyList format
     result = []
@@ -40,19 +49,21 @@ def get_similar_nodes(
             id=node_id,  # NetworkX uses node IDs directly
             description=node_data.get("description", ""),
             datetime=node_data.get("datetime", None),
-            parents=[
-                NodeReference(
-                    id=p, datetime=G.nodes(data=True)[p].get("datetime", None)
-                )
-                for p in G.predecessors(node_id)
-            ],
-            children=[
-                NodeReference(
-                    id=c, datetime=G.nodes(data=True)[c].get("datetime", None)
-                )
-                for c in G.successors(node_id)
-            ],
             frequency=node_data.get("frequency", 1),
+            parents_count=len(list(G.predecessors(node_id))),
+            children_count=len(list(G.successors(node_id))),
+            # parents=[
+            #     NodeReference(
+            #         id=p, datetime=G.nodes(data=True)[p].get("datetime", None)
+            #     )
+            #     for p in G.predecessors(node_id)
+            # ],
+            # children=[
+            #     NodeReference(
+            #         id=c, datetime=G.nodes(data=True)[c].get("datetime", None)
+            #     )
+            #     for c in G.successors(node_id)
+            # ],
         )
         result.append(record)
 

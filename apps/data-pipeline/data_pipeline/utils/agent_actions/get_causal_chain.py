@@ -3,27 +3,13 @@ import networkx as nx
 from data_pipeline.resources.graph_explorer_agent.types import (
     AdjacencyList,
     AdjacencyListRecord,
-    NodeReference,
 )
 from data_pipeline.utils.get_node_datetime import get_node_datetime
 
 
-def get_causal_chain(
-    G: nx.DiGraph, node_id: str, target_node_id: str, top_k: int = 30
-) -> AdjacencyList:
-    """
-    Find a causal chain between two nodes using personalized PageRank.
-
-    Args:
-        G: NetworkX DiGraph containing the graph
-        node_id: ID of the first node
-        target_node_id: ID of the second node
-        top_k: Number of top nodes to return
-
-    Returns:
-        List of AdjacencyListRecord representing the causal chain
-    """
-
+def _get_pageranked_nodes(
+    G: nx.DiGraph, node_id: str, target_node_id: str, top_k: int
+) -> list[str]:
     # Calculate weights based on inverse frequencies
     weight1 = 1.0 / G.nodes[node_id]["frequency"]
     weight2 = 1.0 / G.nodes[target_node_id]["frequency"]
@@ -46,27 +32,44 @@ def get_causal_chain(
     scored_nodes = [(node, score) for node, score in pagerank_scores.items()]
     scored_nodes.sort(key=lambda x: x[1], reverse=True)
 
+    node_ids = [x for x, _ in scored_nodes[:top_k]]
+
+    return node_ids
+
+
+def get_causal_chain(
+    G: nx.DiGraph, node_id: str, target_node_id: str, top_k: int = 10
+) -> AdjacencyList:
+    """
+    Find a causal chain between two nodes using personalized PageRank.
+
+    Args:
+        G: NetworkX DiGraph containing the graph
+        node_id: ID of the first node
+        target_node_id: ID of the second node
+        top_k: Number of top nodes to return
+
+    Returns:
+        List of AdjacencyListRecord representing the causal chain
+    """
+
+    try:
+        node_ids = nx.shortest_path(G, node_id, target_node_id)
+    except nx.NetworkXNoPath:
+        # If no shortest path, use pageranked nodes
+        node_ids = _get_pageranked_nodes(G, node_id, target_node_id, top_k)
+
     # Convert top nodes to AdjacencyListRecord format
     result = []
-    for node_id, _ in scored_nodes[:top_k]:
+    for node_id in node_ids:
         node_data = G.nodes(data=True)[node_id]
         record = AdjacencyListRecord(
             id=node_id,
             description=node_data.get("description", ""),
             datetime=node_data.get("datetime", None),
-            parents=[
-                NodeReference(
-                    id=p, datetime=G.nodes(data=True)[p].get("datetime", None)
-                )
-                for p in G.predecessors(node_id)
-            ],
-            children=[
-                NodeReference(
-                    id=c, datetime=G.nodes(data=True)[c].get("datetime", None)
-                )
-                for c in G.successors(node_id)
-            ],
             frequency=node_data.get("frequency", 1),
+            parents_count=len(list(G.predecessors(node_id))),
+            children_count=len(list(G.successors(node_id))),
         )
         result.append(record)
 

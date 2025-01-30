@@ -1,7 +1,8 @@
 import json
+import re
 from dataclasses import asdict
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import httpx
 from dagster import get_dagster_logger
@@ -52,25 +53,25 @@ class GraphExplorerAgent:
         )
 
     @staticmethod
-    def _get_reasoning_content(response: Dict[str, Any]) -> str | None:
+    def _get_answer(response: Dict[str, Any]) -> Tuple[str, str | None]:
+        answer = response["choices"][0]["message"]["content"]
+
+        # Try to get reasoning_content from the response (some APIs do this)
         reasoning_content = response["choices"][0]["message"].get(
             "reasoning_content", None
         )
 
-        # Look for content between <think> tags if reasoning_content is not available directly
+        # Otherwise, look for content between <think> tags
         if reasoning_content is None:
-            content = response["choices"][0]["message"]["content"]
-            start_tag = "<think>"
-            end_tag = "</think>"
-            start_idx = content.find(start_tag)
-            end_idx = content.find(end_tag)
+            think_pattern = r"<think>(.*?)</think>"
+            think_match = re.search(think_pattern, answer, re.DOTALL)
 
-            if start_idx != -1 and end_idx != -1:
-                reasoning_content = content[
-                    start_idx + len(start_tag) : end_idx
-                ].strip()
+            if think_match:
+                reasoning_content = think_match.group(1).strip()
+                # Remove the think tags and their content from the answer
+                answer = re.sub(think_pattern, "", answer, flags=re.DOTALL).strip()
 
-        return reasoning_content
+        return answer, reasoning_content
 
     def _next_step(self, new_question: str) -> str | None:
         self._messages.append({"role": "user", "content": new_question})
@@ -97,8 +98,8 @@ class GraphExplorerAgent:
 
         input_cost, output_cost = self._calculate_cost(result["usage"])
 
-        # Save the assistant response
-        answer = result["choices"][0]["message"]["content"]
+        answer, reasoning_content = self._get_answer(result)
+        # Do not save reasoning_content to the messages memory
         self._messages.append({"role": "assistant", "content": answer})
 
         # Trace the user message
@@ -108,18 +109,19 @@ class GraphExplorerAgent:
                 content=new_question,
                 reasoning_content=None,
                 cost=input_cost,
+                token_count=result["usage"]["prompt_tokens"],
                 timestamp=datetime.now(),
             )
         )
 
         # Trace the assistant response with reasoning content if available
-        reasoning_content = self._get_reasoning_content(result)
         self._trace.append(
             TraceRecord(
                 role="assistant",
                 content=answer,
                 reasoning_content=reasoning_content,
                 cost=output_cost,
+                token_count=result["usage"]["completion_tokens"],
                 timestamp=datetime.now(),
             )
         )
@@ -130,7 +132,7 @@ class GraphExplorerAgent:
         self,
         response: str,
         actions_impl: ActionsImpl,
-    ) -> tuple[HypothesisValidationResult | None, list | None]:
+    ) -> HypothesisValidationResult | list[ActionResult]:
         """Parse agent response and execute any actions.
 
         Returns:
@@ -143,10 +145,21 @@ class GraphExplorerAgent:
 
             # Check for final result
             if "result" in result:
-                return HypothesisValidationResult(**result["result"]), None
-
+                return HypothesisValidationResult(**result["result"])
             # Parse and execute actions
-            if "actions" in result:
+            elif "actions" in result:
+                # Discard malformed actions
+                result["actions"] = [
+                    a
+                    for a in result["actions"]
+                    if (
+                        "name" in a
+                        and isinstance(a["name"], str)
+                        and "args" in a
+                        and isinstance(a["args"], dict)
+                    )
+                ]
+
                 self._logger.info(
                     f"[ACTIONS] {json.dumps(result['actions'], indent=2)}"
                 )
@@ -167,12 +180,14 @@ class GraphExplorerAgent:
                             result=action_result,
                         )
                     )
-                return None, action_results
+                return action_results
+            else:
+                raise ValueError(
+                    f"Agent response does not contain a result or actions: {response}"
+                )
 
-            return None, None
-
-        except json.JSONDecodeError:
-            return None, None
+        except Exception as e:
+            raise ValueError(f"Failed to parse agent response: {response}") from e
 
     def validate_hypothesis(
         self,
@@ -188,7 +203,7 @@ class GraphExplorerAgent:
                 formatted_action_results = json.dumps(
                     [asdict(ar) for ar in action_results], indent=2
                 )
-                self._logger.info(f"[ACTION RESULTS] \n{formatted_action_results}\n")
+                self._logger.info(f"[ACTIONS_RESULTS] \n{formatted_action_results}\n")
                 response = self._next_step(
                     f"Action results: {formatted_action_results}"
                 )
@@ -207,9 +222,13 @@ class GraphExplorerAgent:
                     f"Failed to get response from the model in iteration #{iteration}"
                 )
 
-            final_result, action_results = self._parse_agent_response(
-                response, actions_impl
-            )
+            res = self._parse_agent_response(response, actions_impl)
+
+            if isinstance(res, HypothesisValidationResult):
+                final_result = res
+            else:
+                action_results = res
+
             iteration += 1
 
         return final_result, self._trace
