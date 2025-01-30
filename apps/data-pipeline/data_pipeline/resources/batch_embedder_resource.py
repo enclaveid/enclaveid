@@ -1,3 +1,4 @@
+import asyncio
 from logging import Logger
 from typing import List, Tuple
 
@@ -9,20 +10,36 @@ from dagster import (
 )
 from pydantic import PrivateAttr
 
-from data_pipeline.utils.ray_cluster_embedder_client import RayClusterEmbedderClient
+from data_pipeline.constants.environments import get_environment
+from data_pipeline.utils.embeddings.base_embedder_client import BaseEmbedderClient
+from data_pipeline.utils.embeddings.local_embedder_client import LocalEmbedderClient
+from data_pipeline.utils.embeddings.ray_cluster_embedder_client import (
+    RayClusterEmbedderClient,
+)
 
 
 class BatchEmbedderResource(ConfigurableResource):
     base_url: str
 
-    _client: RayClusterEmbedderClient = PrivateAttr()
+    _client: BaseEmbedderClient = PrivateAttr()
     _logger: DagsterLogManager | Logger = PrivateAttr()
+    _loop: asyncio.AbstractEventLoop = PrivateAttr()
 
     def setup_for_execution(self, context: InitResourceContext) -> None:
-        self._client = RayClusterEmbedderClient(
-            base_url=self.base_url,
+        self._client = (
+            LocalEmbedderClient()
+            if get_environment() == "LOCAL"
+            else RayClusterEmbedderClient(
+                base_url=self.base_url,
+            )
         )
         self._logger = context.log or get_dagster_logger()
+        # Initialize the event loop if it doesn't exist
+        try:
+            self._loop = asyncio.get_event_loop()
+        except RuntimeError:
+            self._loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._loop)
 
     async def get_embeddings(
         self,
@@ -57,5 +74,21 @@ class BatchEmbedderResource(ConfigurableResource):
             await self._client.close()
             raise e
 
+    def get_embeddings_sync(
+        self,
+        texts: List[str],
+        api_batch_size: int | None = None,
+        gpu_batch_size: int | None = None,
+    ) -> Tuple[float, List[List[float]]]:
+        return self._loop.run_until_complete(
+            self.get_embeddings(
+                texts=texts,
+                api_batch_size=api_batch_size,
+                gpu_batch_size=gpu_batch_size,
+            )
+        )
+
     async def teardown_after_execution(self, context: InitResourceContext) -> None:
         await self._client.close()
+        if self._loop and not self._loop.is_closed():
+            self._loop.close()

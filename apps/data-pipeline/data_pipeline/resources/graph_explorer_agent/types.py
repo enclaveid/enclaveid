@@ -16,6 +16,7 @@ class AdjacencyListRecord:
     datetime: str
     parents: list[NodeReference]
     children: list[NodeReference]
+    frequency: int
 
 
 AdjacencyList = list[AdjacencyListRecord]
@@ -40,7 +41,13 @@ class HypothesisValidationResult:
 @dataclass
 class ActionsImpl:
     get_similar_nodes: Callable[[str], AdjacencyList]
-    get_parents: Callable[[str, int], AdjacencyList]
-    get_children: Callable[[str, int], AdjacencyList]
+    get_causes: Callable[[str], AdjacencyList]
+    get_effects: Callable[[str, int], AdjacencyList]
     get_causal_chain: Callable[[str, str], AdjacencyList]
-    connect_nodes: Callable[[str, str], None]
+
+
+@dataclass
+class ActionResult:
+    action: str
+    args: dict
+    result: AdjacencyList

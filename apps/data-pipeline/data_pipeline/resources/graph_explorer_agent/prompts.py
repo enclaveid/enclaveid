@@ -37,8 +37,8 @@ Analyze temporal patterns and contextual relationships between nodes:
 
 The actions you can use at this step are:
 - `get_causal_chain(node_id1: str, node_id2: str) -> AdjacencyList`: Get the causal chain between two nodes. If no causal chain is found, it will return the closest one.
-- `get_parents(node_id: str, depth: int) -> AdjacencyList`: Explore parents of the current node, with their metadata properties.
-- `get_children(node_id: str, depth: int) -> AdjacencyList`: Explore children of the current node, with their metadata properties.
+- `get_effects(node_id: str, depth: int) -> AdjacencyList`: Explore the immediate (if depth=1) or indirect (if depth>1) effects of the current node, with their metadata properties.
+- `get_causes(node_id: str) -> AdjacencyList`: Explore the immediate causes of the current node, with their metadata properties.
 
 You can perform many iterations of this step but try to perform as many actions as possible in a single batch.
 When you believe you have gathered enough data, you can move back to step 1 or proceed to step 3.
@@ -74,28 +74,30 @@ When you want to perform one or multiple actions, answer with the JSON format:
   ]
 }
 
-Actions will return an AdjacencyList, which is a list of nodes with their properties:
-[
-  {
-    "id": "node_id",
-    "description": "description of the node",
-    "datetime": "YYYY-MM-DD HH:MM:SS", # When did the current node occur?
-    "parents": [ # Interpret these as the "causes" of the node
-      {
-        "id": "parent_node_id",
-        "datetime": "YYYY-MM-DD HH:MM:SS" # When did the parent node cause the current node (if applicable)
-      },
-      ...
-    ],
-    "children": [ # Interpret these as the "effects" of the node
-      {
-        "id": "child_node_id",
-        "datetime": "YYYY-MM-DD HH:MM:SS" # When did the current node cause the child node (if applicable)
-      },
-      ...
-    ],
-  },
-  ...
-]
+Actions will return an AdjacencyList, which is a list of nodes with their properties.
 """
 ).strip()
+
+
+# [
+#   {
+#     "id": "node_id",
+#     "description": "description of the node",
+#     "datetime": "YYYY-MM-DD HH:MM:SS", # When did the current node occur?
+#     "parents": [ # Interpret these as the "causes" of the node
+#       {
+#         "id": "parent_node_id",
+#         "datetime": "YYYY-MM-DD HH:MM:SS" # When did the parent node cause the current node (if applicable)
+#       },
+#       ...
+#     ],
+#     "children": [ # Interpret these as the "effects" of the node
+#       {
+#         "id": "child_node_id",
+#         "datetime": "YYYY-MM-DD HH:MM:SS" # When did the current node cause the child node (if applicable)
+#       },
+#       ...
+#     ],
+#   },
+#   ...
+# ]

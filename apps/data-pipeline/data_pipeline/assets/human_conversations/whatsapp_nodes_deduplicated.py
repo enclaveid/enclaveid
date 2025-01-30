@@ -13,26 +13,29 @@ class WhatsappClaimsDeduplicatedConfig(Config):
     threshold: float = Field(
         default=0.9, description="Cosine similarity threshold for merging claims"
     )
+    debug_graph: bool = Field(
+        default=False, description="Whether to save the graph to the debug directory"
+    )
 
 
 @asset(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
-        "whatsapp_claims_embeddings": AssetIn(
-            key=["whatsapp_claims_embeddings"],
+        "whatsapp_node_embeddings": AssetIn(
+            key=["whatsapp_node_embeddings"],
         ),
     },
 )
-async def whatsapp_claims_deduplicated(
+async def whatsapp_nodes_deduplicated(
     context: AssetExecutionContext,
     config: WhatsappClaimsDeduplicatedConfig,
-    whatsapp_claims_embeddings: pl.DataFrame,
+    whatsapp_node_embeddings: pl.DataFrame,
 ) -> pl.DataFrame:
     messaging_partners = get_messaging_partners()
 
     # Gather embeddings and find similarities
-    df = whatsapp_claims_embeddings
+    df = whatsapp_node_embeddings
 
     # Add a user column based on the contents of the proposition column
     df = df.with_columns(
@@ -116,12 +119,15 @@ async def whatsapp_claims_deduplicated(
         how="vertical",
     )
 
-    G = build_graph_from_df(
-        deduplicated_df,
-        "relationships",
-        "id",
-        ["frequency", "user", "proposition", "chunk_id"],
-    )
-    save_graph(G, context)
+    if config.debug_graph:
+        save_graph(
+            build_graph_from_df(
+                deduplicated_df,
+                "relationships",
+                "id",
+                ["frequency", "user", "proposition", "chunk_id"],
+            ),
+            context,
+        )
 
     return deduplicated_df

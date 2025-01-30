@@ -54,6 +54,13 @@ pytest-cov = "4.1.0"
 pytest-html = "3.2.0"
 dagster-webserver = "^1.9.4"
 python-dotenv = "^1.0.1"
+# for local embedder
+torch = "2.5.0"
+transformers = "4.47.1"
+sentence-transformers = "3.3.1"
+hf-transfer = "0.1.8"
+einops = "0.8.0"
+datasets = "3.2.0"
 # dtale = "^3.16.0"
 
 [build-system]

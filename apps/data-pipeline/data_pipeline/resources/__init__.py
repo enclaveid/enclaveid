@@ -2,7 +2,7 @@ from dagster import EnvVar
 from dagster_polars import PolarsParquetIOManager
 
 from data_pipeline.constants.environments import DAGSTER_STORAGE_DIRECTORY
-from data_pipeline.resources.batch_embedder import BatchEmbedderResource
+from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResource
 from data_pipeline.resources.batch_inference.llms.claude import claude_resource
 from data_pipeline.resources.batch_inference.llms.deepseek_r1 import (
     create_deepseek_r1_resource,

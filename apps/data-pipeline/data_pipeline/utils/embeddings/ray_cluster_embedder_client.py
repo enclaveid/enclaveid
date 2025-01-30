@@ -7,6 +7,8 @@ from typing import List, Tuple
 import httpx
 from dagster import get_dagster_logger
 
+from data_pipeline.utils.embeddings.base_embedder_client import BaseEmbedderClient
+
 GPU_BATCH_SIZE = 1  # NB: careful with this one
 API_BATCH_SIZE = 2
 RUNTIME_COST_HOURLY = (
@@ -14,7 +16,7 @@ RUNTIME_COST_HOURLY = (
 )  # A100 spot price * nodes (assuming we can get 4 which is not guaranteed)
 
 
-class RayClusterEmbedderClient:
+class RayClusterEmbedderClient(BaseEmbedderClient):
     _timeout: int = 60 * 5
     _max_connections: int = 4
     _max_retries: int = 3

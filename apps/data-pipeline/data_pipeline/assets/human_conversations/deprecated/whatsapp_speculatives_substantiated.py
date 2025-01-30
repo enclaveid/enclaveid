@@ -118,24 +118,24 @@ def parse_substantiation(response: str) -> tuple[bool | None, float | None]:
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
-        "whatsapp_claims_deduplicated": AssetIn(
-            key=["whatsapp_claims_deduplicated"],
+        "whatsapp_nodes_deduplicated": AssetIn(
+            key=["whatsapp_nodes_deduplicated"],
         ),
     },
 )
 def whatsapp_speculatives_substantiated(
     context: AssetExecutionContext,
     config: WhatsappSpeculativesSubstantiationConfig,
-    whatsapp_claims_deduplicated: pl.DataFrame,
+    whatsapp_nodes_deduplicated: pl.DataFrame,
     gpt4o: BaseLlmResource,
 ) -> pl.DataFrame:
     """
-    Identify speculative claims from whatsapp_claims_deduplicated, gather
+    Identify speculative claims from whatsapp_nodes_deduplicated, gather
     similar evidence from non-speculative claims, and determine if they are supported.
     """
 
     # 1) Create an ephemeral ID column for *every* row
-    df = whatsapp_claims_deduplicated.with_row_count("id")
+    df = whatsapp_nodes_deduplicated.with_row_count("id")
 
     # 2) Separate query (speculative) vs. non-speculative
     query_claims = df.filter(pl.col("claim_type") == "speculative")

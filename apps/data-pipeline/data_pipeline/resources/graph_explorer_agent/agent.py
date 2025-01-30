@@ -1,13 +1,18 @@
 import json
+from dataclasses import asdict
 from datetime import datetime
 
+from dagster import get_dagster_logger
+from json_repair import repair_json
 from openai import OpenAI
 from openai.types import CompletionUsage
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 
 from data_pipeline.resources.graph_explorer_agent.prompts import AGENT_SYSTEM_PROMPT
 from data_pipeline.resources.graph_explorer_agent.types import (
+    ActionResult,
     ActionsImpl,
+    AdjacencyList,
     HypothesisValidationResult,
     TraceRecord,
 )
@@ -31,6 +36,7 @@ class GraphExplorerAgent:
             {"role": "system", "content": system_prompt or AGENT_SYSTEM_PROMPT},
         ]
         self._trace = []
+        self._logger = get_dagster_logger()
 
     @staticmethod
     def _calculate_cost(
@@ -45,6 +51,8 @@ class GraphExplorerAgent:
         )
 
     def _next_step(self, new_question: str) -> str | None:
+        self._messages.append({"role": "user", "content": new_question})
+
         response = self._client.chat.completions.create(
             model="deepseek-reasoner",
             messages=self._messages,
@@ -52,8 +60,11 @@ class GraphExplorerAgent:
 
         input_cost, output_cost = self._calculate_cost(response.usage)
 
-        # Save the user message and trace it
-        self._messages.append({"role": "user", "content": new_question})
+        # Save the assistant response
+        answer = response.choices[0].message.content
+        self._messages.append({"role": "assistant", "content": answer})
+
+        # Trace the user message
         self._trace.append(
             TraceRecord(
                 role="user",
@@ -64,9 +75,7 @@ class GraphExplorerAgent:
             )
         )
 
-        # Save the assistant message and trace it
-        answer = response.choices[0].message.content
-        self._messages.append({"role": "assistant", "content": answer})
+        # Trace the assistant response
         self._trace.append(
             TraceRecord(
                 role="assistant",
@@ -79,9 +88,10 @@ class GraphExplorerAgent:
 
         return answer
 
-    @staticmethod
     def _parse_agent_response(
-        response: str, actions_impl: ActionsImpl
+        self,
+        response: str,
+        actions_impl: ActionsImpl,
     ) -> tuple[HypothesisValidationResult | None, list | None]:
         """Parse agent response and execute any actions.
 
@@ -91,7 +101,7 @@ class GraphExplorerAgent:
                 - action_results: List of action results if actions executed, None otherwise
         """
         try:
-            result = json.loads(response)
+            result: dict = repair_json(response, return_objects=True)  # type: ignore
 
             # Check for final result
             if "result" in result:
@@ -99,20 +109,25 @@ class GraphExplorerAgent:
 
             # Parse and execute actions
             if "actions" in result:
+                self._logger.info(
+                    f"[ACTIONS] {json.dumps(result['actions'], indent=2)}"
+                )
                 action_results = []
                 for action in result["actions"]:
                     if not hasattr(actions_impl, action["name"]):
                         raise ValueError(f"Unknown action: {action['name']}")
 
                     # Execute the action and get result
-                    result = getattr(actions_impl, action["name"])(**action["args"])
+                    action_result: AdjacencyList = getattr(
+                        actions_impl, action["name"]
+                    )(**action["args"])
 
                     action_results.append(
-                        {
-                            "action": action["name"],
-                            "args": action["args"],
-                            "result": result,
-                        }
+                        ActionResult(
+                            action=action["name"],
+                            args=action["args"],
+                            result=action_result,
+                        )
                     )
                 return None, action_results
 
@@ -126,23 +141,33 @@ class GraphExplorerAgent:
         hypothesis: str,
         actions_impl: ActionsImpl,
     ) -> tuple[HypothesisValidationResult | None, list[TraceRecord] | None]:
-        final_result = None
-        action_results = None
+        final_result: HypothesisValidationResult | None = None
+        action_results: list[ActionResult] | None = None
         iteration = 0
 
         while final_result is None:
             if action_results:
-                self._next_step(f"Action results: {json.dumps(action_results)}")
+                formatted_action_results = json.dumps(
+                    [asdict(ar) for ar in action_results], indent=2
+                )
+                self._logger.info(f"[ACTION RESULTS] \n{formatted_action_results}\n")
+                response = self._next_step(
+                    f"Action results: {formatted_action_results}"
+                )
             else:
                 if iteration == 0:
-                    self._next_step(f"Here is the hypothesis to validate: {hypothesis}")
+                    response = self._next_step(
+                        f"Here is the hypothesis to validate: {hypothesis}"
+                    )
                 else:
-                    raise ValueError("Failed to get action results")
-
-            response = self._next_step(hypothesis)
+                    raise ValueError(
+                        f"Failed to get action results in iteration #{iteration}"
+                    )
 
             if not response:
-                raise ValueError("Failed to get response from the model")
+                raise ValueError(
+                    f"Failed to get response from the model in iteration #{iteration}"
+                )
 
             final_result, action_results = self._parse_agent_response(
                 response, actions_impl

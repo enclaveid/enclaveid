@@ -4,7 +4,7 @@ from dagster import AssetExecutionContext, AssetIn, asset
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.environments import get_environment
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.batch_embedder import BatchEmbedderResource
+from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResource
 
 
 class ConversationEmbeddingsConfig(RowLimitConfig):

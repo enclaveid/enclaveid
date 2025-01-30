@@ -1,74 +1,87 @@
 from typing import Literal
 
-import igraph as ig
+import networkx as nx
 
 from data_pipeline.resources.graph_explorer_agent.types import (
     AdjacencyList,
     AdjacencyListRecord,
     NodeReference,
 )
+from data_pipeline.utils.get_node_datetime import get_node_datetime
 
 
-def get_children(igraph: ig.Graph, node_id: str, depth: int) -> AdjacencyList:
-    return _get_relatives(igraph, node_id, depth, mode="out")
+def get_children(graph: nx.DiGraph, node_id: str, depth: int = 1) -> AdjacencyList:
+    return _get_relatives(graph, node_id, mode="out", depth=depth)
 
 
-def get_parents(igraph: ig.Graph, node_id: str, depth: int) -> AdjacencyList:
-    return _get_relatives(igraph, node_id, depth, mode="in")
+def get_parents(graph: nx.DiGraph, node_id: str) -> AdjacencyList:
+    return _get_relatives(graph, node_id, mode="in")
 
 
 def _get_relatives(
-    igraph: ig.Graph, node_id: str, depth: int, mode: Literal["in", "out"] = "out"
+    graph: nx.DiGraph, node_id: str, mode: Literal["in", "out"] = "out", depth: int = 1
 ) -> AdjacencyList:
-    # Get the vertex index for the given node_id
-    try:
-        vertex_idx = igraph.vs.find(name=node_id).index
-    except ValueError:
+    if node_id not in graph:
         return []  # Return empty list if node not found
 
-    # Get all ancestors/descendants up to specified depth using neighborhood()
-    relatives = igraph.neighborhood(
-        vertices=vertex_idx,
-        order=depth,
-        mode=mode,  # "in" for parents, "out" for children
-        mindist=1,  # Exclude the start node itself
-    )
+    # Get all ancestors/descendants up to specified depth
+    if mode == "out":
+        relatives = nx.descendants_at_distance(graph, node_id, depth)
+    else:
+        relatives = nx.ancestors(graph, node_id)
 
     result: AdjacencyList = []
 
     # Process each relative
-    for rel_idx in relatives[0]:  # [0] because neighborhood returns a list of lists
-        rel_vertex = igraph.vs[rel_idx]
-        parent_indices = igraph.predecessors(rel_idx)
-
-        # Create parent references
+    for rel_id in relatives:
+        # Get parent and child references
         parents = [
             NodeReference(
-                id=igraph.vs[parent_idx]["name"],
-                datetime=igraph.vs[parent_idx].get("datetime", ""),
+                id=parent,
+                datetime=graph.nodes(data=True)[parent].get("datetime", None),
             )
-            for parent_idx in parent_indices
+            for parent in graph.predecessors(rel_id)
         ]
 
-        # Create children references
-        child_indices = igraph.successors(rel_idx)
         children = [
             NodeReference(
-                id=igraph.vs[child_idx]["name"],
-                datetime=igraph.vs[child_idx].get("datetime", ""),
+                id=child,
+                datetime=graph.nodes(data=True)[child].get("datetime", None),
             )
-            for child_idx in child_indices
+            for child in graph.successors(rel_id)
         ]
 
         # Create record for this node
         record = AdjacencyListRecord(
-            id=rel_vertex["name"],
-            description=rel_vertex.get("description", ""),
-            datetime=rel_vertex.get("datetime", ""),
+            id=rel_id,
+            description=graph.nodes(data=True)[rel_id].get("description", ""),
+            datetime=graph.nodes(data=True)[rel_id].get("datetime", None),
             parents=parents,
             children=children,
+            frequency=graph.nodes(data=True)[rel_id].get("frequency", 1),
         )
 
         result.append(record)
 
     return result
+
+
+if __name__ == "__main__":
+    import polars as pl
+
+    filename = "/Users/ma9o/Desktop/enclaveid/apps/data-pipeline/data/dagster/whatsapp_nodes_deduplicated/cm0i27jdj0000aqpa73ghpcxf.snappy"
+    df = pl.read_parquet(filename)
+
+    G = nx.DiGraph()
+    for row in df.iter_rows(named=True):
+        G.add_node(
+            row["id"],
+            description=row["proposition"],
+            frequency=row["frequency"],
+            user=row["user"],
+            datetime=get_node_datetime(row["datetimes"]),
+            chunk_ids=row["chunk_ids"],
+        )
+        G.add_edges_from([(row["id"], e) for e in row["edges"]])
+
+    print(get_children(G, "frequent_check_ins", 1))
