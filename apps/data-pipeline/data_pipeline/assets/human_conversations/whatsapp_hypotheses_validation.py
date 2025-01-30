@@ -4,9 +4,10 @@ from dagster import AssetExecutionContext, AssetIn, asset
 
 from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResource
-from data_pipeline.resources.graph_explorer_agent.resource import (
-    GraphExplorerAgentResource,
+from data_pipeline.resources.batch_inference.base_llm_resource import (
+    BaseLlmResource,
 )
+from data_pipeline.resources.graph_explorer_agent.agent import GraphExplorerAgent
 from data_pipeline.resources.graph_explorer_agent.types import ActionsImpl
 from data_pipeline.utils.agent_actions import (
     get_causal_chain,
@@ -31,8 +32,8 @@ from data_pipeline.utils.get_node_datetime import get_node_datetime
 def whatsapp_hypotheses_validation(
     context: AssetExecutionContext,
     whatsapp_nodes_deduplicated: pl.DataFrame,
-    graph_explorer_agent: GraphExplorerAgentResource,
     batch_embedder: BatchEmbedderResource,
+    gpt4o: BaseLlmResource,
 ):
     df = whatsapp_nodes_deduplicated
     hypothesis = "Estela's frequent requests for reassurance are due to her anxious attachment style"  # TODO: Get from somewhere
@@ -51,7 +52,7 @@ def whatsapp_hypotheses_validation(
 
     label_embeddings = df.select("id", "embedding").to_dicts()
 
-    result, trace = graph_explorer_agent.validate_hypothesis(
+    result, trace = GraphExplorerAgent(gpt4o.llm_config).validate_hypothesis(
         hypothesis,
         actions_impl=ActionsImpl(
             get_similar_nodes=lambda query: get_similar_nodes(

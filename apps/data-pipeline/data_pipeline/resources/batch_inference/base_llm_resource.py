@@ -18,7 +18,7 @@ PromptSequence = Sequence[Union[str, Callable[[str], str]]]
 
 
 class BaseLlmResource(ConfigurableResource, ABC):
-    llm_config: LlmConfig
+    llm_config: RemoteLlmConfig | LocalLlmConfig
 
     @abstractmethod
     def setup_for_execution(self, context) -> None:

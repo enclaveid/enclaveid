@@ -1,13 +1,13 @@
 import json
 from dataclasses import asdict
 from datetime import datetime
+from typing import Any, Dict
 
+import httpx
 from dagster import get_dagster_logger
 from json_repair import repair_json
-from openai import OpenAI
-from openai.types import CompletionUsage
-from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 
+from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
 from data_pipeline.resources.graph_explorer_agent.prompts import AGENT_SYSTEM_PROMPT
 from data_pipeline.resources.graph_explorer_agent.types import (
     ActionResult,
@@ -17,51 +17,88 @@ from data_pipeline.resources.graph_explorer_agent.types import (
     TraceRecord,
 )
 
-DEEPSEEK_INPUT_COST_1M = 0.55
-DEEPSEEK_OUTPUT_COST_1M = 2.19
-
 
 class GraphExplorerAgent:
-    _client: OpenAI
-    _messages: list[ChatCompletionMessageParam]
+    _client: httpx.Client
+    _messages: list[Dict[str, Any]]
     _trace: list[TraceRecord]
+    _model_config: RemoteLlmConfig
 
     def __init__(
         self,
-        api_key: str,
+        model_config: RemoteLlmConfig,
         system_prompt: str | None = None,
     ):
-        self._client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+        self._client = httpx.Client(
+            timeout=model_config.timeout,
+        )
         self._messages = [
             {"role": "system", "content": system_prompt or AGENT_SYSTEM_PROMPT},
         ]
         self._trace = []
         self._logger = get_dagster_logger()
+        self._model_config = model_config
 
-    @staticmethod
     def _calculate_cost(
-        usage: CompletionUsage | None
+        self,
+        usage: Dict[str, int],
     ) -> tuple[float | None, float | None]:
         if not usage:
             return None, None
 
         return (
-            (usage.completion_tokens / 1_000_000) * DEEPSEEK_OUTPUT_COST_1M,
-            (usage.prompt_tokens / 1_000_000) * DEEPSEEK_INPUT_COST_1M,
+            (usage["completion_tokens"] / 1_000_000) * self._model_config.output_cpm,
+            (usage["prompt_tokens"] / 1_000_000) * self._model_config.input_cpm,
         )
+
+    @staticmethod
+    def _get_reasoning_content(response: Dict[str, Any]) -> str | None:
+        reasoning_content = response["choices"][0]["message"].get(
+            "reasoning_content", None
+        )
+
+        # Look for content between <think> tags if reasoning_content is not available directly
+        if reasoning_content is None:
+            content = response["choices"][0]["message"]["content"]
+            start_tag = "<think>"
+            end_tag = "</think>"
+            start_idx = content.find(start_tag)
+            end_idx = content.find(end_tag)
+
+            if start_idx != -1 and end_idx != -1:
+                reasoning_content = content[
+                    start_idx + len(start_tag) : end_idx
+                ].strip()
+
+        return reasoning_content
 
     def _next_step(self, new_question: str) -> str | None:
         self._messages.append({"role": "user", "content": new_question})
 
-        response = self._client.chat.completions.create(
-            model="deepseek-reasoner",
-            messages=self._messages,
-        )
+        payload = {
+            "messages": self._messages,
+            **self._model_config.inference_config,
+        }
 
-        input_cost, output_cost = self._calculate_cost(response.usage)
+        if self._model_config.provider:
+            payload["provider"] = self._model_config.provider
+
+        response = self._client.post(
+            self._model_config.inference_url,
+            json=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self._model_config.api_key}",
+                "api-key": self._model_config.api_key,
+            },
+        )
+        response.raise_for_status()
+        result = response.json()
+
+        input_cost, output_cost = self._calculate_cost(result["usage"])
 
         # Save the assistant response
-        answer = response.choices[0].message.content
+        answer = result["choices"][0]["message"]["content"]
         self._messages.append({"role": "assistant", "content": answer})
 
         # Trace the user message
@@ -75,12 +112,13 @@ class GraphExplorerAgent:
             )
         )
 
-        # Trace the assistant response
+        # Trace the assistant response with reasoning content if available
+        reasoning_content = self._get_reasoning_content(result)
         self._trace.append(
             TraceRecord(
                 role="assistant",
                 content=answer,
-                reasoning_content=response.choices[0].message.reasoning_content,  # type: ignore
+                reasoning_content=reasoning_content,
                 cost=output_cost,
                 timestamp=datetime.now(),
             )

@@ -22,9 +22,6 @@ from data_pipeline.resources.batch_inference.llms.llama70b import (
 from data_pipeline.resources.batch_inference.llms.llama70b_turbo import (
     create_llama70b_turbo_resource,
 )
-from data_pipeline.resources.graph_explorer_agent.resource import (
-    GraphExplorerAgentResource,
-)
 
 resources = {
     "batch_embedder": BatchEmbedderResource(base_url=EnvVar("RAY_APP_ADDRESS")),
@@ -37,9 +34,6 @@ resources = {
     "gpt4o_mini": create_gpt4o_mini_resource(),
     "deepseek_r1": create_deepseek_r1_resource(),
     "deepseek_v3": create_deepseek_v3_resource(),
-    "graph_explorer_agent": GraphExplorerAgentResource(
-        api_key=EnvVar("DEEPSEEK_API_KEY")
-    ),
     "parquet_io_manager": PolarsParquetIOManager(
         extension=".snappy", base_dir=str(DAGSTER_STORAGE_DIRECTORY)
     ),
