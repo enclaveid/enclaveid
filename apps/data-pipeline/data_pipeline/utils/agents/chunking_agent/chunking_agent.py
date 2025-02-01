@@ -41,24 +41,35 @@ class ChunkingAgent(BaseAgent):
         next_chunk: Callable[..., tuple[str | None, bool]],
     ) -> list[TraceRecord]:
         to_process, is_over_max_size = next_chunk()
+        max_retries = 3
+        retries = 0
 
         while to_process is not None:
-            llm_response = self._next_step(
-                dedent(
-                    f"""
-                    {CHUNKING_AGENT_SPLIT_PROMPT if not is_over_max_size else CHUNKING_AGENT_FORCE_SPLIT_PROMPT}
+            try:
+                llm_response = self._next_step(
+                    dedent(
+                        f"""
+                      {CHUNKING_AGENT_SPLIT_PROMPT if not is_over_max_size else CHUNKING_AGENT_FORCE_SPLIT_PROMPT}
 
-                    Here is the list of messages:
-                    {to_process}
-                    """
+                      Here is the list of messages:
+                      {to_process}
+                      """
+                    )
                 )
-            )
 
-            if llm_response is None:
-                raise ValueError("No LLM response received")
+                if llm_response is None:
+                    raise ValueError("No LLM response received")
 
-            chunk_decision = self._parse_llm_response(llm_response)
+                chunk_decision = self._parse_llm_response(llm_response)
 
-            to_process, is_over_max_size = next_chunk(chunk_decision)
+                to_process, is_over_max_size = next_chunk(chunk_decision)
+                retries = 0
+            except Exception as e:
+                retries += 1
+                self._logger.error(f"Error processing chunk: {e}, retrying...")
+                if retries > max_retries:
+                    raise ValueError(
+                        f"Failed to process chunk after {max_retries} retries"
+                    ) from e
 
         return self._trace

@@ -1,3 +1,5 @@
+import time
+
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 from pydantic import Field
@@ -41,10 +43,10 @@ class WhatsappChunkingConfig(RowLimitConfig):
 def whatsapp_chunks_sequential(
     context: AssetExecutionContext,
     config: WhatsappChunkingConfig,
-    gpt4o: BaseLlmResource,
+    o1_mini: BaseLlmResource,
     parsed_whatsapp_conversations: pl.DataFrame,
 ) -> pl.DataFrame:
-    llm = gpt4o
+    llm = o1_mini
 
     messaging_partners = get_messaging_partners()
     df = (
@@ -55,30 +57,49 @@ def whatsapp_chunks_sequential(
         .with_columns(pl.lit(None).alias("chunk_id"))
         .sort("datetime")
         .with_row_count("index")
+        .slice(0, config.row_limit)
     )
     last_to_process_idx = 0
+    last_log_time = time.time()
 
     def next_to_process(
         decision_payload: ChunkDecision | None = None
     ) -> tuple[str | None, bool]:
-        nonlocal df, last_to_process_idx
+        nonlocal df, last_to_process_idx, last_log_time
+
+        # Progress logging every 60 seconds
+        current_time = time.time()
+        if current_time - last_log_time >= 60:
+            processed_rows = df.filter(pl.col("chunk_id").is_not_null()).height
+            progress_percentage = (processed_rows / df.height) * 100
+            context.log.info(
+                f"Progress: {processed_rows}/{df.height} rows processed ({progress_percentage:.2f}%)"
+            )
+            last_log_time = current_time
+
+        # Get the current max chunk_id or start with 0 if no chunks exist
+        current_max_chunk = (
+            df.filter(pl.col("chunk_id").is_not_null()).select("chunk_id").max().item()
+            or 0
+        )
 
         if decision_payload is None or decision_payload.decision == "NO_SPLIT":
             # Grow next input
             next_to_process = df.filter(
                 pl.col("index") < last_to_process_idx + config.grow_by
             )
-            last_to_process_idx = next_to_process["index"].max()
+            # End condition
+            if next_to_process["index"].max() == last_to_process_idx:
+                df = df.with_columns(
+                    pl.when(pl.col("chunk_id").is_null())
+                    .then(pl.lit(current_max_chunk + 1))
+                    .otherwise(pl.col("chunk_id"))
+                    .alias("chunk_id")
+                )
+                return None, False
+            else:
+                last_to_process_idx = next_to_process["index"].max()
         elif decision_payload.decision == "SPLIT":
-            # Get the current max chunk_id or start with 0 if no chunks exist
-            current_max_chunk = (
-                df.filter(pl.col("chunk_id").is_not_null())
-                .select("chunk_id")
-                .max()
-                .item()
-                or 0
-            )
-
             # Update chunk_id for rows up to the decision timestamp
             df = df.with_columns(
                 pl.when(
@@ -93,13 +114,8 @@ def whatsapp_chunks_sequential(
                 .alias("chunk_id")
             )
 
-            # Set last_to_process_idx to the index of the last row in the new chunk
-            last_to_process_idx = df.filter(
-                pl.col("chunk_id") == current_max_chunk + 1
-            )["index"].max()
-
         next_to_process = df.filter(
-            pl.col("chunk_id").is_null() & pl.col("index") <= last_to_process_idx
+            pl.col("chunk_id").is_null() & pl.col("index").le(last_to_process_idx)
         )
 
         over_max_size = next_to_process.height > config.max_chunk_size
@@ -107,6 +123,7 @@ def whatsapp_chunks_sequential(
         # Get all the messages with None chunk_id until the last_to_process_idx
         next_to_process_str = (
             next_to_process.select(
+                pl.col("chunk_id"),
                 messages_str=pl.concat_str(
                     [
                         pl.lit("From: "),
@@ -116,7 +133,7 @@ def whatsapp_chunks_sequential(
                         pl.lit(", Content: "),
                         pl.col("content"),
                     ]
-                )
+                ),
             )
             .group_by("chunk_id")
             .agg(pl.col("messages_str").str.join("\n").alias("messages_str"))
@@ -129,6 +146,8 @@ def whatsapp_chunks_sequential(
     traces = ChunkingAgent(llm.llm_config).chunk_messages(
         next_to_process,
     )
+
+    context.log.info(f"Total cost: ${sum((trace.cost or 0.0) for trace in traces)}")
 
     if config.save_traces:
         save_agent_traces(traces, context)

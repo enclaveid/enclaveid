@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass
 from datetime import datetime
+from logging import Logger
 from typing import Any, Dict, Tuple
 
 import httpx
@@ -20,13 +21,20 @@ class TraceRecord:
 
 
 class BaseAgent:
+    _messages: list[dict[str, Any]] = []
+    _trace: list[TraceRecord] = []
+    _system_prompt: str | None = None
+
+    _logger: Logger
+    _model_config: RemoteLlmConfig
+    _with_memory: bool
+
     def __init__(
         self,
         model_config: RemoteLlmConfig,
         system_prompt: str | None = None,
         with_memory: bool = True,
     ):
-        self._messages = []
         if system_prompt:
             self._system_prompt = system_prompt
             self._messages.append({"role": "system", "content": system_prompt})
@@ -34,7 +42,6 @@ class BaseAgent:
         self._client = httpx.Client(
             timeout=model_config.timeout,
         )
-        self._trace = []
         self._logger = get_dagster_logger()
         self._model_config = model_config
         self._with_memory = with_memory
