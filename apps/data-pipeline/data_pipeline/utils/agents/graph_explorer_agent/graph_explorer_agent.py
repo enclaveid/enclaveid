@@ -1,132 +1,30 @@
 import json
-import re
 from dataclasses import asdict
-from datetime import datetime
-from typing import Any, Dict, Tuple
 
-import httpx
-from dagster import get_dagster_logger
 from json_repair import repair_json
 
 from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
-from data_pipeline.resources.graph_explorer_agent.prompts import AGENT_SYSTEM_PROMPT
-from data_pipeline.resources.graph_explorer_agent.types import (
+from data_pipeline.utils.agents.base_agent import BaseAgent, TraceRecord
+from data_pipeline.utils.agents.graph_explorer_agent.prompts import (
+    GRAPH_EXPLORER_AGENT_SYSTEM_PROMPT,
+)
+from data_pipeline.utils.agents.graph_explorer_agent.types import (
     ActionResult,
     ActionsImpl,
     AdjacencyList,
     HypothesisValidationResult,
-    TraceRecord,
 )
 
 
-class GraphExplorerAgent:
-    _client: httpx.Client
-    _messages: list[Dict[str, Any]]
-    _trace: list[TraceRecord]
-    _model_config: RemoteLlmConfig
-
+class GraphExplorerAgent(BaseAgent):
     def __init__(
         self,
         model_config: RemoteLlmConfig,
         system_prompt: str | None = None,
     ):
-        self._client = httpx.Client(
-            timeout=model_config.timeout,
+        super().__init__(
+            model_config, system_prompt or GRAPH_EXPLORER_AGENT_SYSTEM_PROMPT
         )
-        self._messages = [
-            {"role": "system", "content": system_prompt or AGENT_SYSTEM_PROMPT},
-        ]
-        self._trace = []
-        self._logger = get_dagster_logger()
-        self._model_config = model_config
-
-    def _calculate_cost(
-        self,
-        usage: Dict[str, int],
-    ) -> tuple[float | None, float | None]:
-        if not usage:
-            return None, None
-
-        return (
-            (usage["completion_tokens"] / 1_000_000) * self._model_config.output_cpm,
-            (usage["prompt_tokens"] / 1_000_000) * self._model_config.input_cpm,
-        )
-
-    @staticmethod
-    def _get_answer(response: Dict[str, Any]) -> Tuple[str, str | None]:
-        answer = response["choices"][0]["message"]["content"]
-
-        # Try to get reasoning_content from the response (some APIs do this)
-        reasoning_content = response["choices"][0]["message"].get(
-            "reasoning_content", None
-        )
-
-        # Otherwise, look for content between <think> tags
-        if reasoning_content is None:
-            think_pattern = r"<think>(.*?)</think>"
-            think_match = re.search(think_pattern, answer, re.DOTALL)
-
-            if think_match:
-                reasoning_content = think_match.group(1).strip()
-                # Remove the think tags and their content from the answer
-                answer = re.sub(think_pattern, "", answer, flags=re.DOTALL).strip()
-
-        return answer, reasoning_content
-
-    def _next_step(self, new_question: str) -> str | None:
-        self._messages.append({"role": "user", "content": new_question})
-
-        payload = {
-            "messages": self._messages,
-            **self._model_config.inference_config,
-        }
-
-        if self._model_config.provider:
-            payload["provider"] = self._model_config.provider
-
-        response = self._client.post(
-            self._model_config.inference_url,
-            json=payload,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self._model_config.api_key}",
-                "api-key": self._model_config.api_key,
-            },
-        )
-        response.raise_for_status()
-        result = response.json()
-
-        input_cost, output_cost = self._calculate_cost(result["usage"])
-
-        answer, reasoning_content = self._get_answer(result)
-        # Do not save reasoning_content to the messages memory
-        self._messages.append({"role": "assistant", "content": answer})
-
-        # Trace the user message
-        self._trace.append(
-            TraceRecord(
-                role="user",
-                content=new_question,
-                reasoning_content=None,
-                cost=input_cost,
-                token_count=result["usage"]["prompt_tokens"],
-                timestamp=datetime.now(),
-            )
-        )
-
-        # Trace the assistant response with reasoning content if available
-        self._trace.append(
-            TraceRecord(
-                role="assistant",
-                content=answer,
-                reasoning_content=reasoning_content,
-                cost=output_cost,
-                token_count=result["usage"]["completion_tokens"],
-                timestamp=datetime.now(),
-            )
-        )
-
-        return answer
 
     def _parse_agent_response(
         self,

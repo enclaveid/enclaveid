@@ -6,23 +6,24 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 
 from data_pipeline.partitions import user_partitions_def
-from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResource
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
 )
-from data_pipeline.resources.graph_explorer_agent.agent import GraphExplorerAgent
-from data_pipeline.resources.graph_explorer_agent.types import (
-    ActionsImpl,
-    HypothesisValidationResult,
-    TraceRecord,
-)
-from data_pipeline.utils.agent_actions import (
+from data_pipeline.utils.agents.base_agent import TraceRecord
+from data_pipeline.utils.agents.graph_explorer_agent.actions import (
     get_causal_chain,
     get_children,
     get_similar_nodes,
 )
-from data_pipeline.utils.agent_actions.get_relatives import (
+from data_pipeline.utils.agents.graph_explorer_agent.actions.get_relatives import (
     get_parents,
+)
+from data_pipeline.utils.agents.graph_explorer_agent.graph_explorer_agent import (
+    GraphExplorerAgent,
+)
+from data_pipeline.utils.agents.graph_explorer_agent.types import (
+    ActionsImpl,
+    HypothesisValidationResult,
 )
 from data_pipeline.utils.get_node_datetime import get_node_datetime
 from data_pipeline.utils.get_working_dir import get_working_dir
@@ -73,7 +74,7 @@ def whatsapp_hypotheses_validation(
 
     while not result or result.decision == "refine":
         if not result:
-            hypothesis = "Estela's frequent requests for reassurance are due to her anxious attachment style"  # TODO: Get from somewhere
+            hypothesis = "Giovanni displays relationship-specific ambivalent behaviors influenced by current emotional tensions with Estela, rather than a global disorganized attachment style originating in childhood"  # TODO: Get from somewhere
         else:
             if not result.new_hypothesis:
                 raise ValueError("No hypothesis provided")

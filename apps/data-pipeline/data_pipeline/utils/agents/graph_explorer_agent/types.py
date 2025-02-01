@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Callable, Literal
 
 
@@ -22,16 +21,6 @@ class AdjacencyListRecord:
 
 
 AdjacencyList = list[AdjacencyListRecord]
-
-
-@dataclass
-class TraceRecord:
-    timestamp: datetime
-    role: Literal["user", "assistant"]
-    content: str | None
-    reasoning_content: str | None
-    cost: float | None
-    token_count: int | None
 
 
 @dataclass

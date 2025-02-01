@@ -3,7 +3,7 @@ import networkx as nx
 import numpy as np
 
 from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResource
-from data_pipeline.resources.graph_explorer_agent.types import (
+from data_pipeline.utils.agents.graph_explorer_agent.types import (
     AdjacencyList,
     AdjacencyListRecord,
 )

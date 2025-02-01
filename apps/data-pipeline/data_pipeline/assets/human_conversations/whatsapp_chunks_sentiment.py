@@ -56,8 +56,8 @@ def _get_sentiment_analysis_prompt_sequence(
     partitions_def=user_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
-        "whatsapp_conversation_rechunked": AssetIn(
-            key=["whatsapp_conversation_rechunked"],
+        "whatsapp_chunks_sequential": AssetIn(
+            key=["whatsapp_chunks_sequential"],
         ),
     },
 )
@@ -65,11 +65,11 @@ def whatsapp_chunks_sentiment(
     context: AssetExecutionContext,
     config: Config,
     gpt4o: BaseLlmResource,
-    whatsapp_conversation_rechunked: pl.DataFrame,
+    whatsapp_chunks_sequential: pl.DataFrame,
 ) -> pl.DataFrame:
     messaging_partners = get_messaging_partners()
 
-    df = whatsapp_conversation_rechunked.with_columns(
+    df = whatsapp_chunks_sequential.with_columns(
         messages_str=get_messages_struct_to_string_format_expr(messaging_partners)
     )
 

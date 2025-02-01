@@ -1,6 +1,6 @@
 import networkx as nx
 
-from data_pipeline.resources.graph_explorer_agent.types import (
+from data_pipeline.utils.agents.graph_explorer_agent.types import (
     AdjacencyList,
     AdjacencyListRecord,
 )
