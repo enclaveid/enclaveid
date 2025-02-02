@@ -16,8 +16,8 @@ openrouter_config = RemoteLlmConfig(
     context_length=200_000,
     concurrency_limit=10,
     timeout=300,
-    input_cpm=3 / 1000,
-    output_cpm=15 / 1000,
+    input_cpm=3,
+    output_cpm=15,
 )
 
 claude_config = LlmConfig(

@@ -17,8 +17,8 @@ o1_mini_config = LlmConfig(
         inference_config={
             "model": "o1-mini",
         },
-        input_cpm=3 / 1000,
-        output_cpm=12 / 1000,
+        input_cpm=3,
+        output_cpm=12,
         context_length=128_000,
     ),
 )

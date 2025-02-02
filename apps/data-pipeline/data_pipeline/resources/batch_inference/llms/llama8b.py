@@ -1,7 +1,10 @@
 from dagster import EnvVar
 
 from data_pipeline.resources.batch_inference.base_llm_resource import BaseLlmResource
-from data_pipeline.resources.batch_inference.llm_factory import LlmConfig, create_llm_resource
+from data_pipeline.resources.batch_inference.llm_factory import (
+    LlmConfig,
+    create_llm_resource,
+)
 from data_pipeline.resources.batch_inference.local_llm_config import LocalLlmConfig
 from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
 
@@ -24,8 +27,8 @@ llama8b_config = LlmConfig(
         timeout=60 * 5,
         inference_url="https://api.deepinfra.com/v1/openai/chat/completions",
         inference_config={"model": "meta-llama/Meta-Llama-3.1-8B-Instruct"},
-        input_cpm=0.03 / 1000,
-        output_cpm=0.05 / 1000,
+        input_cpm=0.03,
+        output_cpm=0.05,
         context_length=128_000,
     ),
 )

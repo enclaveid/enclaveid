@@ -1,5 +1,8 @@
 from data_pipeline.resources.batch_inference.base_llm_resource import BaseLlmResource
-from data_pipeline.resources.batch_inference.llm_factory import LlmConfig, create_llm_resource
+from data_pipeline.resources.batch_inference.llm_factory import (
+    LlmConfig,
+    create_llm_resource,
+)
 from data_pipeline.resources.batch_inference.local_llm_config import LocalLlmConfig
 
 qwen32b_config = LlmConfig(

@@ -12,8 +12,8 @@ llama70b_turbo_config = LlmConfig(
         timeout=60 * 5,
         inference_url="https://api.deepinfra.com/v1/openai/chat/completions",
         inference_config={"model": "meta-llama/Llama-3.3-70B-Instruct-Turbo"},
-        input_cpm=0.13 / 1000,
-        output_cpm=0.4 / 1000,
+        input_cpm=0.13,
+        output_cpm=0.4,
         context_length=128_000,
     ),
 )

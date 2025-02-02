@@ -24,8 +24,8 @@ gpt4o_config = LlmConfig(
             "frequency_penalty": 0,
             "presence_penalty": 0,
         },
-        input_cpm=2.5 / 1000,
-        output_cpm=10 / 1000,
+        input_cpm=2.5,
+        output_cpm=10,
         context_length=128_000,
     ),
 )

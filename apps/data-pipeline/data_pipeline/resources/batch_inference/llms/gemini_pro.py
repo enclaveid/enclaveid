@@ -16,8 +16,8 @@ openrouter_config = RemoteLlmConfig(
     context_length=1_000_000,
     concurrency_limit=200,
     timeout=300,
-    input_cpm=1.25 / 1000,
-    output_cpm=5 / 1000,
+    input_cpm=1.25,
+    output_cpm=5,
 )
 
 gemini_pro_config = LlmConfig(

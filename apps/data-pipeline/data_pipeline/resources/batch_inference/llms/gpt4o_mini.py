@@ -23,8 +23,8 @@ gpt4o_mini_config_azure = LlmConfig(
             "frequency_penalty": 0,
             "presence_penalty": 0,
         },
-        input_cpm=0.15 / 1000,
-        output_cpm=0.6 / 1000,
+        input_cpm=0.15,
+        output_cpm=0.6,
         context_length=128_000,
     ),
 )
@@ -46,8 +46,8 @@ gpt4o_mini_config_openrouter = LlmConfig(
             "frequency_penalty": 0,
             "presence_penalty": 0,
         },
-        input_cpm=0.15 / 1000,
-        output_cpm=0.6 / 1000,
+        input_cpm=0.15,
+        output_cpm=0.6,
         context_length=128_000,
     ),
 )

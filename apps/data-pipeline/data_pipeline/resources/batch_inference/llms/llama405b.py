@@ -1,7 +1,10 @@
 from dagster import EnvVar
 
 from data_pipeline.resources.batch_inference.base_llm_resource import BaseLlmResource
-from data_pipeline.resources.batch_inference.llm_factory import LlmConfig, create_llm_resource
+from data_pipeline.resources.batch_inference.llm_factory import (
+    LlmConfig,
+    create_llm_resource,
+)
 from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
 
 llama405b_config = LlmConfig(
@@ -22,8 +25,8 @@ llama405b_config = LlmConfig(
             "skip_special_tokens": "false",
             "stream": False,
         },
-        input_cpm=0.00533,
-        output_cpm=0.016,
+        input_cpm=5.33,
+        output_cpm=16,
         context_length=128000,
     ),
 )

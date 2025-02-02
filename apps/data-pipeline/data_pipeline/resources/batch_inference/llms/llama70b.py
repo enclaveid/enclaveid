@@ -24,8 +24,8 @@ _azure_config = RemoteLlmConfig(
         # "skip_special_tokens": "false",
         # "stream": False,
     },
-    input_cpm=0.00071,
-    output_cpm=0.00071,
+    input_cpm=0.71,
+    output_cpm=0.71,
     context_length=128000,
 )
 
@@ -35,8 +35,8 @@ _deepinfra_config = RemoteLlmConfig(
     timeout=60 * 5,
     inference_url="https://api.deepinfra.com/v1/openai/chat/completions",
     inference_config={"model": "meta-llama/Llama-3.3-70B-Instruct"},
-    input_cpm=0.23 / 1000,
-    output_cpm=0.4 / 1000,
+    input_cpm=0.23,
+    output_cpm=0.4,
     context_length=128_000,
 )
 

@@ -23,8 +23,8 @@ llama70b_nemotron_config = LlmConfig(
         timeout=60 * 5,
         inference_url="https://api.deepinfra.com/v1/openai/chat/completions",
         inference_config={"model": "nvidia/Llama-3.1-Nemotron-70B-Instruct"},
-        input_cpm=0.35 / 1000,
-        output_cpm=0.4 / 1000,
+        input_cpm=0.35,
+        output_cpm=0.4,
         context_length=128_000,
     ),
 )

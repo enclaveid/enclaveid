@@ -28,8 +28,8 @@ gemma27b_config = LlmConfig(
         timeout=60 * 5,
         inference_url="https://api.deepinfra.com/v1/openai/chat/completions",
         inference_config={"model": "google/gemma-2-27b-it"},
-        input_cpm=0.27 / 1000,
-        output_cpm=0.27 / 1000,
+        input_cpm=0.27,
+        output_cpm=0.27,
         context_length=8192,
     ),
 )

@@ -17,8 +17,8 @@ _deepseek_config = RemoteLlmConfig(
         "model": "deepseek-chat",
         "max_tokens": 8192,
     },
-    input_cpm=0.27 / 1000,
-    output_cpm=1.1 / 1000,
+    input_cpm=0.27,
+    output_cpm=1.1,
     context_length=16_000,
 )
 
@@ -32,8 +32,8 @@ _deepinfra_config = RemoteLlmConfig(
         "model": "deepseek-ai/DeepSeek-R1",
         "max_tokens": 8192,
     },
-    input_cpm=0.85 / 1000,
-    output_cpm=0.9 / 1000,
+    input_cpm=0.85,
+    output_cpm=0.9,
     context_length=16_000,
 )
 
@@ -48,8 +48,8 @@ _openrouter_config = RemoteLlmConfig(
     concurrency_limit=50,
     timeout=300,
     # In reality these vary by provider but 1$ is a good ballpark
-    input_cpm=1 / 1000,
-    output_cpm=1 / 1000,
+    input_cpm=1,
+    output_cpm=1,
 )
 
 

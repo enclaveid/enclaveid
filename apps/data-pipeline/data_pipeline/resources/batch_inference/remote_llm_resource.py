@@ -135,8 +135,8 @@ class RemoteLlmResource(BaseLlmResource):
                 input_tokens = res["usage"]["prompt_tokens"]
                 output_tokens = res["usage"]["completion_tokens"]
 
-                cost = (input_tokens * self.llm_config.input_cpm / 1000) + (
-                    output_tokens * self.llm_config.output_cpm / 1000
+                cost = (input_tokens * self.llm_config.input_cpm / 1_000_000) + (
+                    output_tokens * self.llm_config.output_cpm / 1_000_000
                 )
                 return answer, cost, (input_tokens, output_tokens)
 

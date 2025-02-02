@@ -6,7 +6,7 @@ from data_pipeline.partitions import user_partitions_def
 
 
 class WhatsappChunksRechunkedConfig(Config):
-    min_chunk_size: int = Field(default=10, description="The minimum size of a chunk")
+    min_chunk_size: int = Field(default=7, description="The minimum size of a chunk")
 
 
 @asset(
