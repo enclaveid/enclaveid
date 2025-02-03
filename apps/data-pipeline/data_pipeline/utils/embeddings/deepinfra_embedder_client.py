@@ -1,6 +1,8 @@
 import asyncio
 from typing import List, Tuple
 
+import numpy as np
+from dagster import get_dagster_logger
 from openai import AsyncOpenAI
 
 from data_pipeline.utils.embeddings.base_embedder_client import BaseEmbedderClient
@@ -22,6 +24,7 @@ class DeepInfraEmbedderClient(BaseEmbedderClient):
         self.openai = AsyncOpenAI(
             api_key=api_key, base_url=base_url or "https://api.deepinfra.com/v1/openai"
         )
+        self.logger = get_dagster_logger()
 
     async def get_embeddings(
         self, texts: List[str], gpu_batch_size: int = 1, api_batch_size: int = 32
@@ -55,7 +58,7 @@ class DeepInfraEmbedderClient(BaseEmbedderClient):
             estimated_total_time = elapsed_time / progress if progress > 0 else 0
             estimated_remaining_time = estimated_total_time - elapsed_time
 
-            print(
+            self.logger.info(
                 f"Progress: {progress:.1%} | "
                 f"Elapsed: {elapsed_time:.1f}s | "
                 f"Estimated remaining: {estimated_remaining_time:.1f}s"
@@ -75,6 +78,13 @@ class DeepInfraEmbedderClient(BaseEmbedderClient):
         # Calculate total elapsed time and cost
         elapsed_time = asyncio.get_event_loop().time() - start_time
         total_cost = elapsed_time * self._cost_per_second
+
+        self.logger.info("Normalizing embeddings...")
+
+        # Convert to numpy array and normalize all at once
+        embeddings_array = np.array(all_embeddings)
+        norms = np.linalg.norm(embeddings_array, axis=1, keepdims=True)
+        all_embeddings = (embeddings_array / norms).tolist()
 
         return total_cost, all_embeddings
 
