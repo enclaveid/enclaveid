@@ -10,29 +10,22 @@ from dagster import (
 )
 from pydantic import PrivateAttr
 
-from data_pipeline.constants.environments import get_environment
 from data_pipeline.utils.embeddings.base_embedder_client import BaseEmbedderClient
-from data_pipeline.utils.embeddings.local_embedder_client import LocalEmbedderClient
-from data_pipeline.utils.embeddings.ray_cluster_embedder_client import (
-    RayClusterEmbedderClient,
+from data_pipeline.utils.embeddings.deepinfra_embedder_client import (
+    DeepInfraEmbedderClient,
 )
 
 
 class BatchEmbedderResource(ConfigurableResource):
-    base_url: str
+    api_key: str
+    base_url: str | None = None
 
     _client: BaseEmbedderClient = PrivateAttr()
     _logger: DagsterLogManager | Logger = PrivateAttr()
     _loop: asyncio.AbstractEventLoop = PrivateAttr()
 
     def setup_for_execution(self, context: InitResourceContext) -> None:
-        self._client = (
-            LocalEmbedderClient()
-            if get_environment() == "LOCAL"
-            else RayClusterEmbedderClient(
-                base_url=self.base_url,
-            )
-        )
+        self._client = DeepInfraEmbedderClient(api_key=self.api_key)
         self._logger = context.log or get_dagster_logger()
         # Initialize the event loop if it doesn't exist
         try:

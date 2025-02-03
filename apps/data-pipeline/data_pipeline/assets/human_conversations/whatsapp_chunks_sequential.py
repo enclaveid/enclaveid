@@ -29,7 +29,7 @@ from data_pipeline.utils.get_messaging_partners import get_messaging_partners
 
 
 class WhatsappChunkingConfig(RowLimitConfig):
-    row_limit: int | None = 100 if get_environment() == "LOCAL" else None
+    row_limit: int | None = None if get_environment() == "LOCAL" else None
     max_chunk_size: int = Field(
         default=100, description="Max chunk size in number of messages"
     )

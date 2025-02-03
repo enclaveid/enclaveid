@@ -26,7 +26,9 @@ from data_pipeline.resources.batch_inference.llms.o1_mini import create_o1_mini_
 from data_pipeline.resources.postgres_resource import PostgresResource
 
 resources = {
-    "batch_embedder": BatchEmbedderResource(base_url=EnvVar("RAY_APP_ADDRESS")),
+    "batch_embedder": BatchEmbedderResource(
+        api_key=EnvVar("DEEPINFRA_API_KEY"),
+    ),
     "claude": claude_resource(),
     "llama70b_turbo": create_llama70b_turbo_resource(),
     "llama70b": create_llama70b_resource(),
