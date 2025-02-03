@@ -2,10 +2,11 @@ from collections import defaultdict
 from zipfile import ZipFile, is_zipfile
 
 import polars as pl
-from dagster import AssetExecutionContext, Config, asset
+from dagster import AssetExecutionContext, asset
 
 from data_pipeline.constants.environments import API_STORAGE_DIRECTORY, DataProvider
-from data_pipeline.partitions import user_partitions_def
+from data_pipeline.partitions import phone_number_partitions_def
+from data_pipeline.resources.postgres_resource import PostgresResource
 
 MESSAGE_MEDIA_TYPES = defaultdict(
     lambda: None,
@@ -54,15 +55,19 @@ def _process_row(row: dict) -> str:
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=phone_number_partitions_def,
     io_manager_key="parquet_io_manager",
 )
 def parsed_whatsapp_conversations(
-    context: AssetExecutionContext, config: Config
+    context: AssetExecutionContext, postgres: PostgresResource
 ) -> pl.DataFrame:
+    # TODO: get user_id from phone_number (partition_key)
+    # user_id = postgres.get_user_id(context.partition_key)
+    user_id = "cm0i27jdj0000aqpa73ghpcxf"
+
     archive_path = (
         API_STORAGE_DIRECTORY
-        / context.partition_key
+        / user_id
         / DataProvider.WHATSAPP_DESKTOP["path_prefix"]
         / "latest.zip"
     )

@@ -2,7 +2,7 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 from pydantic import Field
 
-from data_pipeline.partitions import user_partitions_def
+from data_pipeline.partitions import multi_phone_number_partitions_def
 from data_pipeline.utils.get_messaging_partners import get_messaging_partners
 from data_pipeline.utils.graph.build_graph_from_df import build_graph_from_df
 from data_pipeline.utils.graph.save_graph import save_graph
@@ -19,7 +19,7 @@ class WhatsappClaimsDeduplicatedConfig(Config):
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=multi_phone_number_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
         "whatsapp_node_embeddings": AssetIn(

@@ -10,8 +10,13 @@ from dagster import (
     sensor,
 )
 
-from data_pipeline.constants.environments import STORAGE_BUCKET, get_environment
+from data_pipeline.constants.environments import (
+    API_STORAGE_DIRECTORY,
+    STORAGE_BUCKET,
+    get_environment,
+)
 from data_pipeline.partitions import user_partitions_def
+from data_pipeline.resources.postgres_resource import PostgresResource
 
 
 @sensor(
@@ -23,7 +28,9 @@ from data_pipeline.partitions import user_partitions_def
         else DefaultSensorStatus.RUNNING
     ),
 )
-def inputs_sensor(context: SensorEvaluationContext) -> SensorResult | SkipReason:
+def inputs_sensor(
+    context: SensorEvaluationContext, postgres: PostgresResource
+) -> SensorResult | SkipReason:
     """Polls the storage bucket for user folders.
 
     Adds or removes user partitions based on the presence of user folders. Note
@@ -31,11 +38,14 @@ def inputs_sensor(context: SensorEvaluationContext) -> SensorResult | SkipReason
 
     current_state: set = ast.literal_eval(context.cursor) if context.cursor else set()  # type: ignore
 
-    STORAGE_BUCKET.fs.invalidate_cache()
-    all_partitions = {d.name for d in STORAGE_BUCKET.iterdir() if d.is_dir()}
+    API_STORAGE_DIRECTORY.fs.invalidate_cache()
+    all_partitions = {d.name for d in API_STORAGE_DIRECTORY.iterdir() if d.is_dir()}
 
     partitions_to_add = all_partitions - current_state
     partitions_to_delete = current_state - all_partitions
+
+    # TODO: check if phone number is verified in the database
+    # postgres.execute_query("SELECT * FROM phone_numbers WHERE phone_number = %s", {"phone_number": phone_number})
 
     # Delete materializations for partitions that are no longer present
     if partitions_to_delete:

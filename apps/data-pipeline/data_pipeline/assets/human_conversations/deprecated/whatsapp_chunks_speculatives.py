@@ -4,7 +4,6 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 
 from data_pipeline.constants.whatsapp_conversations import PartnerType
-from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
@@ -92,7 +91,7 @@ def _get_speculatives_extraction_prompt_sequence(
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=partitions,
     io_manager_key="parquet_io_manager",
     ins={
         "whatsapp_conversation_rechunked": AssetIn(

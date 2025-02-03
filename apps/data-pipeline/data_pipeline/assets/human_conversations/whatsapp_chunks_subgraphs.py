@@ -4,7 +4,7 @@ from json_repair import repair_json
 
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.environments import get_environment
-from data_pipeline.partitions import user_partitions_def
+from data_pipeline.partitions import multi_phone_number_partitions_def
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
 )
@@ -42,7 +42,7 @@ class WhatsappChunksSubgraphsConfig(RowLimitConfig):
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=multi_phone_number_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
         "whatsapp_chunks_rechunked": AssetIn(

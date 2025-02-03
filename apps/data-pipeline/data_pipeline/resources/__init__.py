@@ -23,6 +23,7 @@ from data_pipeline.resources.batch_inference.llms.llama70b_turbo import (
     create_llama70b_turbo_resource,
 )
 from data_pipeline.resources.batch_inference.llms.o1_mini import create_o1_mini_resource
+from data_pipeline.resources.postgres_resource import PostgresResource
 
 resources = {
     "batch_embedder": BatchEmbedderResource(base_url=EnvVar("RAY_APP_ADDRESS")),
@@ -39,4 +40,5 @@ resources = {
     "parquet_io_manager": PolarsParquetIOManager(
         extension=".snappy", base_dir=str(DAGSTER_STORAGE_DIRECTORY)
     ),
+    "postgres": PostgresResource(connection_string=EnvVar("DATABASE_URL")),
 }

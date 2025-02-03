@@ -2,7 +2,7 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 from pydantic import Field
 
-from data_pipeline.partitions import user_partitions_def
+from data_pipeline.partitions import multi_phone_number_partitions_def
 
 
 class WhatsappChunksRechunkedConfig(Config):
@@ -10,7 +10,7 @@ class WhatsappChunksRechunkedConfig(Config):
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=multi_phone_number_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
         "whatsapp_chunks_sequential": AssetIn(
@@ -48,7 +48,6 @@ def whatsapp_chunks_rechunked(
 
     # 2) Merge small chunks into their subsequent chunk
     i = 0
-    # We'll mutate chunk_ids in place, removing ones that get merged
     while i < len(chunk_ids):
         current_id = chunk_ids[i]
         size = chunk_sizes[current_id]
@@ -66,14 +65,11 @@ def whatsapp_chunks_rechunked(
             # Remove current chunk from the list of active chunks
             chunk_ids.pop(i)
             # Do NOT advance i, so we re-check the newly expanded chunk_ids[i]
-            # on the next iteration (in case it's still < min_size).
         else:
-            # This chunk is large enough, or it's the last chunk
             i += 1
 
     # 3) Flatten any mapping chains (e.g. if chunk1 -> chunk2, chunk2 -> chunk3)
     def find_final_id(cid):
-        # Follow the chain until the mapping is id -> itself
         while new_chunk_ids[cid] != cid:
             cid = new_chunk_ids[cid]
         return cid
@@ -85,7 +81,19 @@ def whatsapp_chunks_rechunked(
     df = df.with_columns(
         pl.col("chunk_id")
         .map_elements(lambda old_id: new_chunk_ids[old_id])
-        .alias("chunk_id")
+        .alias("final_chunk_id")
+    )
+
+    # 5) Compute the average sentiment per final_chunk_id
+    df_avg_sentiment = df.group_by("final_chunk_id").agg(
+        pl.col("sentiment").mean().alias("chunk_sentiment")
+    )
+
+    # 6) Join back to get the chunk-level average sentiment on every row and replace chunk_id
+    df = (
+        df.join(df_avg_sentiment, on="final_chunk_id", how="left")
+        .drop("chunk_id")
+        .rename({"final_chunk_id": "chunk_id"})
     )
 
     return df

@@ -8,7 +8,6 @@ from dagster import AssetExecutionContext, AssetIn, Config, asset
 from json_repair import repair_json
 from pydantic import Field
 
-from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
 )
@@ -115,7 +114,7 @@ def parse_substantiation(response: str) -> tuple[bool | None, float | None]:
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=partitions,
     io_manager_key="parquet_io_manager",
     ins={
         "whatsapp_nodes_deduplicated": AssetIn(

@@ -9,7 +9,7 @@ from data_pipeline.resources.batch_inference.remote_llm_resource import (
 )
 
 
-def create_llm_resource(config: LlmConfig) -> BaseLlmResource | None:
+def create_llm_resource(config: LlmConfig) -> BaseLlmResource:
     logger = get_dagster_logger()
 
     if config.remote_llm_config is None:

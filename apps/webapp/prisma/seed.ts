@@ -13,9 +13,28 @@ async function main() {
     data: {
       id: 'cm0i27jdj0000aqpa73ghpcxf',
       email: 'magogagiovanni@gmail.com',
+      name: 'Giovanni',
+      phoneNumbers: {
+        create: {
+          phoneNumber: '00393494197577',
+          verifiedAt: new Date(),
+        },
+      },
       apiKeys: {
         create: {
           key: '1234567890',
+        },
+      },
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      email: 'changeme@gmail.com',
+      name: 'Estela',
+      phoneNumbers: {
+        create: {
+          phoneNumber: '0034689896443',
         },
       },
     },

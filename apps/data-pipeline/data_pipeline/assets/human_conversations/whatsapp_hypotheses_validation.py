@@ -5,7 +5,7 @@ import networkx as nx
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 
-from data_pipeline.partitions import user_partitions_def
+from data_pipeline.partitions import multi_phone_number_partitions_def
 from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResource
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
@@ -39,7 +39,7 @@ def _write_traces(traces: list[TraceRecord], context: AssetExecutionContext):
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=multi_phone_number_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
         "whatsapp_nodes_deduplicated": AssetIn(

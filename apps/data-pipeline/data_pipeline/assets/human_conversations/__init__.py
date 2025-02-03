@@ -1,11 +1,5 @@
-from data_pipeline.assets.human_conversations.parsed_whatsapp_conversations import (
-    parsed_whatsapp_conversations,
-)
 from data_pipeline.assets.human_conversations.whatsapp_chunks_rechunked import (
     whatsapp_chunks_rechunked,
-)
-from data_pipeline.assets.human_conversations.whatsapp_chunks_sentiment import (
-    whatsapp_chunks_sentiment,
 )
 from data_pipeline.assets.human_conversations.whatsapp_chunks_sequential import (
     whatsapp_chunks_sequential,
@@ -27,12 +21,10 @@ from data_pipeline.assets.human_conversations.whatsapp_nodes_deduplicated import
 )
 
 __all__ = [
-    parsed_whatsapp_conversations,
     whatsapp_chunks_sequential,
     whatsapp_chunks_rechunked,
     whatsapp_node_embeddings,
     whatsapp_nodes_deduplicated,
-    whatsapp_chunks_sentiment,
     whatsapp_chunks_subgraphs,
     whatsapp_cross_chunk_causality,
     whatsapp_hypotheses_validation,

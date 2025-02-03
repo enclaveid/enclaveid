@@ -1,13 +1,31 @@
-from dagster import DagsterInstance, DynamicPartitionsDefinition
+import os
+
+from dagster import (
+    DagsterInstance,
+    DynamicPartitionsDefinition,
+    MultiPartitionsDefinition,
+)
 
 from data_pipeline.constants.environments import get_environment
 
-# TODO: why would we want to name them differently wtf
 user_partitions_def = DynamicPartitionsDefinition(name="users")
+
+phone_number_partitions_def = DynamicPartitionsDefinition(name="phone_numbers")
+
+multi_phone_number_partitions_def = MultiPartitionsDefinition(
+    {
+        "phone_number1": phone_number_partitions_def,
+        "phone_number2": phone_number_partitions_def,
+    }
+)
 
 # Add test user to dev instance
 if get_environment() == "LOCAL":
     instance = DagsterInstance.get()
     instance.add_dynamic_partitions(
-        user_partitions_def.name, ["cm0i27jdj0000aqpa73ghpcxf"]
+        partitions_def_name=phone_number_partitions_def.name,
+        partition_keys=[
+            os.getenv("TEST_PHONE_NUMBER_1"),
+            os.getenv("TEST_PHONE_NUMBER_2"),
+        ],
     )

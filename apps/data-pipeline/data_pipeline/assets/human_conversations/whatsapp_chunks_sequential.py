@@ -1,15 +1,25 @@
 import time
 
 import polars as pl
-from dagster import AssetExecutionContext, AssetIn, asset
+from dagster import (
+    AssetExecutionContext,
+    asset,
+)
 from pydantic import Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
-from data_pipeline.constants.environments import get_environment
-from data_pipeline.partitions import user_partitions_def
+from data_pipeline.constants.environments import (
+    API_STORAGE_DIRECTORY,
+    DataProvider,
+    get_environment,
+)
+from data_pipeline.partitions import (
+    multi_phone_number_partitions_def,
+)
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
 )
+from data_pipeline.resources.postgres_resource import PostgresResource
 from data_pipeline.utils.agents.chunking_agent.chunking_agent import (
     ChunkDecision,
     ChunkingAgent,
@@ -19,7 +29,7 @@ from data_pipeline.utils.get_messaging_partners import get_messaging_partners
 
 
 class WhatsappChunkingConfig(RowLimitConfig):
-    row_limit: int | None = None if get_environment() == "LOCAL" else None
+    row_limit: int | None = 100 if get_environment() == "LOCAL" else None
     max_chunk_size: int = Field(
         default=100, description="Max chunk size in number of messages"
     )
@@ -32,29 +42,37 @@ class WhatsappChunkingConfig(RowLimitConfig):
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=multi_phone_number_partitions_def,
     io_manager_key="parquet_io_manager",
-    ins={
-        "parsed_whatsapp_conversations": AssetIn(
-            key=["parsed_whatsapp_conversations"],
-        ),
-    },
 )
 def whatsapp_chunks_sequential(
     context: AssetExecutionContext,
     config: WhatsappChunkingConfig,
     o1_mini: BaseLlmResource,
-    parsed_whatsapp_conversations: pl.DataFrame,
+    postgres: PostgresResource,
 ) -> pl.DataFrame:
     llm = o1_mini
 
-    messaging_partners = get_messaging_partners()
+    messaging_partners = get_messaging_partners(
+        postgres, context.partition_keys[0].split("|")
+    )
+
+    parsed_whatsapp_conversations = pl.read_json(
+        API_STORAGE_DIRECTORY
+        / messaging_partners.initiator_user_id
+        / DataProvider.WHATSAPP_DESKTOP["path_prefix"]
+        / "latest.json"  # TODO: change to snappy
+    )
+
     df = (
         parsed_whatsapp_conversations.filter(
-            pl.col("from").eq(messaging_partners.partner)
-            | pl.col("to").eq(messaging_partners.partner)
+            pl.col("from").eq(messaging_partners.partner_name)
+            | pl.col("to").eq(messaging_partners.partner_name)
         )
-        .with_columns(pl.lit(None).alias("chunk_id"))
+        .with_columns(
+            chunk_id=pl.lit(None),
+            datetime=pl.col("datetime").str.to_datetime(),
+        )
         .sort("datetime")
         .with_row_count("index")
         .slice(0, config.row_limit)
@@ -100,18 +118,21 @@ def whatsapp_chunks_sequential(
             else:
                 last_to_process_idx = next_to_process["index"].max()
         elif decision_payload.decision == "SPLIT":
-            # Update chunk_id for rows up to the decision timestamp
-            df = df.with_columns(
-                pl.when(
-                    (pl.col("chunk_id").is_null())
-                    & (
-                        pl.col("datetime")
-                        < pl.lit(decision_payload.timestamp).str.to_datetime()
-                    )
+            # Update chunk_id and sentiment for rows up to the decision timestamp
+            rows_to_update = pl.when(
+                (pl.col("chunk_id").is_null())
+                & (
+                    pl.col("datetime")
+                    < pl.lit(decision_payload.timestamp).str.to_datetime()
                 )
-                .then(pl.lit(current_max_chunk + 1))
+            )
+            df = df.with_columns(
+                rows_to_update.then(pl.lit(current_max_chunk + 1))
                 .otherwise(pl.col("chunk_id"))
-                .alias("chunk_id")
+                .alias("chunk_id"),
+                rows_to_update.then(pl.lit(decision_payload.sentiment))
+                .otherwise(pl.col("sentiment"))
+                .alias("sentiment"),
             )
 
         next_to_process = df.filter(

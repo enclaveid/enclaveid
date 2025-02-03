@@ -8,13 +8,10 @@ import zipfile
 import argparse
 from datetime import datetime, timedelta
 
-# ---------------------------------------------------------------------
-MESSAGE_COUNTS_ENDPOINT = "/api/file-upload/whatsapp-counts"
-MESSAGE_ARCHIVES_ENDPOINT = "/api/file-upload/whatsapp-chats"
-# ---------------------------------------------------------------------
+MESSAGE_ARCHIVES_ENDPOINT = "api/file-upload/whatsapp-chats"
 
 
-def main(api_key, test):
+def main(api_key, phone_number, base_url):
     # 1. Connect to SQLite
     db_path = os.path.expanduser(
         "~/Library/Group Containers/group.net.whatsapp.WhatsApp.shared/ChatStorage.sqlite"
@@ -45,10 +42,7 @@ def main(api_key, test):
     """
     cursor.execute(query)
 
-    # Remove partner_data and partner_messages dictionaries
-    # Replace with a single messages list
     messages = []
-    partner_data = {}
 
     apple_epoch = datetime(2001, 1, 1)
 
@@ -63,26 +57,21 @@ def main(api_key, test):
 
         # Parse out phone number from partner_jid by splitting at '@'
         # (If there's no '@', we'll just keep the original partner_jid.)
-        phone_number = (
-            "+" + partner_jid.split("@")[0] if "@" in partner_jid else partner_jid
+        partner_phone_number = (
+            "00" + partner_jid.split("@")[0] if "@" in partner_jid else partner_jid
         )
-
-        # Initialize partner data if needed
-        if partner_name not in partner_data:
-            partner_data[partner_name] = {
-                "phone_number": phone_number,
-                "message_count": 0,
-            }
-
-        partner_data[partner_name]["message_count"] += 1
 
         # Determine from/to
         if from_jid == partner_jid:
             from_name = partner_name
+            from_phone_number = partner_phone_number
             to_name = "me"
+            to_phone_number = None
         else:
             from_name = "me"
+            from_phone_number = None
             to_name = partner_name
+            to_phone_number = partner_phone_number
 
         # Convert timestamp
         dt = apple_epoch + timedelta(seconds=msg_date_apple_epoch)
@@ -94,7 +83,9 @@ def main(api_key, test):
                 "datetime": dt_str,
                 "content": text,
                 "from": from_name,
+                "from_phone_number": from_phone_number,
                 "to": to_name,
+                "to_phone_number": to_phone_number,
                 "message_type": message_type,
                 "media_title": media_title,
             }
@@ -109,33 +100,17 @@ def main(api_key, test):
         json_str = json.dumps(messages, ensure_ascii=False, indent=2)
         zf.writestr("messages.json", json_str)
 
-    BASE_URL = "http://localhost:3000" if test else "https://enclaveid.com"
-
     zip_data = zip_buffer.getvalue()
     print("Uploading message archives...")
-    post_zip(BASE_URL + MESSAGE_ARCHIVES_ENDPOINT, zip_data, api_key)
-
-    print("Uploading message counts...")
-    post_json(BASE_URL + MESSAGE_COUNTS_ENDPOINT, partner_data, api_key)
-
-
-def post_json(url, data_dict, api_key):
-    """Send a JSON POST using urllib."""
-    payload_bytes = json.dumps(data_dict).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=payload_bytes,
-        method="POST",
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
-        },
+    post_zip(
+        f"{base_url or 'https://enclaveid.com'}/{MESSAGE_ARCHIVES_ENDPOINT}",
+        zip_data,
+        api_key,
+        phone_number,
     )
-    with urllib.request.urlopen(req) as f:
-        return f.read().decode("utf-8")
 
 
-def post_zip(url, zip_bytes, api_key):
+def post_zip(url, zip_bytes, api_key, phone_number):
     """Send raw binary ZIP data as POST using urllib."""
     req = urllib.request.Request(
         url,
@@ -144,6 +119,7 @@ def post_zip(url, zip_bytes, api_key):
         headers={
             "Content-Type": "application/zip",
             "Authorization": f"Bearer {api_key}",
+            "X-Phone-Number": phone_number,
         },
     )
     with urllib.request.urlopen(req) as f:
@@ -155,6 +131,11 @@ if __name__ == "__main__":
         description="Read WhatsApp ChatStorage.sqlite and send data via POST."
     )
     parser.add_argument("--api-key", required=True, help="API Key for your endpoints.")
-    parser.add_argument("--test", action="store_true", help="Test mode.")
+    parser.add_argument(
+        "--phone-number",
+        required=True,
+        help="Phone number to associate with the upload.",
+    )
+    parser.add_argument("--base-url", help="Base URL for your endpoints.")
     args = parser.parse_args()
-    main(args.api_key, args.test)
+    main(args.api_key, args.phone_number, args.base_url)

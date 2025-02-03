@@ -1,31 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { azureContainerClient } from '../../../services/azure/storage';
 import { apiAuth } from '../../../actions/auth/apiAuth';
+import { parseWhatsappDesktopArchive } from '../../../services/parsing/parseWhatsappDesktopArchive';
+import { prisma } from '../../../services/db/prisma';
 
 export async function POST(req: NextRequest) {
   try {
     const user = await apiAuth(req);
+    const phoneNumber = req.headers.get('X-Phone-Number');
 
-    // Check if request contains a file
-    if (!req.body) {
+    if (!phoneNumber || !req.body) {
       return NextResponse.json(
-        { error: 'No file provided in request' },
+        { error: 'Phone number or file not provided' },
         { status: 400 }
       );
     }
 
-    // Get the file data as ArrayBuffer
-    const fileData = await req.arrayBuffer();
+    // Check if phone number belongs to user
+    const userPhoneNumber = await prisma.phoneNumber.findFirst({
+      where: {
+        userId: user.id,
+        number: phoneNumber,
+        verifiedAt: { not: null },
+      },
+    });
+
+    if (!userPhoneNumber) {
+      return NextResponse.json(
+        { error: 'Phone number does not belong to user or is not verified' },
+        { status: 400 }
+      );
+    }
+
+    const parsedBuffer = await req
+      .arrayBuffer()
+      .then((fileData) => parseWhatsappDesktopArchive(fileData, phoneNumber));
 
     // Create blob name using user ID
-    const blobName = `/api/${user.id}/whatsapp_desktop/latest.zip`;
+    const blobName = `/api/${user.id}/whatsapp_desktop/latest.json`;
 
     // Get blob client and upload file
     const blockBlobClient = azureContainerClient.getBlockBlobClient(blobName);
 
-    await blockBlobClient.upload(fileData, fileData.byteLength, {
+    await blockBlobClient.upload(parsedBuffer, parsedBuffer.byteLength, {
       blobHTTPHeaders: {
-        blobContentType: 'application/zip',
+        blobContentType: 'application/json',
       },
     });
 

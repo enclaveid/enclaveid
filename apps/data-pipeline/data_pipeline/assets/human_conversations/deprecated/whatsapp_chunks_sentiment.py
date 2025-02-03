@@ -3,7 +3,7 @@ from textwrap import dedent
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 
-from data_pipeline.partitions import user_partitions_def
+from data_pipeline.partitions import multi_phone_number_partitions_def
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
@@ -53,7 +53,7 @@ def _get_sentiment_analysis_prompt_sequence(
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=multi_phone_number_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
         "whatsapp_chunks_rechunked": AssetIn(

@@ -3,7 +3,7 @@ from textwrap import dedent
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 
-from data_pipeline.partitions import user_partitions_def
+from data_pipeline.partitions import multi_phone_number_partitions_def
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
@@ -51,7 +51,7 @@ def _get_observables_extraction_prompt_sequence(
             Given this chat conversation between {user_name} and {partner_name}, extract claims about them.
 
             Include only claims that are:
-            - Directly evident in their words or behavior (like reviewing security camera footage—just stating what’s visible).
+            - Directly evident in their words or behavior (like reviewing security camera footage—just stating what's visible).
             - Accurate and observable without guessing or adding interpretation.
             - Agreed upon by any neutral observer, requiring no assumptions beyond what is plainly stated.
 
@@ -61,9 +61,9 @@ def _get_observables_extraction_prompt_sequence(
             - From {partner_name} to {user_name}: "Yea, since you told me I drink it in the mornings"
             - From {user_name} to {partner_name}: "does it help?"
             - From {partner_name} to {user_name}: "I have more energy in the mornings"
-            - From {partner_name} to {user_name}: "I don’t eat sugar anymore in the mornings"
-            - From {partner_name} to {user_name}: "I’m eating protein every day"
-            - From {partner_name} to {user_name}: "And my personal trainer texted me today so I’ll organise my routine to go twice a week"
+            - From {partner_name} to {user_name}: "I don't eat sugar anymore in the mornings"
+            - From {partner_name} to {user_name}: "I'm eating protein every day"
+            - From {partner_name} to {user_name}: "And my personal trainer texted me today so I'll organise my routine to go twice a week"
             - From {partner_name} to {user_name}: "💪🏼💪🏼"
 
             You should extract the following claims:
@@ -90,7 +90,7 @@ def _get_observables_extraction_prompt_sequence(
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=multi_phone_number_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
         "whatsapp_conversation_rechunked": AssetIn(

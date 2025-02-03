@@ -16,6 +16,7 @@ from data_pipeline.utils.agents.chunking_agent.prompts import (
 class ChunkDecision:
     decision: Literal["SPLIT", "NO_SPLIT"]
     timestamp: str | None
+    sentiment: float | None
 
 
 class ChunkingAgent(BaseAgent):

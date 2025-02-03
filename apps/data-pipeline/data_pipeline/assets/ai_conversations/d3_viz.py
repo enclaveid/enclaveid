@@ -16,7 +16,7 @@ class D3VizConfig(RowLimitConfig):
 
 @asset(
     io_manager_key="parquet_io_manager",
-    partitions_def=user_partitions_def,  # Assuming you want to use the same partitioning
+    partitions_def=user_partitions_def,
     ins={
         "recursive_causality": AssetIn(key=["recursive_causality"]),
     },

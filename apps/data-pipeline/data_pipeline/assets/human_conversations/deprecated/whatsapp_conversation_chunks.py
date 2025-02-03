@@ -7,7 +7,6 @@ from json_repair import repair_json
 
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.environments import get_environment
-from data_pipeline.partitions import user_partitions_def
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
@@ -82,7 +81,7 @@ class WhatsappChunkingConfig(RowLimitConfig):
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=partitions,
     io_manager_key="parquet_io_manager",
     ins={
         "parsed_whatsapp_conversations": AssetIn(

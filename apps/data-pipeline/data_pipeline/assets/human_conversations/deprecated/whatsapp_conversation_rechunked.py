@@ -2,8 +2,6 @@ import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
 from pydantic import Field
 
-from data_pipeline.partitions import user_partitions_def
-
 
 class WhatsappConversationRechunkedConfig(Config):
     min_chunk_size: int = Field(
@@ -13,7 +11,7 @@ class WhatsappConversationRechunkedConfig(Config):
 
 
 @asset(
-    partitions_def=user_partitions_def,
+    partitions_def=partitions,
     io_manager_key="parquet_io_manager",
     ins={
         "whatsapp_conversation_chunks": AssetIn(

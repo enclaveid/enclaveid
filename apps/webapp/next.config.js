@@ -21,7 +21,7 @@ const plugins = [
 
 module.exports = {
   ...composePlugins(...plugins)(nextConfig),
-  webpack(config) {
+  webpack(config, { isServer }) {
     config.plugins.push(
       require('unplugin-icons/webpack').default({
         compiler: 'jsx',
@@ -30,7 +30,11 @@ module.exports = {
       })
     )
 
-    return config
+    if (isServer) {
+      config.externals.push({ 'nodejs-polars': 'commonjs nodejs-polars' });
+    }
+
+    return config;
   },
   typescript: {
     ignoreBuildErrors: true,
