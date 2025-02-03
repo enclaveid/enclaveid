@@ -48,10 +48,10 @@ class WhatsappChunkingConfig(RowLimitConfig):
 def whatsapp_chunks_sequential(
     context: AssetExecutionContext,
     config: WhatsappChunkingConfig,
-    o1_mini: BaseLlmResource,
+    gpt4o: BaseLlmResource,
     postgres: PostgresResource,
 ) -> pl.DataFrame:
-    llm = o1_mini
+    llm = gpt4o
 
     messaging_partners = get_messaging_partners(
         postgres, context.partition_keys[0].split("|")
@@ -70,8 +70,10 @@ def whatsapp_chunks_sequential(
             | pl.col("to").eq(messaging_partners.partner_name)
         )
         .with_columns(
-            chunk_id=pl.lit(None),
             datetime=pl.col("datetime").str.to_datetime(),
+            # Initialize columns for processing
+            chunk_id=pl.lit(None),
+            sentiment=pl.lit(None),
         )
         .sort("datetime")
         .with_row_count("index")
@@ -123,7 +125,9 @@ def whatsapp_chunks_sequential(
                 (pl.col("chunk_id").is_null())
                 & (
                     pl.col("datetime")
-                    < pl.lit(decision_payload.timestamp).str.to_datetime()
+                    < pl.lit(decision_payload.timestamp).str.to_datetime(
+                        time_zone="UTC"
+                    )
                 )
             )
             df = df.with_columns(
