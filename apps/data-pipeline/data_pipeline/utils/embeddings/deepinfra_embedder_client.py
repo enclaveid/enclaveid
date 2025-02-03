@@ -27,7 +27,7 @@ class DeepInfraEmbedderClient(BaseEmbedderClient):
         self.logger = get_dagster_logger()
 
     async def get_embeddings(
-        self, texts: List[str], gpu_batch_size: int = 1, api_batch_size: int = 32
+        self, texts: List[str], gpu_batch_size: int = 1, api_batch_size: int = 100
     ) -> Tuple[float, List[List[float]]]:
         """
         Get embeddings for a list of texts using the deepinfra API.
@@ -44,6 +44,7 @@ class DeepInfraEmbedderClient(BaseEmbedderClient):
         """
         # Record start time for cost calculation
         start_time = asyncio.get_event_loop().time()
+        last_log_time = start_time
         total_cost = 0.0
         all_embeddings = []
         total_texts = len(texts)
@@ -52,17 +53,20 @@ class DeepInfraEmbedderClient(BaseEmbedderClient):
         for i in range(0, total_texts, api_batch_size):
             batch_texts = texts[i : i + api_batch_size]
 
-            # Calculate and print progress
-            progress = (i + len(batch_texts)) / total_texts
-            elapsed_time = asyncio.get_event_loop().time() - start_time
-            estimated_total_time = elapsed_time / progress if progress > 0 else 0
-            estimated_remaining_time = estimated_total_time - elapsed_time
+            # Calculate progress metrics
+            current_time = asyncio.get_event_loop().time()
+            if current_time - last_log_time >= 60:  # Only log every 60 seconds
+                progress = (i + len(batch_texts)) / total_texts
+                elapsed_time = current_time - start_time
+                estimated_total_time = elapsed_time / progress if progress > 0 else 0
+                estimated_remaining_time = estimated_total_time - elapsed_time
 
-            self.logger.info(
-                f"Progress: {progress:.1%} | "
-                f"Elapsed: {elapsed_time:.1f}s | "
-                f"Estimated remaining: {estimated_remaining_time:.1f}s"
-            )
+                self.logger.info(
+                    f"Progress: {progress:.1%} | "
+                    f"Elapsed: {elapsed_time:.1f}s | "
+                    f"Estimated remaining: {estimated_remaining_time:.1f}s"
+                )
+                last_log_time = current_time
 
             # Use the async client for each batch
             result = await self.openai.embeddings.create(
@@ -78,8 +82,6 @@ class DeepInfraEmbedderClient(BaseEmbedderClient):
         # Calculate total elapsed time and cost
         elapsed_time = asyncio.get_event_loop().time() - start_time
         total_cost = elapsed_time * self._cost_per_second
-
-        self.logger.info("Normalizing embeddings...")
 
         # Convert to numpy array and normalize all at once
         embeddings_array = np.array(all_embeddings)

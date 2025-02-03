@@ -43,7 +43,7 @@ if __name__ == "__main__":
     async def main():
         client = LocalEmbedderClient()
         cost, embeddings = await client.get_embeddings(
-            ["Hello, how are you? I'm under the water"]
+            ["Hello, how are you? I'm under the water"] * 4, gpu_batch_size=1
         )
         print(cost)
         print(len(embeddings))

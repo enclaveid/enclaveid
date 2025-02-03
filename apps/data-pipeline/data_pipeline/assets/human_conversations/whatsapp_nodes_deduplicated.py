@@ -3,6 +3,7 @@ from dagster import AssetExecutionContext, AssetIn, Config, asset
 from pydantic import Field
 
 from data_pipeline.partitions import multi_phone_number_partitions_def
+from data_pipeline.resources.postgres_resource import PostgresResource
 from data_pipeline.utils.get_messaging_partners import get_messaging_partners
 from data_pipeline.utils.graph.build_graph_from_df import build_graph_from_df
 from data_pipeline.utils.graph.save_graph import save_graph
@@ -31,8 +32,11 @@ async def whatsapp_nodes_deduplicated(
     context: AssetExecutionContext,
     config: WhatsappClaimsDeduplicatedConfig,
     whatsapp_node_embeddings: pl.DataFrame,
+    postgres: PostgresResource,
 ) -> pl.DataFrame:
-    messaging_partners = get_messaging_partners()
+    messaging_partners = get_messaging_partners(
+        postgres, context.partition_keys[0].split("|")
+    )
 
     # Gather embeddings and find similarities
     df = whatsapp_node_embeddings
@@ -42,19 +46,23 @@ async def whatsapp_nodes_deduplicated(
         pl.when(
             # Check if both names appear in either order using regex
             pl.col("proposition").str.contains(
-                f"{messaging_partners.me} and {messaging_partners.partner}|{messaging_partners.partner} and {messaging_partners.me}"
+                f"{messaging_partners.initiator_name} and {messaging_partners.partner_name}|{messaging_partners.partner_name} and {messaging_partners.initiator_name}"
             )
         )
         .then(pl.lit("both"))
         # Check which name appears first and use that
         .when(
             pl.col("proposition")
-            .str.extract(f"({messaging_partners.me}|{messaging_partners.partner})", 0)
+            .str.extract(
+                f"({messaging_partners.initiator_name}|{messaging_partners.partner_name})",
+                0,
+            )
             .is_not_null()
         )
         .then(
             pl.col("proposition").str.extract(
-                f"({messaging_partners.me}|{messaging_partners.partner})", 0
+                f"({messaging_partners.initiator_name}|{messaging_partners.partner_name})",
+                0,
             )
         )
         .otherwise(pl.lit("both"))
@@ -109,10 +117,11 @@ async def whatsapp_nodes_deduplicated(
                 df.filter(pl.col("user") == "both"), **deduplication_args
             ),
             deduplicate_nodes_dataframe(
-                df.filter(pl.col("user") == messaging_partners.me), **deduplication_args
+                df.filter(pl.col("user") == messaging_partners.initiator_name),
+                **deduplication_args,
             ),
             deduplicate_nodes_dataframe(
-                df.filter(pl.col("user") == messaging_partners.partner),
+                df.filter(pl.col("user") == messaging_partners.partner_name),
                 **deduplication_args,
             ),
         ],

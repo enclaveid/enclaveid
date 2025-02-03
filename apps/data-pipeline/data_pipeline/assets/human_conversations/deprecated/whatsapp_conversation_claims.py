@@ -8,6 +8,7 @@ from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
     PromptSequence,
 )
+from data_pipeline.resources.postgres_resource import PostgresResource
 from data_pipeline.utils.get_messaging_partners import get_messaging_partners
 from data_pipeline.utils.parsing.parse_whatsapp_claims import parse_whatsapp_claims
 from data_pipeline.utils.polars_expressions.messages_struct_to_string_format_expr import (
@@ -103,8 +104,11 @@ def whatsapp_chunk_inferrables(
     config: Config,
     gpt4o: BaseLlmResource,
     whatsapp_conversation_rechunked: pl.DataFrame,
+    postgres: PostgresResource,
 ) -> pl.DataFrame:
-    messaging_partners = get_messaging_partners()
+    messaging_partners = get_messaging_partners(
+        postgres, context.partition_keys[0].split("|")
+    )
 
     df = whatsapp_conversation_rechunked.with_columns(
         messages_str=get_messages_struct_to_string_format_expr(messaging_partners)
@@ -112,7 +116,9 @@ def whatsapp_chunk_inferrables(
 
     prompt_sequences = [
         _get_observables_extraction_prompt_sequence(
-            messages_str, messaging_partners.me, messaging_partners.partner
+            messages_str,
+            messaging_partners.initiator_name,
+            messaging_partners.partner_name,
         )
         for messages_str in df.get_column("messages_str").to_list()
     ]
@@ -127,7 +133,9 @@ def whatsapp_chunk_inferrables(
         *[
             (
                 parse_whatsapp_claims(
-                    messaging_partners.me, messaging_partners.partner, completion[-1]
+                    messaging_partners.initiator_name,
+                    messaging_partners.partner_name,
+                    completion[-1],
                 ),
                 completion[-2],
             )

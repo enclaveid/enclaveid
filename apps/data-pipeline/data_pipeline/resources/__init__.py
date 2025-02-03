@@ -27,7 +27,8 @@ from data_pipeline.resources.postgres_resource import PostgresResource
 
 resources = {
     "batch_embedder": BatchEmbedderResource(
-        api_key=EnvVar("DEEPINFRA_API_KEY"),
+        # api_key=EnvVar("DEEPINFRA_API_KEY"),
+        base_url=EnvVar("RAY_APP_ADDRESS"),
     ),
     "claude": claude_resource(),
     "llama70b_turbo": create_llama70b_turbo_resource(),

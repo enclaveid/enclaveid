@@ -8,10 +8,8 @@ from data_pipeline.partitions import multi_phone_number_partitions_def
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
 )
+from data_pipeline.resources.postgres_resource import PostgresResource
 from data_pipeline.utils.get_messaging_partners import get_messaging_partners
-from data_pipeline.utils.polars_expressions.messages_struct_to_string_format_expr import (
-    get_messages_struct_to_string_format_expr,
-)
 from data_pipeline.utils.prompt_sequences.inferrables_extraction import (
     get_inferrables_extraction_prompt_sequence,
 )
@@ -53,19 +51,50 @@ class WhatsappChunksSubgraphsConfig(RowLimitConfig):
 def whatsapp_chunks_subgraphs(
     context: AssetExecutionContext,
     whatsapp_chunks_rechunked: pl.DataFrame,
-    gpt4o: BaseLlmResource,
+    llama70b: BaseLlmResource,
+    postgres: PostgresResource,
     config: WhatsappChunksSubgraphsConfig,
 ):
-    llm = gpt4o
-    messaging_partners = get_messaging_partners()
+    llm = llama70b
+    messaging_partners = get_messaging_partners(
+        postgres, context.partition_keys[0].split("|")
+    )
 
-    df = whatsapp_chunks_rechunked.with_columns(
-        messages_str=get_messages_struct_to_string_format_expr(messaging_partners)
-    ).slice(0, config.row_limit)
+    df = (
+        whatsapp_chunks_rechunked.group_by("chunk_id")
+        .agg(
+            messages_struct=pl.struct(["from", "datetime", "content"]),
+            sentiment=pl.col("sentiment").mean(),
+            start_dt=pl.col("datetime").min(),
+            end_dt=pl.col("datetime").max(),
+        )
+        .with_columns(
+            messages_str=pl.col("messages_struct")
+            .list.eval(
+                pl.concat_str(
+                    [
+                        pl.when(pl.element().struct.field("from").eq("me"))
+                        .then(pl.lit(messaging_partners.initiator_name))
+                        .otherwise(pl.element().struct.field("from")),
+                        pl.lit(" at "),
+                        pl.element().struct.field("datetime").dt.date().dt.to_string(),
+                        pl.lit(" "),
+                        pl.element().struct.field("datetime").dt.time().dt.to_string(),
+                        pl.lit(": "),
+                        pl.element().struct.field("content"),
+                    ]
+                )
+            )
+            .list.join("\n")
+        )
+        .slice(0, config.row_limit)
+    )
 
     prompt_sequences = [
         get_inferrables_extraction_prompt_sequence(
-            messages_str, messaging_partners.me, messaging_partners.partner
+            messages_str,
+            messaging_partners.initiator_name,
+            messaging_partners.partner_name,
         )
         for messages_str in df.get_column("messages_str").to_list()
     ]

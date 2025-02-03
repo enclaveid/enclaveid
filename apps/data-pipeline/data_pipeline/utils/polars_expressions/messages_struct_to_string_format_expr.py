@@ -12,7 +12,7 @@ def get_messages_struct_to_string_format_expr(
             pl.concat_str(
                 [
                     pl.when(pl.element().struct.field("from").eq("me"))
-                    .then(pl.lit(messaging_partners.me))
+                    .then(pl.lit(messaging_partners.initiator_name))
                     .otherwise(pl.element().struct.field("from")),
                     # pl.lit(", To: "),
                     # pl.when(pl.element().struct.field("to").eq("me"))
