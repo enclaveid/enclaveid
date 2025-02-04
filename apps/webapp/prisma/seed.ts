@@ -16,7 +16,7 @@ async function main() {
       name: 'Giovanni',
       phoneNumbers: {
         create: {
-          phoneNumber: '00393494197577',
+          phoneNumber: process.env.TEST_PHONE_NUMBER_1!,
           verifiedAt: new Date(),
         },
       },
@@ -34,7 +34,7 @@ async function main() {
       name: 'Estela',
       phoneNumbers: {
         create: {
-          phoneNumber: '0034689896443',
+          phoneNumber: process.env.TEST_PHONE_NUMBER_2!,
         },
       },
     },

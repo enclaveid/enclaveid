@@ -1,8 +1,16 @@
+from textwrap import dedent
+
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
+from json_repair import repair_json
 from pydantic import Field
 
 from data_pipeline.partitions import multi_phone_number_partitions_def
+from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResource
+from data_pipeline.resources.batch_inference.base_llm_resource import (
+    BaseLlmResource,
+    PromptSequence,
+)
 from data_pipeline.resources.postgres_resource import PostgresResource
 from data_pipeline.utils.get_messaging_partners import get_messaging_partners
 from data_pipeline.utils.graph.build_graph_from_df import build_graph_from_df
@@ -10,9 +18,44 @@ from data_pipeline.utils.graph.save_graph import save_graph
 from data_pipeline.utils.super_deduplicator import deduplicate_nodes_dataframe
 
 
+def _get_synthetization_prompt_sequence(
+    text: str,
+) -> PromptSequence:
+    return [
+        dedent(
+            f"""
+            Given a list of similar propositions, synthesize all propositions into a single proposition encompassing all of them.
+            Provide a label in snake_case for the synthesized proposition.
+
+            Provide your response in the following format:
+            {{
+                "proposition": "Synthesized proposition",
+                "label": "a_label_for_the_synthesized_proposition",
+            }}
+
+            Here is the list of propositions:
+            {text}
+            """
+        ).strip()
+    ]
+
+
+def _parse_synthetization_response(
+    response: str
+) -> tuple[str, str] | tuple[None, None]:
+    try:
+        res = repair_json(response, return_objects=True)
+        if isinstance(res, dict):
+            return res["proposition"], res["label"]
+        else:
+            return None, None
+    except Exception:
+        return None, None
+
+
 class WhatsappClaimsDeduplicatedConfig(Config):
     threshold: float = Field(
-        default=0.9, description="Cosine similarity threshold for merging claims"
+        default=0.95, description="Cosine similarity threshold for merging claims"
     )
     debug_graph: bool = Field(
         default=True, description="Whether to save the graph to the debug directory"
@@ -33,6 +76,8 @@ async def whatsapp_nodes_deduplicated(
     config: WhatsappClaimsDeduplicatedConfig,
     whatsapp_node_embeddings: pl.DataFrame,
     postgres: PostgresResource,
+    batch_embedder: BatchEmbedderResource,
+    llama70b: BaseLlmResource,
 ) -> pl.DataFrame:
     messaging_partners = get_messaging_partners(
         postgres, context.partition_keys[0].split("|")
@@ -98,13 +143,12 @@ async def whatsapp_nodes_deduplicated(
     deduplication_args = {
         "label_col": "id",
         "embedding_col": "embedding",
-        "single_fields": ["proposition", "embedding", "user", "chunk_id"],
+        "single_fields": ["user", "proposition", "embedding"],
         "list_fields": [
             ("ids", "id"),
             ("chunk_ids", "chunk_id"),
             ("datetimes", "datetime"),
-            # ("propositions", "proposition"),
-            # ("embeddings", "embedding"),
+            ("propositions", "proposition"),
         ],
         "relationship_col": "relationships",
         "threshold": config.threshold,
@@ -126,6 +170,70 @@ async def whatsapp_nodes_deduplicated(
             ),
         ],
         how="vertical",
+    ).with_row_count("index")  # For joining later
+
+    # Synthesize propositions
+    synthesized_df = (
+        deduplicated_df.filter(pl.col("frequency") > 1)
+        .select("index", "propositions")
+        .with_columns(propositions_str=pl.col("propositions").list.join("\n"))
+    )
+    prompt_sequences = [
+        _get_synthetization_prompt_sequence(row["propositions_str"])
+        for row in synthesized_df.iter_rows(named=True)
+    ]
+
+    completions, cost = llama70b.get_prompt_sequences_completions_batch(
+        prompt_sequences,
+    )
+
+    context.log.info(f"Synthesization cost: ${cost:.6f}")
+
+    propositions, labels = zip(
+        *(
+            _parse_synthetization_response(completion[-1])
+            if completion
+            else (None, None)
+            for completion in completions
+        )
+    )
+
+    # Add back propositions and labels to synthesized_df
+    synthesized_df = synthesized_df.with_columns(
+        proposition=pl.Series(propositions),
+        id=pl.Series(labels),
+    ).drop("propositions_str")
+
+    # Get embeddings
+    cost, embeddings = await batch_embedder.get_embeddings(
+        synthesized_df.get_column("proposition").to_list(),
+    )
+
+    context.log.info(f"Embedding cost: ${cost:.6f}")
+
+    # Add embeddings to synthesized_df
+    synthesized_df = synthesized_df.with_columns(embedding=pl.Series(embeddings))
+
+    # Join back with deduplicated_df
+    deduplicated_df = deduplicated_df.join(
+        synthesized_df, on="index", how="left", suffix="_right"
+    ).sort("frequency", descending=True)
+
+    # Coalesce right columns with originals
+    cols_to_coalesce = [
+        col.replace("_right", "")
+        for col in deduplicated_df.columns
+        if col.endswith("_right")
+    ]
+    deduplicated_df = (
+        deduplicated_df.with_columns(
+            [
+                pl.col(f"{col}_right").fill_null(pl.col(col)).alias(col)
+                for col in cols_to_coalesce
+            ]
+        )
+        .drop([col + "_right" for col in cols_to_coalesce])
+        .drop("index")
     )
 
     if config.debug_graph:
@@ -134,9 +242,9 @@ async def whatsapp_nodes_deduplicated(
                 deduplicated_df,
                 "relationships",
                 "id",
-                ["frequency", "user", "proposition", "chunk_id"],
+                ["frequency", "user", "proposition"],
             ),
             context,
         )
 
-    return deduplicated_df
+    return deduplicated_df.drop("propositions", "ids")

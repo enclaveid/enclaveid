@@ -128,13 +128,13 @@ class WhatsappCrossChunkCausalityConfig(RowLimitConfig):
 def whatsapp_cross_chunk_causality(
     context: AssetExecutionContext,
     whatsapp_chunks_subgraphs: pl.DataFrame,
-    gpt4o: BaseLlmResource,
+    llama70b: BaseLlmResource,
     config: WhatsappCrossChunkCausalityConfig,
 ) -> pl.DataFrame:
     """
     Determine the causality between chunks.
     """
-
+    llm = llama70b
     df = (
         whatsapp_chunks_subgraphs.with_columns(
             subgraph_combined=pl.concat_list(
@@ -146,9 +146,9 @@ def whatsapp_cross_chunk_causality(
     )
 
     # Get comparions pairs for each chunk based on these constraints:
-    max_time_range = pl.duration(days=3)
+    max_time_range = pl.duration(days=7)
     min_comparisons = 1
-    max_comparisons = 3
+    max_comparisons = 10
 
     # Result schema: chunk_id, subgraph_combined, picked: {prev_chunk_id, prev_end_dt, prev_subgraph_combined, rank}
     df_pairs = (
@@ -222,7 +222,7 @@ def whatsapp_cross_chunk_causality(
                 )
             )
 
-    completions, cost = gpt4o.get_prompt_sequences_completions_batch(
+    completions, cost = llm.get_prompt_sequences_completions_batch(
         [x[1] for x in chunk_id_prompt_sequences]
     )
 

@@ -32,11 +32,7 @@ def _find_similar_nodes(
     index = faiss.IndexFlatIP(dimension)
     index.add(embeddings_array)  # type: ignore
 
-    # Adding a try-except because there are no infos if OOM
-    try:
-        similarities, indices = index.search(embeddings_array, k=max_k)  # type: ignore
-    except Exception as e:
-        raise RuntimeError(f"Error in FAISS search: {e}") from e
+    similarities, indices = index.search(embeddings_array, k=max_k)  # type: ignore
 
     # Collect similar pairs
     similar_pairs = []

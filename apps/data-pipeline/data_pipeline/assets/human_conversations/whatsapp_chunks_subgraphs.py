@@ -126,7 +126,7 @@ def whatsapp_chunks_subgraphs(
     )
 
     return df.with_columns(
-        subgraph_attributes=pl.Series(subgraphs_attributes, strict=False),
-        subgraph_context=pl.Series(subgraphs_context, strict=False),
-        subgraph_meta=pl.Series(subgraphs_meta, strict=False),
+        subgraph_attributes=pl.Series(subgraphs_attributes, strict=False).fill_null([]),
+        subgraph_context=pl.Series(subgraphs_context, strict=False).fill_null([]),
+        subgraph_meta=pl.Series(subgraphs_meta, strict=False).fill_null([]),
     )
