@@ -16,6 +16,9 @@ from data_pipeline.utils.agents.graph_explorer_agent.actions import (
     get_children,
     get_similar_nodes,
 )
+from data_pipeline.utils.agents.graph_explorer_agent.actions.get_raw_data import (
+    get_raw_data,
+)
 from data_pipeline.utils.agents.graph_explorer_agent.actions.get_relatives import (
     get_parents,
 )
@@ -45,11 +48,15 @@ def _write_traces(traces: list[TraceRecord], context: AssetExecutionContext):
         "whatsapp_nodes_deduplicated": AssetIn(
             key=["whatsapp_nodes_deduplicated"],
         ),
+        "whatsapp_chunks_subgraphs": AssetIn(
+            key=["whatsapp_chunks_subgraphs"],
+        ),
     },
 )
 def whatsapp_hypotheses_validation(
     context: AssetExecutionContext,
     whatsapp_nodes_deduplicated: pl.DataFrame,
+    whatsapp_chunks_subgraphs: pl.DataFrame,
     batch_embedder: BatchEmbedderResource,
     deepseek_r1: BaseLlmResource,
 ):
@@ -75,8 +82,13 @@ def whatsapp_hypotheses_validation(
 
     while not result or result.decision == "refine":
         if not result:
-            hypothesis = "Giovanni displays relationship-specific ambivalent behaviors influenced by current emotional tensions with Estela, rather than a global disorganized attachment style originating in childhood"  # TODO: Get from somewhere
+            # TODO: Get from somewhere
+            hypothesis = "Giovanni displays relationship-specific ambivalent behaviors influenced by current emotional tensions with Estela, rather than a global disorganized attachment style originating in childhood"
         else:
+            context.log.info(
+                f"[INTERMEDIATE_RESULT] {json.dumps(asdict(result), indent=2)}"
+            )
+
             if not result.new_hypothesis:
                 raise ValueError("No hypothesis provided")
             hypothesis = result.new_hypothesis
@@ -92,6 +104,9 @@ def whatsapp_hypotheses_validation(
                     ),
                     get_causes=lambda node_id: get_parents(G, node_id),
                     get_effects=lambda node_id, depth: get_children(G, node_id, depth),
+                    get_raw_data=lambda node_id: get_raw_data(
+                        whatsapp_nodes_deduplicated, whatsapp_chunks_subgraphs, node_id
+                    ),
                 ),
             )
         except Exception as e:
@@ -100,10 +115,6 @@ def whatsapp_hypotheses_validation(
 
         if not trace or not result:
             raise ValueError("No trace or result returned from agent")
-
-        context.log.info(
-            f"[INTERMEDIATE_RESULT] {json.dumps(asdict(result), indent=2)}"
-        )
 
         traces.extend(trace)
 

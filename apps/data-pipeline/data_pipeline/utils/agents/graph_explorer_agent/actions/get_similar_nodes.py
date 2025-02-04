@@ -11,10 +11,10 @@ from data_pipeline.utils.agents.graph_explorer_agent.types import (
 
 def get_similar_nodes(
     G: nx.DiGraph,
-    label_embeddings: list[dict],  # each dict: {"id": <node_id>, "embedding": <vec>}
+    label_embeddings: list[dict],  # [{"id": <node_id>, "embedding": <vec>}]
     batch_embedder: BatchEmbedderResource,
     query: str,
-    top_k: int = 7,
+    top_k: int = 10,
     threshold: float = 0.6,
 ) -> AdjacencyList:
     # Extract node IDs and embeddings in a consistent order

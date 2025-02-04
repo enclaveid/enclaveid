@@ -39,6 +39,7 @@ The actions you can use at this step are:
 - `get_causal_chain(node_id1: str, node_id2: str) -> AdjacencyList`: Get the causal chain between two nodes. If no causal chain is found, it will return the closest one.
 - `get_effects(node_id: str, depth: int) -> AdjacencyList`: Explore the immediate (if depth=1) or indirect (if depth>1) effects of the current node, with their metadata properties.
 - `get_causes(node_id: str) -> AdjacencyList`: Explore the immediate causes of the current node, with their metadata properties.
+- `get_raw_data(node_id: str) -> str`: Get the raw data underlying the propostion of the given node. Use this action to assess the strenght of the proposition.
 
 You can perform many iterations of this step.
 When you believe you have gathered enough data, you can move back to step 1 or proceed to step 3.
@@ -77,27 +78,3 @@ When you want to perform one or multiple actions, answer with the JSON format:
 Actions will return an AdjacencyList, which is a list of nodes with their properties.
 """
 ).strip()
-
-
-# [
-#   {
-#     "id": "node_id",
-#     "description": "description of the node",
-#     "datetime": "YYYY-MM-DD HH:MM:SS", # When did the current node occur?
-#     "parents": [ # Interpret these as the "causes" of the node
-#       {
-#         "id": "parent_node_id",
-#         "datetime": "YYYY-MM-DD HH:MM:SS" # When did the parent node cause the current node (if applicable)
-#       },
-#       ...
-#     ],
-#     "children": [ # Interpret these as the "effects" of the node
-#       {
-#         "id": "child_node_id",
-#         "datetime": "YYYY-MM-DD HH:MM:SS" # When did the current node cause the child node (if applicable)
-#       },
-#       ...
-#     ],
-#   },
-#   ...
-# ]

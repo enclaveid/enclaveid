@@ -36,6 +36,7 @@ class ActionsImpl:
     get_causes: Callable[[str], AdjacencyList]
     get_effects: Callable[[str, int], AdjacencyList]
     get_causal_chain: Callable[[str, str], AdjacencyList]
+    get_raw_data: Callable[[str], str]
 
 
 @dataclass
