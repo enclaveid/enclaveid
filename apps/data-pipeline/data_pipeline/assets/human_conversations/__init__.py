@@ -19,6 +19,9 @@ from data_pipeline.assets.human_conversations.whatsapp_node_embeddings import (
 from data_pipeline.assets.human_conversations.whatsapp_nodes_deduplicated import (
     whatsapp_nodes_deduplicated,
 )
+from data_pipeline.assets.human_conversations.whatsapp_seed_hypotheses import (
+    whatsapp_seed_hypotheses,
+)
 
 __all__ = [
     whatsapp_chunks_sequential,
@@ -28,4 +31,5 @@ __all__ = [
     whatsapp_chunks_subgraphs,
     whatsapp_cross_chunk_causality,
     whatsapp_hypotheses_validation,
+    whatsapp_seed_hypotheses,
 ]  # type: ignore

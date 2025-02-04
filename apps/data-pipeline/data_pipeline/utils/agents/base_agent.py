@@ -17,7 +17,7 @@ class TraceRecord:
     reasoning_content: str | None
     cost: float | None
     token_count: int
-    timestamp: datetime
+    timestamp: float
 
 
 class BaseAgent:
@@ -117,7 +117,7 @@ class BaseAgent:
                 reasoning_content=None,
                 cost=input_cost,
                 token_count=result["usage"]["prompt_tokens"],
-                timestamp=datetime.now(),
+                timestamp=datetime.now().timestamp(),
             )
         )
 
@@ -128,7 +128,7 @@ class BaseAgent:
                 reasoning_content=reasoning_content,
                 cost=output_cost,
                 token_count=result["usage"]["completion_tokens"],
-                timestamp=datetime.now(),
+                timestamp=datetime.now().timestamp(),
             )
         )
 

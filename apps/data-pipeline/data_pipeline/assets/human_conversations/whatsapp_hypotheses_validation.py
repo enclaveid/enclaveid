@@ -5,6 +5,7 @@ import networkx as nx
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 
+from data_pipeline.constants.environments import get_environment
 from data_pipeline.partitions import multi_phone_number_partitions_def
 from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResource
 from data_pipeline.resources.batch_inference.base_llm_resource import (
@@ -30,15 +31,6 @@ from data_pipeline.utils.agents.graph_explorer_agent.types import (
     HypothesisValidationResult,
 )
 from data_pipeline.utils.get_node_datetime import get_node_datetime
-from data_pipeline.utils.get_working_dir import get_working_dir
-
-
-def _write_traces(traces: list[TraceRecord], context: AssetExecutionContext):
-    working_dir = get_working_dir(context)
-    working_dir.mkdir(parents=True, exist_ok=True)
-    pl.DataFrame(traces).write_parquet(
-        f"{working_dir}/{context.partition_key}.trace.snappy"
-    )
 
 
 @asset(
@@ -51,12 +43,16 @@ def _write_traces(traces: list[TraceRecord], context: AssetExecutionContext):
         "whatsapp_chunks_subgraphs": AssetIn(
             key=["whatsapp_chunks_subgraphs"],
         ),
+        "whatsapp_seed_hypotheses": AssetIn(
+            key=["whatsapp_seed_hypotheses"],
+        ),
     },
 )
 def whatsapp_hypotheses_validation(
     context: AssetExecutionContext,
     whatsapp_nodes_deduplicated: pl.DataFrame,
     whatsapp_chunks_subgraphs: pl.DataFrame,
+    whatsapp_seed_hypotheses: pl.DataFrame,
     batch_embedder: BatchEmbedderResource,
     deepseek_r1: BaseLlmResource,
 ):
@@ -77,50 +73,117 @@ def whatsapp_hypotheses_validation(
 
     label_embeddings = df.select("id", "embedding").to_dicts()
 
-    result: HypothesisValidationResult | None = None
-    traces: list[TraceRecord] = []
+    def _validate_hypothesis(
+        initial_hypothesis: str,
+    ) -> dict[str, list[HypothesisValidationResult] | list[TraceRecord]]:
+        traces = []
+        results = []
+        current_result = None
+        while not current_result or current_result.decision == "refine":
+            if not current_result:
+                hypothesis_to_validate = initial_hypothesis
+            else:
+                context.log.info(
+                    f"[INTERMEDIATE_RESULT] {json.dumps(asdict(current_result), indent=2)}"
+                )
 
-    while not result or result.decision == "refine":
-        if not result:
-            # TODO: Get from somewhere
-            hypothesis = "Giovanni displays relationship-specific ambivalent behaviors influenced by current emotional tensions with Estela, rather than a global disorganized attachment style originating in childhood"
-        else:
-            context.log.info(
-                f"[INTERMEDIATE_RESULT] {json.dumps(asdict(result), indent=2)}"
-            )
+                if not current_result.new_hypothesis:
+                    raise ValueError("No hypothesis provided")
 
-            if not result.new_hypothesis:
-                raise ValueError("No hypothesis provided")
-            hypothesis = result.new_hypothesis
-        try:
-            result, trace = GraphExplorerAgent(llm_config).validate_hypothesis(
-                hypothesis,
-                actions_impl=ActionsImpl(
-                    get_similar_nodes=lambda query: get_similar_nodes(
-                        G, label_embeddings, batch_embedder, query
+                hypothesis_to_validate = current_result.new_hypothesis
+
+            try:
+                current_result, trace = GraphExplorerAgent(
+                    llm_config
+                ).validate_hypothesis(
+                    hypothesis_to_validate,
+                    actions_impl=ActionsImpl(
+                        get_similar_nodes=lambda query: get_similar_nodes(
+                            G,
+                            label_embeddings,
+                            batch_embedder,
+                            query,
+                            use_lock=get_environment() == "LOCAL",
+                        ),
+                        get_causal_chain=lambda node_id1, node_id2: get_causal_chain(
+                            G, node_id1, node_id2
+                        ),
+                        get_causes=lambda node_id: get_parents(G, node_id),
+                        get_effects=lambda node_id, depth: get_children(
+                            G, node_id, depth
+                        ),
+                        get_raw_data=lambda node_id: get_raw_data(
+                            whatsapp_nodes_deduplicated,
+                            whatsapp_chunks_subgraphs,
+                            node_id,
+                        ),
                     ),
-                    get_causal_chain=lambda node_id1, node_id2: get_causal_chain(
-                        G, node_id1, node_id2
-                    ),
-                    get_causes=lambda node_id: get_parents(G, node_id),
-                    get_effects=lambda node_id, depth: get_children(G, node_id, depth),
-                    get_raw_data=lambda node_id: get_raw_data(
-                        whatsapp_nodes_deduplicated, whatsapp_chunks_subgraphs, node_id
-                    ),
+                )
+            except Exception as e:
+                context.log.error(f"Error validating hypothesis: {e}")
+                return {"results": results, "traces": traces}
+
+            if not trace or not current_result:
+                context.log.error("No trace or result returned from agent")
+                return {"results": results, "traces": traces}
+
+            results.append(asdict(current_result))
+            traces.extend([asdict(t) for t in trace])
+
+        res = {"results": results, "traces": traces}
+        context.log.info(f"[FINAL_RESULT] {json.dumps(res, indent=2)}")
+        return res
+
+    results_df = (
+        whatsapp_seed_hypotheses.select(
+            pl.struct("chunk_id", "hypothesis").alias("row")
+        )
+        .with_columns(
+            validation_struct=pl.col("row").map_elements(
+                lambda row: _validate_hypothesis(row["hypothesis"]),
+                strategy="threading",
+                return_dtype=pl.Struct(
+                    [
+                        pl.Field(
+                            "results",
+                            pl.List(
+                                pl.Struct(
+                                    [
+                                        pl.Field("decision", pl.String),
+                                        pl.Field("explanation", pl.String),
+                                        pl.Field("new_hypothesis", pl.String),
+                                    ]
+                                )
+                            ),
+                        ),
+                        pl.Field(
+                            "traces",
+                            pl.List(
+                                pl.Struct(
+                                    [
+                                        pl.Field("role", pl.String),
+                                        pl.Field("content", pl.String),
+                                        pl.Field("reasoning_content", pl.String),
+                                        pl.Field("cost", pl.Float64),
+                                        pl.Field("token_count", pl.Int64),
+                                        pl.Field("timestamp", pl.Float64),
+                                    ]
+                                )
+                            ),
+                        ),
+                    ]
                 ),
             )
-        except Exception as e:
-            _write_traces(traces, context)
-            raise e
+        )
+        .unnest("validation_struct", "row")
+    )
 
-        if not trace or not result:
-            raise ValueError("No trace or result returned from agent")
-
-        traces.extend(trace)
-
-    context.log.info(f"[FINAL_RESULT] {json.dumps(asdict(result), indent=2)}")
-
-    total_cost = sum(float(t.cost) if t.cost else 0 for t in traces) if traces else 0
+    total_cost = (
+        results_df.select("traces")
+        .explode("traces")
+        .select(pl.col("traces").map_elements(lambda t: t["cost"]).sum())
+        .item()
+    )
     context.log.info(f"Total cost: ${total_cost:.2f}")
 
-    return pl.DataFrame(traces)
+    return results_df

@@ -1,4 +1,5 @@
 import json
+import re
 from dataclasses import asdict
 
 from json_repair import repair_json
@@ -39,53 +40,66 @@ class GraphExplorerAgent(BaseAgent):
                 - action_results: List of action results if actions executed, None otherwise
         """
         try:
-            result: dict = repair_json(response, return_objects=True)  # type: ignore
+            # The LLM often returns json within markdown code blocks
+            json_match = re.search(
+                r"```(?:json)?\s*([\s\S]*?)\s*```", response, re.DOTALL
+            )
+            # If no json match, just use the response as is
+            cleaned_response = (
+                json_match.group(1).strip() if json_match else response.strip()
+            )
 
-            # Check for final result
-            if "result" in result:
-                return HypothesisValidationResult(**result["result"])
-            # Parse and execute actions
-            elif "actions" in result:
-                # Discard malformed actions
-                result["actions"] = [
-                    a
-                    for a in result["actions"]
-                    if (
-                        "name" in a
-                        and isinstance(a["name"], str)
-                        and "args" in a
-                        and isinstance(a["args"], dict)
-                    )
-                ]
+            result: dict = repair_json(cleaned_response, return_objects=True)  # type: ignore
 
-                self._logger.info(
-                    f"[ACTIONS] {json.dumps(result['actions'], indent=2)}"
+        except Exception as e:
+            raise ValueError(
+                f"Failed to parse agent response: {cleaned_response}"
+            ) from e
+
+        # Check for final result
+        if "result" in result:
+            return HypothesisValidationResult(**result["result"])
+        # Parse and execute actions
+        elif "actions" in result:
+            # Discard malformed actions
+            result["actions"] = [
+                a
+                for a in result["actions"]
+                if (
+                    "name" in a
+                    and isinstance(a["name"], str)
+                    and "args" in a
+                    and isinstance(a["args"], dict)
                 )
-                action_results = []
-                for action in result["actions"]:
-                    if not hasattr(actions_impl, action["name"]):
-                        raise ValueError(f"Unknown action: {action['name']}")
+            ]
 
-                    # Execute the action and get result
+            action_results = []
+            for action in result["actions"]:
+                if not hasattr(actions_impl, action["name"]):
+                    raise ValueError(f"Unknown action: {action['name']}")
+
+                # Execute the action and get result
+                try:
                     action_result: AdjacencyList = getattr(
                         actions_impl, action["name"]
                     )(**action["args"])
+                except Exception as e:
+                    raise ValueError(
+                        f"Failed to execute action: {action['name']} with args: {action['args']}"
+                    ) from e
 
-                    action_results.append(
-                        ActionResult(
-                            action=action["name"],
-                            args=action["args"],
-                            result=action_result,
-                        )
+                action_results.append(
+                    ActionResult(
+                        action=action["name"],
+                        args=action["args"],
+                        result=action_result,
                     )
-                return action_results
-            else:
-                raise ValueError(
-                    f"Agent response does not contain a result or actions: {response}"
                 )
-
-        except Exception as e:
-            raise ValueError(f"Failed to parse agent response: {response}") from e
+            return action_results
+        else:
+            raise ValueError(
+                f"Agent response does not contain a result or actions: {cleaned_response}"
+            )
 
     def validate_hypothesis(
         self,
