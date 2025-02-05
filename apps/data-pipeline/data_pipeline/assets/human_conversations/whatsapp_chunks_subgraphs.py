@@ -15,7 +15,7 @@ from data_pipeline.utils.prompt_sequences.inferrables_extraction import (
 )
 
 
-def parse_subgraphs(response: str) -> list[dict] | None:
+def parse_subgraphs(response: str, subgraph_type: str) -> list[dict] | None:
     try:
         res = repair_json(response, return_objects=True)
         if isinstance(res, list):
@@ -26,6 +26,7 @@ def parse_subgraphs(response: str) -> list[dict] | None:
                     "proposition": node.get("proposition", None),
                     "caused_by": node.get("caused_by", []),
                     "caused": node.get("caused", []),
+                    "subgraph_type": subgraph_type,
                 }
                 for node in res
             ]
@@ -115,9 +116,9 @@ def whatsapp_chunks_subgraphs(
     ) = zip(
         *[
             (
-                parse_subgraphs(completion[-1]),
-                parse_subgraphs(completion[-2]),
-                parse_subgraphs(completion[-3]),
+                parse_subgraphs(completion[-1], "meta"),
+                parse_subgraphs(completion[-2], "context"),
+                parse_subgraphs(completion[-3], "attributes"),
             )
             if completion
             else (None, None, None)

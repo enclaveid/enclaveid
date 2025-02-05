@@ -13,7 +13,7 @@ import {
 } from 'react-hook-form';
 
 import { cn } from '@enclaveid/ui-utils';
-import { Label } from '@enclaveid/ui/label';
+import { Label } from './label';
 
 const Form = FormProvider;
 

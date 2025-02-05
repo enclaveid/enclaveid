@@ -149,6 +149,7 @@ async def whatsapp_nodes_deduplicated(
             ("chunk_ids", "chunk_id"),
             ("datetimes", "datetime"),
             ("propositions", "proposition"),
+            ("subgraph_types", "subgraph_type"),
         ],
         "relationship_col": "relationships",
         "threshold": config.threshold,
