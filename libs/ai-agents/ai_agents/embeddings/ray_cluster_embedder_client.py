@@ -5,9 +5,8 @@ import time
 from typing import List, Tuple
 
 import httpx
-from dagster import get_dagster_logger
 
-from data_pipeline.utils.embeddings.base_embedder_client import BaseEmbedderClient
+from .base_embedder_client import BaseEmbedderClient
 
 GPU_BATCH_SIZE = 1  # NB: careful with this one
 API_BATCH_SIZE = 2
@@ -25,8 +24,9 @@ class RayClusterEmbedderClient(BaseEmbedderClient):
         self,
         base_url: str,
         max_connections: int | None = None,
-        logger=None,
+        logger: logging.Logger | None = None,
     ):
+        super().__init__(logger)
         self._max_connections = max_connections or self._max_connections
 
         self._client = httpx.AsyncClient(
@@ -40,7 +40,6 @@ class RayClusterEmbedderClient(BaseEmbedderClient):
         self._base_url = base_url
         self._remaining_reqs = 0
         self._status_printer_task = None
-        self._logger = logger or get_dagster_logger()
 
     async def _periodic_status_printer(self) -> None:
         while True:

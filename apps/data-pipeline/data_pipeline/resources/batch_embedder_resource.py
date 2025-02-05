@@ -1,38 +1,36 @@
 import asyncio
-from logging import Logger
 from typing import List, Tuple
 
+from ai_agents.embeddings.base_embedder_client import BaseEmbedderClient
+from ai_agents.embeddings.local_embedder_client import LocalEmbedderClient
+from ai_agents.embeddings.ray_cluster_embedder_client import (
+    RayClusterEmbedderClient,
+)
 from dagster import (
     ConfigurableResource,
-    DagsterLogManager,
     InitResourceContext,
     get_dagster_logger,
 )
 from pydantic import PrivateAttr
 
 from data_pipeline.constants.environments import get_environment
-from data_pipeline.utils.embeddings.base_embedder_client import BaseEmbedderClient
-from data_pipeline.utils.embeddings.local_embedder_client import LocalEmbedderClient
-from data_pipeline.utils.embeddings.ray_cluster_embedder_client import (
-    RayClusterEmbedderClient,
-)
 
 
-class BatchEmbedderResource(ConfigurableResource):
+class BatchEmbedderResource(ConfigurableResource, BaseEmbedderClient):
     api_key: str | None = None
     base_url: str | None = None
 
     _client: BaseEmbedderClient = PrivateAttr()
-    _logger: DagsterLogManager | Logger = PrivateAttr()
     _loop: asyncio.AbstractEventLoop = PrivateAttr()
 
     def setup_for_execution(self, context: InitResourceContext) -> None:
         self._client = (
             LocalEmbedderClient()
             if get_environment() == "LOCAL"
-            else RayClusterEmbedderClient(base_url=self.base_url)
+            else RayClusterEmbedderClient(
+                base_url=self.base_url, logger=get_dagster_logger()
+            )
         )
-        self._logger = context.log or get_dagster_logger()
         # Initialize the event loop if it doesn't exist
         try:
             self._loop = asyncio.get_event_loop()
@@ -69,25 +67,23 @@ class BatchEmbedderResource(ConfigurableResource):
 
             return await self._client.get_embeddings(texts, **kwargs)
         except Exception as e:
-            self._logger.error(f"Error getting embeddings: {e}")
             await self._client.close()
             raise e
 
     def get_embeddings_sync(
         self,
         texts: List[str],
-        api_batch_size: int | None = None,
-        gpu_batch_size: int | None = None,
+        api_batch_size: int = 1,
+        gpu_batch_size: int = 1,
     ) -> Tuple[float, List[List[float]]]:
-        return self._loop.run_until_complete(
-            self.get_embeddings(
-                texts=texts,
-                api_batch_size=api_batch_size,
-                gpu_batch_size=gpu_batch_size,
-            )
+        return self._client.get_embeddings_sync(
+            texts=texts,
+            api_batch_size=api_batch_size,
+            gpu_batch_size=gpu_batch_size,
         )
 
-    async def teardown_after_execution(self, context: InitResourceContext) -> None:
+    async def close(self) -> None:
         await self._client.close()
-        if self._loop and not self._loop.is_closed():
-            self._loop.close()
+
+    async def teardown_after_execution(self, context: InitResourceContext) -> None:
+        await self.close()

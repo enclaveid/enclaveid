@@ -1,6 +1,6 @@
 from typing import Any, List
 
-from data_pipeline.utils.embeddings.base_embedder_client import BaseEmbedderClient
+from .base_embedder_client import BaseEmbedderClient
 
 
 class LocalEmbedderClient(BaseEmbedderClient):
@@ -18,7 +18,8 @@ class LocalEmbedderClient(BaseEmbedderClient):
         self._model.tokenizer.padding_side = "right"
 
     async def get_embeddings(
-        self, texts: List[str], gpu_batch_size: int = 1, api_batch_size: int = 1
+        self,
+        texts: List[str],
     ):
         if not texts:
             return []
@@ -28,7 +29,7 @@ class LocalEmbedderClient(BaseEmbedderClient):
         embeddings = self._model.encode(
             padded_texts,
             normalize_embeddings=True,
-            batch_size=gpu_batch_size,
+            batch_size=1,
         )
 
         return 0, embeddings.tolist()
@@ -43,7 +44,7 @@ if __name__ == "__main__":
     async def main():
         client = LocalEmbedderClient()
         cost, embeddings = await client.get_embeddings(
-            ["Hello, how are you? I'm under the water"] * 4, gpu_batch_size=1
+            ["Hello, how are you? I'm under the water"] * 4,
         )
         print(cost)
         print(len(embeddings))

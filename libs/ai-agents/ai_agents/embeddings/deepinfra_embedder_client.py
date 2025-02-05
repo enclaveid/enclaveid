@@ -1,11 +1,11 @@
 import asyncio
+import logging
 from typing import List, Tuple
 
 import numpy as np
-from dagster import get_dagster_logger
 from openai import AsyncOpenAI
 
-from data_pipeline.utils.embeddings.base_embedder_client import BaseEmbedderClient
+from .base_embedder_client import BaseEmbedderClient
 
 
 class DeepInfraEmbedderClient(BaseEmbedderClient):
@@ -19,12 +19,13 @@ class DeepInfraEmbedderClient(BaseEmbedderClient):
         self,
         api_key: str,
         base_url: str | None = None,
+        logger: logging.Logger | None = None,
     ):
+        super().__init__(logger)
         # Create an OpenAI client with your deepinfra token and endpoint
         self.openai = AsyncOpenAI(
             api_key=api_key, base_url=base_url or "https://api.deepinfra.com/v1/openai"
         )
-        self.logger = get_dagster_logger()
 
     async def get_embeddings(
         self, texts: List[str], gpu_batch_size: int = 1, api_batch_size: int = 100
@@ -61,7 +62,7 @@ class DeepInfraEmbedderClient(BaseEmbedderClient):
                 estimated_total_time = elapsed_time / progress if progress > 0 else 0
                 estimated_remaining_time = estimated_total_time - elapsed_time
 
-                self.logger.info(
+                self._logger.info(
                     f"Progress: {progress:.1%} | "
                     f"Elapsed: {elapsed_time:.1f}s | "
                     f"Estimated remaining: {estimated_remaining_time:.1f}s"

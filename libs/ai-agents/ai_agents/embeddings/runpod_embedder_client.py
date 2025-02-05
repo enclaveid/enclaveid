@@ -6,14 +6,15 @@ from typing import List, Tuple
 
 import httpx
 import numpy as np
-from dagster import get_dagster_logger
+
+from .base_embedder_client import BaseEmbedderClient
 
 DEFAULT_MAX_BATCH_SIZE = (
     200  # Over a certain size, the API starts to send async responses (wtf)
 )
 
 
-class RunpodEmbedderClient:
+class RunpodEmbedderClient(BaseEmbedderClient):
     _timeout: int = 60 * 10
     _n_workers: int = 3
     _max_connections: int = (
@@ -29,8 +30,10 @@ class RunpodEmbedderClient:
         api_key: str,
         base_url: str,
         max_connections: int | None = None,
-        logger=None,
+        logger: logging.Logger | None = None,
     ):
+        super().__init__(logger)
+
         self._max_connections = max_connections or self._max_connections
 
         self._client = httpx.AsyncClient(
@@ -44,7 +47,6 @@ class RunpodEmbedderClient:
         self._base_url = base_url
         self._remaining_reqs = 0
         self._status_printer_task = None
-        self._logger = logger or get_dagster_logger()
 
     async def _periodic_status_printer(self) -> None:
         while True:
