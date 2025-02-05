@@ -7,7 +7,7 @@ export type ChunkData = {
   messages_str: string;
 };
 
-type SubgraphType = 'meta' | 'context' | 'attributes';
+export type SubgraphType = 'meta' | 'context' | 'attributes';
 
 export type NodeData = {
   id: string;
