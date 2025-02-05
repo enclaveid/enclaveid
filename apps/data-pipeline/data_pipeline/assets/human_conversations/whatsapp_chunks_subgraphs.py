@@ -116,9 +116,9 @@ def whatsapp_chunks_subgraphs(
     ) = zip(
         *[
             (
-                parse_subgraphs(completion[-1], "meta"),
+                parse_subgraphs(completion[-1], "attributes"),
                 parse_subgraphs(completion[-2], "context"),
-                parse_subgraphs(completion[-3], "attributes"),
+                parse_subgraphs(completion[-3], "meta"),
             )
             if completion
             else (None, None, None)

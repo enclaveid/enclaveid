@@ -75,7 +75,7 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
   const chunkNodeMap = useMemo(() => {
     const map: Record<string, Array<(typeof nodes)[0]>> = {};
     for (const node of nodes) {
-      for (const cId of node.chunk_ids) {
+      for (const cId of [...new Set(node.chunk_ids)]) {
         if (!map[cId]) {
           map[cId] = [];
         }
