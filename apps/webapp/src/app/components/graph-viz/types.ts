@@ -24,3 +24,9 @@ export type ChunkTimelineProps = {
   chunks: ChunkData[];
   nodes: NodeData[];
 };
+
+export type NodeHoverData = {
+  position: [number, number];
+  node: NodeData | null;
+  visible: boolean;
+};
