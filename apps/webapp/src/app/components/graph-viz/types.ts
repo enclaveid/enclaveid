@@ -7,8 +7,19 @@ export type ChunkData = {
   messages_str: string;
 };
 
+type SubgraphType = 'meta' | 'context' | 'attributes';
+
+export type NodeData = {
+  id: string;
+  user: string;
+  proposition: string;
+  datetimes: string[];
+  subgraph_types: SubgraphType[];
+  chunk_ids: string[];
+  relationships: Array<{ source: string; target: string }>;
+};
+
 export type ChunkTimelineProps = {
-  width: number; // For controlling the initial camera, etc.
-  height: number; // For controlling the initial camera, etc.
   chunks: ChunkData[];
+  nodes: NodeData[];
 };

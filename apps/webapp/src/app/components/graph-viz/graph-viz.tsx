@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { ChunkTimelineProps } from './types';
 import { getSentimentColor } from './helpers';
 
-export function GraphViz({ chunks }: ChunkTimelineProps) {
+export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
   // Layout parameters
   const margin = { top: 20, right: 20, bottom: 40, left: 20 };
   const fixedChunkWidth = 300;
