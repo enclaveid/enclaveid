@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Callable, Literal
+from typing import Any, Callable, Coroutine, Literal
 
 
 @dataclass
@@ -32,7 +32,7 @@ class HypothesisValidationResult:
 
 @dataclass
 class ActionsImpl:
-    get_similar_nodes: Callable[[str], AdjacencyList]
+    get_similar_nodes: Callable[[str], Coroutine[Any, Any, AdjacencyList]]
     get_causes: Callable[[str], AdjacencyList]
     get_effects: Callable[[str, int], AdjacencyList]
     get_causal_chain: Callable[[str, str], AdjacencyList]

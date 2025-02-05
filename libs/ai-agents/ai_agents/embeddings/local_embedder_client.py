@@ -17,9 +17,13 @@ class LocalEmbedderClient(BaseEmbedderClient):
         self._model.max_seq_length = 32768
         self._model.tokenizer.padding_side = "right"
 
+        super().__init__()
+
     async def get_embeddings(
         self,
         texts: List[str],
+        api_batch_size: int = 1,
+        gpu_batch_size: int = 1,
     ):
         if not texts:
             return []
@@ -29,7 +33,7 @@ class LocalEmbedderClient(BaseEmbedderClient):
         embeddings = self._model.encode(
             padded_texts,
             normalize_embeddings=True,
-            batch_size=1,
+            batch_size=gpu_batch_size,
         )
 
         return 0, embeddings.tolist()

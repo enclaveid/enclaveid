@@ -1,3 +1,5 @@
+from .pre_init import pre_init  # noqa: I001
+
 from typing import Tuple
 
 import networkx as nx
@@ -11,7 +13,9 @@ from ai_agents.graph_explorer_agent.actions.get_relatives import (
 )
 from ai_agents.graph_explorer_agent.actions.get_similar_nodes import get_similar_nodes
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import asyncio
 
 from .dependencies import get_embedder_client, get_graph_df, get_raw_data_df
 
@@ -34,7 +38,21 @@ class ChildrenRequest(BaseModel):
     depth: int
 
 
+pre_init()
+
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # TODO: Allows all origins in development
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+# TODO: this is just for dev
+similar_nodes_semaphore = asyncio.Semaphore(1)
 
 
 @app.post("/similar_nodes")
@@ -44,18 +62,18 @@ async def similar_nodes(
     embedder_client: BaseEmbedderClient = Depends(get_embedder_client),
 ):
     """Get similar nodes for a query."""
-    try:
-        G, df = graph_and_df
-        label_embeddings = df.select("id", "embedding").to_dicts()
-        return get_similar_nodes(
-            G,
-            label_embeddings,
-            embedder_client,
-            request.query,
-            use_lock=False,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    async with similar_nodes_semaphore:  # This ensures only one request runs at a time
+        try:
+            G, df = graph_and_df
+            label_embeddings = df.select("id", "embedding").to_dicts()
+            return await get_similar_nodes(
+                G,
+                label_embeddings,
+                embedder_client,
+                request.query,
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/causal_chain")

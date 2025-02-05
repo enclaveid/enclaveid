@@ -70,18 +70,6 @@ class BatchEmbedderResource(ConfigurableResource, BaseEmbedderClient):
             await self._client.close()
             raise e
 
-    def get_embeddings_sync(
-        self,
-        texts: List[str],
-        api_batch_size: int = 1,
-        gpu_batch_size: int = 1,
-    ) -> Tuple[float, List[List[float]]]:
-        return self._client.get_embeddings_sync(
-            texts=texts,
-            api_batch_size=api_batch_size,
-            gpu_batch_size=gpu_batch_size,
-        )
-
     async def close(self) -> None:
         await self._client.close()
 

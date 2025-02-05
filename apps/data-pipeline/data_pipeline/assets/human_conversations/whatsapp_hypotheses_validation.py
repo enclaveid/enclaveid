@@ -1,3 +1,4 @@
+import asyncio
 import json
 from dataclasses import asdict
 
@@ -73,9 +74,16 @@ def whatsapp_hypotheses_validation(
         )
         G.add_edges_from([(row["id"], e) for e in row["edges"]])
 
-    label_embeddings = df.select("id", "embedding").to_dicts()
+    async def get_similar_nodes_async(query):
+        return await get_similar_nodes(
+            G,
+            df.select("id", "embedding").to_dicts(),
+            batch_embedder,
+            query,
+            use_lock=get_environment() == "LOCAL",
+        )
 
-    def _validate_hypothesis(
+    async def _validate_hypothesis(
         initial_hypothesis: str,
     ) -> dict[str, list[HypothesisValidationResult] | list[TraceRecord]]:
         traces = []
@@ -95,18 +103,12 @@ def whatsapp_hypotheses_validation(
                 hypothesis_to_validate = current_result.new_hypothesis
 
             try:
-                current_result, trace = GraphExplorerAgent(
+                current_result, trace = await GraphExplorerAgent(
                     llm_config
                 ).validate_hypothesis(
                     hypothesis_to_validate,
                     actions_impl=ActionsImpl(
-                        get_similar_nodes=lambda query: get_similar_nodes(
-                            G,
-                            label_embeddings,
-                            batch_embedder,
-                            query,
-                            use_lock=get_environment() == "LOCAL",
-                        ),
+                        get_similar_nodes=get_similar_nodes_async,
                         get_causal_chain=lambda node_id1, node_id2: get_causal_chain(
                             G, node_id1, node_id2
                         ),
@@ -135,13 +137,17 @@ def whatsapp_hypotheses_validation(
         res = {"results": results, "traces": traces}
         return res
 
+    event_loop = asyncio.get_event_loop()
+
     results_df = (
         whatsapp_seed_hypotheses.select(
             pl.struct("chunk_id", "hypothesis").alias("row")
         )
         .with_columns(
             validation_struct=pl.col("row").map_elements(
-                lambda row: _validate_hypothesis(row["hypothesis"]),
+                lambda row: event_loop.run_until_complete(
+                    _validate_hypothesis(row["hypothesis"])
+                ),
                 strategy="threading",
                 return_dtype=pl.Struct(
                     [

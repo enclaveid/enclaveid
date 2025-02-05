@@ -1,3 +1,4 @@
+import inspect
 import json
 import re
 from dataclasses import asdict
@@ -26,7 +27,7 @@ class GraphExplorerAgent(BaseAgent):
             model_config, system_prompt or GRAPH_EXPLORER_AGENT_SYSTEM_PROMPT
         )
 
-    def _parse_agent_response(
+    async def _parse_agent_response(
         self,
         response: str,
         actions_impl: ActionsImpl,
@@ -79,9 +80,12 @@ class GraphExplorerAgent(BaseAgent):
 
                 # Execute the action and get result
                 try:
-                    action_result: AdjacencyList = getattr(
-                        actions_impl, action["name"]
-                    )(**action["args"])
+                    action_fn = getattr(actions_impl, action["name"])
+                    # Await if the action is async
+                    if inspect.iscoroutinefunction(action_fn):
+                        action_result: AdjacencyList = await action_fn(**action["args"])
+                    else:
+                        action_result: AdjacencyList = action_fn(**action["args"])
                 except Exception as e:
                     raise ValueError(
                         f"Failed to execute action: {action['name']} with args: {action['args']}"
@@ -100,7 +104,7 @@ class GraphExplorerAgent(BaseAgent):
                 f"Agent response does not contain a result or actions: {cleaned_response}"
             )
 
-    def validate_hypothesis(
+    async def validate_hypothesis(
         self,
         hypothesis: str,
         actions_impl: ActionsImpl,
@@ -133,7 +137,7 @@ class GraphExplorerAgent(BaseAgent):
                     f"Failed to get response from the model in iteration #{iteration}"
                 )
 
-            res = self._parse_agent_response(response, actions_impl)
+            res = await self._parse_agent_response(response, actions_impl)
 
             if isinstance(res, HypothesisValidationResult):
                 final_result = res

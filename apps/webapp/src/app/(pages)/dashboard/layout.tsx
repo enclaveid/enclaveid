@@ -8,7 +8,7 @@ import {
 } from '@enclaveid/ui/sidebar';
 import { LogoutButton } from '../../components/logout-button';
 import { DashboardBreadcrumb } from '../../components/dashboard-breadcrumb';
-import { CodeIcon, HomeIcon } from '@radix-ui/react-icons';
+import { CodeIcon, HomeIcon, Share1Icon } from '@radix-ui/react-icons';
 
 const sidebarItems = {
   navMain: [
@@ -20,12 +20,11 @@ const sidebarItems = {
           url: '/dashboard/home',
           icon: <HomeIcon />,
         },
-        // {
-        //   title: 'Social',
-        //   url: '#',
-        //   icon: <Share1Icon />,
-        //   badge: 'Soon!',
-        // },
+        {
+          title: 'Graph',
+          url: '/dashboard/graph',
+          icon: <Share1Icon />,
+        },
       ],
     },
     {
@@ -40,6 +39,7 @@ const sidebarItems = {
         //   title: 'Data sources',
         //   url: '/dashboard/data-sources',
         //   icon: <Share1Icon />,
+        //  badge: 'Soon!',
         // },
       ],
     },

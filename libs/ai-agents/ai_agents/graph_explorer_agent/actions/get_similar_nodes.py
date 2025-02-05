@@ -12,7 +12,7 @@ from ..types import AdjacencyList, AdjacencyListRecord
 similarity_semaphore = Semaphore(1)
 
 
-def get_similar_nodes(
+async def get_similar_nodes(
     G: nx.DiGraph,
     label_embeddings: list[dict],  # [{"id": <node_id>, "embedding": <vec>}]
     embedder_client: BaseEmbedderClient,
@@ -39,7 +39,7 @@ def get_similar_nodes(
         index = faiss.IndexFlatIP(dimension)
         index.add(embeddings)  # type: ignore
 
-        cost, query_embeddings = embedder_client.get_embeddings_sync([query])
+        cost, query_embeddings = await embedder_client.get_embeddings([query])
         query_embedding = np.array(query_embeddings[0], dtype=np.float32).reshape(1, -1)
 
         # Normalize query as well
