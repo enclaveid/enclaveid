@@ -30,3 +30,15 @@ export type NodeHoverData = {
   node: NodeData | null;
   visible: boolean;
 };
+
+export type HoverEdgesProps = {
+  hoveredNode: NodeData | null;
+  nodePositions: Record<string, [number, number, number]>;
+  allNodes: NodeData[];
+};
+
+export type GraphVizCirclePackProps = {
+  nodes: NodeData[];
+  hoverData: NodeHoverData;
+  setHoverData: React.Dispatch<React.SetStateAction<NodeHoverData>>;
+};
