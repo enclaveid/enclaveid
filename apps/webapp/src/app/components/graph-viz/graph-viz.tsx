@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
 import { scaleTime } from 'd3-scale';
 import { timeParse, timeFormat } from 'd3-time-format';
+import * as THREE from 'three';
 
 // Types (same as in your example)
 export type ChunkData = {
@@ -21,6 +22,21 @@ type ChunkTimelineProps = {
   height: number; // For controlling the initial camera, etc.
   chunks: ChunkData[];
 };
+
+// Helper function to interpolate between vibrant red and green
+function getSentimentColor(sentiment: number): string {
+  // Ensure sentiment is between -1 and 1
+  const normalizedSentiment = Math.max(-1, Math.min(1, sentiment));
+
+  // Convert to a 0-1 scale for interpolation
+  const t = (normalizedSentiment + 1) / 2;
+
+  const red = Math.round(255 - 175 * t);
+  const green = Math.round(80 + 175 * t);
+  const blue = 0;
+
+  return `rgb(${red}, ${green}, ${blue})`;
+}
 
 export function GraphViz({
   width = 1000,
@@ -98,7 +114,10 @@ export function GraphViz({
       const formattedLines = lines.flatMap((line) => {
         const wrappedLines = [];
         for (let i = 0; i < line.length; i += charsPerLine) {
-          wrappedLines.push(line.slice(i, i + charsPerLine));
+          const isLastLine = i + charsPerLine >= line.length;
+          const lineContent = line.slice(i, i + charsPerLine);
+          // Add hyphen only if this isn't the last line of the text chunk
+          wrappedLines.push(isLastLine ? lineContent : lineContent + '-');
         }
         return wrappedLines;
       });
@@ -222,18 +241,23 @@ export function GraphViz({
       >
         {/* OrbitControls provides mouse-driven pan/zoom/rotate. */}
         <OrbitControls
-          // Limits on zoom
-          minZoom={0.1}
-          maxZoom={5}
-          // Optionally limit rotation if you truly want a "2D" feel:
+          enableZoom
+          enablePan
           enableRotate={false}
+          enableDamping={false}
+          mouseButtons={{
+            LEFT: THREE.MOUSE.PAN,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.ROTATE,
+          }}
+          screenSpacePanning={true}
+          zoomToCursor={true}
+          target0={new THREE.Vector3(0, 0, 0)}
         />
 
         {/* Chunks rendered as colored planes. We'll place them on the XY plane at z=0. */}
         {chunkDimensions.map((c) => {
-          let color = '#8884d8';
-          if (c.sentiment === 'negative') color = 'tomato';
-          if (c.sentiment === 'positive') color = 'green';
+          const color = getSentimentColor(c.sentiment);
 
           // Center the plane so that (x, y) is top-left:
           // By default, a Plane is centered at [0, 0], so we shift by half the width & height.
@@ -253,7 +277,7 @@ export function GraphViz({
               {c.formattedLines.map((line, idx) => (
                 <Text
                   key={idx}
-                  color="white"
+                  color="black"
                   fontSize={12}
                   anchorX="left"
                   anchorY="top"
