@@ -1,11 +1,18 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { ChunkTimelineProps, SubgraphType } from './types';
+import { ChunkTimelineProps, SubgraphType, NodeHoverData } from './types';
 import { getSentimentColor } from './helpers';
 
 export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
+  // Add state for hover data
+  const [hoverData, setHoverData] = useState<NodeHoverData>({
+    position: [0, 0],
+    node: null,
+    visible: false,
+  });
+
   // Layout parameters
   const margin = { top: 20, right: 20, bottom: 40, left: 20 };
   const fixedChunkWidth = 300;
@@ -14,7 +21,7 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
   const horizontalGap = 20;
   const lineHeight = 20;
 
-  // We’ll keep an easy reference for subgraph layout:
+  // We'll keep an easy reference for subgraph layout:
   const subgraphTypes: SubgraphType[] = ['meta', 'context', 'attributes'];
   const subgraphColors: Record<SubgraphType, string> = {
     meta: '#ffaaaa', // pink-ish
@@ -35,7 +42,7 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
     });
   }, [sortedChunks, margin.left]);
 
-  // Compute chunk “heights” based on text wrapping (just as in your original code)
+  // Compute chunk "heights" based on text wrapping (just as in your original code)
   const chunkDimensions = useMemo(() => {
     return chunkLayout.map((chunk) => {
       // Rough text wrapping logic
@@ -79,7 +86,7 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
   }, [nodes]);
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <Canvas
         orthographic
         camera={{
@@ -149,7 +156,7 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
                     n.subgraph_types.includes(sgType)
                   );
 
-                  // We’ll divide the fixedChunkWidth into 3 equal columns
+                  // We'll divide the fixedChunkWidth into 3 equal columns
                   const columnWidth = fixedChunkWidth / 3;
                   // Center each column
                   const colX =
@@ -158,13 +165,38 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
                   return (
                     <group key={sgType} position={[colX, 0, 0]}>
                       {colNodes.map((node, nodeIdx) => {
-                        // For a simple top-down stack:
-                        const nodeY = nodeIdx * 30; // each node 30 px below previous
+                        const nodeY = nodeIdx * 50;
                         return (
                           <group key={node.id} position={[0, nodeY, 0]}>
-                            <mesh>
-                              {/* A small circle geometry in the XY plane */}
-                              <circleGeometry args={[10, 32]} />
+                            <mesh
+                              onPointerEnter={(e) => {
+                                e.stopPropagation();
+                                // Convert 3D position to screen coordinates
+                                const vector = new THREE.Vector3();
+                                vector.setFromMatrixPosition(
+                                  e.object.matrixWorld
+                                );
+                                vector.project(e.camera);
+
+                                const x =
+                                  ((vector.x + 1) * window.innerWidth) / 2;
+                                const y =
+                                  ((-vector.y + 1) * window.innerHeight) / 2;
+
+                                setHoverData({
+                                  position: [x, y],
+                                  node: node,
+                                  visible: true,
+                                });
+                              }}
+                              onPointerLeave={() => {
+                                setHoverData((prev) => ({
+                                  ...prev,
+                                  visible: false,
+                                }));
+                              }}
+                            >
+                              <circleGeometry args={[18, 32]} />
                               <meshBasicMaterial
                                 color={subgraphColors[sgType]}
                               />
@@ -180,6 +212,54 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
           );
         })}
       </Canvas>
+
+      {/* Hover tooltip */}
+      {hoverData.visible && hoverData.node && (
+        <div
+          style={{
+            position: 'absolute',
+            left: hoverData.position[0],
+            top: hoverData.position[1],
+            background: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
+            padding: '8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            pointerEvents: 'none',
+            transform: 'translate(-50%, -100%)',
+            marginTop: '-10px',
+            maxWidth: '300px',
+            zIndex: 1000,
+          }}
+        >
+          <div>
+            <strong>ID:</strong> {hoverData.node.id}
+          </div>
+          <div>
+            <strong>User:</strong> {hoverData.node.user}
+          </div>
+          <div>
+            <strong>Proposition:</strong> {hoverData.node.proposition}
+          </div>
+          <div>
+            <strong>Node type:</strong> {hoverData.node.subgraph_types[0]}
+          </div>
+          {/* <div>
+            <strong>Datetimes:</strong> {hoverData.node.datetimes.join(', ')}
+          </div>
+          <div>
+            <strong>Types:</strong> {hoverData.node.subgraph_types.join(', ')}
+          </div>
+          */}
+          {/* <div>
+            <strong>Chunk IDs:</strong> {hoverData.node.chunk_ids.join(', ')}
+          </div> */}
+          <div>
+            <strong>Relationships:</strong>{' '}
+            {hoverData.node.relationships.length}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

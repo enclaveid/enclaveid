@@ -12,6 +12,7 @@ export type SubgraphType = 'meta' | 'context' | 'attributes';
 export type NodeData = {
   id: string;
   user: string;
+  frequency: bigint;
   proposition: string;
   datetimes: string[];
   subgraph_types: SubgraphType[];
