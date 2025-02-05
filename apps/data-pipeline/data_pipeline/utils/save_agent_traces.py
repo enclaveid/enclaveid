@@ -1,7 +1,7 @@
 import polars as pl
+from ai_agents.base_agent import TraceRecord
 from dagster import AssetExecutionContext
 
-from data_pipeline.utils.agents.base_agent import TraceRecord
 from data_pipeline.utils.get_working_dir import get_working_dir
 
 

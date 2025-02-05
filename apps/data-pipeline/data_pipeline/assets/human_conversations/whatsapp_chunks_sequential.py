@@ -1,6 +1,10 @@
 import time
 
 import polars as pl
+from ai_agents.chunking_agent.agent import (
+    ChunkDecision,
+    ChunkingAgent,
+)
 from dagster import (
     AssetExecutionContext,
     asset,
@@ -20,12 +24,8 @@ from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
 )
 from data_pipeline.resources.postgres_resource import PostgresResource
-from data_pipeline.utils.agents.chunking_agent.chunking_agent import (
-    ChunkDecision,
-    ChunkingAgent,
-)
-from data_pipeline.utils.agents.save_agent_traces import save_agent_traces
 from data_pipeline.utils.get_messaging_partners import get_messaging_partners
+from data_pipeline.utils.save_agent_traces import save_agent_traces
 
 
 class WhatsappChunkingConfig(RowLimitConfig):

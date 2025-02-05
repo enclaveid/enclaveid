@@ -5,11 +5,7 @@ import faiss
 import networkx as nx
 import numpy as np
 
-from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResource
-from data_pipeline.utils.agents.graph_explorer_agent.types import (
-    AdjacencyList,
-    AdjacencyListRecord,
-)
+from ..types import AdjacencyList, AdjacencyListRecord
 
 similarity_semaphore = Semaphore(1)
 
@@ -17,7 +13,7 @@ similarity_semaphore = Semaphore(1)
 def get_similar_nodes(
     G: nx.DiGraph,
     label_embeddings: list[dict],  # [{"id": <node_id>, "embedding": <vec>}]
-    batch_embedder: BatchEmbedderResource,
+    batch_embedder,
     query: str,
     top_k: int = 10,
     threshold: float = 0.6,
@@ -38,7 +34,7 @@ def get_similar_nodes(
 
         dimension = embeddings.shape[1]
         index = faiss.IndexFlatIP(dimension)
-        index.add(embeddings)  # add normalized embeddings
+        index.add(embeddings)  # type: ignore
 
         cost, query_embeddings = batch_embedder.get_embeddings_sync([query])
         query_embedding = np.array(query_embeddings[0], dtype=np.float32).reshape(1, -1)
@@ -49,7 +45,7 @@ def get_similar_nodes(
         )
 
         # Perform similarity search. For efficiency, ask for top_k directly
-        scores, idxs = index.search(query_embedding, top_k)  # shape: (1, top_k)
+        scores, idxs = index.search(query_embedding, top_k)  # type: ignore
         scores, idxs = scores[0], idxs[0]  # unwrap since we only had 1 query
 
         # Filter by threshold
@@ -58,7 +54,7 @@ def get_similar_nodes(
         ]
 
         result = []
-        for i, score in filtered:
+        for i, _score in filtered:
             node_id = node_ids[i]
             node_data = G.nodes[node_id]
 

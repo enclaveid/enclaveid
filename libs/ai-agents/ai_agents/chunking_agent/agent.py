@@ -4,9 +4,8 @@ from typing import Callable, Literal
 
 from json_repair import repair_json
 
-from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
-from data_pipeline.utils.agents.base_agent import BaseAgent, TraceRecord
-from data_pipeline.utils.agents.chunking_agent.prompts import (
+from ..base_agent import BaseAgent, TraceRecord
+from .prompts import (
     CHUNKING_AGENT_FORCE_SPLIT_PROMPT,
     CHUNKING_AGENT_SPLIT_PROMPT,
 )
@@ -22,7 +21,7 @@ class ChunkDecision:
 class ChunkingAgent(BaseAgent):
     def __init__(
         self,
-        model_config: RemoteLlmConfig,
+        model_config,
     ):
         super().__init__(model_config, with_memory=False)
 

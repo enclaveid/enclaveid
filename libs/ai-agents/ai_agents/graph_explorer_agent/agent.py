@@ -4,12 +4,11 @@ from dataclasses import asdict
 
 from json_repair import repair_json
 
-from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
-from data_pipeline.utils.agents.base_agent import BaseAgent, TraceRecord
-from data_pipeline.utils.agents.graph_explorer_agent.prompts import (
+from ..base_agent import BaseAgent, TraceRecord
+from .prompts import (
     GRAPH_EXPLORER_AGENT_SYSTEM_PROMPT,
 )
-from data_pipeline.utils.agents.graph_explorer_agent.types import (
+from .types import (
     ActionResult,
     ActionsImpl,
     AdjacencyList,
@@ -20,7 +19,7 @@ from data_pipeline.utils.agents.graph_explorer_agent.types import (
 class GraphExplorerAgent(BaseAgent):
     def __init__(
         self,
-        model_config: RemoteLlmConfig,
+        model_config,
         system_prompt: str | None = None,
     ):
         super().__init__(

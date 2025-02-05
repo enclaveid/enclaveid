@@ -3,6 +3,27 @@ from dataclasses import asdict
 
 import networkx as nx
 import polars as pl
+from ai_agents.base_agent import TraceRecord
+from ai_agents.graph_explorer_agent.actions.get_causal_chain import (
+    get_causal_chain,
+)
+from ai_agents.graph_explorer_agent.actions.get_raw_data import (
+    get_raw_data,
+)
+from ai_agents.graph_explorer_agent.actions.get_relatives import (
+    get_children,
+    get_parents,
+)
+from ai_agents.graph_explorer_agent.actions.get_similar_nodes import (
+    get_similar_nodes,
+)
+from ai_agents.graph_explorer_agent.agent import (
+    GraphExplorerAgent,
+)
+from ai_agents.graph_explorer_agent.types import (
+    ActionsImpl,
+    HypothesisValidationResult,
+)
 from dagster import AssetExecutionContext, AssetIn, asset
 
 from data_pipeline.constants.environments import get_environment
@@ -10,25 +31,6 @@ from data_pipeline.partitions import multi_phone_number_partitions_def
 from data_pipeline.resources.batch_embedder_resource import BatchEmbedderResource
 from data_pipeline.resources.batch_inference.base_llm_resource import (
     BaseLlmResource,
-)
-from data_pipeline.utils.agents.base_agent import TraceRecord
-from data_pipeline.utils.agents.graph_explorer_agent.actions import (
-    get_causal_chain,
-    get_children,
-    get_similar_nodes,
-)
-from data_pipeline.utils.agents.graph_explorer_agent.actions.get_raw_data import (
-    get_raw_data,
-)
-from data_pipeline.utils.agents.graph_explorer_agent.actions.get_relatives import (
-    get_parents,
-)
-from data_pipeline.utils.agents.graph_explorer_agent.graph_explorer_agent import (
-    GraphExplorerAgent,
-)
-from data_pipeline.utils.agents.graph_explorer_agent.types import (
-    ActionsImpl,
-    HypothesisValidationResult,
 )
 from data_pipeline.utils.get_node_datetime import get_node_datetime
 
@@ -131,7 +133,6 @@ def whatsapp_hypotheses_validation(
             traces.extend([asdict(t) for t in trace])
 
         res = {"results": results, "traces": traces}
-        context.log.info(f"[FINAL_RESULT] {json.dumps(res, indent=2)}")
         return res
 
     results_df = (

@@ -2,11 +2,8 @@ from typing import Literal
 
 import networkx as nx
 
-from data_pipeline.utils.agents.graph_explorer_agent.types import (
-    AdjacencyList,
-    AdjacencyListRecord,
-)
-from data_pipeline.utils.get_node_datetime import get_node_datetime
+from ..types import AdjacencyList, AdjacencyListRecord
+from ..utils.get_node_datetime import get_node_datetime
 
 
 def get_children(graph: nx.DiGraph, node_id: str, depth: int = 1) -> AdjacencyList:

@@ -7,8 +7,6 @@ from typing import Any, Dict, Tuple
 import httpx
 from dagster import get_dagster_logger
 
-from data_pipeline.resources.batch_inference.remote_llm_config import RemoteLlmConfig
-
 
 @dataclass
 class TraceRecord:
@@ -26,12 +24,12 @@ class BaseAgent:
     _system_prompt: str | None = None
 
     _logger: Logger
-    _model_config: RemoteLlmConfig
+    _model_config: Any
     _with_memory: bool
 
     def __init__(
         self,
-        model_config: RemoteLlmConfig,
+        model_config,
         system_prompt: str | None = None,
         with_memory: bool = True,
     ):
