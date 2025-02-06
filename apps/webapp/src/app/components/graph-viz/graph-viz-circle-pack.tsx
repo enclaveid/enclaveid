@@ -2,13 +2,16 @@ import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { NodeData, NodeHoverData } from './types';
+import { getSentimentColor } from './helpers';
 
 export function GraphVizCirclePack({
   circlePackingPositions,
   setHoverData,
+  color = '#ffcc00',
 }: {
   circlePackingPositions: { x: number; y: number; r: number; node: NodeData }[];
-  setHoverData: (hoverData: NodeHoverData) => void;
+  setHoverData: React.Dispatch<React.SetStateAction<NodeHoverData>>;
+  color?: string;
 }) {
   const circlePackRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
@@ -70,7 +73,7 @@ export function GraphVizCirclePack({
                 }}
               >
                 <circleGeometry args={[r, 32]} />
-                <meshBasicMaterial color="#ffcc00" />
+                <meshBasicMaterial color={getSentimentColor(node.sentiment)} />
               </mesh>
             </group>
           );

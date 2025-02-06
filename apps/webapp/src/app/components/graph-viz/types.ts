@@ -18,6 +18,7 @@ export type NodeData = {
   subgraph_types: SubgraphType[];
   chunk_ids: string[];
   relationships: Array<{ source: string; target: string }>;
+  sentiment: number;
 };
 
 export type ChunkTimelineProps = {

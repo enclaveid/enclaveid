@@ -18,7 +18,9 @@ export function getSentimentColor(sentiment: number): string {
 export function computeCirclePackingLayout(
   nodes: NodeData[],
   width: number,
-  height: number
+  height: number,
+  xOffset = 0,
+  yOffset = 0
 ) {
   // Step 1: Create hierarchy with frequency scaling for sizes
   const root = hierarchy({ children: nodes }).sum((d) => {
@@ -38,7 +40,7 @@ export function computeCirclePackingLayout(
   for (const leaf of packedRoot.leaves()) {
     const { x, y, r } = leaf;
     const node = leaf.data as unknown as NodeData;
-    circles.push({ x, y, r, node });
+    circles.push({ x: x + xOffset, y: y + yOffset, r, node });
   }
 
   return circles;

@@ -5,10 +5,11 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { SubgraphType, NodeHoverData, NodeData } from './types';
-import { computeCirclePackingLayout, getSentimentColor } from './helpers';
+import { getSentimentColor } from './helpers';
 import { HoverEdges } from './hover-edges';
 import { HoverTooltip } from './hover-tooltip';
 import { GraphVizCirclePack } from './graph-viz-circle-pack';
+import { useCirclePackingLayout } from './useCirclePackingLayout';
 
 export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
   const [hoverData, setHoverData] = useState<NodeHoverData>({
@@ -94,16 +95,33 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
     return map;
   }, [regularNodes]);
 
-  const circlePackRegionWidth = 400;
-  const circlePackRegionHeight = 400;
-  const circlePackingPositions = useMemo(() => {
-    if (recurrentNodes.length === 0) return [];
-    return computeCirclePackingLayout(
-      recurrentNodes,
-      circlePackRegionWidth,
-      circlePackRegionHeight
+  const [user1, user2] = useMemo(() => {
+    return [...new Set(recurrentNodes.map((n) => n.user))].filter(
+      (user) => user !== 'both'
     );
-  }, [recurrentNodes, circlePackRegionWidth, circlePackRegionHeight]);
+  }, [recurrentNodes]);
+
+  const recurrentNodesAreaSide = 350;
+
+  const recurrentCirclePackUser1 = useCirclePackingLayout(
+    recurrentNodes.filter((n) => n.user === user1),
+    recurrentNodesAreaSide,
+    recurrentNodesAreaSide
+  );
+
+  const recurrentCirclePackBoth = useCirclePackingLayout(
+    recurrentNodes,
+    recurrentNodesAreaSide,
+    recurrentNodesAreaSide,
+    recurrentNodesAreaSide + 50
+  );
+
+  const recurrentCirclePackUser2 = useCirclePackingLayout(
+    recurrentNodes.filter((n) => n.user === user2),
+    recurrentNodesAreaSide,
+    recurrentNodesAreaSide,
+    (recurrentNodesAreaSide + 50) * 2
+  );
 
   // 1) Store each node's world position in a dictionary for use in edges
   const nodePositions = useMemo(() => {
@@ -261,7 +279,17 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
         })}
 
         <GraphVizCirclePack
-          circlePackingPositions={circlePackingPositions}
+          circlePackingPositions={recurrentCirclePackUser1}
+          setHoverData={setHoverData}
+        />
+
+        <GraphVizCirclePack
+          circlePackingPositions={recurrentCirclePackBoth}
+          setHoverData={setHoverData}
+        />
+
+        <GraphVizCirclePack
+          circlePackingPositions={recurrentCirclePackUser2}
           setHoverData={setHoverData}
         />
 
