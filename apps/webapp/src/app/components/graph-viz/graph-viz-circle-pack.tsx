@@ -7,11 +7,13 @@ import { getSentimentColor } from './helpers';
 export function GraphVizCirclePack({
   circlePackingPositions,
   setHoverData,
-  color = '#ffcc00',
+  onNodeClick,
+  selectedNodeId = null,
 }: {
   circlePackingPositions: { x: number; y: number; r: number; node: NodeData }[];
   setHoverData: React.Dispatch<React.SetStateAction<NodeHoverData>>;
-  color?: string;
+  onNodeClick: (e: THREE.Event, node: NodeData) => void;
+  selectedNodeId?: string | null;
 }) {
   const circlePackRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
@@ -49,6 +51,9 @@ export function GraphVizCirclePack({
           return (
             <group key={node.id} position={[x, -y, 0]}>
               <mesh
+                onClick={(e) => {
+                  onNodeClick(e, node);
+                }}
                 onPointerEnter={(e) => {
                   e.stopPropagation();
                   const vector = new THREE.Vector3().setFromMatrixPosition(
@@ -73,7 +78,13 @@ export function GraphVizCirclePack({
                 }}
               >
                 <circleGeometry args={[r, 32]} />
-                <meshBasicMaterial color={getSentimentColor(node.sentiment)} />
+                <meshBasicMaterial
+                  color={
+                    selectedNodeId === node.id
+                      ? 'lightblue'
+                      : getSentimentColor(node.sentiment)
+                  }
+                />
               </mesh>
             </group>
           );

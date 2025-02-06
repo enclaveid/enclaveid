@@ -1,10 +1,9 @@
-import { ChunkTimelineProps } from './types';
-import { useState } from 'react';
-import { useMemo } from 'react';
+import { ChunkTimelineProps, NodeHoverData, NodeData } from './types';
+import { useState, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { SubgraphType, NodeHoverData, NodeData } from './types';
+import { SubgraphType } from './types';
 import { getSentimentColor } from './helpers';
 import { HoverEdges } from './hover-edges';
 import { HoverTooltip } from './hover-tooltip';
@@ -12,11 +11,15 @@ import { GraphVizCirclePack } from './graph-viz-circle-pack';
 import { useCirclePackingLayout } from './useCirclePackingLayout';
 
 export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
+  // 1) Hover (ephemeral) state
   const [hoverData, setHoverData] = useState<NodeHoverData>({
     position: [0, 0],
     node: null,
     visible: false,
   });
+
+  // 2) Selected (sticky) node state
+  const [selectedData, setSelectedData] = useState<NodeHoverData | null>(null);
 
   // Separate out single-chunk nodes vs. multi-chunk (recurrent) nodes
   const [regularNodes, recurrentNodes] = useMemo(() => {
@@ -110,7 +113,7 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
   );
 
   const recurrentCirclePackBoth = useCirclePackingLayout(
-    recurrentNodes,
+    recurrentNodes.filter((n) => n.user === 'both'),
     recurrentNodesAreaSide,
     recurrentNodesAreaSide,
     recurrentNodesAreaSide + 50
@@ -123,7 +126,7 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
     (recurrentNodesAreaSide + 50) * 2
   );
 
-  // 1) Store each node's world position in a dictionary for use in edges
+  // 1) Store each node's "static" world position (approx) for edges
   const nodePositions = useMemo(() => {
     const positions: Record<string, [number, number, number]> = {};
 
@@ -156,6 +159,36 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
     return positions;
   }, [chunkDimensions, chunkNodeMap, subgraphTypes, margin.top]);
 
+  // Helper to convert a node's world coords to screen coords
+  const worldToScreenCoords = (
+    object: THREE.Object3D,
+    camera: THREE.Camera
+  ): [number, number] => {
+    const vector = new THREE.Vector3().setFromMatrixPosition(
+      object.matrixWorld
+    );
+    vector.project(camera);
+    const x = ((vector.x + 1) * window.innerWidth) / 2;
+    const y = ((-vector.y + 1) * window.innerHeight) / 2;
+    return [x, y];
+  };
+
+  // Handler to set pinned node data upon click
+  const handleNodeClick = (e: THREE.Event, node: NodeData) => {
+    e.stopPropagation();
+
+    const screenPos = worldToScreenCoords(e.object, e.camera);
+    // Also store the actual 3D world position so edges draw from correct point
+    const worldPos = e.object.getWorldPosition(new THREE.Vector3());
+
+    setSelectedData({
+      position: screenPos,
+      node,
+      visible: true,
+      worldPosition: [worldPos.x, worldPos.y, worldPos.z],
+    });
+  };
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <Canvas
@@ -168,6 +201,10 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
           far: 10000,
         }}
         style={{ background: '#222', width: '100%', height: '100%' }}
+        // 3) If user clicks on empty space, clear the selected node
+        onPointerMissed={() => {
+          setSelectedData(null);
+        }}
       >
         <OrbitControls
           enableZoom
@@ -236,23 +273,27 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
                           <group key={node.id} position={[0, nodeY, 0]}>
                             {/* Draw the node circle */}
                             <mesh
+                              // 2a) Set pinned node on click
+                              onPointerDown={(e) => handleNodeClick(e, node)}
+                              // 1a) Hover state
                               onPointerEnter={(e) => {
                                 e.stopPropagation();
-                                // Convert world coords to screen coords
-                                const vector =
-                                  new THREE.Vector3().setFromMatrixPosition(
-                                    e.object.matrixWorld
-                                  );
-                                vector.project(e.camera);
-                                const x =
-                                  ((vector.x + 1) * window.innerWidth) / 2;
-                                const y =
-                                  ((-vector.y + 1) * window.innerHeight) / 2;
-
+                                const [x, y] = worldToScreenCoords(
+                                  e.object,
+                                  e.camera
+                                );
+                                const worldPos = e.object.getWorldPosition(
+                                  new THREE.Vector3()
+                                );
                                 setHoverData({
                                   position: [x, y],
-                                  node: node,
+                                  node,
                                   visible: true,
+                                  worldPosition: [
+                                    worldPos.x,
+                                    worldPos.y,
+                                    worldPos.z,
+                                  ],
                                 });
                               }}
                               onPointerLeave={() => {
@@ -278,22 +319,28 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
           );
         })}
 
+        {/* The recurrent nodes (circle packed) */}
         <GraphVizCirclePack
           circlePackingPositions={recurrentCirclePackUser1}
           setHoverData={setHoverData}
+          // Pass our click handler down to GraphVizCirclePack so it can set pinned node
+          onNodeClick={handleNodeClick}
+          selectedNodeId={selectedData?.node?.id}
         />
-
         <GraphVizCirclePack
           circlePackingPositions={recurrentCirclePackBoth}
           setHoverData={setHoverData}
+          onNodeClick={handleNodeClick}
+          selectedNodeId={selectedData?.node?.id}
         />
-
         <GraphVizCirclePack
           circlePackingPositions={recurrentCirclePackUser2}
           setHoverData={setHoverData}
+          onNodeClick={handleNodeClick}
+          selectedNodeId={selectedData?.node?.id}
         />
 
-        {/* 2) The curved "jump" lines for the hovered node's inbound/outbound edges */}
+        {/* 4) Two sets of edges: ephemeral hovered node + pinned node */}
         <HoverEdges
           hoveredNode={hoverData.visible ? hoverData.node : null}
           nodePositions={
@@ -306,10 +353,28 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
           }
           allNodes={nodes}
         />
+
+        <HoverEdges
+          hoveredNode={selectedData?.node || null}
+          nodePositions={
+            selectedData?.worldPosition
+              ? {
+                  ...nodePositions,
+                  [selectedData.node?.id || '']: selectedData.worldPosition,
+                }
+              : nodePositions
+          }
+          allNodes={nodes}
+        />
       </Canvas>
 
+      {/* 5) Two tooltips: ephemeral + pinned */}
       {hoverData.visible && hoverData.node && (
         <HoverTooltip hoverData={hoverData} />
+      )}
+
+      {selectedData && selectedData.node && selectedData.visible && (
+        <HoverTooltip hoverData={selectedData} />
       )}
     </div>
   );
