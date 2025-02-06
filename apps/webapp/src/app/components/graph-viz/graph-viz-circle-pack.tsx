@@ -31,6 +31,14 @@ export function GraphVizCirclePack({
     circlePackRef.current.scale.set(invZoom, invZoom, invZoom);
   });
 
+  // Add this function to get world positions
+  const getWorldPosition = (x: number, y: number) => {
+    if (!circlePackRef.current) return [x, y, 0];
+    const worldPos = new THREE.Vector3(x, -y, 0);
+    worldPos.applyMatrix4(circlePackRef.current.matrixWorld);
+    return [worldPos.x, worldPos.y, worldPos.z] as [number, number, number];
+  };
+
   return (
     <>
       <group ref={circlePackRef}>
@@ -47,10 +55,14 @@ export function GraphVizCirclePack({
                   const sx = ((vector.x + 1) * window.innerWidth) / 2;
                   const sy = ((-vector.y + 1) * window.innerHeight) / 2;
 
+                  // Get the actual world position for edges
+                  const worldPos = getWorldPosition(x, y);
+
                   setHoverData({
                     position: [sx, sy],
                     node,
                     visible: true,
+                    worldPosition: worldPos as [number, number, number],
                   });
                 }}
                 onPointerLeave={() => {

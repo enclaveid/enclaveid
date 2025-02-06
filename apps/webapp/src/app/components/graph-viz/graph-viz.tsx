@@ -94,6 +94,17 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
     return map;
   }, [regularNodes]);
 
+  const circlePackRegionWidth = 400;
+  const circlePackRegionHeight = 400;
+  const circlePackingPositions = useMemo(() => {
+    if (recurrentNodes.length === 0) return [];
+    return computeCirclePackingLayout(
+      recurrentNodes,
+      circlePackRegionWidth,
+      circlePackRegionHeight
+    );
+  }, [recurrentNodes, circlePackRegionWidth, circlePackRegionHeight]);
+
   // 1) Store each node's world position in a dictionary for use in edges
   const nodePositions = useMemo(() => {
     const positions: Record<string, [number, number, number]> = {};
@@ -126,17 +137,6 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
 
     return positions;
   }, [chunkDimensions, chunkNodeMap, subgraphTypes, margin.top]);
-
-  const circlePackRegionWidth = 400;
-  const circlePackRegionHeight = 400;
-  const circlePackingPositions = useMemo(() => {
-    if (recurrentNodes.length === 0) return [];
-    return computeCirclePackingLayout(
-      recurrentNodes,
-      circlePackRegionWidth,
-      circlePackRegionHeight
-    );
-  }, [recurrentNodes, circlePackRegionWidth, circlePackRegionHeight]);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -265,16 +265,17 @@ export function GraphViz({ chunks, nodes }: ChunkTimelineProps) {
           setHoverData={setHoverData}
         />
 
-        {/* 2) The curved "jump" lines for the hovered node’s inbound/outbound edges */}
+        {/* 2) The curved "jump" lines for the hovered node's inbound/outbound edges */}
         <HoverEdges
           hoveredNode={hoverData.visible ? hoverData.node : null}
-          nodePositions={circlePackingPositions.reduce(
-            (acc, { x, y, node }) => {
-              acc[node.id] = [x, y, 0];
-              return acc;
-            },
-            nodePositions
-          )}
+          nodePositions={
+            hoverData.worldPosition
+              ? {
+                  ...nodePositions,
+                  [hoverData.node?.id || '']: hoverData.worldPosition,
+                }
+              : nodePositions
+          }
           allNodes={nodes}
         />
       </Canvas>

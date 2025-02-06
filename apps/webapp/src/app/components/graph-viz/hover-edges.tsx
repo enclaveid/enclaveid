@@ -7,7 +7,6 @@ export function HoverEdges({
   nodePositions,
   allNodes,
 }: HoverEdgesProps) {
-  console.log('hoveredNode', hoveredNode);
   // If no node is hovered, render nothing
   if (!hoveredNode) return null;
 

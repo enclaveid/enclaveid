@@ -1,4 +1,5 @@
 from textwrap import dedent
+from typing import Dict
 
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, Config, asset
@@ -25,12 +26,10 @@ def _get_synthetization_prompt_sequence(
         dedent(
             f"""
             Given a list of similar propositions, synthesize all propositions into a single proposition encompassing all of them.
-            Provide a label in snake_case for the synthesized proposition.
 
             Provide your response in the following format:
             {{
-                "proposition": "Synthesized proposition",
-                "label": "a_label_for_the_synthesized_proposition",
+                "proposition": "Synthesized proposition"
             }}
 
             Here is the list of propositions:
@@ -40,17 +39,15 @@ def _get_synthetization_prompt_sequence(
     ]
 
 
-def _parse_synthetization_response(
-    response: str
-) -> tuple[str, str] | tuple[None, None]:
+def _parse_synthetization_response(response: str) -> str | None:
     try:
         res = repair_json(response, return_objects=True)
         if isinstance(res, dict):
-            return res["proposition"], res["label"]
+            return res["proposition"]
         else:
-            return None, None
+            return None
     except Exception:
-        return None, None
+        return None
 
 
 class WhatsappClaimsDeduplicatedConfig(Config):
@@ -60,6 +57,49 @@ class WhatsappClaimsDeduplicatedConfig(Config):
     debug_graph: bool = Field(
         default=True, description="Whether to save the graph to the debug directory"
     )
+
+
+def _make_ids_globally_unique(
+    df: pl.DataFrame,
+    used_ids: set[str],
+    id_col: str = "id",
+    rel_col: str = "relationships",
+) -> pl.DataFrame:
+    """
+    Ensures IDs in df[id_col] are unique globally, by appending '_2', '_3', etc.
+    Updates relationship references accordingly.
+    """
+    old_ids = df[id_col].to_list()
+    # Build a mapping from old_id -> new_id
+    id_mapping: Dict[str, str] = {}
+    for old_id in old_ids:
+        candidate = old_id
+        counter = 2
+        # If candidate is already taken, append _2, _3, etc.
+        while candidate in used_ids:
+            candidate = f"{old_id}_{counter}"
+            counter += 1
+        id_mapping[old_id] = candidate
+        used_ids.add(candidate)
+
+    # Replace the DataFrame's id column
+    df = df.with_columns(pl.col(id_col).map_elements(lambda x: id_mapping[x]))
+
+    # Update relationships so that old references get mapped to new IDs
+    if rel_col in df.columns:
+        df = df.with_columns(
+            pl.col(rel_col).map_elements(
+                lambda rels: [
+                    {
+                        "source": id_mapping.get(r["source"], r["source"]),
+                        "target": id_mapping.get(r["target"], r["target"]),
+                    }
+                    for r in rels
+                ]
+            )
+        )
+
+    return df
 
 
 @asset(
@@ -86,16 +126,14 @@ async def whatsapp_nodes_deduplicated(
     # Gather embeddings and find similarities
     df = whatsapp_node_embeddings
 
-    # Add a user column based on the contents of the proposition column
+    # Determine "user" by which name(s) appear in the proposition
     df = df.with_columns(
         pl.when(
-            # Check if both names appear in either order using regex
             pl.col("proposition").str.contains(
                 f"{messaging_partners.initiator_name} and {messaging_partners.partner_name}|{messaging_partners.partner_name} and {messaging_partners.initiator_name}"
             )
         )
         .then(pl.lit("both"))
-        # Check which name appears first and use that
         .when(
             pl.col("proposition")
             .str.extract(
@@ -114,16 +152,13 @@ async def whatsapp_nodes_deduplicated(
         .alias("user")
     )
 
-    # Create a relationship column
     df = df.with_columns(
         pl.when(
             (pl.col("caused").list.len() > 0) | (pl.col("caused_by").list.len() > 0)
         )
         .then(
-            # Build a new list of relationship dicts for each row
             pl.struct(["id", "caused", "caused_by"]).map_elements(
                 lambda row: (
-                    # Relationships from this node -> items in caused
                     [{"source": row["id"], "target": c} for c in row["caused"]]
                     +
                     # Relationships from items in caused_by -> this node
@@ -155,72 +190,63 @@ async def whatsapp_nodes_deduplicated(
         "threshold": config.threshold,
     }
 
-    # Deduplicate within user groups
-    deduplicated_df = pl.concat(
-        [
-            deduplicate_nodes_dataframe(
-                df.filter(pl.col("user") == "both"), **deduplication_args
-            ),
-            deduplicate_nodes_dataframe(
-                df.filter(pl.col("user") == messaging_partners.initiator_name),
-                **deduplication_args,
-            ),
-            deduplicate_nodes_dataframe(
-                df.filter(pl.col("user") == messaging_partners.partner_name),
-                **deduplication_args,
-            ),
-        ],
-        how="vertical",
-    ).with_row_count("index")  # For joining later
+    # Deduplicate by user group
+    df_both = df.filter(pl.col("user") == "both")
+    df_initiator = df.filter(pl.col("user") == messaging_partners.initiator_name)
+    df_partner = df.filter(pl.col("user") == messaging_partners.partner_name)
 
-    # Synthesize propositions
-    synthesized_df = (
+    deduped_both = deduplicate_nodes_dataframe(df_both, **deduplication_args)
+    deduped_initiator = deduplicate_nodes_dataframe(df_initiator, **deduplication_args)
+    deduped_partner = deduplicate_nodes_dataframe(df_partner, **deduplication_args)
+
+    # Make IDs globally unique across the three dataframes
+    used_ids: set[str] = set()
+
+    deduped_both = _make_ids_globally_unique(deduped_both, used_ids)
+    deduped_initiator = _make_ids_globally_unique(deduped_initiator, used_ids)
+    deduped_partner = _make_ids_globally_unique(deduped_partner, used_ids)
+
+    # Combine them
+    deduplicated_df = pl.concat(
+        [deduped_both, deduped_initiator, deduped_partner],
+        how="vertical",
+    ).with_row_count("index")
+
+    # Synthesize propositions for rows with frequency > 1
+    to_synthesize = (
         deduplicated_df.filter(pl.col("frequency") > 1)
         .select("index", "propositions")
         .with_columns(propositions_str=pl.col("propositions").list.join("\n"))
     )
+
     prompt_sequences = [
         _get_synthetization_prompt_sequence(row["propositions_str"])
-        for row in synthesized_df.iter_rows(named=True)
+        for row in to_synthesize.iter_rows(named=True)
     ]
-
     completions, cost = llama70b.get_prompt_sequences_completions_batch(
-        prompt_sequences,
+        prompt_sequences
     )
-
     context.log.info(f"Synthesization cost: ${cost:.6f}")
 
-    propositions, labels = zip(
-        *(
-            _parse_synthetization_response(completion[-1])
-            if completion
-            else (None, None)
-            for completion in completions
-        )
-    )
-
-    # Add back propositions and labels to synthesized_df
-    synthesized_df = synthesized_df.with_columns(
+    propositions = [
+        _parse_synthetization_response(completion[-1]) if completion else None
+        for completion in completions
+    ]
+    to_synthesize = to_synthesize.with_columns(
         proposition=pl.Series(propositions),
-        id=pl.Series(labels),
     ).drop("propositions_str")
 
-    # Get embeddings
+    # Embed new synthesized propositions
     cost, embeddings = await batch_embedder.get_embeddings(
-        synthesized_df.get_column("proposition").to_list(),
+        to_synthesize.get_column("proposition").to_list(),
     )
-
     context.log.info(f"Embedding cost: ${cost:.6f}")
+    to_synthesize = to_synthesize.with_columns(embedding=pl.Series(embeddings))
 
-    # Add embeddings to synthesized_df
-    synthesized_df = synthesized_df.with_columns(embedding=pl.Series(embeddings))
-
-    # Join back with deduplicated_df
     deduplicated_df = deduplicated_df.join(
-        synthesized_df, on="index", how="left", suffix="_right"
+        to_synthesize, on="index", how="left", suffix="_right"
     ).sort("frequency", descending=True)
 
-    # Coalesce right columns with originals
     cols_to_coalesce = [
         col.replace("_right", "")
         for col in deduplicated_df.columns

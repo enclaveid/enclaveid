@@ -25,11 +25,12 @@ export type ChunkTimelineProps = {
   nodes: NodeData[];
 };
 
-export type NodeHoverData = {
+export interface NodeHoverData {
   position: [number, number];
   node: NodeData | null;
   visible: boolean;
-};
+  worldPosition?: [number, number, number];
+}
 
 export type HoverEdgesProps = {
   hoveredNode: NodeData | null;
