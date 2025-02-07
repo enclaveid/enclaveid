@@ -35,8 +35,8 @@ def _get_relatives(
             description=graph.nodes(data=True)[rel_id].get("description", ""),
             datetime=graph.nodes(data=True)[rel_id].get("datetime", None),
             frequency=graph.nodes(data=True)[rel_id].get("frequency", 1),
-            parents_count=len(list(graph.predecessors(rel_id))),
-            children_count=len(list(graph.successors(rel_id))),
+            # parents_count=len(list(graph.predecessors(rel_id))),
+            # children_count=len(list(graph.successors(rel_id))),
         )
 
         result.append(record)

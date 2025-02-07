@@ -51,10 +51,17 @@ def get_causal_chain(
     """
 
     try:
+        print(node_id, target_node_id)
         node_ids = nx.shortest_path(G, node_id, target_node_id)
+
     except nx.NetworkXNoPath:
+        print("No shortest path")
         # If no shortest path, use pageranked nodes
-        node_ids = _get_pageranked_nodes(G, node_id, target_node_id, top_k)
+        try:
+            node_ids = _get_pageranked_nodes(G, node_id, target_node_id, top_k)
+        except Exception as e:
+            print(e)
+            raise e
 
     # Convert top nodes to AdjacencyListRecord format
     result = []
@@ -65,8 +72,8 @@ def get_causal_chain(
             description=node_data.get("description", ""),
             datetime=node_data.get("datetime", None),
             frequency=node_data.get("frequency", 1),
-            parents_count=len(list(G.predecessors(node_id))),
-            children_count=len(list(G.successors(node_id))),
+            # parents_count=len(list(G.predecessors(node_id))),
+            # children_count=len(list(G.successors(node_id))),
         )
         result.append(record)
 
@@ -91,8 +98,4 @@ if __name__ == "__main__":
         )
         G.add_edges_from([(row["id"], e) for e in row["edges"]])
 
-    print(
-        get_causal_chain(
-            G, "dismissive_resolution", "relationship_with_humor_and_independence"
-        )
-    )
+    print(get_causal_chain(G, "giovanni_commitment_phobia", "mutual frustration"))

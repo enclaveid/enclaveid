@@ -1,12 +1,8 @@
-import { HomePieChart } from '../../../components/home-pie-chart';
-import { getCategoryCounts } from '../../../actions/getCategoryCounts';
-import { AiChat } from '../../../components/ai-chat';
+import { AiChat } from '../../../components/ai-chat/ai-chat';
 
 export default async function Home() {
-  const data = await getCategoryCounts();
   return (
-    <div className="flex flex-row gap-4">
-      <HomePieChart data={data} />
+    <div className="flex flex-row gap-4 h-full">
       <AiChat />
     </div>
   );

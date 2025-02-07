@@ -1,10 +1,11 @@
+import os
 from functools import lru_cache
 from typing import Tuple
 
 import networkx as nx
 import polars as pl
 from ai_agents.embeddings.base_embedder_client import BaseEmbedderClient
-from ai_agents.embeddings.local_embedder_client import LocalEmbedderClient
+from ai_agents.embeddings.deepinfra_embedder_client import DeepInfraEmbedderClient
 
 # TODO: get this from auth
 CONST_NODES_PATH = "/Users/ma9o/Desktop/enclaveid/apps/data-pipeline/data/dagster/whatsapp_nodes_deduplicated/00393494197577/0034689896443.snappy"
@@ -37,4 +38,4 @@ def get_raw_data_df() -> pl.DataFrame:
 
 @lru_cache(maxsize=1)
 def get_embedder_client() -> BaseEmbedderClient:
-    return LocalEmbedderClient()
+    return DeepInfraEmbedderClient(api_key=os.environ["DEEPINFRA_API_KEY"])

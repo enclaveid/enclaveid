@@ -66,8 +66,8 @@ async def get_similar_nodes(
                 description=node_data.get("description", ""),
                 datetime=node_data.get("datetime", None),
                 frequency=node_data.get("frequency", 1),
-                parents_count=len(list(G.predecessors(node_id))),
-                children_count=len(list(G.successors(node_id))),
+                # parents_count=len(list(G.predecessors(node_id))),
+                # children_count=len(list(G.successors(node_id))),
             )
             result.append(record)
 

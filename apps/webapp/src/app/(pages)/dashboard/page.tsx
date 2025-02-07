@@ -1,12 +1,11 @@
+import { AiChat } from '../../components/ai-chat/ai-chat';
+
 export default function Page() {
   return (
-    <>
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="aspect-video rounded-xl bg-muted/50" />
-        <div className="aspect-video rounded-xl bg-muted/50" />
-        <div className="aspect-video rounded-xl bg-muted/50" />
+    <div className="flex flex-col gap-4 h-full">
+      <div className="flex-1 rounded-xl bg-muted/50 ">
+        <AiChat />
       </div>
-      <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
-    </>
+    </div>
   );
 }

@@ -14,8 +14,8 @@ class AdjacencyListRecord:
     description: str
     datetime: str
     frequency: int
-    parents_count: int
-    children_count: int
+    # parents_count: int
+    # children_count: int
     # parents: list[NodeReference]
     # children: list[NodeReference]
 
