@@ -52,7 +52,8 @@ def _parse_synthetization_response(response: str) -> str | None:
 
 class WhatsappClaimsDeduplicatedConfig(Config):
     threshold: float = Field(
-        default=0.95, description="Cosine similarity threshold for merging claims"
+        default=0.98,
+        description="Cosine similarity threshold for merging claims. (depends on the embedding model used upstream)",
     )
     debug_graph: bool = Field(
         default=True, description="Whether to save the graph to the debug directory"
@@ -180,10 +181,9 @@ async def whatsapp_nodes_deduplicated(
         "embedding_col": "embedding",
         "single_fields": ["user", "proposition", "embedding"],
         "list_fields": [
-            ("ids", "id"),
             ("chunk_ids", "chunk_id"),
             ("datetimes", "datetime"),
-            ("propositions", "proposition"),
+            ("propositions_to_merge", "proposition"),
             ("subgraph_types", "subgraph_type"),
         ],
         "relationship_col": "relationships",
@@ -215,12 +215,14 @@ async def whatsapp_nodes_deduplicated(
     # Synthesize propositions for rows with frequency > 1
     to_synthesize = (
         deduplicated_df.filter(pl.col("frequency") > 1)
-        .select("index", "propositions")
-        .with_columns(propositions_str=pl.col("propositions").list.join("\n"))
+        .select("index", "propositions_to_merge")
+        .with_columns(
+            propositions_to_merge_str=pl.col("propositions_to_merge").list.join("\n")
+        )
     )
 
     prompt_sequences = [
-        _get_synthetization_prompt_sequence(row["propositions_str"])
+        _get_synthetization_prompt_sequence(row["propositions_to_merge_str"])
         for row in to_synthesize.iter_rows(named=True)
     ]
     completions, cost = llama70b.get_prompt_sequences_completions_batch(
@@ -234,7 +236,7 @@ async def whatsapp_nodes_deduplicated(
     ]
     to_synthesize = to_synthesize.with_columns(
         proposition=pl.Series(propositions),
-    ).drop("propositions_str")
+    ).drop("propositions_to_merge_str")
 
     # Embed new synthesized propositions
     cost, embeddings = await batch_embedder.get_embeddings(
@@ -274,4 +276,4 @@ async def whatsapp_nodes_deduplicated(
             context,
         )
 
-    return deduplicated_df.drop("propositions", "ids")
+    return deduplicated_df

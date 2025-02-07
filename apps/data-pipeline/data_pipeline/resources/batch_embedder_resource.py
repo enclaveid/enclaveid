@@ -2,18 +2,13 @@ import asyncio
 from typing import List, Tuple
 
 from ai_agents.embeddings.base_embedder_client import BaseEmbedderClient
-from ai_agents.embeddings.local_embedder_client import LocalEmbedderClient
-from ai_agents.embeddings.ray_cluster_embedder_client import (
-    RayClusterEmbedderClient,
-)
+from ai_agents.embeddings.deepinfra_embedder_client import DeepInfraEmbedderClient
 from dagster import (
     ConfigurableResource,
     InitResourceContext,
     get_dagster_logger,
 )
 from pydantic import PrivateAttr
-
-from data_pipeline.constants.environments import get_environment
 
 
 class BatchEmbedderResource(ConfigurableResource, BaseEmbedderClient):
@@ -25,11 +20,12 @@ class BatchEmbedderResource(ConfigurableResource, BaseEmbedderClient):
 
     def setup_for_execution(self, context: InitResourceContext) -> None:
         self._client = (
-            LocalEmbedderClient()
-            if get_environment() == "LOCAL"
-            else RayClusterEmbedderClient(
-                base_url=self.base_url, logger=get_dagster_logger()
-            )
+            DeepInfraEmbedderClient(api_key=self.api_key, logger=get_dagster_logger())
+            # LocalEmbedderClient()
+            # if get_environment() == "LOCAL"
+            # else RayClusterEmbedderClient(
+            #     base_url=self.base_url, logger=get_dagster_logger()
+            # )
         )
         # Initialize the event loop if it doesn't exist
         try:
