@@ -1,4 +1,3 @@
-import { Agent } from '../../api/chat/route';
 import { Tool, ToolSet } from 'ai';
 import { causalInferenceActions } from './causalInferenceAgent/actions';
 import { quantitativeActions } from './quantitativeAgent/actions';
@@ -28,27 +27,20 @@ export function serializeActions(actions: ToolSet): string {
     .join('\n');
 }
 
-export async function parseAndExecuteActions(rawAssistantMessage: string) {
-  // See if the message is wrapped in any kind of tags
-  const tagMatch = rawAssistantMessage.match(/<([^>]+)>([\s\S]*?)<\/\1>/);
-
-  if (!tagMatch) {
-    return {
-      actionsResults: null,
-      agent: 'nudging', // Reset to the nudging agent if no tags are found
-    };
-  }
-
-  const [fullMatch, tagName, tagContent] = tagMatch;
-
+export async function parseAndExecuteActions(
+  rawAssistantMessage: string
+): Promise<{
+  actionsResults: string | null;
+  finalResult: string | null;
+}> {
   // Extract JSON object using regex
-  const jsonMatch = tagContent.match(/\{[\s\S]*\}/);
+  const jsonMatch = rawAssistantMessage.match(/\{[\s\S]*\}/);
 
   if (!jsonMatch) {
-    // If there are no actions to execute, it means we are initializing the agent flow
+    // If there are no actions to execute, it's the final result
     return {
-      actionsResults: tagContent,
-      agent: tagName as Agent,
+      actionsResults: null,
+      finalResult: rawAssistantMessage,
     };
   }
 
@@ -86,6 +78,6 @@ export async function parseAndExecuteActions(rawAssistantMessage: string) {
 
   return {
     actionsResults: JSON.stringify(resultsRecord, null, 2),
-    agent: tagName as Agent,
+    finalResult: null,
   };
 }

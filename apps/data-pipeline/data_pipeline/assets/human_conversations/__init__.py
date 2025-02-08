@@ -10,6 +10,9 @@ from data_pipeline.assets.human_conversations.whatsapp_chunks_subgraphs import (
 from data_pipeline.assets.human_conversations.whatsapp_cross_chunk_causality import (
     whatsapp_cross_chunk_causality,
 )
+from data_pipeline.assets.human_conversations.whatsapp_dim_reduction import (
+    whatsapp_dim_reduction,
+)
 from data_pipeline.assets.human_conversations.whatsapp_hypotheses_validation import (
     whatsapp_hypotheses_validation,
 )
@@ -36,4 +39,5 @@ __all__ = [
     whatsapp_hypotheses_validation,
     whatsapp_seed_hypotheses,
     whatsapp_node_sentiments,
+    whatsapp_dim_reduction,
 ]  # type: ignore

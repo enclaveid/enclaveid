@@ -52,7 +52,6 @@ By performing this step you will be returning the interaction to the user, and t
 This step is final, you cannot go back to step 1 or step 2.
 
 When you want to perform one or multiple actions, answer with this JSON object wrapped in the tags:
-<causal_inference>
 {
   "actions": [
     {
@@ -65,7 +64,6 @@ When you want to perform one or multiple actions, answer with this JSON object w
     ...
   ]
 }
-</causal_inference>
 
 Here is the hypothesis to validate:
 `;

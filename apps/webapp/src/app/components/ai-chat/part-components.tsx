@@ -1,8 +1,44 @@
 import {
+  JSONValue,
   ReasoningUIPart,
   TextUIPart,
   ToolInvocationUIPart,
 } from '@ai-sdk/ui-utils';
+import { ChevronDown } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@enclaveid/ui/collapsible';
+
+export function IntermediateAgentActionsComponent({
+  data,
+}: {
+  data: JSONValue[] | undefined;
+}) {
+  if (!data) {
+    return null;
+  }
+
+  return (
+    <Collapsible>
+      <CollapsibleTrigger className="flex w-full items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+        <ChevronDown className="h-4 w-4" />
+        <span>Intermediate Tool Calls</span>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        {data.map((record) => (
+          <div
+            key={(record as { id: string }).id}
+            className="mt-2 text-xs text-muted-foreground pl-6"
+          >
+            {(record as { message: string }).message}
+          </div>
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 
 export function ToolInvocationPartComponent({
   toolInvocationPart,

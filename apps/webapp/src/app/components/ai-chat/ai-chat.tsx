@@ -7,66 +7,24 @@ import { cn } from '@enclaveid/ui-utils';
 import { Message, useChat } from 'ai/react';
 import { Button } from '@enclaveid/ui/button';
 import { DoubleArrowRightIcon, ReloadIcon } from '@radix-ui/react-icons';
-import { useRef, useState } from 'react';
 import { ReasoningUIPart, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
-import { ReasoningPartComponent } from './part-components';
+import {
+  IntermediateAgentActionsComponent,
+  ReasoningPartComponent,
+} from './part-components';
 import { ToolInvocationPartComponent } from './part-components';
-import { parseAndExecuteActions } from '../../services/ai/utils';
-import { Agent } from '../../api/chat/route';
 
 export function AiChat() {
-  const [performingActions, setPerformingActions] = useState(false);
-  const [lastAgent, setLastAgent] = useState<Agent | null>('nudging'); // Always start with the nudging agent
-
   const {
     messages,
     input,
     handleInputChange,
     handleSubmit,
     isLoading,
-    setMessages,
     reload,
   } = useChat({
-    maxSteps: 1,
-    body: {
-      metadata: {
-        agent: lastAgent,
-      },
-    },
-    onFinish: (message) => {
-      setPerformingActions(true);
-      parseAndExecuteActions(message.content).then(
-        ({ actionsResults, agent }) => {
-          setLastAgent(agent as Agent);
-
-          setPerformingActions(false);
-
-          if (actionsResults) {
-            setMessages((messages) => [
-              ...messages,
-              {
-                role: 'user',
-                content: actionsResults,
-                id: `action-result-${Date.now()}`,
-                parts: [],
-              },
-            ]);
-            reload({
-              body: {
-                metadata: {
-                  agent,
-                },
-              },
-            });
-          }
-        }
-      );
-    },
+    maxSteps: 2,
   });
-
-  const isWaiting = performingActions || isLoading;
-
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   return (
     <Card className="h-full w-full">
@@ -87,6 +45,8 @@ export function AiChat() {
               >
                 {m.content}
               </div>
+
+              <IntermediateAgentActionsComponent data={m.annotations} />
 
               {m.parts?.map((part, index) => {
                 const componentKey = `${m.id}-part-${index}`;
@@ -109,7 +69,7 @@ export function AiChat() {
             </div>
           ))}
 
-          {isWaiting && (
+          {isLoading && (
             <div className="mb-4 flex flex-col">
               <div className="bg-muted rounded-lg px-3 py-2 text-sm w-fit">
                 <span className="inline-flex gap-1">
@@ -132,24 +92,12 @@ export function AiChat() {
             onChange={handleInputChange}
             placeholder="Type a message..."
             className="flex-1"
-            disabled={isWaiting}
+            disabled={isLoading}
           />
-          <Button type="submit" disabled={isWaiting} ref={buttonRef}>
+          <Button type="submit" disabled={isLoading}>
             <DoubleArrowRightIcon />
           </Button>
-          <Button
-            type="button"
-            onClick={() =>
-              reload({
-                body: {
-                  metadata: {
-                    agent: lastAgent,
-                  },
-                },
-              })
-            }
-            variant="outline"
-          >
+          <Button type="button" onClick={() => reload()} variant="outline">
             <ReloadIcon />
           </Button>
         </form>
