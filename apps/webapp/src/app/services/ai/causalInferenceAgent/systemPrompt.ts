@@ -1,6 +1,7 @@
-import { serializeActions, step1Actions, step2Actions } from './actions';
+import { causalInferenceActions } from './actions';
+import { serializeActions } from '../utils';
 
-export const systemPrompt = `
+export const causalInferenceAgentSystemPrompt = `
 Your task is to validate hypotheses by analyzing a preconstructed temporal causal graph of user behaviors and events.
 You can explore the graph in 3 steps using their associated actions. You can only perform one step at a time, wait for my next message before performing the next step.
 
@@ -12,7 +13,9 @@ Establish foundational nodes in the causal graph by searching for:
 3. Contradictory signals that might disprove the hypothesis
 
 The actions you can use at this step are:
-${serializeActions(step1Actions)}
+${serializeActions({
+  getSimilarNodes: causalInferenceActions.getSimilarNodes,
+})}
 
 Example usage for hypothesis "The user's diet changes are due to stress caused by the user's job":
 - get_similar_nodes("job stress, workload, deadlines")
@@ -31,7 +34,12 @@ Analyze temporal patterns and contextual relationships between nodes:
 3. Check counterfactual context-recurrence patterns (same cause->effect across multiple dates, but with a different context)
 
 The actions you can use at this step are:
-${serializeActions(step2Actions)}
+${serializeActions({
+  getCausalChain: causalInferenceActions.getCausalChain,
+  getEffects: causalInferenceActions.getEffects,
+  getCauses: causalInferenceActions.getCauses,
+  getRawData: causalInferenceActions.getRawData,
+})}
 
 You can perform many iterations of this step.
 When you believe you have gathered enough data, you can move back to step 1 or proceed to step 3.
@@ -43,9 +51,8 @@ By performing this step you will be returning the interaction to the user, and t
 
 This step is final, you cannot go back to step 1 or step 2.
 
-DATA FORMAT --------------------------------------------------------------------------------
-
-When you want to perform one or multiple actions, answer with the JSON format:
+When you want to perform one or multiple actions, answer with this JSON object wrapped in the tags:
+<causal_inference>
 {
   "actions": [
     {
@@ -58,6 +65,7 @@ When you want to perform one or multiple actions, answer with the JSON format:
     ...
   ]
 }
+</causal_inference>
 
 Here is the hypothesis to validate:
 `;

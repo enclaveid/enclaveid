@@ -113,9 +113,7 @@ def whatsapp_hypotheses_validation(
                             G, node_id1, node_id2
                         ),
                         get_causes=lambda node_id: get_parents(G, node_id),
-                        get_effects=lambda node_id, depth: get_children(
-                            G, node_id, depth
-                        ),
+                        get_effects=lambda node_id: get_children(G, node_id),
                         get_raw_data=lambda node_id: get_raw_data(
                             whatsapp_nodes_deduplicated,
                             whatsapp_chunks_subgraphs,

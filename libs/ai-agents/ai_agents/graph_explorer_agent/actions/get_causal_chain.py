@@ -51,7 +51,6 @@ def get_causal_chain(
     """
 
     try:
-        print(node_id, target_node_id)
         node_ids = nx.shortest_path(G, node_id, target_node_id)
 
     except nx.NetworkXNoPath:
@@ -70,7 +69,7 @@ def get_causal_chain(
         record = AdjacencyListRecord(
             id=node_id,
             description=node_data.get("description", ""),
-            datetime=node_data.get("datetime", None),
+            datetime=get_node_datetime(node_data.get("datetime", [])),
             frequency=node_data.get("frequency", 1),
             # parents_count=len(list(G.predecessors(node_id))),
             # children_count=len(list(G.successors(node_id))),

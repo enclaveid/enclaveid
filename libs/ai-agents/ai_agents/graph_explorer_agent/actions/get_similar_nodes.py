@@ -6,6 +6,7 @@ import networkx as nx
 import numpy as np
 
 from ai_agents.embeddings.base_embedder_client import BaseEmbedderClient
+from ai_agents.graph_explorer_agent.utils.get_node_datetime import get_node_datetime
 
 from ..types import AdjacencyList, AdjacencyListRecord
 
@@ -64,7 +65,7 @@ async def get_similar_nodes(
             record = AdjacencyListRecord(
                 id=node_id,
                 description=node_data.get("description", ""),
-                datetime=node_data.get("datetime", None),
+                datetime=get_node_datetime(node_data.get("datetime", [])),
                 frequency=node_data.get("frequency", 1),
                 # parents_count=len(list(G.predecessors(node_id))),
                 # children_count=len(list(G.successors(node_id))),

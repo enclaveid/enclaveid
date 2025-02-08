@@ -1,27 +1,23 @@
 import { streamText } from 'ai';
-import { openRouterAi } from '../../services/ai/openRouterAi';
-import { LanguageModelV1 } from '@ai-sdk/provider';
-import { systemPrompt } from '../../services/ai/causalInferenceAgent/systemPrompt';
-// Allow streaming responses up to 30 seconds
-export const maxDuration = 30;
+
+import { quantitativeAgentConfig } from '../../services/ai/quantitativeAgent/agentConfig';
+import { causalInferenceAgentConfig } from '../../services/ai/causalInferenceAgent/agentConfig';
+import { nudgingAgentConfig } from '../../services/ai/nudgingAgent/agentConfig';
+
+export type Agent = 'nudging' | 'causal_inference' | 'quantitative_analysis';
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const { messages, metadata } = await req.json();
 
-  const result = streamText({
-    model: openRouterAi(
-      //'google/gemini-2.0-flash-thinking-exp:free'
-      'deepseek/deepseek-r1'
-      //'google/gemini-2.0-flash-001'
-      //'anthropic/claude-3.5-sonnet'
-    ) as LanguageModelV1,
-    messages,
-    maxTokens: 8192,
-    system: systemPrompt,
-    // TODO: tool use is a bit broken atm
-    // tools: [...actions]
-  });
+  const agentConfig = {
+    nudging: nudgingAgentConfig,
+    causal_inference: causalInferenceAgentConfig,
+    quantitative_analysis: quantitativeAgentConfig,
+  }[metadata.agent as Agent];
 
+  const result = streamText({ ...agentConfig, messages });
+
+  // If no markup, return the stream response as normal
   return result.toDataStreamResponse({
     sendReasoning: true,
   });

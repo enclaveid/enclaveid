@@ -2,12 +2,12 @@ from typing import Literal
 
 import networkx as nx
 
-from ..types import AdjacencyList, AdjacencyListRecord
-from ..utils.get_node_datetime import get_node_datetime
+from ai_agents.graph_explorer_agent.types import AdjacencyList, AdjacencyListRecord
+from ai_agents.graph_explorer_agent.utils.get_node_datetime import get_node_datetime
 
 
-def get_children(graph: nx.DiGraph, node_id: str, depth: int = 1) -> AdjacencyList:
-    return _get_relatives(graph, node_id, mode="out", depth=depth)
+def get_children(graph: nx.DiGraph, node_id: str) -> AdjacencyList:
+    return _get_relatives(graph, node_id, mode="out")
 
 
 def get_parents(graph: nx.DiGraph, node_id: str) -> AdjacencyList:
@@ -15,16 +15,16 @@ def get_parents(graph: nx.DiGraph, node_id: str) -> AdjacencyList:
 
 
 def _get_relatives(
-    graph: nx.DiGraph, node_id: str, mode: Literal["in", "out"] = "out", depth: int = 1
+    graph: nx.DiGraph, node_id: str, mode: Literal["in", "out"] = "out"
 ) -> AdjacencyList:
     if node_id not in graph:
         return []  # Return empty list if node not found
 
     # Get all ancestors/descendants up to specified depth
     if mode == "out":
-        relatives = nx.descendants_at_distance(graph, node_id, depth)
+        relatives = graph.successors(node_id)
     else:
-        relatives = nx.ancestors(graph, node_id)
+        relatives = graph.predecessors(node_id)
 
     result: AdjacencyList = []
 
@@ -33,10 +33,10 @@ def _get_relatives(
         record = AdjacencyListRecord(
             id=rel_id,
             description=graph.nodes(data=True)[rel_id].get("description", ""),
-            datetime=graph.nodes(data=True)[rel_id].get("datetime", None),
+            datetime=get_node_datetime(
+                graph.nodes(data=True)[rel_id].get("datetime", [])
+            ),
             frequency=graph.nodes(data=True)[rel_id].get("frequency", 1),
-            # parents_count=len(list(graph.predecessors(rel_id))),
-            # children_count=len(list(graph.successors(rel_id))),
         )
 
         result.append(record)
@@ -47,7 +47,7 @@ def _get_relatives(
 if __name__ == "__main__":
     import polars as pl
 
-    filename = "/Users/ma9o/Desktop/enclaveid/apps/data-pipeline/data/dagster/whatsapp_nodes_deduplicated/cm0i27jdj0000aqpa73ghpcxf.snappy"
+    filename = "/Users/ma9o/Desktop/enclaveid/apps/data-pipeline/data/dagster/whatsapp_nodes_deduplicated/00393494197577/0034689896443.snappy"
     df = pl.read_parquet(filename)
 
     G = nx.DiGraph()
@@ -62,4 +62,4 @@ if __name__ == "__main__":
         )
         G.add_edges_from([(row["id"], e) for e in row["edges"]])
 
-    print(get_children(G, "frequent_check_ins", 1))
+    print(len(get_children(G, "Relationship_Problems")))

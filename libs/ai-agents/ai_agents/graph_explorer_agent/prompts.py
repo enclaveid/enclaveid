@@ -37,7 +37,7 @@ Analyze temporal patterns and contextual relationships between nodes:
 
 The actions you can use at this step are:
 - `get_causal_chain(node_id1: str, node_id2: str) -> AdjacencyList`: Get the causal chain between two nodes. If no causal chain is found, it will return the closest one.
-- `get_effects(node_id: str, depth: int) -> AdjacencyList`: Explore the immediate (if depth=1) or indirect (if depth>1) effects of the current node, with their metadata properties.
+- `get_effects(node_id: str) -> AdjacencyList`: Explore the immediate effects of the current node, with their metadata properties.
 - `get_causes(node_id: str) -> AdjacencyList`: Explore the immediate causes of the current node, with their metadata properties.
 - `get_raw_data(node_id: str) -> str`: Get the raw data underlying the propostion of the given node. Use this action to assess the strenght of the proposition.
 

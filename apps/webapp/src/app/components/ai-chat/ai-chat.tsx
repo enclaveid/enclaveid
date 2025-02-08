@@ -6,14 +6,18 @@ import { ScrollArea } from '@enclaveid/ui/scroll-area';
 import { cn } from '@enclaveid/ui-utils';
 import { Message, useChat } from 'ai/react';
 import { Button } from '@enclaveid/ui/button';
-import { DoubleArrowRightIcon } from '@radix-ui/react-icons';
-import { useRef } from 'react';
+import { DoubleArrowRightIcon, ReloadIcon } from '@radix-ui/react-icons';
+import { useRef, useState } from 'react';
 import { ReasoningUIPart, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import { ReasoningPartComponent } from './part-components';
 import { ToolInvocationPartComponent } from './part-components';
-import { useExecActions } from './useExecActions';
+import { parseAndExecuteActions } from '../../services/ai/utils';
+import { Agent } from '../../api/chat/route';
 
 export function AiChat() {
+  const [performingActions, setPerformingActions] = useState(false);
+  const [lastAgent, setLastAgent] = useState<Agent | null>('nudging'); // Always start with the nudging agent
+
   const {
     messages,
     input,
@@ -24,21 +28,50 @@ export function AiChat() {
     reload,
   } = useChat({
     maxSteps: 1,
+    body: {
+      metadata: {
+        agent: lastAgent,
+      },
+    },
+    onFinish: (message) => {
+      setPerformingActions(true);
+      parseAndExecuteActions(message.content).then(
+        ({ actionsResults, agent }) => {
+          setLastAgent(agent as Agent);
+
+          setPerformingActions(false);
+
+          if (actionsResults) {
+            setMessages((messages) => [
+              ...messages,
+              {
+                role: 'user',
+                content: actionsResults,
+                id: `action-result-${Date.now()}`,
+                parts: [],
+              },
+            ]);
+            reload({
+              body: {
+                metadata: {
+                  agent,
+                },
+              },
+            });
+          }
+        }
+      );
+    },
   });
+
+  const isWaiting = performingActions || isLoading;
 
   const buttonRef = useRef<HTMLButtonElement>(null);
-
-  const { isWaiting } = useExecActions({
-    messages,
-    isLoading,
-    setMessages,
-    reload,
-  });
 
   return (
     <Card className="h-full w-full">
       <CardContent className="flex flex-col gap-4 p-4 h-full">
-        <ScrollArea className="flex-1 pr-4 overflow-y-auto">
+        <ScrollArea className="h-[600px] pr-4 overflow-y-auto">
           {messages?.map((m: Message) => (
             <div
               key={m.id}
@@ -103,6 +136,21 @@ export function AiChat() {
           />
           <Button type="submit" disabled={isWaiting} ref={buttonRef}>
             <DoubleArrowRightIcon />
+          </Button>
+          <Button
+            type="button"
+            onClick={() =>
+              reload({
+                body: {
+                  metadata: {
+                    agent: lastAgent,
+                  },
+                },
+              })
+            }
+            variant="outline"
+          >
+            <ReloadIcon />
           </Button>
         </form>
       </CardContent>

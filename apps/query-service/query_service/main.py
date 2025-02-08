@@ -1,6 +1,7 @@
 from .pre_init import pre_init  # noqa: I001
 
 from typing import Tuple
+import logging
 
 import networkx as nx
 import polars as pl
@@ -20,7 +21,7 @@ import asyncio
 from .dependencies import get_embedder_client, get_graph_df, get_raw_data_df
 
 
-class SimilarNodesRequest(BaseModel):
+class QueryRequest(BaseModel):
     query: str
 
 
@@ -31,11 +32,6 @@ class CausalChainRequest(BaseModel):
 
 class NodeRequest(BaseModel):
     node_id: str
-
-
-class ChildrenRequest(BaseModel):
-    node_id: str
-    depth: int
 
 
 pre_init()
@@ -54,10 +50,13 @@ app.add_middleware(
 # TODO: this is just for dev
 similar_nodes_semaphore = asyncio.Semaphore(1)
 
+# Get the logger
+logger = logging.getLogger(__name__)
+
 
 @app.post("/similar_nodes")
 async def similar_nodes(
-    request: SimilarNodesRequest,
+    request: QueryRequest,
     graph_and_df: Tuple[nx.DiGraph, pl.DataFrame] = Depends(get_graph_df),
     embedder_client: BaseEmbedderClient = Depends(get_embedder_client),
 ):
@@ -104,13 +103,13 @@ async def parents(
 
 @app.post("/children")
 async def children(
-    request: ChildrenRequest,
+    request: NodeRequest,
     graph_and_df: Tuple[nx.DiGraph, pl.DataFrame] = Depends(get_graph_df),
 ):
-    """Get child nodes up to specified depth."""
+    """Get child nodes."""
     try:
         G, _ = graph_and_df
-        return get_children(G, request.node_id, request.depth)
+        return get_children(G, request.node_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -126,6 +125,26 @@ async def raw_data(
         _, nodes_df = graph_and_df
         return get_raw_data(nodes_df, raw_data_df, request.node_id)
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/sql_query")
+async def sql_query(
+    request: QueryRequest,
+    graph_and_df: Tuple[nx.DiGraph, pl.DataFrame] = Depends(get_graph_df),
+    raw_data_df: pl.DataFrame = Depends(get_raw_data_df),
+):
+    """Execute a query on the database using plain SQL (ANSI/ISO standard)."""
+    try:
+        _, nodes_df = graph_and_df
+        return (
+            pl.SQLContext(frames={"nodes_df": nodes_df, "raw_data_df": raw_data_df})
+            .execute(request.query, eager=True)
+            .unique()
+            .to_dicts()
+        )
+    except Exception as e:
+        logger.error(f"SQL Query Error - Query: {request.query}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
