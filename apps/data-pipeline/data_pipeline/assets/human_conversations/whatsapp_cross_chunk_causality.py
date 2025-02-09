@@ -120,14 +120,14 @@ class WhatsappCrossChunkCausalityConfig(RowLimitConfig):
     partitions_def=multi_phone_number_partitions_def,
     io_manager_key="parquet_io_manager",
     ins={
-        "whatsapp_chunks_subgraphs": AssetIn(
-            key=["whatsapp_chunks_subgraphs"],
+        "whatsapp_subgraphs_sanitized": AssetIn(
+            key=["whatsapp_subgraphs_sanitized"],
         ),
     },
 )
 def whatsapp_cross_chunk_causality(
     context: AssetExecutionContext,
-    whatsapp_chunks_subgraphs: pl.DataFrame,
+    whatsapp_subgraphs_sanitized: pl.DataFrame,
     llama70b: BaseLlmResource,
     config: WhatsappCrossChunkCausalityConfig,
 ) -> pl.DataFrame:
@@ -135,15 +135,7 @@ def whatsapp_cross_chunk_causality(
     Determine the causality between chunks.
     """
     llm = llama70b
-    df = (
-        whatsapp_chunks_subgraphs.with_columns(
-            subgraph_combined=pl.concat_list(
-                ["subgraph_attributes", "subgraph_context", "subgraph_meta"]
-            )
-        )
-        .sort("chunk_id")
-        .slice(0, config.row_limit)
-    )
+    df = whatsapp_subgraphs_sanitized.sort("chunk_id").slice(0, config.row_limit)
 
     # Get comparions pairs for each chunk based on these constraints:
     max_time_range = pl.duration(days=7)

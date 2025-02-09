@@ -1,6 +1,9 @@
+from typing import List
+
 import polars as pl
 from dagster import AssetExecutionContext, AssetIn, asset
 from json_repair import repair_json
+from pydantic import BaseModel, Field
 
 from data_pipeline.constants.custom_config import RowLimitConfig
 from data_pipeline.constants.environments import get_environment
@@ -15,19 +18,28 @@ from data_pipeline.utils.prompt_sequences.inferrables_extraction import (
 )
 
 
+class SubgraphNode(BaseModel):
+    id: str
+    datetime: str
+    proposition: str
+    caused_by: List[str] = Field(default_factory=list)
+    caused: List[str] = Field(default_factory=list)
+    subgraph_type: str
+
+
 def parse_subgraphs(response: str, subgraph_type: str) -> list[dict] | None:
     try:
         res = repair_json(response, return_objects=True)
         if isinstance(res, list):
             return [
-                {
-                    "id": node.get("id", None),
-                    "datetime": node.get("datetime", None),
-                    "proposition": node.get("proposition", None),
-                    "caused_by": node.get("caused_by", []),
-                    "caused": node.get("caused", []),
-                    "subgraph_type": subgraph_type,
-                }
+                SubgraphNode(
+                    id=node["id"],
+                    datetime=node["datetime"],
+                    proposition=node["proposition"],
+                    caused_by=node.get("caused_by", []),
+                    caused=node.get("caused", []),
+                    subgraph_type=subgraph_type,
+                ).model_dump()
                 for node in res
             ]
         else:

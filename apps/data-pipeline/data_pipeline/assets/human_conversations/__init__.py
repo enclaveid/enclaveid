@@ -34,6 +34,9 @@ from data_pipeline.assets.human_conversations.whatsapp_out_nodes import (
 from data_pipeline.assets.human_conversations.whatsapp_seed_hypotheses import (
     whatsapp_seed_hypotheses,
 )
+from data_pipeline.assets.human_conversations.whatsapp_subgraphs_sanitized import (
+    whatsapp_subgraphs_sanitized,
+)
 
 __all__ = [
     whatsapp_chunks_sequential,
@@ -48,4 +51,5 @@ __all__ = [
     whatsapp_out_chunks,
     whatsapp_out_nodes,
     whatsapp_chunk_embeddings,
+    whatsapp_subgraphs_sanitized,
 ]  # type: ignore

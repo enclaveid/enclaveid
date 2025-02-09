@@ -1,5 +1,3 @@
-from data_pipeline.pre_init import pre_init  # noqa: I001
-
 from typing import Any
 
 from dagster import (
@@ -11,6 +9,7 @@ from dagster import (
 from data_pipeline import assets
 from data_pipeline.assets import human_conversations
 from data_pipeline.assets.ai_conversations import graph, plain
+from data_pipeline.pre_init import pre_init  # noqa: I001
 from data_pipeline.sensors.inputs_sensor import inputs_sensor
 from data_pipeline.sensors.outputs_sensor import outputs_sensor
 from data_pipeline.utils.feature_flags import (
