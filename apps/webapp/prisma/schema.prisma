@@ -13,17 +13,34 @@ datasource db {
 
 model User {
   id    String  @id @default(cuid())
-  email String? @unique
+  email String  @unique
   name  String?
 
   apiKeys          ApiKey[]
-  causalGraphNodes CausalGraphNode[]
+  phoneNumbers     PhoneNumber[]
+  causalGraphNodes CausalGraphNode[] @relation("CausalGraphNodeToUser")
 
   // Auth.js fields
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PhoneNumber {
+  id String @id @default(cuid())
+
+  phoneNumber      String    @unique
+  verificationCode String?
+  verifiedAt       DateTime?
+
+  rawDataChunks RawDataChunk[] @relation("PhoneNumberToRawDataChunk")
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -53,18 +70,15 @@ model WhitelistedEmail {
 model CausalGraphNode {
   id String @id @default(cuid())
 
-  nodeLabel          String
-  proposition        String
-  propositionSubject String
-  edges              String[]
-  datetimes          DateTime[]
-  sentiment          Float
-  embedding          Unsupported("vector(2000)")
+  nodeLabel   String                      @unique
+  proposition String
+  edges       String[]
+  datetimes   DateTime[]
+  sentiment   Float
+  embedding   Unsupported("vector(2000)")
 
-  rawDataChunks RawDataChunk[] @relation("CausalGraphNodeToRawDataChunk")
-
-  user   User   @relation(fields: [userId], references: [id])
-  userId String
+  rawDataChunks       RawDataChunk[] @relation("CausalGraphNodeToRawDataChunk")
+  propositionSubjects User[]         @relation("CausalGraphNodeToUser")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -73,7 +87,7 @@ model CausalGraphNode {
 model RawDataChunk {
   id String @id @default(cuid())
 
-  chunkNumber  Int
+  chunkNumber  Int                         @unique
   fromDatetime DateTime
   toDatetime   DateTime
   sentiment    Float
@@ -81,6 +95,7 @@ model RawDataChunk {
   embedding    Unsupported("vector(2000)")
 
   causalGraphNodes CausalGraphNode[] @relation("CausalGraphNodeToRawDataChunk")
+  phoneNumbers     PhoneNumber[]     @relation("PhoneNumberToRawDataChunk")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

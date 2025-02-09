@@ -1,30 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadPipelineResults } from '../../services/azure/loadPipelineResult';
 import { readParquet } from '../../services/readParquet';
-import { DataframeRow, saveDataframe } from '../../services/db/saveDataframe';
+import { saveDataframes } from '../../services/db/saveDataframes';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await request.json();
+    const { initiatorPhoneNumber, partnerPhoneNumber } = await request.json();
 
-    if (!userId) {
+    if (!initiatorPhoneNumber || !partnerPhoneNumber) {
       return NextResponse.json(
-        { error: 'userId is required' },
+        { error: 'initiatorPhoneNumber and partnerPhoneNumber are required' },
         { status: 400 }
       );
     }
 
     const blobNames = [
-      `/dagster/speculatives_substantiation/${userId}.snappy`,
-      
-    ]
+      `/dagster/whatsapp_out_chunks/${initiatorPhoneNumber}/${partnerPhoneNumber}.snappy`,
+      `/dagster/whatsapp_out_nodes/${initiatorPhoneNumber}/${partnerPhoneNumber}.snappy`,
+    ];
 
+    const [outChunks, outNodes] = await Promise.all(
+      blobNames.map(async (blobName) => {
+        const data = await loadPipelineResults(blobName);
+        return await readParquet(data);
+      })
+    );
 
-    const parquetData = await loadPipelineResults(blobName).then((data) => {
-      return readParquet(data);
-    });
-
-    await saveDataframe(userId, parquetData as DataframeRow[]);
+    await saveDataframes(
+      [initiatorPhoneNumber, partnerPhoneNumber],
+      outChunks,
+      outNodes
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {
