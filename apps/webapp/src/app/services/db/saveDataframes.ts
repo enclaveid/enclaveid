@@ -10,7 +10,7 @@ export interface OutChunksRow {
 }
 
 export interface OutNodesRow {
-  id: string; // nodeLabel, might have a "row[0-9]+_" prefix that should be removed
+  id: string; // nodeLabel, might have a "rowxxx_" prefix that should be removed
   user: string; // propositionSubject (e.g. "Alice", "Bob", or "both")
   proposition: string;
   chunk_ids: bigint[];
@@ -21,9 +21,12 @@ export interface OutNodesRow {
   reduced_embedding: bigint[];
 }
 
-// Helper function to remove row[0-9]+_ prefix from any id.
+// Helper function to remove row prefix from any id if it starts with "row" followed by numbers and underscore
 const cleanNodeId = (nodeId: string): string => {
-  return nodeId.replace(/^row[0-9]+_/, '');
+  if (nodeId.match(/^row\d+_/)) {
+    return nodeId.replace(/^row/, '');
+  }
+  return nodeId;
 };
 
 // TODO: slow as shit. find a proper ORM that supports pgvector + bulk upserts.
