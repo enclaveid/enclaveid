@@ -69,5 +69,11 @@ async def whatsapp_node_sentiments(
     ]
 
     return df.with_columns(
-        pl.Series(name="sentiment", values=sentiments).fill_nan(0).fill_null(0)
+        pl.Series(
+            name="sentiment",
+            values=sentiments,
+            dtype=pl.Float64,
+        )
+        .fill_nan(0)
+        .fill_null(0)
     )

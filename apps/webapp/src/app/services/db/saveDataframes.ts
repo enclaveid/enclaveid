@@ -10,16 +10,21 @@ export interface OutChunksRow {
 }
 
 export interface OutNodesRow {
-  id: string; // nodeLabel
+  id: string; // nodeLabel, might have a "row[0-9]+_" prefix that should be removed
   user: string; // propositionSubject (e.g. "Alice", "Bob", or "both")
   proposition: string;
   chunk_ids: bigint[];
   datetimes: string[];
   frequency: bigint;
-  edges: string[];
+  edges: string[]; // edges reference node ids that might also have a "row[0-9]+_" prefix.
   sentiment: bigint;
   reduced_embedding: bigint[];
 }
+
+// Helper function to remove row[0-9]+_ prefix from any id.
+const cleanNodeId = (nodeId: string): string => {
+  return nodeId.replace(/^row[0-9]+_/, '');
+};
 
 // TODO: slow as shit. find a proper ORM that supports pgvector + bulk upserts.
 export async function saveDataframes(
@@ -84,9 +89,10 @@ export async function saveDataframes(
       // 4) CREATE MANY CausalGraphNode for outNodes (skip duplicates on nodeLabel)
       await tx.causalGraphNode.createMany({
         data: outNodes.map((node) => ({
-          nodeLabel: node.id,
+          nodeLabel: cleanNodeId(node.id),
           proposition: node.proposition,
-          edges: node.edges,
+          // Clean all edges references by removing the unwanted prefix
+          edges: node.edges.map(cleanNodeId),
           sentiment: Number(node.sentiment),
           datetimes: node.datetimes.map((dt) => new Date(dt)),
           frequency: Number(node.frequency),
@@ -117,10 +123,10 @@ export async function saveDataframes(
 
         // (a) Update the node to set scalars & connect relevant rawDataChunks + users
         await tx.causalGraphNode.update({
-          where: { nodeLabel: node.id },
+          where: { nodeLabel: cleanNodeId(node.id) },
           data: {
             proposition: node.proposition,
-            edges: node.edges,
+            edges: node.edges.map(cleanNodeId),
             sentiment: Number(node.sentiment),
             frequency: Number(node.frequency),
             datetimes: node.datetimes.map((dt) => new Date(dt)),
@@ -140,7 +146,7 @@ export async function saveDataframes(
         await tx.$executeRawUnsafe(`
           UPDATE "CausalGraphNode"
           SET "embedding" = (${nodeEmbedding})::vector
-          WHERE "nodeLabel" = '${node.id}'
+          WHERE "nodeLabel" = '${cleanNodeId(node.id)}'
         `);
       }
     });
