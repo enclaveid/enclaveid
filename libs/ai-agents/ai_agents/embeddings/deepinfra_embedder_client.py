@@ -16,7 +16,7 @@ class DeepInfraEmbedderClient(BaseEmbedderClient):
 
     _cost_per_token = 0.0100 / 1_000_000
 
-    _timeout: int = 60
+    _timeout: int = 60 * 5
     _max_connections: int = 50
     _max_retries: int = 3
     _last_log_time: float = 0

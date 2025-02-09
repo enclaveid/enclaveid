@@ -55,8 +55,6 @@ class BatchEmbedderResource(ConfigurableResource, BaseEmbedderClient):
             kwargs = {}
             if gpu_batch_size is not None:
                 kwargs["gpu_batch_size"] = gpu_batch_size
-                # The API batch size should be at least as large as the GPU batch size
-                kwargs["api_batch_size"] = gpu_batch_size
 
             if api_batch_size is not None:
                 kwargs["api_batch_size"] = api_batch_size

@@ -14,7 +14,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const blobName = `/dagster/speculatives_substantiation/${userId}.snappy`;
+    const blobNames = [
+      `/dagster/speculatives_substantiation/${userId}.snappy`,
+      
+    ]
+
+
     const parquetData = await loadPipelineResults(blobName).then((data) => {
       return readParquet(data);
     });
