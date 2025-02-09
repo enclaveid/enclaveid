@@ -1,12 +1,14 @@
 generator client {
-  provider      = "prisma-client-js"
+  provider        = "prisma-client-js"
   // One for local dev, one for nodejs docker
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model User {
@@ -14,10 +16,8 @@ model User {
   email String? @unique
   name  String?
 
-  phoneNumbers PhoneNumber[]
-
-  claimCategories ClaimCategory[]
-  apiKeys         ApiKey[]
+  apiKeys          ApiKey[]
+  causalGraphNodes CausalGraphNode[]
 
   // Auth.js fields
   emailVerified DateTime?
@@ -27,17 +27,6 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model PhoneNumber {
-  id String @id @default(cuid())
-
-  phoneNumber      String    @unique
-  verificationCode String?
-  verifiedAt       DateTime?
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
 }
 
 model ApiKey {
@@ -60,44 +49,41 @@ model WhitelistedEmail {
   updatedAt DateTime @updatedAt
 }
 
-enum NodeType {
-  observable
-  inferrable
-  speculative
-}
-
-model UserClaim {
+// -------------------- Query service models --------------------
+model CausalGraphNode {
   id String @id @default(cuid())
 
-  label          String
-  description    String
-  nodeType       NodeType
-  conversationId String
-  frequency      Int
+  nodeLabel          String
+  proposition        String
+  propositionSubject String
+  edges              String[]
+  datetimes          DateTime[]
+  sentiment          Float
+  embedding          Unsupported("vector(2000)")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  rawDataChunks RawDataChunk[] @relation("CausalGraphNodeToRawDataChunk")
 
-  claimCategory   ClaimCategory @relation(fields: [claimCategoryId], references: [id], onDelete: Cascade)
-  claimCategoryId String
-}
-
-model ClaimCategory {
-  id String @id @default(cuid())
-
-  name         String
-  clusterLabel Int
-  isPersonal   Boolean
-
-  userClaims UserClaim[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
   userId String
 
-  @@unique([userId, clusterLabel])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RawDataChunk {
+  id String @id @default(cuid())
+
+  chunkNumber  Int
+  fromDatetime DateTime
+  toDatetime   DateTime
+  sentiment    Float
+  rawData      String
+  embedding    Unsupported("vector(2000)")
+
+  causalGraphNodes CausalGraphNode[] @relation("CausalGraphNodeToRawDataChunk")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // -------------------- Auth.js models --------------------

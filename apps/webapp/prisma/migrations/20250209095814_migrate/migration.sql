@@ -1,10 +1,10 @@
--- CreateEnum
-CREATE TYPE "NodeType" AS ENUM ('observable', 'inferrable', 'speculative');
+-- CreateExtension
+CREATE EXTENSION IF NOT EXISTS "vector";
 
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
+    "email" TEXT,
     "name" TEXT,
     "emailVerified" TIMESTAMP(3),
     "image" TEXT,
@@ -12,6 +12,17 @@ CREATE TABLE "User" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PhoneNumber" (
+    "id" TEXT NOT NULL,
+    "phoneNumber" TEXT,
+    "verificationCode" TEXT,
+    "verifiedAt" TIMESTAMP(3),
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "PhoneNumber_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -36,31 +47,34 @@ CREATE TABLE "WhitelistedEmail" (
 );
 
 -- CreateTable
-CREATE TABLE "UserClaim" (
+CREATE TABLE "CausalGraphNode" (
     "id" TEXT NOT NULL,
-    "label" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "nodeType" "NodeType" NOT NULL,
-    "conversationId" TEXT NOT NULL,
-    "frequency" INTEGER NOT NULL,
+    "nodeLabel" TEXT NOT NULL,
+    "proposition" TEXT NOT NULL,
+    "edges" TEXT[],
+    "datetimes" TIMESTAMP(3)[],
+    "sentiment" DOUBLE PRECISION NOT NULL,
+    "embedding" vector(2000) NOT NULL,
+    "userId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "claimCategoryId" TEXT NOT NULL,
 
-    CONSTRAINT "UserClaim_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "CausalGraphNode_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "ClaimCategory" (
+CREATE TABLE "RawDataChunk" (
     "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "clusterLabel" INTEGER NOT NULL,
-    "isPersonal" BOOLEAN NOT NULL,
+    "chunkNumber" INTEGER NOT NULL,
+    "fromDatetime" TIMESTAMP(3) NOT NULL,
+    "toDatetime" TIMESTAMP(3) NOT NULL,
+    "sentiment" DOUBLE PRECISION NOT NULL,
+    "embedding" vector(2000) NOT NULL,
+    "rawData" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "userId" TEXT,
 
-    CONSTRAINT "ClaimCategory_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "RawDataChunk_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -100,6 +114,14 @@ CREATE TABLE "VerificationToken" (
     CONSTRAINT "VerificationToken_pkey" PRIMARY KEY ("identifier","token")
 );
 
+-- CreateTable
+CREATE TABLE "_CausalGraphNodeToRawDataChunk" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL,
+
+    CONSTRAINT "_CausalGraphNodeToRawDataChunk_AB_pkey" PRIMARY KEY ("A","B")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -110,22 +132,28 @@ CREATE UNIQUE INDEX "ApiKey_key_key" ON "ApiKey"("key");
 CREATE UNIQUE INDEX "WhitelistedEmail_email_key" ON "WhitelistedEmail"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ClaimCategory_userId_clusterLabel_key" ON "ClaimCategory"("userId", "clusterLabel");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
 
--- AddForeignKey
-ALTER TABLE "ApiKey" ADD CONSTRAINT "ApiKey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "_CausalGraphNodeToRawDataChunk_B_index" ON "_CausalGraphNodeToRawDataChunk"("B");
 
 -- AddForeignKey
-ALTER TABLE "UserClaim" ADD CONSTRAINT "UserClaim_claimCategoryId_fkey" FOREIGN KEY ("claimCategoryId") REFERENCES "ClaimCategory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "PhoneNumber" ADD CONSTRAINT "PhoneNumber_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ClaimCategory" ADD CONSTRAINT "ClaimCategory_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ApiKey" ADD CONSTRAINT "ApiKey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CausalGraphNode" ADD CONSTRAINT "CausalGraphNode_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_CausalGraphNodeToRawDataChunk" ADD CONSTRAINT "_CausalGraphNodeToRawDataChunk_A_fkey" FOREIGN KEY ("A") REFERENCES "CausalGraphNode"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_CausalGraphNodeToRawDataChunk" ADD CONSTRAINT "_CausalGraphNodeToRawDataChunk_B_fkey" FOREIGN KEY ("B") REFERENCES "RawDataChunk"("id") ON DELETE CASCADE ON UPDATE CASCADE;

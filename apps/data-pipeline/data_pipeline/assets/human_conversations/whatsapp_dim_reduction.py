@@ -12,7 +12,7 @@ from data_pipeline.utils.get_working_dir import get_working_dir
 class WhatsappDimReductionConfig(Config):
     max_components: int = Field(
         default=2000,
-        description="The maximum number of components to reduce the embeddings to.",
+        description="The maximum number of components to reduce the embeddings to (pgvector max)",
     )
 
 
@@ -31,7 +31,7 @@ def whatsapp_dim_reduction(
     config: WhatsappDimReductionConfig,
 ):
     # Convert embeddings to numpy array
-    embeddings = np.stack(whatsapp_node_sentiments["embedding"].to_numpy())
+    embeddings = np.stack(whatsapp_node_sentiments["embedding"].to_list())
 
     reducer = PCA(
         n_components=min(config.max_components, embeddings.shape[0]),
@@ -40,6 +40,7 @@ def whatsapp_dim_reduction(
     )
     reduced_embeddings = reducer.fit_transform(embeddings)
 
+    # Save the reducer for RAG
     working_dir = get_working_dir(context)
     working_dir.mkdir(parents=True, exist_ok=True)
     joblib.dump(reducer, working_dir / f"{context.partition_key}.reducer.joblib")

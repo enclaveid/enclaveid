@@ -38,10 +38,10 @@
     "prisma-resolve": {
       "executor": "@nx-tools/nx-prisma:resolve"
     },
-    "prisma-seed": {
+    "prisma-post-migrate": {
       "executor": "@nx-tools/nx-prisma:seed",
       "options": {
-        "script": "apps/webapp/prisma/seed.ts"
+        "script": "apps/webapp/prisma/postMigrate.ts"
       }
     },
     "prisma-status": {
