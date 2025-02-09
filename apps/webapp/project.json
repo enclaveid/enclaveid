@@ -52,6 +52,18 @@
     },
     "prisma-validate": {
       "executor": "@nx-tools/nx-prisma:validate"
+    },
+    "prisma-nuke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/webapp",
+        "commands": [
+          "rm -rf prisma/migrations",
+          "yes | nx run webapp:prisma-migrate",
+          "cd ../.. && nx run webapp:prisma-post-migrate"
+        ],
+        "parallel": false
+      }
     }
   }
 }

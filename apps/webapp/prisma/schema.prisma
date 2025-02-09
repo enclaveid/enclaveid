@@ -70,12 +70,13 @@ model WhitelistedEmail {
 model CausalGraphNode {
   id String @id @default(cuid())
 
-  nodeLabel   String                      @unique
+  nodeLabel   String                       @unique
   proposition String
+  frequency   Int                          @default(1)
   edges       String[]
   datetimes   DateTime[]
   sentiment   Float
-  embedding   Unsupported("vector(2000)")
+  embedding   Unsupported("vector(2000)")? // Need to keep optional bc of prisma bullshit...
 
   rawDataChunks       RawDataChunk[] @relation("CausalGraphNodeToRawDataChunk")
   propositionSubjects User[]         @relation("CausalGraphNodeToUser")
@@ -87,12 +88,12 @@ model CausalGraphNode {
 model RawDataChunk {
   id String @id @default(cuid())
 
-  chunkNumber  Int                         @unique
+  chunkNumber  Int                          @unique
   fromDatetime DateTime
   toDatetime   DateTime
   sentiment    Float
   rawData      String
-  embedding    Unsupported("vector(2000)")
+  embedding    Unsupported("vector(2000)")? // Need to keep optional bc of prisma bullshit...
 
   causalGraphNodes CausalGraphNode[] @relation("CausalGraphNodeToRawDataChunk")
   phoneNumbers     PhoneNumber[]     @relation("PhoneNumberToRawDataChunk")

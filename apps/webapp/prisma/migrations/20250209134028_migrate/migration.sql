@@ -53,10 +53,11 @@ CREATE TABLE "CausalGraphNode" (
     "id" TEXT NOT NULL,
     "nodeLabel" TEXT NOT NULL,
     "proposition" TEXT NOT NULL,
+    "frequency" INTEGER NOT NULL DEFAULT 1,
     "edges" TEXT[],
     "datetimes" TIMESTAMP(3)[],
     "sentiment" DOUBLE PRECISION NOT NULL,
-    "embedding" vector(2000) NOT NULL,
+    "embedding" vector(2000),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -71,7 +72,7 @@ CREATE TABLE "RawDataChunk" (
     "toDatetime" TIMESTAMP(3) NOT NULL,
     "sentiment" DOUBLE PRECISION NOT NULL,
     "rawData" TEXT NOT NULL,
-    "embedding" vector(2000) NOT NULL,
+    "embedding" vector(2000),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
