@@ -46,7 +46,7 @@ The database has the following tables (extra fields omitted for brevity):
     PRIMARY KEY ("A","B")
 );
 
-If you want to compare embeddings on the fly, you will need to provide the texts to embed in the "to_embed_raw_data" and "to_embed_nodes" fields.
+If you want to compare embeddings on the fly, you will need to provide the texts to embed in the "toEmbedRawData" and "toEmbedNodes" fields.
 They will be made available for your query in this table:
 
 "QueryEmbedding" (
@@ -55,6 +55,13 @@ They will be made available for your query in this table:
     "embedding" vector(2000),
 );
 
+For example, if you want to find the top 5 raw data chunks that are most similar to the text "I love you", call the tool with:
+{
+  "query": "SELECT * FROM RawDataChunk ORDER BY embedding <=> (SELECT embedding FROM QueryEmbedding WHERE id = 0 and type = 'raw_data') LIMIT 5",
+  "toEmbedRawData": ["I love you"] // Note how we select the QueryEmbedding with id = 0 (the array index) and type = 'raw_data'
+  "toEmbedNodes": [],
+}
+
 Answer with one query at a time as a JSON object with the following format:
 {
   "actions": [
@@ -62,8 +69,8 @@ Answer with one query at a time as a JSON object with the following format:
       "name": "sqlQuery",
       "args": {
         "query": "your SQL query",
-        "to_embed_raw_data": ["text1", "text2", ...], // Use this field if you want to compare text to raw data embeddings
-        "to_embed_nodes": ["text1", "text2", ...] // Use this field if you want to compare text to nodes embeddings
+        "toEmbedRawData": ["text1", "text2", ...], // Use this field if you want to compare text to raw data embeddings
+        "toEmbedNodes": ["text1", "text2", ...] // Use this field if you want to compare text to nodes embeddings
       }
     }
   ]
@@ -72,5 +79,5 @@ Answer with one query at a time as a JSON object with the following format:
 Wait to get the results of your query before formulating the next one.
 Once you have gathered all the information needed, provide your final answer.
 
-Here is the question to reformulate into SQL queries:
+Here is the question to answer with SQL queries:
 `;

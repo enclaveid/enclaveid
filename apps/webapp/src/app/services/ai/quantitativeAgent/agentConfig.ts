@@ -1,9 +1,9 @@
 import { streamText } from 'ai';
-import { openRouterAi } from '../openRouterAi';
 import { quantitativeAgentSystemPrompt } from './systemPrompt';
+import { anthropic } from '@ai-sdk/anthropic';
 
 export const quantitativeAgentConfig: Parameters<typeof streamText>[0] = {
-  model: openRouterAi('anthropic/claude-3.5-sonnet'),
+  model: anthropic('claude-3-5-sonnet-20241022'),
   system: quantitativeAgentSystemPrompt,
   maxTokens: 8192,
 };

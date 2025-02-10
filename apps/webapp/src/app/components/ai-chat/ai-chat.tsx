@@ -7,13 +7,12 @@ import { cn } from '@enclaveid/ui-utils';
 import { Message, useChat } from 'ai/react';
 import { Button } from '@enclaveid/ui/button';
 import { DoubleArrowRightIcon, ReloadIcon } from '@radix-ui/react-icons';
-import { ReasoningUIPart, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import {
   IntermediateAgentActionsComponent,
-  ReasoningPartComponent,
+  ToolResultsPartsComponent,
 } from './part-components';
-import { ToolInvocationPartComponent } from './part-components';
-import { useState, useRef, useCallback } from 'react';
+import { useCallback, useState } from 'react';
+import { generateId, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 
 export function AiChat() {
   const [suggestions, setSuggestions] = useState<{
@@ -26,12 +25,12 @@ export function AiChat() {
 
   const {
     messages,
+    setMessages,
     input,
     handleInputChange,
     handleSubmit,
     isLoading,
     reload,
-    setInput,
   } = useChat({
     maxSteps: 2,
     onToolCall: async ({ toolCall }) => {
@@ -40,116 +39,121 @@ export function AiChat() {
           toolCall.args as { horizontal: string[]; vertical: string[] }
         );
       }
+      return { toolCall };
     },
   });
 
-  const submitRef = useRef<HTMLButtonElement>(null);
-
   const handleSuggestionClick = useCallback(
     (suggestion: string) => {
-      setInput(suggestion);
-      submitRef.current?.click();
-      setSuggestions({
-        horizontal: [],
-        vertical: [],
-      });
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: generateId(),
+          role: 'user',
+          content: suggestion,
+          parts: [],
+        },
+      ]);
+      reload();
     },
-    [setInput, setSuggestions]
+    [setMessages, reload]
   );
 
   return (
     <Card className="h-full w-full">
       <CardContent className="flex flex-col gap-4 p-4 h-full">
-        <ScrollArea className="h-[600px] pr-4 overflow-y-auto">
-          {messages?.map((m: Message) => (
-            <div
-              key={m.id}
-              className={cn('mb-4 flex flex-col', {
-                'items-end': m.role === 'user',
-              })}
-            >
+        <ScrollArea className="flex-1 pr-4 overflow-y-auto">
+          <div className="flex flex-col gap-4">
+            {messages?.map((m: Message) => (
               <div
-                className={cn('rounded-lg px-3 py-2 text-sm', {
-                  'bg-primary text-primary-foreground': m.role === 'user',
-                  'bg-muted': m.role === 'assistant',
+                key={m.id}
+                className={cn('mb-4 flex flex-col', {
+                  'items-end': m.role === 'user',
                 })}
               >
-                {m.content}
+                <div
+                  className={cn('rounded-lg px-3 py-2 text-sm', {
+                    'bg-primary text-primary-foreground': m.role === 'user',
+                    'bg-muted': m.role === 'assistant',
+                  })}
+                >
+                  {m.content}
+                </div>
+
+                <IntermediateAgentActionsComponent data={m.annotations} />
+
+                <ToolResultsPartsComponent
+                  messageId={m.id}
+                  parts={
+                    m.parts?.filter(
+                      (p) => p.type === 'tool-invocation'
+                    ) as ToolInvocationUIPart[]
+                  }
+                />
               </div>
+            ))}
 
-              <IntermediateAgentActionsComponent data={m.annotations} />
-
-              {m.parts?.map((part, index) => {
-                const componentKey = `${m.id}-part-${index}`;
-                return {
-                  'tool-invocation': (
-                    <ToolInvocationPartComponent
-                      key={componentKey}
-                      toolInvocationPart={part as ToolInvocationUIPart}
-                    />
-                  ),
-                  reasoning: (
-                    <ReasoningPartComponent
-                      key={componentKey}
-                      reasoningPart={part as ReasoningUIPart}
-                    />
-                  ),
-                  text: <div key={componentKey}></div>,
-                }[part.type];
-              })}
-            </div>
-          ))}
-
-          {isLoading && (
-            <div className="mb-4 flex flex-col">
-              <div className="bg-muted rounded-lg px-3 py-2 text-sm w-fit">
-                <span className="inline-flex gap-1">
-                  <span className="animate-bounce">.</span>
-                  <span className="animate-bounce [animation-delay:0.2s]">
-                    .
+            {isLoading && (
+              <div className="mb-4 flex flex-col">
+                <div className="bg-muted rounded-lg px-3 py-2 text-sm w-fit">
+                  <span className="inline-flex gap-1">
+                    <span className="animate-bounce">.</span>
+                    <span className="animate-bounce [animation-delay:0.2s]">
+                      .
+                    </span>
+                    <span className="animate-bounce [animation-delay:0.4s]">
+                      .
+                    </span>
                   </span>
-                  <span className="animate-bounce [animation-delay:0.4s]">
-                    .
-                  </span>
-                </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {suggestions.horizontal.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Follow-up questions:
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.horizontal.map((suggestion, index) => (
+                    <Button
+                      key={`horizontal-${index}`}
+                      variant="outline"
+                      size="sm"
+                      color="blue"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      disabled={isLoading}
+                    >
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {suggestions.vertical.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Related topics:
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.vertical.map((suggestion, index) => (
+                    <Button
+                      key={`vertical-${index}`}
+                      variant="outline"
+                      size="sm"
+                      color="red"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      disabled={isLoading}
+                    >
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </ScrollArea>
-
-        {suggestions.horizontal.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {suggestions.horizontal.map((suggestion, index) => (
-              <Button
-                key={`horizontal-${index}`}
-                variant="outline"
-                size="sm"
-                color="blue"
-                onClick={() => handleSuggestionClick(suggestion)}
-                disabled={isLoading}
-              >
-                {suggestion}
-              </Button>
-            ))}
-          </div>
-        )}
-
-        {suggestions.vertical.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {suggestions.vertical.map((suggestion, index) => (
-              <Button
-                key={`vertical-${index}`}
-                variant="outline"
-                size="sm"
-                color="red"
-                onClick={() => handleSuggestionClick(suggestion)}
-                disabled={isLoading}
-              >
-                {suggestion}
-              </Button>
-            ))}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
@@ -159,12 +163,10 @@ export function AiChat() {
             className="flex-1"
             disabled={isLoading}
           />
-          <Button type="submit" disabled={isLoading} ref={submitRef}>
+          <Button type="submit" disabled={isLoading}>
             <DoubleArrowRightIcon />
           </Button>
-          <Button type="button" onClick={() => reload()} variant="outline">
-            <ReloadIcon />
-          </Button>
+
         </form>
       </CardContent>
     </Card>

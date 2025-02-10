@@ -1,7 +1,6 @@
 import {
   JSONValue,
   ReasoningUIPart,
-  TextUIPart,
   ToolInvocationUIPart,
 } from '@ai-sdk/ui-utils';
 import { ChevronDown } from 'lucide-react';
@@ -40,7 +39,46 @@ export function IntermediateAgentActionsComponent({
   );
 }
 
-export function ToolInvocationPartComponent({
+export function ToolResultsPartsComponent({
+  messageId,
+  parts,
+}: {
+  messageId: string;
+  parts?: Array<ToolInvocationUIPart>;
+}) {
+  if (!parts || parts.length === 0) {
+    return null;
+  }
+
+  const isLoading = !parts.every(
+    (part) => part.toolInvocation.state === 'result'
+  );
+
+  return (
+    <Collapsible>
+      <CollapsibleTrigger className="flex w-full items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+        <div className="flex items-center gap-2">
+          <ChevronDown className="h-4 w-4" />
+          {isLoading && (
+            <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
+          )}
+        </div>
+        <span>Tool Calls</span>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        {parts.map((part, index) => {
+          return (
+            <div key={`${messageId}-part-${index}`} className="mt-2">
+              <ToolInvocationPartComponent toolInvocationPart={part} />
+            </div>
+          );
+        })}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+function ToolInvocationPartComponent({
   toolInvocationPart,
 }: {
   toolInvocationPart: ToolInvocationUIPart;
@@ -67,7 +105,7 @@ export function ToolInvocationPartComponent({
   );
 }
 
-export function ReasoningPartComponent({
+function ReasoningPartComponent({
   reasoningPart,
 }: {
   reasoningPart: ReasoningUIPart;
@@ -76,11 +114,5 @@ export function ReasoningPartComponent({
     <div className="mt-2 text-xs text-muted-foreground">
       {reasoningPart.reasoning}
     </div>
-  );
-}
-
-export function TextPartComponent({ textPart }: { textPart: TextUIPart }) {
-  return (
-    <div className="mt-2 text-xs text-muted-foreground">{textPart.text}</div>
   );
 }

@@ -1,9 +1,9 @@
 import { streamText } from 'ai';
-import { openRouterAi } from '../openRouterAi';
 import { causalInferenceAgentSystemPrompt } from './systemPrompt';
+import { anthropic } from '@ai-sdk/anthropic';
 
 export const causalInferenceAgentConfig: Parameters<typeof streamText>[0] = {
-  model: openRouterAi('anthropic/claude-3.5-sonnet'),
+  model: anthropic('claude-3-5-sonnet-20241022'),
   system: causalInferenceAgentSystemPrompt,
   maxTokens: 8192,
 };
