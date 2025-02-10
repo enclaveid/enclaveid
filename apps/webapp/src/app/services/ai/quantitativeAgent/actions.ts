@@ -7,9 +7,23 @@ const sqlQuery: Tool = {
     'Execute a query on the database using plain SQL (ANSI/ISO standard).',
   parameters: z.object({
     query: z.string(),
+    toEmbedNodes: z.array(z.string()).optional(),
+    toEmbedRawData: z.array(z.string()).optional(),
   }),
-  execute: async ({ query }: { query: string }) =>
-    makeApiRequest('sql_query', { query }),
+  execute: async ({
+    query,
+    toEmbedNodes,
+    toEmbedRawData,
+  }: {
+    query: string;
+    toEmbedNodes?: string[];
+    toEmbedRawData?: string[];
+  }) =>
+    makeApiRequest('sql_query', {
+      query,
+      to_embed_nodes: toEmbedNodes ?? [],
+      to_embed_raw_data: toEmbedRawData ?? [],
+    }),
 };
 
 export const quantitativeActions = {

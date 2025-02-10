@@ -44,7 +44,16 @@ export async function parseAndExecuteActions(
     };
   }
 
-  const actionsArray = JSON.parse(jsonrepair(jsonMatch[0])).actions;
+  let actionsArray: any[] = [];
+  try {
+    actionsArray = JSON.parse(jsonrepair(jsonMatch[0])).actions;
+  } catch (error) {
+    console.error('Error parsing actions', error);
+    return {
+      actionsResults: null,
+      finalResult: rawAssistantMessage,
+    };
+  }
 
   const allActions = {
     ...causalInferenceActions,
@@ -55,14 +64,29 @@ export async function parseAndExecuteActions(
     actionsArray.map(
       async (action: { name: string; args: Record<string, any> }) => {
         const { name, args } = action;
-        const actionFunction = allActions[name as keyof typeof allActions];
+        try {
+          console.log(`Executing action: ${name}`, { args });
 
-        if (!actionFunction) {
-          throw new Error(`Unknown action: ${name}`);
+          const actionFunction = allActions[name as keyof typeof allActions];
+          if (!actionFunction) {
+            const error = `Unknown action: ${name}`;
+            console.error(error);
+            throw new Error(error);
+          }
+
+          const result = await actionFunction.execute?.(args as any);
+          console.log(`Action ${name} completed successfully`, { result });
+          return { name, args, result };
+        } catch (error) {
+          console.error(`Failed to execute action ${name}:`, error);
+          return {
+            name,
+            args,
+            result: `Error: ${
+              error instanceof Error ? error.message : 'Unknown error'
+            }`,
+          };
         }
-
-        const result = await actionFunction.execute?.(args as any);
-        return { name, args, result };
       }
     )
   );

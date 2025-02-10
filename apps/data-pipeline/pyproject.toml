@@ -48,8 +48,8 @@ psycopg = "^3.2.4"
 joblib = "^1.4.2"
 
 [tool.poetry.group.dev.dependencies]
-autopep8 = "2.0.2"
-ruff = "0.1.5"
+autopep8 = "^2.3.2"
+ruff = "^0.9.5"
 pytest = "7.3.1"
 pytest-sugar = "0.9.7"
 pytest-cov = "4.1.0"
