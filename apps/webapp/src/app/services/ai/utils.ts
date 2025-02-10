@@ -65,9 +65,8 @@ export async function parseAndExecuteActions(
       async (action: { name: string; args: Record<string, any> }) => {
         const { name, args } = action;
         try {
-          console.log(`Executing action: ${name}`, { args });
-
           const actionFunction = allActions[name as keyof typeof allActions];
+
           if (!actionFunction) {
             const error = `Unknown action: ${name}`;
             console.error(error);
@@ -75,7 +74,6 @@ export async function parseAndExecuteActions(
           }
 
           const result = await actionFunction.execute?.(args as any);
-          console.log(`Action ${name} completed successfully`, { result });
           return { name, args, result };
         } catch (error) {
           console.error(`Failed to execute action ${name}:`, error);

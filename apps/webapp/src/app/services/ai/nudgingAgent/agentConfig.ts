@@ -50,6 +50,15 @@ export const nudgingAgentConfig = (
           );
         },
       }),
+      suggestNextQuestions: tool({
+        description: `
+        Suggest the user more questions to explore the previous response vertically or horizontally.
+        `,
+        parameters: z.object({
+          horizontal: z.array(z.string()),
+          vertical: z.array(z.string()),
+        }),
+      }),
     },
   };
 };

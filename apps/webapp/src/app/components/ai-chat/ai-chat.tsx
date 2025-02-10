@@ -13,8 +13,17 @@ import {
   ReasoningPartComponent,
 } from './part-components';
 import { ToolInvocationPartComponent } from './part-components';
+import { useState, useRef, useCallback } from 'react';
 
 export function AiChat() {
+  const [suggestions, setSuggestions] = useState<{
+    horizontal: string[];
+    vertical: string[];
+  }>({
+    horizontal: [],
+    vertical: [],
+  });
+
   const {
     messages,
     input,
@@ -22,9 +31,31 @@ export function AiChat() {
     handleSubmit,
     isLoading,
     reload,
+    setInput,
   } = useChat({
     maxSteps: 2,
+    onToolCall: async ({ toolCall }) => {
+      if (toolCall.toolName === 'suggestNextQuestions') {
+        setSuggestions(
+          toolCall.args as { horizontal: string[]; vertical: string[] }
+        );
+      }
+    },
   });
+
+  const submitRef = useRef<HTMLButtonElement>(null);
+
+  const handleSuggestionClick = useCallback(
+    (suggestion: string) => {
+      setInput(suggestion);
+      submitRef.current?.click();
+      setSuggestions({
+        horizontal: [],
+        vertical: [],
+      });
+    },
+    [setInput, setSuggestions]
+  );
 
   return (
     <Card className="h-full w-full">
@@ -86,6 +117,40 @@ export function AiChat() {
           )}
         </ScrollArea>
 
+        {suggestions.horizontal.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {suggestions.horizontal.map((suggestion, index) => (
+              <Button
+                key={`horizontal-${index}`}
+                variant="outline"
+                size="sm"
+                color="blue"
+                onClick={() => handleSuggestionClick(suggestion)}
+                disabled={isLoading}
+              >
+                {suggestion}
+              </Button>
+            ))}
+          </div>
+        )}
+
+        {suggestions.vertical.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {suggestions.vertical.map((suggestion, index) => (
+              <Button
+                key={`vertical-${index}`}
+                variant="outline"
+                size="sm"
+                color="red"
+                onClick={() => handleSuggestionClick(suggestion)}
+                disabled={isLoading}
+              >
+                {suggestion}
+              </Button>
+            ))}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             value={input}
@@ -94,7 +159,7 @@ export function AiChat() {
             className="flex-1"
             disabled={isLoading}
           />
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading} ref={submitRef}>
             <DoubleArrowRightIcon />
           </Button>
           <Button type="button" onClick={() => reload()} variant="outline">
