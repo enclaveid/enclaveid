@@ -16,6 +16,7 @@ from ai_agents.graph_explorer_agent.actions.get_relatives import (
 from ai_agents.graph_explorer_agent.actions.get_similar_nodes import get_similar_nodes
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from psycopg.rows import dict_row
 from pydantic import BaseModel
 from sklearn.decomposition import PCA  # noqa: I001
 
@@ -157,8 +158,8 @@ async def sql_query(
     embedder_client: BaseEmbedderClient = Depends(get_embedder_client),
     pca_reducers: PCAReducers = Depends(get_pca_reducers),
 ):
-    with db as conn:  # Use the context manager properly
-        cur = conn.cursor()
+    with db as conn:
+        cur = conn.cursor(row_factory=dict_row)
         try:
             # Start transaction explicitly
             cur.execute("BEGIN")
@@ -197,25 +198,33 @@ async def sql_query(
                 ) ON COMMIT DROP;
             """
             )
-            cur.execute(
+
+            # Use executemany for bulk insertion
+            cur.executemany(
                 """
                 INSERT INTO QueryEmbedding (id, type, embedding) VALUES (%s, %s, %s)
                 """,
-                (
-                    list(range(len(embeddings))),
-                    embedding_types,
-                    embeddings,
-                ),
+                [
+                    (i, embedding_types[i], embeddings[i])
+                    for i in range(len(embeddings))
+                ],
             )
 
             # Run query
             cur.execute(request.query)
-            result = cur.fetchall()
+            results = cur.fetchall()
+
+            # Remove embedding columns if they exist
+            cleaned_results = [
+                {k: v for k, v in row.items() if not k.endswith("embedding")}
+                for row in results
+            ]
 
             # Commit the transaction
             cur.execute("COMMIT")
             cur.close()
-            return result
+
+            return cleaned_results
 
         except Exception as e:
             if cur and not cur.closed:

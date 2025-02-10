@@ -51,9 +51,8 @@ def get_embedder_client() -> BaseEmbedderClient:
 # The pool is shared across requests
 @lru_cache(maxsize=1)
 def _get_db_pool() -> ConnectionPool:
-    print(os.environ["DATABASE_URL"])
     return ConnectionPool(
-        os.environ["DATABASE_URL"],
+        "postgresql://ma9o@localhost:5432/enclaveid",  # TODO it doesnt seem to get the one from .env idk why
         min_size=1,
         max_size=10,  # TODO
         configure=lambda conn: register_vector(conn),
