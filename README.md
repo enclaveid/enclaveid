@@ -1,6 +1,6 @@
 # EnclaveID
 
-EnclaveID builds an easily queryable, rich causal graph of your life and your projects so you can stop re-explaining yourself to LLMs every time and focus on your goals.
+User understanding for the AI era
 
 ## Docs
 
